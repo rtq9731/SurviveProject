@@ -27,6 +27,12 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        UpdateCam();
+        CalcPlayerMove();
+    }
+
+    public void CalcPlayerMove()
+    {
         Vector3 move = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxisRaw("Vertical"));
 
         if (move.sqrMagnitude > 1.0f)
@@ -37,12 +43,18 @@ public class PlayerController : MonoBehaviour
         move = move * (Input.GetButton("Run") ? _runningSpeed : _playerSpeed) * Time.deltaTime;
 
         move = new Vector3(move.x, -9.8f * _gravityScale * Time.deltaTime, move.z);
+        move = transform.TransformDirection(move);
+        _characterController.Move(move);
+    }
 
-        float turnPlayer = Input.GetAxis("Mouse X") * (_mouseSensitivity / 5f);
-        _horizontalAngle = _horizontalAngle + turnPlayer;
+    public void UpdateCam()
+    {
 
         if (_horizontalAngle > 360) _horizontalAngle -= 360.0f;
         if (_horizontalAngle < 0) _horizontalAngle += 360.0f;
+
+        float turnPlayer = Input.GetAxis("Mouse X") * (_mouseSensitivity / 5f);
+        _horizontalAngle = _horizontalAngle + turnPlayer;
 
         Vector3 currentAngles = transform.localEulerAngles;
         currentAngles.y = _horizontalAngle;
@@ -54,8 +66,5 @@ public class PlayerController : MonoBehaviour
         currentAngles = camTrm.localEulerAngles;
         currentAngles.x = _verticalAngle;
         camTrm.localEulerAngles = currentAngles;
-
-        move = transform.TransformDirection(move);
-        _characterController.Move(move);
     }
 }
