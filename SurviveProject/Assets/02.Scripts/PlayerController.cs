@@ -18,10 +18,19 @@ public class PlayerController : MonoBehaviour
     public bool _isMove = false;
 
     CharacterController _characterController = null;
+    Animator _charAnim = null;
+
+    int hashDirHorizontal = 0;
+    int hashDirVertical = 0;
+    int hashIsMove = 0;
 
     private void Awake()
     {
         _characterController = GetComponent<CharacterController>();
+        _charAnim = GetComponent<Animator>();
+        hashDirHorizontal = Animator.StringToHash("HorizontalMove");
+        hashDirVertical = Animator.StringToHash("VerticalMove");
+        hashIsMove = Animator.StringToHash("IsMove");
         _isPaused = false;
     }
 
@@ -45,6 +54,11 @@ public class PlayerController : MonoBehaviour
         move = new Vector3(move.x, -9.8f * _gravityScale * Time.deltaTime, move.z);
         move = transform.TransformDirection(move);
         _characterController.Move(move);
+
+        _charAnim.SetFloat(hashDirHorizontal, move.x);
+        _charAnim.SetFloat(hashDirVertical, move.z);
+
+        _charAnim.SetBool(hashIsMove, move.magnitude > 0);
     }
 
     public void UpdateCam()
