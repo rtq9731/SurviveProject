@@ -4,18 +4,18 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] public Transform camTrm = null;
+    [SerializeField] Transform camTrm = null;
     [Header("Control Settings")]
-    public float _mouseSensitivity = 100.0f;
-    public float _playerSpeed = 5.0f;
-    public float _runningSpeed = 7.0f;
-    public float _gravityScale = 1f;
+    [SerializeField] float _mouseSensitivity = 100.0f;
+    [SerializeField] float _playerSpeed = 5.0f;
+    [SerializeField] float _runningSpeed = 7.0f;
+    [SerializeField] float _gravityScale = 1f;
+    [SerializeField] float _shakePower = 5f;
 
     float _horizontalAngle = 0f;
     float _verticalAngle = 0f;
 
-    public bool _isPaused = false;
-    public bool _isMove = false;
+    [SerializeField] CameraShake camShake = null;
 
     CharacterController _characterController = null;
     Animator _charAnim = null;
@@ -23,6 +23,7 @@ public class PlayerController : MonoBehaviour
     int hashDirHorizontal = 0;
     int hashDirVertical = 0;
     int hashIsMove = 0;
+    int hashSpeed = 0;
 
     private void Awake()
     {
@@ -30,8 +31,8 @@ public class PlayerController : MonoBehaviour
         _charAnim = GetComponent<Animator>();
         hashDirHorizontal = Animator.StringToHash("HorizontalMove");
         hashDirVertical = Animator.StringToHash("VerticalMove");
-        hashIsMove = Animator.StringToHash("IsMove");
-        _isPaused = false;
+        hashSpeed = Animator.StringToHash("Speed");
+        hashIsMove = Animator.StringToHash("isMove");
     }
 
     private void Update()
@@ -49,16 +50,32 @@ public class PlayerController : MonoBehaviour
             move.Normalize();
         }
 
-        move = move * (Input.GetButton("Run") ? _runningSpeed : _playerSpeed) * Time.deltaTime;
+        if (move.sqrMagnitude < 0.01f)
+        {
+            if (camShake.IsShaking())
+                camShake.StopShake();
+        }
+        else
+        {
+            if (!camShake.IsShaking())
+            {
+                camShake.StartShake(EasingFunction.Ease.Linear, true, 1f, _shakePower);
+            }
+        }
+
+        _charAnim.SetFloat(hashSpeed, (Input.GetButton("Run") ? _runningSpeed : _playerSpeed) / _playerSpeed);
+
+        move *= (Input.GetButton("Run") ? _runningSpeed : _playerSpeed) * Time.deltaTime;
 
         move = new Vector3(move.x, -9.8f * _gravityScale * Time.deltaTime, move.z);
+
+        _charAnim.SetFloat(hashDirHorizontal, move.normalized.x);
+        _charAnim.SetFloat(hashDirVertical, move.normalized.z);
+
+        _charAnim.SetBool(hashIsMove, new Vector2(Input.GetAxis("Horizontal"), Input.GetAxisRaw("Vertical")).magnitude >= 0.1f);
+
         move = transform.TransformDirection(move);
         _characterController.Move(move);
-
-        _charAnim.SetFloat(hashDirHorizontal, move.x);
-        _charAnim.SetFloat(hashDirVertical, move.z);
-
-        _charAnim.SetBool(hashIsMove, move.magnitude > 0);
     }
 
     public void UpdateCam()
@@ -68,14 +85,14 @@ public class PlayerController : MonoBehaviour
         if (_horizontalAngle < 0) _horizontalAngle += 360.0f;
 
         float turnPlayer = Input.GetAxis("Mouse X") * (_mouseSensitivity / 5f);
-        _horizontalAngle = _horizontalAngle + turnPlayer;
+        _horizontalAngle += turnPlayer;
 
         Vector3 currentAngles = transform.localEulerAngles;
         currentAngles.y = _horizontalAngle;
         transform.localEulerAngles = currentAngles;
 
         var turnCam = -Input.GetAxis("Mouse Y");
-        turnCam = turnCam * (_mouseSensitivity / 5f);
+        turnCam *= (_mouseSensitivity / 5f);
         _verticalAngle = Mathf.Clamp(turnCam + _verticalAngle, -89.0f, 89.0f);
         currentAngles = camTrm.localEulerAngles;
         currentAngles.x = _verticalAngle;
