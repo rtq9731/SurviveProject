@@ -6,33 +6,50 @@ using Cinemachine;
 public class CameraShake : MonoBehaviour
 {
     CinemachineVirtualCamera _vCam = null;
+    Coroutine _shakeCor = null;
 
     bool _loop = true;
+    bool _isShaking = false;
 
     private void Awake()
     {
         _vCam = GetComponent<CinemachineVirtualCamera>();
     }
 
-    private void Start()
+    public void StartShake(EasingFunction.Ease easing, bool isLoop, float loopSec = 1f, float shakePower = 1f)
     {
-        StartCoroutine(Shake(EasingFunction.Ease.Linear));
+        _loop = isLoop;
+
+        if (_shakeCor != null)
+            StopCoroutine(_shakeCor);
+
+        _shakeCor = StartCoroutine(Shake(easing, loopSec, shakePower));
+    }
+
+    public bool IsShaking()
+    {
+        return _isShaking;
+    }
+
+    public void StopShake()
+    {
+        _loop = false;
     }
 
     private IEnumerator Shake(EasingFunction.Ease easing, float loopSec = 1f, float shakePower = 1f)
     {
         EasingFunction.Function easingFunc = EasingFunction.GetEasingFunction(easing);
-
+        _isShaking = true;
         float timer = 0f;
         Vector3 curAngle = Vector3.zero;
         float curValue = 0f;
 
         while(_loop)
         {
-            while (timer <= loopSec)
+            while (timer <= loopSec / 2)
             {
                 timer += Time.deltaTime;
-                curValue = easingFunc(0, loopSec, timer);
+                curValue = easingFunc(0, loopSec / 2, timer) * shakePower;
                 curAngle = _vCam.transform.localRotation.eulerAngles;
                 curAngle.x += curValue;
                 _vCam.transform.localRotation = Quaternion.Euler(curAngle);
@@ -42,13 +59,14 @@ public class CameraShake : MonoBehaviour
             while (timer >= 0)
             {
                 timer -= Time.deltaTime;
-                curValue = easingFunc(0, loopSec, timer);
+                curValue = easingFunc(0, loopSec / 2, timer) * shakePower;
                 curAngle = _vCam.transform.localRotation.eulerAngles;
-                curAngle.x -= curValue;
+                curAngle.x += curValue;
                 _vCam.transform.localRotation = Quaternion.Euler(curAngle);
                 yield return null;
             }
         }
+        _isShaking = false;
 
         yield return null;
     }
