@@ -11,14 +11,19 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float _runningSpeed = 7.0f;
     [SerializeField] float _gravityScale = 1f;
     [SerializeField] float _shakePower = 5f;
+    [SerializeField] float _jumpPower = 2f;
+    [SerializeField] float _jumpCool = 1f;
 
     float _horizontalAngle = 0f;
     float _verticalAngle = 0f;
+    float _jumpTimer = 0f;
 
     [SerializeField] CameraShake camShake = null;
 
     CharacterController _characterController = null;
     Animator _charAnim = null;
+
+    Vector3 velo = Vector3.zero;
 
     int hashDirHorizontal = 0;
     int hashDirVertical = 0;
@@ -33,6 +38,11 @@ public class PlayerController : MonoBehaviour
         hashDirVertical = Animator.StringToHash("VerticalMove");
         hashSpeed = Animator.StringToHash("Speed");
         hashIsMove = Animator.StringToHash("isMove");
+    }
+
+    private void Start()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
     private void Update()
@@ -67,7 +77,15 @@ public class PlayerController : MonoBehaviour
 
         move *= (Input.GetButton("Run") ? _runningSpeed : _playerSpeed) * Time.deltaTime;
 
-        move = new Vector3(move.x, -9.8f * _gravityScale * Time.deltaTime, move.z);
+        _jumpTimer += Time.deltaTime;
+
+        if(Input.GetButton("Jump") && _jumpTimer >= _jumpCool)
+        {
+            velo.y = _jumpPower;
+            _jumpTimer = 0f;
+        }
+
+        velo.y += -9.8f * _gravityScale * Time.deltaTime;
 
         _charAnim.SetFloat(hashDirHorizontal, move.normalized.x);
         _charAnim.SetFloat(hashDirVertical, move.normalized.z);
@@ -76,6 +94,8 @@ public class PlayerController : MonoBehaviour
 
         move = transform.TransformDirection(move);
         _characterController.Move(move);
+
+        _characterController.Move(velo * Time.deltaTime);
     }
 
     public void UpdateCam()
