@@ -8006,6 +8006,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: CvsUI
       objectReference: {fileID: 0}
+    - target: {fileID: 301521547292152580, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 301521547292152600, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -8104,6 +8108,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 301521547391049822, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
       propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5030924172161719626, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
+      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
