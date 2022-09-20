@@ -9,7 +9,6 @@ public class ItemInfo
 
     public Sprite itemIcon = null;
 
-    public int curStack = 1;
     public int itemStackMax = 1;
 
     public string itemName = "";
