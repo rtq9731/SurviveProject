@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e948bc146932cf540a2efd537821f36b, type: 3}
-  m_Name: ch1_04_filter
+  m_Name: ch1_04_pickaxe
   m_EditorClassIdentifier: Survive.Domain::Survive.Progression.CollectItemObjective
-  id: ch1_04_filter
-  displayText: "\uC0B0\uC18C \uD544\uD130\uB97C \uC81C\uC791\uD55C\uB2E4"
-  itemId: oxygen_filter
+  id: ch1_04_pickaxe
+  displayText: "\uACE1\uAD2D\uC774\uB97C \uC81C\uC791\uD55C\uB2E4"
+  itemId: pickaxe
   amount: 1

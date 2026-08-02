@@ -10,10 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e948bc146932cf540a2efd537821f36b, type: 3}
-  m_Name: ch1_03_scrap
+  m_Name: ch1_05_lantern
   m_EditorClassIdentifier: Survive.Domain::Survive.Progression.CollectItemObjective
-  id: ch1_03_scrap
-  displayText: "\uD769\uC5B4\uC9C4 \uC794\uD574\uC5D0\uC11C \uC2A4\uD06C\uB7A9 10\uAC1C\uB97C
-    \uBAA8\uC740\uB2E4"
-  itemId: scrap
-  amount: 10
+  id: ch1_05_lantern
+  displayText: "\uB79C\uD134\uC744 \uC81C\uC791\uD574 \uC5B4\uB460\uC5D0 \uB300\uBE44\uD55C\uB2E4"
+  itemId: lantern
+  amount: 1

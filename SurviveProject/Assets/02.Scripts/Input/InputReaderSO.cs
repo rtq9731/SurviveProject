@@ -24,6 +24,8 @@ namespace Survive.InputSystem
         public event Action InteractCancelledEvent;
         public event Action AttackEvent;
         public event Action ToggleInventoryEvent;
+        public event Action NextToolEvent;
+        public event Action ToggleLanternEvent;
         public event Action PauseEvent;
         public event Action CancelEvent;
 
@@ -123,6 +125,16 @@ namespace Survive.InputSystem
         public void OnPause(InputAction.CallbackContext ctx)
         {
             if (ctx.performed) PauseEvent?.Invoke();
+        }
+
+        public void OnNextTool(InputAction.CallbackContext ctx)
+        {
+            if (ctx.performed) NextToolEvent?.Invoke();
+        }
+
+        public void OnToggleLantern(InputAction.CallbackContext ctx)
+        {
+            if (ctx.performed) ToggleLanternEvent?.Invoke();
         }
 
         // ── UI ───────────────────────────────────────────────────

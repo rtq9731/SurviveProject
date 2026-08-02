@@ -16,4 +16,4 @@ MonoBehaviour:
   displayName: "\uC0B0\uC18C"
   maxValue: 100
   startValue: 100
-  passiveRatePerSecond: -1.5
+  passiveRatePerSecond: 0
