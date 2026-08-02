@@ -18,6 +18,7 @@ namespace Survive.Interaction
         [SerializeField] LayerMask interactableMask = ~0;
 
         PlayerContext _player;
+        Transform _playerRoot;
 
         public IInteractable Current { get; private set; }
 
@@ -31,6 +32,7 @@ namespace Survive.Interaction
         void Awake()
         {
             _player = GetComponentInParent<PlayerContext>();
+            _playerRoot = _player != null ? _player.transform : transform.root;
             if (rayOrigin == null && Camera.main != null) rayOrigin = Camera.main.transform;
         }
 
@@ -58,12 +60,28 @@ namespace Survive.Interaction
         {
             if (rayOrigin == null) return;
 
+            // 카메라가 플레이어 콜라이더 안에 있어 SphereCast가 자기 자신을 거리 0에서
+            // 명중시킨다. 단일 SphereCast로는 그 뒤가 보이지 않으므로 전부 받아
+            // 자기 몸을 건너뛰고 가장 가까운 상호작용 대상을 고른다.
+            var hits = Physics.SphereCastAll(rayOrigin.position, detectRadius, rayOrigin.forward,
+                                             detectDistance, interactableMask,
+                                             QueryTriggerInteraction.Collide);
+
             IInteractable 찾은것 = null;
-            if (Physics.SphereCast(rayOrigin.position, detectRadius, rayOrigin.forward,
-                                   out var hit, detectDistance, interactableMask,
-                                   QueryTriggerInteraction.Collide))
+            float 가장가까운 = float.MaxValue;
+
+            foreach (var hit in hits)
             {
-                찾은것 = hit.collider.GetComponentInParent<IInteractable>();
+                if (자기몸인가(hit.collider)) continue;
+
+                var 후보 = hit.collider.GetComponentInParent<IInteractable>();
+                if (후보 == null) continue;
+
+                if (hit.distance < 가장가까운)
+                {
+                    가장가까운 = hit.distance;
+                    찾은것 = 후보;
+                }
             }
 
             if (!ReferenceEquals(찾은것, Current))
@@ -81,6 +99,13 @@ namespace Survive.Interaction
                 _마지막문구 = 문구;
                 PromptChanged?.Invoke(문구);
             }
+        }
+
+        /// <summary>플레이어 자신의 콜라이더인지. 카메라가 몸 안에 있어 반드시 걸러야 한다.</summary>
+        bool 자기몸인가(Collider col)
+        {
+            if (_playerRoot == null) return false;
+            return col.transform == _playerRoot || col.transform.IsChildOf(_playerRoot);
         }
 
         void 상호작용시작()

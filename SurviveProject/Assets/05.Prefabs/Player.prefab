@@ -1032,7 +1032,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Survive.Interaction.PlayerInteractor
   input: {fileID: 11400000, guid: 830cdc8999020854b95d9c0533137882, type: 2}
-  rayOrigin: {fileID: 4160890879938104255}
+  rayOrigin: {fileID: 0}
   detectDistance: 3
   detectRadius: 0.3
   interactableMask:
@@ -1052,7 +1052,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Survive.Combat.MeleeSwing
   input: {fileID: 11400000, guid: 830cdc8999020854b95d9c0533137882, type: 2}
   toolHolder: {fileID: 2546311439467589279}
-  swingOrigin: {fileID: 4160890879938104255}
+  swingOrigin: {fileID: 0}
   targetMask:
     serializedVersion: 2
     m_Bits: 4294967295
