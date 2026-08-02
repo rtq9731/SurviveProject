@@ -618,9 +618,9 @@ public class SequenceDirector : MonoBehaviour {
     public event Action<SequenceSO> SequenceFinished;
 }
 
-public class ScreenFader : MonoBehaviour {          // DOTween 사용 (이미 보유)
-    public IEnumerator FadeIn(float seconds);
-    public IEnumerator FadeOut(float seconds);
+public class ScreenFader : MonoBehaviour {          // CanvasGroup + DOTween
+    public Tween FadeIn(float seconds);             // 화면이 밝아짐 (alpha 1 → 0)
+    public Tween FadeOut(float seconds);            // 화면이 어두워짐 (alpha 0 → 1)
 }
 ```
 
@@ -673,6 +673,39 @@ public class UIStateService {                      // 어떤 패널이 열렸는
 **주의**: `ValueBarScript`의 현행 `Update()`는 매 프레임 `RefreshColor()`를 호출한다. 값이 바뀔 때만 호출하도록 정리하되, **공개 시그니처는 유지**한다 (씬 참조가 걸려 있다).
 
 **의존성**: Core, Input, Vitals, Inventory, Crafting, Progression, Narrative.
+
+---
+
+## 4.15 연출 자산 활용 방침 — Feel · Cinemachine · DOTween
+
+세 자산을 적극적으로 쓴다. 다만 **거동 계층(`Assembly-CSharp`)에서만** 쓴다 — 도메인 계층은 이들을 모른다(10장 규칙 5).
+
+### 역할 분담
+
+| 자산 | 담당 | 쓰지 않을 곳 |
+|---|---|---|
+| **Feel (`MMF_Player`)** | 순간적인 게임 필 — 타격감, 획득감, 경고. 화면 흔들림·플래시·진동·시간 정지·파티클·사운드를 한 덩어리로 묶는다 | 지속적인 상태 표현(게이지 채우기 등) |
+| **Cinemachine** | 카메라 전반 — 1인칭 리그, 임펄스(피격 반동), 프롤로그 컷신의 카메라 이동 | UI |
+| **DOTween** | UI 전환과 값 보간 — 패널 열림/닫힘, 자막 페이드, 게이지 보간, 화면 암전 | 3D 카메라 흔들림(Cinemachine Impulse가 담당) |
+
+### 챕터 1에서 붙일 피드백 지점
+
+`MMF_Player`를 직렬화 필드로 노출해 디자이너가 에디터에서 조립하게 한다. 코드는 `player?.PlayFeedbacks()`만 호출한다.
+
+| 지점 | 담당 컴포넌트 | 성격 |
+|---|---|---|
+| 근접 타격 명중 | `MeleeSwing` | 화면 흔들림(Impulse) + 히트스톱 + 타격음 |
+| 생물 피격·사망 | `CreatureHealth` | 플래시 + 파편 파티클 + 사망음 |
+| 플레이어 피격 | `PlayerDamageReceiver` | 화면 붉은 비네트 + 진동 |
+| 아이템 획득 | `ItemPickup`, `HarvestNode` | 획득음 + UI 슬롯 펄스(DOTween) |
+| 채집 완료 | `HarvestNode` | 파편 파티클 + 도구 임팩트 |
+| **산소 위험(20% 이하)** | `PlayerVitals` 구독 UI | 반복 경고음 + 화면 가장자리 맥동. 챕터 1의 핵심 압박이므로 가장 공들인다 |
+| 제작 완료 | `CraftingUI` | 완료음 + 결과 슬롯 강조 |
+| 포탈 기동 | `PortalDevice` | 카메라 임펄스 + 발광 상승 + 저음 |
+
+### 기존 `CameraShake`의 처지
+
+`CameraShake.cs`는 Cinemachine 가상 카메라를 직접 흔드는 수작업 구현이다. 씬과 프리팹에서 참조 중이므로 **삭제하지 않는다.** 다만 신규 타격감은 Feel + Cinemachine Impulse로 만들고, `CameraShake`는 기존 이동 흔들림 용도로만 남긴다. 두 경로가 같은 가상 카메라를 동시에 흔들면 결과가 겹치므로, **한 시점에 한쪽만 동작하게** 한다.
 
 ---
 
@@ -774,20 +807,32 @@ Build Settings에 `StartScene`(0), `MainScene`(1)을 등록한다.
 ## 9. 폴더 구조
 
 ```
-Assets/02.Scripts/
-├── Core/          EventChannelSO, GameServices, GameBootstrap, SceneFlowService, SaveService
+Assets/02.Scripts/Domain/          ← Survive.Domain.asmdef  (MonoBehaviour 금지, Feel·DOTween 금지)
+├── Core/          EventChannelSO, EventChannels, GameServices, ISaveable, SceneReferenceSO
+├── Vitals/        Vital, VitalDefinitionSO, IOxygenModifier, OxygenRate
+├── Items/         ItemCategory, ToolType, ItemDataSO, ToolItemSO, ConsumableItemSO,
+│                  ItemDatabaseSO, ItemStack, Inventory
+├── Combat/        DamageInfo, IDamageable
+├── Harvesting/    HarvestNodeSO, LootTableSO
+├── Crafting/      RecipeSO, RecipeBookSO, CraftingService
+├── Creatures/     CreatureDefinitionSO, TrophicTier, LocomotionType, BehaviorProfile
+├── Progression/   ObjectiveSO 및 구현체, ChapterSO, IObjectiveContext
+└── Narrative/     SequenceSO
+
+Assets/02.Scripts/                 ← Assembly-CSharp  (Feel·DOTween·Cinemachine 자유롭게 사용)
+├── Core/          GameBootstrap, SceneFlowService, SaveService
 ├── Input/         InputReaderSO, PlayerInputActions.inputactions
 ├── Player/        PlayerLocomotion, PlayerCameraRig, PlayerAnimatorDriver, PlayerToolHolder, PlayerContext
-├── Vitals/        VitalDefinitionSO, Vital, PlayerVitals, IOxygenModifier
-├── Inventory/     ItemDataSO, ToolItemSO, ConsumableItemSO, ItemDatabaseSO, ItemStack, Inventory, PlayerInventory
+├── Vitals/        PlayerVitals
+├── Inventory/     PlayerInventory
 ├── Interaction/   IInteractable, IHoldInteractable, PlayerInteractor, ItemPickup, LootContainer
-├── Harvesting/    HarvestNodeSO, HarvestNode, LootTableSO
-├── Combat/        IDamageable, DamageInfo, MeleeSwing, CreatureHealth, PlayerDamageReceiver
-├── Creatures/     CreatureDefinitionSO, CreatureBrain, FlyerMotor, 상태 클래스
-├── Crafting/      RecipeSO, RecipeBookSO, CraftingService, CraftingBench
+├── Harvesting/    HarvestNode
+├── Combat/        MeleeSwing, CreatureHealth, PlayerDamageReceiver
+├── Creatures/     CreatureBrain, FlyerMotor, 상태 클래스
+├── Crafting/      CraftingBench
 ├── World/         OxygenZone, HazardZone, PortalDevice, Checkpoint
-├── Progression/   ObjectiveSO 및 구현체, ChapterSO, ChapterDirector
-├── Narrative/     SequenceSO, SequenceDirector, ScreenFader
+├── Progression/   ChapterDirector
+├── Narrative/     SequenceDirector, ScreenFader
 ├── UI/            HUDController, VitalBarView, ScrapCounterView, InventoryUI, QuickSlotUI,
 │                  CraftingUI, ObjectiveListView, SubtitleView, PauseMenu, UIStateService,
 │                  ValueBarScript (기존)
@@ -815,7 +860,28 @@ Assets/09.Tests/
    단 하나의 예외: **W12는 `CvsUI.prefab`의 `PanelDialog` 하위만** 수정할 수 있다 (자막 구조 정리). W0이 `CvsUI` 단일화를 마친 뒤에 착수한다.
 3. 데이터 에셋(`.asset`)은 각 워크스트림이 자기 담당 폴더에만 만든다.
 4. 다른 시스템이 필요하면 **이벤트 채널이나 인터페이스로** 접근한다. 직접 참조 금지.
-5. **어셈블리는 하나다.** 이번 범위에서 `.asmdef`로 나누지 않는다. 따라서 폴더 경계는 컴파일 경계가 아니라 **소유권 규약**이다. 폴더 간 타입 참조 자체는 컴파일되지만, 규칙 1을 어기고 남의 폴더 파일을 고치면 충돌한다.
+5. **어셈블리는 두 계층이다 — 도메인과 거동.**
+
+   ```
+   Assets/02.Scripts/Domain/   →  Survive.Domain.asmdef   (순수 로직 + 데이터 SO + 인터페이스)
+   Assets/02.Scripts/<그 외>   →  Assembly-CSharp          (MonoBehaviour 전부)
+   ```
+
+   **`Domain`에 들어가는 것**: MonoBehaviour가 아니고, Feel·DOTween에 의존하지 않는 것 전부. `Vital`, `Inventory`, `ItemStack`, 아이템·레시피·전리품·목표·생물 정의 SO, `CraftingService`, `IDamageable`, `IOxygenModifier`, `ISaveable`, `EventChannelSO`, `GameServices`.
+
+   **`Assembly-CSharp`에 남는 것**: 모든 MonoBehaviour. Feel `MMF_Player`, DOTween 전체(Modules 포함), Cinemachine을 제약 없이 쓴다.
+
+   `Assembly-CSharp`는 모든 asmdef를 자동 참조하므로 의존은 **거동 → 도메인** 한 방향으로만 흐른다. 도메인은 거동을 모른다.
+
+   **왜 이렇게 나누는가** — 두 요구가 정면으로 부딪히기 때문이다:
+   - 테스트 어셈블리는 `Assembly-CSharp` 같은 사전 정의 어셈블리를 **참조할 수 없다.** asmdef가 없으면 11장의 EditMode 전략을 실행할 수 없다.
+   - 그런데 asmdef도 사전 정의 어셈블리를 참조할 수 없다. Feel의 **`MMFeedbacks`(`MMF_Player`)에는 asmdef가 없어 `Assembly-CSharp`에 속한다.** DOTween의 `Modules/*.cs`(`DOFade` 등 UI 확장)도 `Assembly-CSharp-firstpass`에 있다.
+
+   즉 게임플레이 코드를 통째로 asmdef에 넣으면 Feel을 쓸 수 없고, asmdef를 아예 안 쓰면 테스트를 못 한다. 순수 로직만 도메인으로 떼면 양쪽을 다 얻는다.
+
+   **`Survive.Domain.asmdef`가 참조할 어셈블리**: 없음(UnityEngine만). 데이터와 순수 로직뿐이므로 Cinemachine·InputSystem·Feel·DOTween 어느 것도 필요 없다.
+
+   **참고**: 제3자 자산(`Assets/Feel/`, `Assets/Plugins/Demigiant/`)에는 asmdef를 만들거나 고치지 않는다. Feel의 조건부 컴파일 구성을 건드리면 깨지기 쉽다.
 
 ### 워크스트림 간 계약
 
