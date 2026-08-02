@@ -20,10 +20,10 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
+  m_AmbientSkyColor: {r: 0.224, g: 0.24000001, b: 0.304, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
-  m_AmbientIntensity: 1
+  m_AmbientIntensity: 1.6
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
   m_SkyboxMaterial: {fileID: 2100000, guid: ee885b93b0125384ba74dd3e5f6e8459, type: 2}
@@ -5052,7 +5052,7 @@ Light:
   serializedVersion: 13
   m_Type: 1
   m_Color: {r: 0.5566038, g: 0.5566038, b: 0.5566038, a: 1}
-  m_Intensity: 0.3
+  m_Intensity: 0.56
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -69113,6 +69113,14 @@ PrefabInstance:
       propertyPath: oxygenRecoveredFeedback
       value: 
       objectReference: {fileID: 755826529}
+    - target: {fileID: 3917828094864583151, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
+      propertyPath: drainPerSecond
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3917828094864583151, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
+      propertyPath: batteryPerScrap
+      value: 25
+      objectReference: {fileID: 0}
     - target: {fileID: 3917828094864583151, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
       propertyPath: rechargeFeedback
       value: 

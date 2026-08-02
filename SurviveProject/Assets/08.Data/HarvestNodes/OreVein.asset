@@ -16,5 +16,6 @@ MonoBehaviour:
   requiredTool: 1
   requiredTier: 1
   baseDuration: 2.6
+  durability: 44
   drops: {fileID: 11400000, guid: c54d9b9bbfccd2d43a46b7e95ec3b882, type: 2}
   respawnSeconds: 0
