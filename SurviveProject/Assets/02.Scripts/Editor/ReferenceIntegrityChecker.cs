@@ -68,8 +68,11 @@ namespace Survive.EditorTools
             ["HarvestNode.visual"] = "Awake에서 자기 transform으로 대체",
             ["CreatureBrain.agent"] = "Awake에서 GetComponent로 대체",
             ["CreatureBrain.flyer"] = "지상 생물에는 없는 것이 정상. Awake에서 GetComponent로 대체",
-            ["CreatureHealth.pickupPrefab"] = "비우면 임시 큐브로 떨군다. B1에서 실제 프리팹으로 교체",
-            ["HarvestNode.dropPrefab"] = "비우면 발광하는 임시 큐브로 떨군다. B1에서 실제 프리팹으로 교체",
+            // 떨어진 아이템의 겉모습은 ItemDataSO.worldPrefab이 갖는다.
+            // 한 번에 여러 종류를 떨구는 경우 떨구는 쪽의 프리팹 하나로는 맞출 수 없다.
+            // 아래 둘은 특정 대상만 다르게 보이게 하고 싶을 때 쓰는 덮어쓰기 슬롯이다.
+            ["CreatureHealth.pickupPrefab"] = "비움이 기본. 아이템의 worldPrefab을 쓴다",
+            ["HarvestNode.dropPrefab"] = "비움이 기본. 아이템의 worldPrefab을 쓴다",
 
             // 구간의 마지막 포탈은 다음 씬이 없다. PortalDevice가 이 경우를 정상 종료로 다룬다.
             ["PortalDevice.destination"] = "챕터 2 씬이 아직 없다. 빈 값이 구간 종료를 뜻한다",

@@ -17,16 +17,22 @@ namespace Survive.Interaction
         /// <summary>
         /// <paramref name="origin"/>에서 아이템 하나를 튀어나오게 떨군다.
         /// </summary>
-        /// <param name="prefab">없으면 임시 큐브를 쓴다</param>
+        /// <param name="prefab">
+        /// 떨구는 쪽이 지정한 겉모습. 아이템 자신의 worldPrefab이 우선한다 —
+        /// 한 번에 여러 종류를 떨구는 경우 떨구는 쪽의 프리팹 하나로는 맞출 수 없다.
+        /// 둘 다 없으면 임시 큐브를 쓴다.
+        /// </param>
         public static GameObject Drop(ItemDataSO item, int count, Vector3 origin,
                                       GameObject prefab = null, float spread = 0.9f)
         {
             if (item == null || count <= 0) return null;
 
+            var visual = item.worldPrefab != null ? item.worldPrefab : prefab;
+
             GameObject go;
-            if (prefab != null)
+            if (visual != null)
             {
-                go = Object.Instantiate(prefab, origin, Random.rotation);
+                go = Object.Instantiate(visual, origin, Random.rotation);
             }
             else
             {

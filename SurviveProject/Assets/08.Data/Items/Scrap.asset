@@ -19,4 +19,4 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 7584a7bd5d1296547b87833e51878c20, type: 3}
   maxStack: 999
   category: 0
-  worldPrefab: {fileID: 0}
+  worldPrefab: {fileID: 7911299053319137575, guid: 070f27e427430bc4182350721660a720, type: 3}
