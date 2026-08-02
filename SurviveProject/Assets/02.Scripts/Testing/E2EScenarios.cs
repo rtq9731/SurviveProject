@@ -306,9 +306,10 @@ namespace Survive.Testing
             }
             E2EHarness.Assert(node.IsDepleted, "노드가 부서졌다");
 
-            // 떨어진 것이 착지할 때까지 기다린다
+            // 파편이 아직 날고 있을 때 멈춘다. 파티클 수명이 1초 남짓이라
+            // 착지까지 기다리면 정작 확인하려던 연출이 사라진 뒤다.
             float w = 0f;
-            while (w < 1.0f) { w += Time.deltaTime; yield return null; }
+            while (w < 0.3f) { w += Time.deltaTime; yield return null; }
 
             int drops = Object.FindObjectsByType<Survive.Interaction.ItemPickup>(FindObjectsSortMode.None)
                               .Count(p => p.name.StartsWith("Drop_"));

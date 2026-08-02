@@ -69,6 +69,7 @@ namespace Survive.EditorTools
             ["CreatureBrain.agent"] = "Awake에서 GetComponent로 대체",
             ["CreatureBrain.flyer"] = "지상 생물에는 없는 것이 정상. Awake에서 GetComponent로 대체",
             ["CreatureHealth.pickupPrefab"] = "비우면 임시 큐브로 떨군다. B1에서 실제 프리팹으로 교체",
+            ["HarvestNode.dropPrefab"] = "비우면 발광하는 임시 큐브로 떨군다. B1에서 실제 프리팹으로 교체",
 
             // 구간의 마지막 포탈은 다음 씬이 없다. PortalDevice가 이 경우를 정상 종료로 다룬다.
             ["PortalDevice.destination"] = "챕터 2 씬이 아직 없다. 빈 값이 구간 종료를 뜻한다",
