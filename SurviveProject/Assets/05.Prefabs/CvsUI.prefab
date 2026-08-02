@@ -305,7 +305,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &301521546494496579
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3435,7 +3435,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &5541994295797105757
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3504,7 +3504,7 @@ CanvasGroup:
   m_GameObject: {fileID: 4030085313995963334}
   m_Enabled: 1
   m_Alpha: 0
-  m_Interactable: 1
+  m_Interactable: 0
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
 --- !u!114 &6500176895255186940
@@ -3520,7 +3520,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Survive.UI.CraftingUI
   input: {fileID: 11400000, guid: 830cdc8999020854b95d9c0533137882, type: 2}
-  book: {fileID: 0}
+  book: {fileID: 11400000, guid: f5ff3962c89b3e343a943b8a9793bfb0, type: 2}
   panel: {fileID: 5541994295797105757}
   group: {fileID: 3042967436063906138}
   rowParent: {fileID: 3842960379255520747}

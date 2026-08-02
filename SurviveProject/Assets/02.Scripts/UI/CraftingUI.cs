@@ -36,7 +36,20 @@ namespace Survive.UI
 
         public bool IsOpen => _열림;
 
-        void Awake() => 즉시닫기();
+        void Awake()
+        {
+            // 여기서 gameObject.SetActive(false)를 하면 안 된다.
+            // 이 스크립트가 붙은 오브젝트를 끄면, Open()의 SetActive(true)가
+            // 이 Awake를 처음 깨우고 곧바로 다시 닫아버린다.
+            // 보이고 안 보이고는 CanvasGroup으로만 다룬다.
+            if (group != null)
+            {
+                group.alpha = 0f;
+                group.blocksRaycasts = false;
+                group.interactable = false;
+            }
+            _열림 = false;
+        }
 
         void OnEnable()
         {
@@ -151,12 +164,16 @@ namespace Survive.UI
             if (_열림) { 목록갱신(); return; }
 
             _열림 = true;
+
+            // 행이 아직 없으면 지금 만든다. 오브젝트가 꺼져 있어
+            // 연결대기 코루틴이 돌지 못했을 수 있다.
+            if (_rows.Count == 0) 행만들기();
             목록갱신();
 
-            if (panel != null) panel.gameObject.SetActive(true);
             if (group != null)
             {
                 group.blocksRaycasts = true;
+                group.interactable = true;
                 group.DOKill();
                 group.DOFade(1f, tweenSeconds);
             }
@@ -179,13 +196,10 @@ namespace Survive.UI
             if (group != null)
             {
                 group.blocksRaycasts = false;
+                group.interactable = false;
                 group.DOKill();
-                group.DOFade(0f, tweenSeconds).OnComplete(() =>
-                {
-                    if (panel != null) panel.gameObject.SetActive(false);
-                });
+                group.DOFade(0f, tweenSeconds);
             }
-            else 즉시닫기();
 
             조작잠금(false);
             if (GameServices.TryGet<UIStateService>(out var ui)) ui.NotifyClosed(this);
@@ -200,8 +214,10 @@ namespace Survive.UI
         void 즉시닫기()
         {
             _열림 = false;
-            if (group != null) { group.alpha = 0f; group.blocksRaycasts = false; }
-            if (panel != null) panel.gameObject.SetActive(false);
+            if (group == null) return;
+            group.alpha = 0f;
+            group.blocksRaycasts = false;
+            group.interactable = false;
         }
     }
 }
