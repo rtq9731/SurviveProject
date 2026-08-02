@@ -39,7 +39,7 @@ namespace Survive.UI
                 scrapCounter?.Bind(inventory);
             else Debug.LogWarning("[HUDController] PlayerInventory를 찾지 못했습니다.", this);
 
-            var interactor = Object.FindFirstObjectByType<PlayerInteractor>();
+            var interactor = UnityEngine.Object.FindFirstObjectByType<PlayerInteractor>(FindObjectsInactive.Exclude);
             if (interactor != null)
             {
                 interactor.PromptChanged += 프롬프트갱신;

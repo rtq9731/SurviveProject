@@ -60,7 +60,7 @@ namespace Survive.UI
                 _inventory.Inventory.Changed += 갱신;
                 갱신();
             }
-            _player = Object.FindFirstObjectByType<Survive.Player.PlayerContext>();
+            _player = UnityEngine.Object.FindFirstObjectByType<Survive.Player.PlayerContext>(FindObjectsInactive.Exclude);
         }
 
         /// <summary>
