@@ -29,6 +29,9 @@ namespace Survive.Harvesting
         bool _고갈됨;
         PlayerToolHolder _도구;
 
+        public HarvestNodeSO Definition => definition;
+        public bool IsDepleted => _고갈됨;
+
         void Awake()
         {
             if (visual == null) visual = gameObject;

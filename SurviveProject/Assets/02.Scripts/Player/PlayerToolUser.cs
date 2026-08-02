@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Survive.InputSystem;
+using Survive.Input;
 using Survive.Items;
 using Survive.World;
 

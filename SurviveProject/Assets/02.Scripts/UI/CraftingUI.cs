@@ -7,7 +7,7 @@ using DG.Tweening;
 using MoreMountains.Feedbacks;
 using Survive.Core;
 using Survive.Crafting;
-using Survive.InputSystem;
+using Survive.Input;
 using Survive.Items;
 
 namespace Survive.UI

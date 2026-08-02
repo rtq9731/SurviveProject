@@ -16,6 +16,7 @@ namespace Survive.Player
         public PlayerToolHolder ToolHolder { get; private set; }
         public PlayerVitals Vitals { get; private set; }
         public PlayerInventory Inventory { get; private set; }
+        public Survive.Interaction.PlayerInteractor Interactor { get; private set; }
         public Transform Transform { get; private set; }
 
         void Awake()
@@ -26,6 +27,7 @@ namespace Survive.Player
             ToolHolder = GetComponentInChildren<PlayerToolHolder>(true);
             Vitals = GetComponentInChildren<PlayerVitals>(true);
             Inventory = GetComponentInChildren<PlayerInventory>(true);
+            Interactor = GetComponentInChildren<Survive.Interaction.PlayerInteractor>(true);
         }
     }
 }

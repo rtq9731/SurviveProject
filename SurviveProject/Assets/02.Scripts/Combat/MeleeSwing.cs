@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using MoreMountains.Feedbacks;
-using Survive.InputSystem;
+using Survive.Input;
 using Survive.Player;
 
 namespace Survive.Combat

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Survive.Core;
-using Survive.InputSystem;
+using Survive.Input;
 
 namespace Survive.UI
 {

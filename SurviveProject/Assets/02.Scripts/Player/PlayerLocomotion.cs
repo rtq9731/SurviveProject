@@ -1,5 +1,5 @@
 using UnityEngine;
-using Survive.InputSystem;
+using Survive.Input;
 
 namespace Survive.Player
 {

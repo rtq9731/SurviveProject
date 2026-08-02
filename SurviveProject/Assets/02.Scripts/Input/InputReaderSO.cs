@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Survive.InputSystem
+namespace Survive.Input
 {
     /// <summary>
     /// 입력을 이벤트로 바꾸는 유일한 통로.

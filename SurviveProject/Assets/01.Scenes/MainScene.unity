@@ -15957,6 +15957,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 301521546494496579, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 301521546494496579, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 301521547292152580, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
       propertyPath: m_Name
       value: CvsUI
@@ -16059,7 +16067,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 301521547391049822, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -16
+      value: -26
       objectReference: {fileID: 0}
     - target: {fileID: 1205204071617377367, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
       propertyPath: m_AnchorMax.y

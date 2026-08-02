@@ -1,6 +1,6 @@
 using UnityEngine;
 using Survive.Core;
-using Survive.InputSystem;
+using Survive.Input;
 
 namespace Survive.Core
 {

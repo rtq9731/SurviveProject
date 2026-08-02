@@ -1,0 +1,105 @@
+using System;
+using System.Collections;
+using System.Diagnostics;
+using UnityEngine;
+using Debug = UnityEngine.Debug;
+
+namespace Survive.Testing
+{
+    /// <summary>
+    /// 시나리오를 실행하고 결과를 남긴다.
+    ///
+    /// uloop는 요청-응답 모델이라 코루틴이 끝날 때까지 기다릴 수 없다.
+    /// 그래서 시작만 시키고 <see cref="Status"/>를 폴링해 결과를 받는다.
+    /// </summary>
+    public class E2ERunner : MonoBehaviour
+    {
+        public enum RunStatus { Idle, Running, Passed, Failed }
+
+        public static E2ERunner Instance { get; private set; }
+
+        public static RunStatus Status { get; private set; } = RunStatus.Idle;
+        public static string ScenarioName { get; private set; } = "";
+        public static string FailReason { get; private set; } = "";
+        public static float ElapsedSeconds { get; private set; }
+
+        void Awake()
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+
+        /// <summary>씬에 러너가 없으면 만든다.</summary>
+        public static E2ERunner 준비()
+        {
+            if (Instance != null) return Instance;
+            var go = new GameObject("E2ERunner");
+            return go.AddComponent<E2ERunner>();
+        }
+
+        public static void 실행(string name, IEnumerator 시나리오)
+        {
+            var runner = 준비();
+            runner.StopAllCoroutines();
+            runner.StartCoroutine(runner.감싸기(name, 시나리오));
+        }
+
+        IEnumerator 감싸기(string name, IEnumerator 시나리오)
+        {
+            E2EHarness.로그비우기();
+            ScenarioName = name;
+            FailReason = "";
+            Status = RunStatus.Running;
+            ElapsedSeconds = 0f;
+
+            var sw = Stopwatch.StartNew();
+            E2EHarness.기록("=== " + name + " 시작 ===");
+
+            // 코루틴 안에서 던진 예외는 바깥에서 try/catch로 못 잡는다.
+            // 한 단계씩 직접 굴리면서 잡는다.
+            var stack = new System.Collections.Generic.Stack<IEnumerator>();
+            stack.Push(시나리오);
+
+            while (stack.Count > 0)
+            {
+                var top = stack.Peek();
+                object current = null;
+                bool 계속;
+
+                try
+                {
+                    계속 = top.MoveNext();
+                    if (계속) current = top.Current;
+                }
+                catch (Exception e)
+                {
+                    sw.Stop();
+                    ElapsedSeconds = (float)sw.Elapsed.TotalSeconds;
+                    FailReason = e.Message;
+                    Status = RunStatus.Failed;
+                    E2EHarness.기록("실패: " + e.Message);
+                    E2EHarness.기록($"=== {name} 실패 ({ElapsedSeconds:F1}초) ===");
+                    yield break;
+                }
+
+                if (!계속) { stack.Pop(); continue; }
+
+                if (current is IEnumerator 안쪽) stack.Push(안쪽);
+                else yield return current;
+            }
+
+            sw.Stop();
+            ElapsedSeconds = (float)sw.Elapsed.TotalSeconds;
+            Status = RunStatus.Passed;
+            E2EHarness.기록($"=== {name} 통과 ({ElapsedSeconds:F1}초) ===");
+        }
+
+        /// <summary>uloop에서 폴링할 한 줄 요약.</summary>
+        public static string 요약()
+        {
+            return $"{ScenarioName} | {Status}" +
+                   (Status == RunStatus.Failed ? " | " + FailReason : "") +
+                   $" | {ElapsedSeconds:F1}초";
+        }
+    }
+}
