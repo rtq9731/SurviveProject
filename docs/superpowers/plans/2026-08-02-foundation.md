@@ -10,6 +10,8 @@
 
 **설계 문서:** `docs/superpowers/specs/2026-08-02-prologue-chapter1-design.md`
 
+**상태: 완료** — 커밋 `9954fea` 기준.
+
 ---
 
 ## Global Constraints
