@@ -1,7 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Cinemachine;
+// Cinemachine 3.x에서 네임스페이스가 Cinemachine -> Unity.Cinemachine 으로 바뀌었다.
+// CinemachineVirtualCamera는 Unity.Cinemachine 아래에 [Obsolete] 호환 클래스로 남아 있어
+// 씬의 CM vcam1이 그대로 동작한다. 신규 카메라 연출은 CinemachineCamera + Impulse를 쓴다.
+using Unity.Cinemachine;
 
 public class CameraShake : MonoBehaviour
 {
