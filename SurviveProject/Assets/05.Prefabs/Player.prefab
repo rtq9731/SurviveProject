@@ -1024,6 +1024,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1782702501690864755, guid: 60770bdb4dc667c45bea53db0339dc05, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4383533825690385689}
+    - targetCorrespondingSourceObject: {fileID: 1782702501690864755, guid: 60770bdb4dc667c45bea53db0339dc05, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4915590162468517264}
   m_SourcePrefab: {fileID: 100100000, guid: 60770bdb4dc667c45bea53db0339dc05, type: 3}
 --- !u!4 &952630379500360950 stripped
 Transform:
@@ -1095,11 +1098,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Survive.Player.PlayerLocomotion
   input: {fileID: 11400000, guid: 830cdc8999020854b95d9c0533137882, type: 2}
+  swimming: {fileID: 4915590162468517264}
+  cameraRig: {fileID: 467273639891446055}
   walkSpeed: 5
   runSpeed: 7
   gravityScale: 1
   jumpPower: 2
   jumpCooldown: 1
+  swimSpeed: 3.2
+  swimVerticalSpeed: 2.6
+  buoyancy: 0.9
+  wadeSpeedFactor: 0.55
 --- !u!114 &467273639891446055
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1244,10 +1253,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1530df31e3e739145a7a05748494c39d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Survive.World.SubmergedOxygenDrain
-  headPoint: {fileID: 4160890879938104255}
-  waterMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
+  swimming: {fileID: 4915590162468517264}
   drainPerSecond: 6
   refillPerSecond: 20
 --- !u!114 &4383533825690385689
@@ -1266,3 +1272,21 @@ MonoBehaviour:
   holder: {fileID: 2546311439467589279}
   inventory: {fileID: 1330457528169490069}
   lantern: {fileID: 3917828094864583151}
+--- !u!114 &4915590162468517264
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8852171523659162985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74d26adecbb19aa488f8d9d2a51ed1c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Survive.Player.PlayerSwimming
+  swimDepth: 1.15
+  wadeDepth: 0.35
+  headPoint: {fileID: 4160890879938104255}
+  enterFeedback: {fileID: 0}
+  exitFeedback: {fileID: 0}
+  submergeFeedback: {fileID: 0}

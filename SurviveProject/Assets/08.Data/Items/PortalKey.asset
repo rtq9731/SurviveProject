@@ -15,7 +15,7 @@ MonoBehaviour:
   id: portal_key
   displayName: "\uD3EC\uD0C8 \uAE30\uB3D9 \uD0A4"
   description: "\uC678\uACC4 \uAD6C\uC870\uBB3C\uC744 \uAE68\uC6B0\uB294 \uC7A5\uCE58."
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 80e536135c588544ebe7c9cbd7688a9b, type: 3}
   maxStack: 1
   category: 3
   worldPrefab: {fileID: 0}

@@ -51,7 +51,9 @@ namespace Survive.Harvesting
             get
             {
                 if (definition == null || _고갈됨) return "";
-                if (도구충족(장착도구)) return $"[E] {definition.displayName} 채집";
+                // 홀드형이므로 프롬프트에서 그 사실이 드러나야 한다.
+                // "[E]"만 쓰면 탭으로 오해한다.
+                if (도구충족(장착도구)) return $"[E] 길게 눌러 {definition.displayName} 채집";
                 return $"{definition.displayName} — {도구이름(definition.requiredTool)} 필요";
             }
         }

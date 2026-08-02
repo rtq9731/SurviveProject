@@ -42,6 +42,14 @@ namespace Survive.UI
 
         void OnDisable()
         {
+            // 일시정지 중에 플레이 모드를 멈추면 timeScale이 0인 채로 남는다.
+            // 정적 상태라 다음 실행까지 따라와 게임이 얼어붙는다. 반드시 되돌린다.
+            if (IsPaused)
+            {
+                IsPaused = false;
+                Time.timeScale = 1f;
+            }
+
             GameServices.Unregister<UIStateService>();
             if (input == null) return;
             input.PauseEvent -= OnEscape;
