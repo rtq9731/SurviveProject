@@ -71,6 +71,7 @@ namespace Survive.EditorTools
             // 떨어진 아이템의 겉모습은 ItemDataSO.worldPrefab이 갖는다.
             // 한 번에 여러 종류를 떨구는 경우 떨구는 쪽의 프리팹 하나로는 맞출 수 없다.
             // 아래 둘은 특정 대상만 다르게 보이게 하고 싶을 때 쓰는 덮어쓰기 슬롯이다.
+            ["ItemPickup.item"] = "떨구는 프리팹은 비어 있는 게 맞다. ItemDropper가 런타임에 Setup으로 채운다",
             ["CreatureHealth.pickupPrefab"] = "비움이 기본. 아이템의 worldPrefab을 쓴다",
             ["HarvestNode.dropPrefab"] = "비움이 기본. 아이템의 worldPrefab을 쓴다",
 
