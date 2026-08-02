@@ -272,6 +272,60 @@ namespace Survive.Testing
             Time.timeScale = 1f;
         }
 
+        /// <summary>
+        /// 곡괭이로 부수고, 떨어진 것이 바닥에 남은 상태에서 시간을 멈춘다.
+        /// 밖에서 화면을 찍어 "부서지고 떨어졌다"가 실제로 보이는지 확인한다.
+        /// </summary>
+        public static IEnumerator BreakFreeze()
+        {
+            var db = E2EHarness.Player.Inventory.Database;
+            var pickaxe = db != null ? db.GetById("pickaxe") : null;
+            E2EHarness.Assert(pickaxe != null, "곡괭이 정의를 찾았다");
+
+            E2EHarness.Player.Inventory.Inventory.TryAdd(pickaxe, 1);
+            var user = E2EHarness.Player.GetComponent<Survive.Player.PlayerToolUser>();
+            E2EHarness.Assert(user != null && user.EquipFirst("pickaxe"), "곡괭이를 장착했다");
+            yield return null;
+
+            var node = Object.FindObjectsByType<HarvestNode>(FindObjectsSortMode.None)
+                             .FirstOrDefault(h => !h.IsDepleted && h.IsBreakable);
+            E2EHarness.Assert(node != null, "부술 수 있는 노드가 있다");
+
+            var cam = E2EHarness.Eye;
+            node.transform.position = cam.transform.position + cam.transform.forward * 2.2f;
+            yield return null;
+            E2EHarness.LookAt(node.transform.position);
+            yield return null;
+            yield return null;
+
+            for (int swing = 0; swing < 25 && !node.IsDepleted; swing++)
+            {
+                yield return E2EHarness.ClickAttack();
+                float t = 0f;
+                while (t < 0.35f && !node.IsDepleted) { t += Time.deltaTime; yield return null; }
+            }
+            E2EHarness.Assert(node.IsDepleted, "노드가 부서졌다");
+
+            // 떨어진 것이 착지할 때까지 기다린다
+            float w = 0f;
+            while (w < 1.0f) { w += Time.deltaTime; yield return null; }
+
+            int drops = Object.FindObjectsByType<Survive.Interaction.ItemPickup>(FindObjectsSortMode.None)
+                              .Count(p => p.name.StartsWith("Drop_"));
+            E2EHarness.Assert(drops > 0, $"바닥에 떨어진 것이 있다 ({drops}개)");
+
+            // 떨어진 것 하나를 바라본 채로 멈춘다
+            var one = Object.FindObjectsByType<Survive.Interaction.ItemPickup>(FindObjectsSortMode.None)
+                            .FirstOrDefault(p => p.name.StartsWith("Drop_"));
+            if (one != null) E2EHarness.LookAt(one.transform.position);
+            yield return null;
+            yield return null;
+
+            Time.timeScale = 0f;
+            _frozen = true;
+            while (_frozen) yield return null;
+        }
+
         /// <summary>목표 1의 트리거까지 실제로 걸어가는 것만 따로 본다.</summary>
         public static IEnumerator WalkToTrigger()
         {

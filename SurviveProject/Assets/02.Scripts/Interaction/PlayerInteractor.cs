@@ -90,9 +90,16 @@ namespace Survive.Interaction
                 Current = found;
             }
 
+            // 상호작용할 수 없어도 프롬프트는 보여준다.
+            // "곡괭이가 필요하다" / "좌클릭으로 부순다" 같은 안내가 그렇다 —
+            // 아무것도 안 뜨면 대상이 아예 인식되지 않은 것으로 오해한다.
+            // CanInteract는 대상이 플레이어 상태를 읽어 프롬프트를 만들 수 있게 먼저 부른다.
             string prompt = null;
-            if (Current != null && Current.CanInteract(_player))
+            if (Current != null)
+            {
+                Current.CanInteract(_player);
                 prompt = Current.InteractionPrompt;
+            }
 
             if (prompt != _lastPrompt)
             {

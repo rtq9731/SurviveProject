@@ -17,6 +17,10 @@ namespace Survive.Harvesting
         [Tooltip("맨손 기준 채집 시간. 실제 = base / 도구의 harvestPower")]
         [Min(0.1f)] public float baseDuration = 2f;
 
+        [Tooltip("도구가 필요한 노드는 눌러서 캐지 않고 때려서 부순다. " +
+                 "이 값이 내구도이며, 도구 damage로 깎는다")]
+        [Min(1f)] public float durability = 12f;
+
         public LootTableSO drops;
 
         [Tooltip("0이면 재생성하지 않는다")]

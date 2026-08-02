@@ -70,25 +70,11 @@ namespace Survive.Combat
                 if (added > 0) loot.Add(new Survive.Items.ItemStack(_scrapItem, added));
             }
 
+            // 떨구는 방식은 채집물 파괴와 같아야 한다. ItemDropper에 모아 두었다.
+            var origin = transform.position + Vector3.up * 0.3f;
             foreach (var stack in loot)
-            {
-                GameObject go;
-                if (pickupPrefab != null)
-                {
-                    go = Instantiate(pickupPrefab, transform.position + Vector3.up * 0.3f, Quaternion.identity);
-                }
-                else
-                {
-                    go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                    go.transform.localScale = Vector3.one * 0.3f;
-                    go.transform.position = transform.position + Vector3.up * 0.3f;
-                }
-                go.name = "Drop_" + stack.item.id;
-
-                var pickup = go.GetComponent<ItemPickup>();
-                if (pickup == null) pickup = go.AddComponent<ItemPickup>();
-                pickup.Setup(stack.item, stack.count);
-            }
+                for (int i = 0; i < stack.count; i++)
+                    ItemDropper.Drop(stack.item, 1, origin, pickupPrefab);
         }
     }
 }

@@ -127,12 +127,51 @@ namespace Survive.Testing
         /// <summary>현재 키 상태를 큐에 넣는다. 처리는 Unity의 정상 업데이트에 맡긴다.</summary>
         public static void QueueKeys() => InputSystem.QueueStateEvent(Device, _keys);
 
-        /// <summary>시나리오가 끝나면 가상 키보드를 치운다.</summary>
+        // ── 가상 마우스 ──────────────────────────────────────────
+        // 공격은 좌클릭에 묶여 있다. 키보드만으로는 곡괭이를 휘두를 수 없어
+        // 마우스도 같은 방식으로 만든다.
+
+        static Mouse _mouse;
+        static MouseState _mouseState;
+
+        static Mouse MouseDevice
+        {
+            get
+            {
+                if (_mouse == null || !_mouse.added)
+                    _mouse = InputSystem.AddDevice<Mouse>("E2EMouse");
+                return _mouse;
+            }
+        }
+
+        static void QueueMouse() => InputSystem.QueueStateEvent(MouseDevice, _mouseState);
+
+        /// <summary>좌클릭 한 번. 공격은 눌린 순간에 발동한다.</summary>
+        public static IEnumerator ClickAttack()
+        {
+            _mouseState.WithButton(MouseButton.Left, true);
+            QueueMouse();
+            yield return null;
+            QueueMouse();
+            yield return null;
+
+            _mouseState.WithButton(MouseButton.Left, false);
+            QueueMouse();
+            yield return null;
+            QueueMouse();
+            yield return null;
+        }
+
+        /// <summary>시나리오가 끝나면 가상 입력 장치를 치운다.</summary>
         public static void RemoveDevice()
         {
             if (_device != null && _device.added) InputSystem.RemoveDevice(_device);
             _device = null;
             _keys = new KeyboardState();
+
+            if (_mouse != null && _mouse.added) InputSystem.RemoveDevice(_mouse);
+            _mouse = null;
+            _mouseState = new MouseState();
         }
 
         static IEnumerator SendKeyState()

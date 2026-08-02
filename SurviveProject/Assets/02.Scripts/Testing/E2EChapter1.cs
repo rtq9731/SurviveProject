@@ -210,11 +210,77 @@ namespace Survive.Testing
                     continue;
                 }
 
-                yield return E2EHarness.HoldKey(Key.E, node.HoldDuration + 0.35f);
+                if (node.IsBreakable) yield return BreakNode(node);
+                else yield return E2EHarness.HoldKey(Key.E, node.HoldDuration + 0.35f);
+
                 yield return null;
             }
 
             if (!IsDone()) E2EHarness.Log("  채집 반복이 목표에 못 미쳤다");
+        }
+
+        /// <summary>
+        /// 도구가 필요한 노드를 때려서 부수고, 바닥에 떨어진 것을 주워 온다.
+        /// 부수는 것과 줍는 것은 별개의 동작이라 둘 다 실제로 해야 검증이 된다.
+        /// </summary>
+        static IEnumerator BreakNode(HarvestNode node)
+        {
+            E2EHarness.Log($"  {node.name}을(를) 때려서 부순다 (내구도 {node.Definition.durability})");
+
+            for (int swing = 0; swing < 25 && !node.IsDepleted; swing++)
+            {
+                yield return E2EHarness.ClickAttack();
+
+                // 도구 쿨다운을 기다린다. 너무 빨리 누르면 무시된다.
+                float t = 0f;
+                while (t < 0.35f && !node.IsDepleted) { t += Time.deltaTime; yield return null; }
+            }
+
+            if (!node.IsDepleted)
+            {
+                E2EHarness.Log("  부수지 못했다: " + node.name);
+                yield break;
+            }
+
+            E2EHarness.Log("  부서졌다. 떨어진 것을 줍는다");
+            yield return PickUpNearbyDrops();
+        }
+
+        /// <summary>바닥에 떨어진 아이템을 하나씩 조준해서 줍는다.</summary>
+        static IEnumerator PickUpNearbyDrops()
+        {
+            // 떨어진 것이 착지할 시간을 준다
+            float wait = 0f;
+            while (wait < 0.7f) { wait += Time.deltaTime; yield return null; }
+
+            var cam = E2EHarness.Eye;
+            var it = E2EHarness.Player.Interactor;
+
+            for (int n = 0; n < 12; n++)
+            {
+                var drop = Object.FindObjectsByType<ItemPickup>(FindObjectsSortMode.None)
+                    .FirstOrDefault(p => p.name.StartsWith("Drop_") &&
+                                         Vector3.Distance(p.transform.position,
+                                                          E2EHarness.Player.transform.position) < 12f);
+                if (drop == null) yield break;
+
+                // 조준 경로만 확인하면 되므로 눈앞으로 옮긴다. 줍는 동작은 그대로 한다.
+                drop.transform.position = cam.transform.position + cam.transform.forward * 1.8f;
+                yield return null;
+                E2EHarness.LookAt(drop.transform.position);
+                yield return null;
+                yield return null;
+
+                for (int f = 0; f < 10 && it.Current == null; f++) yield return null;
+                if (it.Current == null)
+                {
+                    E2EHarness.Log("  떨어진 것을 조준하지 못했다: " + drop.name);
+                    yield break;
+                }
+
+                yield return E2EHarness.TapKey(Key.E);
+                yield return null;
+            }
         }
 
         /// <summary>
