@@ -80,6 +80,8 @@ namespace Survive.Testing
                     E2EHarness.Log("실패: " + e.Message);
                     E2EHarness.Log($"=== {name} 실패 ({ElapsedSeconds:F1}초) ===");
                     E2EHarness.RemoveDevice();
+            // 시나리오가 시간을 멈춘 채 끝나면 다음 실행이 얼어붙는다. 되돌린다.
+            Time.timeScale = 1f;
                     yield break;
                 }
 
@@ -94,6 +96,8 @@ namespace Survive.Testing
             Status = RunStatus.Passed;
             E2EHarness.Log($"=== {name} 통과 ({ElapsedSeconds:F1}초) ===");
             E2EHarness.RemoveDevice();
+            // 시나리오가 시간을 멈춘 채 끝나면 다음 실행이 얼어붙는다. 되돌린다.
+            Time.timeScale = 1f;
         }
 
         /// <summary>uloop에서 폴링할 한 줄 요약.</summary>

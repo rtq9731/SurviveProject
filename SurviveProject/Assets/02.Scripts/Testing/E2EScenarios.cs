@@ -156,6 +156,122 @@ namespace Survive.Testing
             E2EHarness.Assert(total > 20f, $"10초에 20m 이상 걸었다 (실제 {total:F1}m)");
         }
 
+        /// <summary>
+        /// 홀드 게이지가 <b>화면에</b> 나타나는지 본다.
+        /// 이벤트가 오는 것과 눈에 보이는 것은 다른 문제다 —
+        /// 이벤트 검증만 통과시켜 놓고 정작 안 보이는 상태로 두 번 넘어갔다.
+        /// </summary>
+        public static IEnumerator HoldGauge()
+        {
+            var node = Object.FindObjectsByType<HarvestNode>(FindObjectsSortMode.None)
+                             .FirstOrDefault(h => !h.IsDepleted && h.Definition != null &&
+                                                  h.Definition.requiredTool == ToolType.None);
+            E2EHarness.Assert(node != null, "맨손 채집 노드가 있다");
+
+            var view = Object.FindFirstObjectByType<Survive.UI.HoldProgressView>(FindObjectsInactive.Include);
+            E2EHarness.Assert(view != null, "HoldProgressView가 씬에 있다");
+
+            var group = view.GetComponent<CanvasGroup>();
+            var fill = view.GetComponentsInChildren<UnityEngine.UI.Image>(true)
+                           .FirstOrDefault(i => i.type == UnityEngine.UI.Image.Type.Filled);
+            E2EHarness.Assert(group != null, "CanvasGroup이 있다");
+            E2EHarness.Assert(fill != null, "Filled 이미지가 있다");
+
+            var cam = E2EHarness.Eye;
+            node.transform.position = cam.transform.position + cam.transform.forward * 2.2f;
+            yield return null;
+            E2EHarness.LookAt(node.transform.position);
+            yield return null;
+            yield return null;
+
+            var it = E2EHarness.Player.Interactor;
+            yield return E2EHarness.WaitUntil(() => it.Current != null, "노드가 탐지된다", 3f);
+
+            float maxAlpha = 0f, maxFill = 0f;
+            bool holding = true;
+
+            E2EHarness.Log($"  홀드 전: alpha={group.alpha:F2} fill={fill.fillAmount:F2}");
+
+            // 홀드하면서 매 프레임 화면 값을 본다
+            E2EHarness.Player.StartCoroutine(Sample());
+            IEnumerator Sample()
+            {
+                while (holding)
+                {
+                    if (group.alpha > maxAlpha) maxAlpha = group.alpha;
+                    if (fill.fillAmount > maxFill) maxFill = fill.fillAmount;
+                    yield return null;
+                }
+            }
+
+            yield return E2EHarness.HoldKey(Key.E, node.HoldDuration * 0.8f);
+            holding = false;
+            yield return null;
+
+            E2EHarness.Log($"  홀드 중 최대: alpha={maxAlpha:F2} fill={maxFill:F2}");
+            E2EHarness.Assert(maxAlpha > 0.5f, $"게이지가 화면에 나타난다 (최대 alpha {maxAlpha:F2})");
+            E2EHarness.Assert(maxFill > 0.3f, $"게이지가 차오른다 (최대 fill {maxFill:F2})");
+
+            yield return E2EHarness.ReleaseAllKeys();
+        }
+
+        /// <summary>
+        /// 홀드 중간에 시간을 멈춘다. 밖에서 화면을 찍어 눈으로 확인하기 위한 것이다.
+        /// 값이 맞는 것과 보기 좋은 것은 다르고, 후자는 사람이 봐야 안다.
+        /// </summary>
+        public static IEnumerator HoldGaugeFreeze()
+        {
+            var node = Object.FindObjectsByType<HarvestNode>(FindObjectsSortMode.None)
+                             .FirstOrDefault(h => !h.IsDepleted && h.Definition != null &&
+                                                  h.Definition.requiredTool == ToolType.None);
+            E2EHarness.Assert(node != null, "맨손 채집 노드가 있다");
+
+            var cam = E2EHarness.Eye;
+            node.transform.position = cam.transform.position + cam.transform.forward * 2.2f;
+            yield return null;
+            E2EHarness.LookAt(node.transform.position);
+            yield return null;
+            yield return null;
+
+            var it = E2EHarness.Player.Interactor;
+            yield return E2EHarness.WaitUntil(() => it.Current != null, "노드가 탐지된다", 3f);
+
+            yield return E2EHarness.PressKey(Key.E);
+
+            float t = 0f;
+            float half = node.HoldDuration * 0.5f;
+            while (t < half)
+            {
+                E2EHarness.QueueKeys();
+                t += Time.deltaTime;
+                yield return null;
+            }
+
+            Time.timeScale = 0f;
+            E2EHarness.Log("  진행 약 50%에서 정지. 확인 후 E2EScenarios.Resume()을 부른다");
+
+            // 여기서 끝내면 안 된다. 시나리오가 끝나는 순간 러너가 가상 키보드를
+            // 치우고, 그러면 E가 떨어져 홀드가 취소되면서 게이지가 사라진다.
+            // 사람이 화면을 볼 때까지 키를 누른 채로 기다린다.
+            _frozen = true;
+            while (_frozen)
+            {
+                E2EHarness.QueueKeys();
+                yield return null;
+            }
+
+            yield return E2EHarness.ReleaseAllKeys();
+        }
+
+        static bool _frozen;
+
+        /// <summary>HoldGaugeFreeze가 멈춘 시간을 되돌린다.</summary>
+        public static void Resume()
+        {
+            _frozen = false;
+            Time.timeScale = 1f;
+        }
+
         /// <summary>목표 1의 트리거까지 실제로 걸어가는 것만 따로 본다.</summary>
         public static IEnumerator WalkToTrigger()
         {
