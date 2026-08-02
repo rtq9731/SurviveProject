@@ -17,7 +17,7 @@ namespace Survive.UI
     /// 기존 씬에 제작 UI 레이아웃이 없어서 재활용할 것이 없다.
     /// </summary>
     [DisallowMultipleComponent]
-    public class CraftingUI : MonoBehaviour
+    public class CraftingUI : MonoBehaviour, IClosablePanel
     {
         [SerializeField] InputReaderSO input;
         [SerializeField] RecipeBookSO book;
@@ -40,13 +40,9 @@ namespace Survive.UI
 
         void OnEnable()
         {
-            if (input != null) input.CancelEvent += Close;
+            // ESC 처리는 UIStateService가 전담한다. 여기서 따로 듣지 않는다 —
+            // 패널마다 각자 들으면 닫히는 것과 안 닫히는 것이 생긴다.
             StartCoroutine(연결대기());
-        }
-
-        void OnDisable()
-        {
-            if (input != null) input.CancelEvent -= Close;
         }
 
         IEnumerator 연결대기()
@@ -172,6 +168,7 @@ namespace Survive.UI
             }
 
             조작잠금(true);
+            if (GameServices.TryGet<UIStateService>(out var ui)) ui.NotifyOpened(this);
         }
 
         public void Close()
@@ -191,6 +188,7 @@ namespace Survive.UI
             else 즉시닫기();
 
             조작잠금(false);
+            if (GameServices.TryGet<UIStateService>(out var ui)) ui.NotifyClosed(this);
         }
 
         void 조작잠금(bool 잠글까)

@@ -23,6 +23,9 @@ namespace Survive.Combat
         [Tooltip("전리품을 떨굴 때 쓸 프리팹. 비우면 ItemPickup 오브젝트를 즉석에서 만든다")]
         [SerializeField] GameObject pickupPrefab;
 
+        [Tooltip("축적한 스크랩을 떨굴 때 쓸 아이템. 보통 scrap")]
+        [SerializeField] ItemDataSO _scrapItem;
+
         float _체력;
 
         public CreatureDefinitionSO Definition => definition;
@@ -57,6 +60,16 @@ namespace Survive.Combat
             if (definition?.drops == null) return;
 
             var 전리품 = definition.drops.Roll(new System.Random());
+
+            // 생산자가 먹어서 축적한 스크랩을 더한다.
+            // 배부른 개체를 노리면 더 얻는다 — 관찰에 대한 보상이다.
+            var feeding = GetComponent<Survive.Creatures.CreatureFeeding>();
+            if (feeding != null && feeding.Stored > 0f && _scrapItem != null)
+            {
+                int 추가 = Mathf.RoundToInt(feeding.Stored);
+                if (추가 > 0) 전리품.Add(new Survive.Items.ItemStack(_scrapItem, 추가));
+            }
+
             foreach (var stack in 전리품)
             {
                 GameObject go;

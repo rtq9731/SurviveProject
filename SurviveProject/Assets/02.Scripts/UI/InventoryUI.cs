@@ -13,7 +13,7 @@ namespace Survive.UI
     /// 슬롯 오브젝트는 이미 씬에 있으므로 생성하지 않고 찾아 쓴다.
     /// </summary>
     [DisallowMultipleComponent]
-    public class InventoryUI : MonoBehaviour
+    public class InventoryUI : MonoBehaviour, IClosablePanel
     {
         [SerializeField] InputReaderSO input;
         [SerializeField] RectTransform panel;
@@ -110,6 +110,7 @@ namespace Survive.UI
             }
 
             조작잠금(true);
+            if (GameServices.TryGet<UIStateService>(out var ui)) ui.NotifyOpened(this);
         }
 
         public void Close()
@@ -129,6 +130,7 @@ namespace Survive.UI
             else 즉시닫기();
 
             조작잠금(false);
+            if (GameServices.TryGet<UIStateService>(out var ui)) ui.NotifyClosed(this);
         }
 
         void 즉시닫기()

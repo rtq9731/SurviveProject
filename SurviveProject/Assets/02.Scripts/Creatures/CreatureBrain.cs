@@ -13,7 +13,7 @@ namespace Survive.Creatures
     [RequireComponent(typeof(CreatureHealth))]
     public class CreatureBrain : MonoBehaviour
     {
-        enum State { Idle, Wander, Flee, Chase, Attack, Dead }
+        enum State { Idle, Wander, Flee, Chase, Attack, Feed, Scavenge, Dead }
 
         [SerializeField] CreatureDefinitionSO definition;
         [SerializeField] NavMeshAgent agent;
@@ -26,6 +26,8 @@ namespace Survive.Creatures
         [SerializeField] float fleeDistance = 12f;
 
         CreatureHealth _health;
+        CreatureFeeding _feeding;
+        ScavengerBehavior _scavenger;
         Transform _player;
         State _상태 = State.Idle;
         float _상태타이머;
@@ -41,6 +43,9 @@ namespace Survive.Creatures
             if (agent == null) agent = GetComponent<NavMeshAgent>();
             if (flyer == null) flyer = GetComponent<FlyerMotor>();
             _시작위치 = transform.position;
+
+            _feeding = GetComponent<CreatureFeeding>();
+            _scavenger = GetComponent<ScavengerBehavior>();
 
             if (agent != null && definition != null) agent.speed = definition.moveSpeed;
             if (flyer != null && definition != null) flyer.Speed = definition.moveSpeed;
@@ -109,19 +114,18 @@ namespace Survive.Creatures
             switch (definition.behavior)
             {
                 case BehaviorProfile.Passive:
-                    if (_상태 != State.Wander && _상태타이머 <= 0f) 전환(State.Wander);
+                    if (_상태타이머 <= 0f) 전환(생태행동());
                     break;
 
                 case BehaviorProfile.Skittish:
                     if (감지됨) 전환(State.Flee);
-                    else if (_상태 == State.Flee && _상태타이머 <= 0f) 전환(State.Wander);
-                    else if (_상태 != State.Flee && _상태타이머 <= 0f) 전환(State.Wander);
+                    else if (_상태타이머 <= 0f) 전환(생태행동());
                     break;
 
                 case BehaviorProfile.Defensive:
                     if (_어그로남은시간 > 0f)
                         전환(거리 <= definition.attackRange ? State.Attack : State.Chase);
-                    else if (_상태타이머 <= 0f) 전환(State.Wander);
+                    else if (_상태타이머 <= 0f) 전환(생태행동());
                     break;
 
                 case BehaviorProfile.Aggressive:
@@ -130,6 +134,25 @@ namespace Survive.Creatures
                     else if (_상태타이머 <= 0f) 전환(State.Wander);
                     break;
             }
+        }
+
+        /// <summary>
+        /// 위협이 없을 때 무엇을 할지. 생산자는 먹으러, 분해자는 주우러 간다.
+        /// 할 일이 없으면 배회한다.
+        /// </summary>
+        State 생태행동()
+        {
+            if (_feeding != null && _feeding.TryGetFeedTarget(out var food))
+            {
+                _목표지점 = food;
+                return State.Feed;
+            }
+            if (_scavenger != null && _scavenger.TryGetScavengeTarget(out var junk))
+            {
+                _목표지점 = junk;
+                return State.Scavenge;
+            }
+            return State.Wander;
         }
 
         void 전환(State 새상태)
@@ -143,6 +166,12 @@ namespace Survive.Creatures
                     _목표지점 = _시작위치 + Random.insideUnitSphere * wanderRadius;
                     _목표지점.y = _시작위치.y;
                     _상태타이머 = Random.Range(2f, 4f);
+                    break;
+
+                case State.Feed:
+                case State.Scavenge:
+                    // 목표는 생태행동()에서 이미 잡았다
+                    _상태타이머 = 1.5f;
                     break;
 
                 case State.Flee:
@@ -167,6 +196,8 @@ namespace Survive.Creatures
             {
                 case State.Wander:
                 case State.Flee:
+                case State.Feed:
+                case State.Scavenge:
                     이동(_목표지점);
                     break;
 

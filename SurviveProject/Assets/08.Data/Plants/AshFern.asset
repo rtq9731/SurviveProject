@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec3c11e0829e08e42a299d34022197c3, type: 3}
+  m_Name: AshFern
+  m_EditorClassIdentifier: Survive.Domain::Survive.Harvesting.PlantNodeSO
+  displayName: "\uC7AC\uC591\uCE58"
+  maxStage: 2
+  growSeconds: 40
+  minScale: 0.35
+  maxScale: 1
+  dropsPerStage: {fileID: 11400000, guid: d6ca434c0775e12419009c52397cf7a5, type: 2}
+  harvestSeconds: 1.2
+  witherSeconds: 90
+  nutritionPerStage: 2

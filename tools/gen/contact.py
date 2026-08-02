@@ -15,9 +15,9 @@ OUT = os.path.join(GEN, "contact_sheet.png")
 
 # 배치 순서: 식물군 → 동물군
 ORDER = [
-    "emberfungus_a", "emberfungus_b", "emberfungus_c",
-    "mossnode", "ashfern",
     "eye", "ball", "wing", "fruitcrab",
+    "debris_a", "debris_b", "debris_c",
+    "loosescrap_a", "loosescrap_b",
 ]
 
 COLS = 5
@@ -53,12 +53,8 @@ def main():
     ruler = mat("ruler", (0.9, 0.35, 0.25))
 
     def pick(name):
-        if name.startswith("emberfungus"):
-            return plant
-        if name == "mossnode":
-            return moss
-        if name == "ashfern":
-            return fern
+        if name.startswith("debris") or name.startswith("loosescrap"):
+            return fern      # 잔해는 탁한 회갈색으로 구분
         return machine
 
     placed = []
