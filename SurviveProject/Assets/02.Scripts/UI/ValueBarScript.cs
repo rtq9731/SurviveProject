@@ -60,6 +60,24 @@ public class ValueBarScript : MonoBehaviour
         cor = StartCoroutine(UpdateImage());
     }
 
+    /// <summary>
+    /// 절대값으로 설정한다. SetUpdateValue는 증감분을 받으므로
+    /// Vital 같은 절대값 소스를 바인딩할 때 쓰기 불편해 추가했다.
+    /// </summary>
+    public void SetValueDirect(float value)
+    {
+        _targetValue = Mathf.Clamp(value, minValue, maxValue);
+        textValue.text = Mathf.RoundToInt(_targetValue).ToString();
+
+        if (cor != null)
+            StopCoroutine(cor);
+
+        cor = StartCoroutine(UpdateImage());
+    }
+
+    /// <summary>현재 목표값. 표시 갱신은 코루틴이 따라간다.</summary>
+    public float TargetValue => _targetValue;
+
     private void Update()
     {
         RefreshColor();
