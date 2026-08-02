@@ -58,3 +58,15 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
+# 개인 에디터 설정 (레이아웃·검색 인덱스·MCP 세션)
+/[Uu]serSettings/
+
+# Unity CLI Loop 산출물 (스크린샷·하이어라키 덤프·권한 설정)
+/.uloop/
+
+# 에디터 도구 설정
+/.claude/
+
+# 새 솔루션 포맷
+*.slnx
+
