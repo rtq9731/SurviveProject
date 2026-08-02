@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using Survive.Items;
 
@@ -14,64 +13,19 @@ namespace Survive.Progression
         int GetFlag(string key);
     }
 
+    /// <summary>
+    /// 목표의 기반. 구현체는 각자 자기 이름의 파일에 둔다 —
+    /// ScriptableObject 클래스를 한 파일에 여러 개 넣으면 Unity가
+    /// 에셋의 m_Script 참조를 연결하지 못한다.
+    /// </summary>
     public abstract class ObjectiveSO : ScriptableObject
     {
         public string id;
         [TextArea] public string displayText;
 
-        public abstract float Evaluate(IObjectiveContext ctx);   // 0~1
+        /// <summary>0~1 진행도.</summary>
+        public abstract float Evaluate(IObjectiveContext ctx);
 
         public bool IsComplete(IObjectiveContext ctx) => Evaluate(ctx) >= 1f;
-    }
-
-    /// <summary>아이템 N개 보유.</summary>
-    [CreateAssetMenu(menuName = "Survive/Progression/Objective - Collect Item")]
-    public class CollectItemObjective : ObjectiveSO
-    {
-        public string itemId;
-        [Min(1)] public int amount = 1;
-
-        public override float Evaluate(IObjectiveContext ctx)
-        {
-            var inv = ctx?.PlayerInventory;
-            if (inv == null || string.IsNullOrEmpty(itemId)) return 0f;
-            return Mathf.Clamp01(inv.CountOf(itemId) / (float)Mathf.Max(1, amount));
-        }
-    }
-
-    /// <summary>지정 플래그가 1 이상이면 완료. 지역 도달·상호작용·제작이 공통으로 쓴다.</summary>
-    [CreateAssetMenu(menuName = "Survive/Progression/Objective - Flag")]
-    public class FlagObjective : ObjectiveSO
-    {
-        public string flagKey;
-        [Min(1)] public int requiredCount = 1;
-
-        public override float Evaluate(IObjectiveContext ctx)
-        {
-            if (ctx == null || string.IsNullOrEmpty(flagKey)) return 0f;
-            return Mathf.Clamp01(ctx.GetFlag(flagKey) / (float)Mathf.Max(1, requiredCount));
-        }
-    }
-
-    /// <summary>생물 N마리 처치. 처치 수는 플래그로 누적된다.</summary>
-    [CreateAssetMenu(menuName = "Survive/Progression/Objective - Kill Creature")]
-    public class KillCreatureObjective : ObjectiveSO
-    {
-        public string creatureId;
-        [Min(1)] public int amount = 1;
-
-        public override float Evaluate(IObjectiveContext ctx)
-        {
-            if (ctx == null || string.IsNullOrEmpty(creatureId)) return 0f;
-            return Mathf.Clamp01(ctx.GetFlag("kill:" + creatureId) / (float)Mathf.Max(1, amount));
-        }
-    }
-
-    [CreateAssetMenu(menuName = "Survive/Progression/Chapter")]
-    public class ChapterSO : ScriptableObject
-    {
-        public string id;
-        public string title;
-        public ObjectiveSO[] objectives = new ObjectiveSO[0];
     }
 }

@@ -13,5 +13,13 @@ MonoBehaviour:
   m_Name: ItemDatabase
   m_EditorClassIdentifier: Survive.Domain::Survive.Items.ItemDatabaseSO
   items:
-  - {fileID: 11400000, guid: 9932d97a3f262864088addc8ca354005, type: 2}
   - {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}
+  - {fileID: 11400000, guid: 9932d97a3f262864088addc8ca354005, type: 2}
+  - {fileID: 11400000, guid: f263ee395ffedf546adb2451324bddcf, type: 2}
+  - {fileID: 11400000, guid: f801b5b2e91c30f4d969f66750b4c304, type: 2}
+  - {fileID: 11400000, guid: 920a6043919ea1043985803e52162d69, type: 2}
+  - {fileID: 11400000, guid: 4e8d21caad266464d96dec179244ae88, type: 2}
+  - {fileID: 11400000, guid: 38cf6b941233ce14fafdcf3dbd79d885, type: 2}
+  - {fileID: 11400000, guid: 3b380d3f399ba864381ad2b647b6df74, type: 2}
+  - {fileID: 11400000, guid: c35c0cf2a5733534ab5237f2ab043a78, type: 2}
+  - {fileID: 11400000, guid: cc40e0b98a3251e469de9754eb48d7d6, type: 2}

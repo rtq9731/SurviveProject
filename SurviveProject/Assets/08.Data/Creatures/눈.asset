@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 521c64beec46b9849a8661634d5cc28b, type: 3}
+  m_Name: "\uB208"
+  m_EditorClassIdentifier: Survive.Domain::Survive.Creatures.CreatureDefinitionSO
+  id: eye
+  displayName: "\uB208"
+  tier: 0
+  locomotion: 1
+  behavior: 1
+  maxHealth: 12
+  moveSpeed: 4
+  detectRadius: 9
+  attackDamage: 0
+  attackRange: 1.6
+  attackCooldown: 1.5
+  aggroSeconds: 5
+  drops: {fileID: 11400000, guid: b1d5706381a27f0448336bf25d685ce4, type: 2}
+  codexDescription: "\uC791\uC740 \uCD94\uC9C4\uAE30\uB85C \uACF5\uC911\uC5D0 \uBD80\uC591\uD558\uB294
+    \uB4DC\uB860\uD615 \uAE30\uACC4. \uBAB8\uCCB4 \uC804\uBC29\uC758 \uD070 \uB208\uC774
+    \uC8FC \uD0D0\uC9C0\uAE30\uAD00\uC774\uBA70 \uB2E4\uB978 \uD0D0\uC9C0\uAE30\uAD00\uC740
+    \uBC1C\uACAC\uB418\uC9C0 \uC54A\uC558\uB2E4. \uC8FD\uC740 \uC2DD\uBB3C\uC5D0
+    \uB808\uC774\uC800\uB97C \uC3D8\uC544 \uC2A4\uD06C\uB7A9\uC73C\uB85C \uC804\uD658\uD558\uACE0
+    \uC5ED\uC7A5\uC73C\uB85C \uC5F0\uB8CC\uD0F1\uD06C\uC5D0 \uC62E\uAE34\uB2E4. \uC5B4\uB290
+    \uC9C0\uC5ED\uC5D0\uB098 \uC788\uC9C0\uB9CC \uD3C9\uC57C\uC5D0 \uC790\uC8FC \uBCF4\uC778\uB2E4."
+  codexSketch: {fileID: 0}

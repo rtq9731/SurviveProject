@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e7f1797e5edde543978bb8369b71e2a, type: 3}
+  m_Name: "\uBC84\uC12F \uAC13"
+  m_EditorClassIdentifier: Survive.Domain::Survive.Items.ItemDataSO
+  id: mushroom_cap
+  displayName: "\uBC84\uC12F \uAC13"
+  description: "\uBC1C\uAD11 \uBC84\uC12F\uC758 \uAC13. \uC0B0\uC18C\uB97C \uBA38\uAE08\uACE0
+    \uC788\uB2E4."
+  icon: {fileID: 0}
+  maxStack: 50
+  category: 0
+  worldPrefab: {fileID: 0}

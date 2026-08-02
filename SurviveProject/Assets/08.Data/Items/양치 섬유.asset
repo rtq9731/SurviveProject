@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e7f1797e5edde543978bb8369b71e2a, type: 3}
+  m_Name: "\uC591\uCE58 \uC12C\uC720"
+  m_EditorClassIdentifier: Survive.Domain::Survive.Items.ItemDataSO
+  id: fern_fiber
+  displayName: "\uC591\uCE58 \uC12C\uC720"
+  description: "\uC9C0\uD558 \uC591\uCE58\uB958\uC758 \uC9C8\uAE34 \uC12C\uC720."
+  icon: {fileID: 0}
+  maxStack: 50
+  category: 0
+  worldPrefab: {fileID: 0}

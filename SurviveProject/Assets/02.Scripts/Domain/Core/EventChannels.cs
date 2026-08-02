@@ -3,6 +3,11 @@ using UnityEngine;
 
 namespace Survive.Core
 {
+    /// <summary>
+    /// 페이로드가 없는 이벤트 채널.
+    /// 다른 구체 채널은 각자 자기 이름의 파일에 있다 — ScriptableObject를
+    /// 한 파일에 여러 개 넣으면 에셋의 m_Script 참조가 연결되지 않는다.
+    /// </summary>
     [CreateAssetMenu(menuName = "Survive/Core/Void Event Channel")]
     public class VoidEventChannelSO : ScriptableObject
     {
@@ -10,13 +15,4 @@ namespace Survive.Core
         public void Raise() => OnRaised?.Invoke();
         void OnDisable() => OnRaised = null;
     }
-
-    [CreateAssetMenu(menuName = "Survive/Core/Int Event Channel")]
-    public class IntEventChannelSO : EventChannelSO<int> { }
-
-    [CreateAssetMenu(menuName = "Survive/Core/Float Event Channel")]
-    public class FloatEventChannelSO : EventChannelSO<float> { }
-
-    [CreateAssetMenu(menuName = "Survive/Core/String Event Channel")]
-    public class StringEventChannelSO : EventChannelSO<string> { }
 }

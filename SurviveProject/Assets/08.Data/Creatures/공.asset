@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 521c64beec46b9849a8661634d5cc28b, type: 3}
+  m_Name: "\uACF5"
+  m_EditorClassIdentifier: Survive.Domain::Survive.Creatures.CreatureDefinitionSO
+  id: ball
+  displayName: "\uACF5"
+  tier: 0
+  locomotion: 0
+  behavior: 2
+  maxHealth: 28
+  moveSpeed: 3.2
+  detectRadius: 7
+  attackDamage: 6
+  attackRange: 1.6
+  attackCooldown: 1.5
+  aggroSeconds: 5
+  drops: {fileID: 11400000, guid: ccc4d324365db5f4e90ce7fa652cd179, type: 2}
+  codexDescription: "\uB3D9\uADF8\uB780 \uAD6C \uD615\uD0DC\uC758 \uAE30\uACC4. \uB208\uACFC
+    \uBE44\uC2B7\uD55C \uC18C\uD615\uBD80\uD130 \uC0AC\uB78C\uB9CC \uD55C \uB300\uD615\uAE4C\uC9C0
+    \uC5EC\uB7EC \uD06C\uAE30\uAC00 \uBC1C\uACAC\uB418\uC5C8\uC73C\uBA70 \uC8FC\uB85C
+    \uAD74\uB7EC\uB2E4\uB2CC\uB2E4. \uBAB8\uCCB4 \uD558\uBD80\uC758 \uAD6C\uBA4D\uC73C\uB85C
+    \uC8FD\uC740 \uAE30\uACC4\uC758 \uC794\uD574\uB97C \uD68C\uC218\uD574 \uC2A4\uD06C\uB7A9\uC744
+    \uBAA8\uC740\uB2E4."
+  codexSketch: {fileID: 0}

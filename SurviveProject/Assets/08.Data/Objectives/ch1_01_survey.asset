@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f82d56965140cd24697a5e38a6adb2f7, type: 3}
+  m_Name: ch1_01_survey
+  m_EditorClassIdentifier: Survive.Domain::Survive.Progression.FlagObjective
+  id: ch1_01_survey
+  displayText: "\uCC29\uC9C0 \uC9C0\uC810\uC744 \uBC97\uC5B4\uB098 \uC8FC\uBCC0\uC744
+    \uC0B4\uD540\uB2E4"
+  flagKey: ch1_surveyed
+  requiredCount: 1

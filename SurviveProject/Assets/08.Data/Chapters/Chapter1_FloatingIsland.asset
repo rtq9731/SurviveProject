@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2642fba2f4da05142a43eada34506106, type: 3}
+  m_Name: Chapter1_FloatingIsland
+  m_EditorClassIdentifier: Survive.Domain::Survive.Progression.ChapterSO
+  id: chapter1
+  title: "\uCC55\uD130 1 \u2014 \uBD80\uC720\uC12C"
+  objectives:
+  - {fileID: 11400000, guid: c3a50af6e4ac77f4395534ac115969f7, type: 2}
+  - {fileID: 11400000, guid: 24a49b5f946a90b4a8d701bd47a23cee, type: 2}
+  - {fileID: 11400000, guid: c1e8c834db71c0f408721d66464b1496, type: 2}
+  - {fileID: 11400000, guid: a33ed6f24640433488b9aa7d0c54809d, type: 2}
+  - {fileID: 11400000, guid: d6fe326a5b227294a9387e9852538218, type: 2}
+  - {fileID: 11400000, guid: dc7a78b76c107d146ade4f9bd6b3b9a2, type: 2}

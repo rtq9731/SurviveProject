@@ -21,10 +21,4 @@ namespace Survive.Crafting
         [Min(0f)] public float craftSeconds = 1f;
         public StationType requiredStation = StationType.None;
     }
-
-    [CreateAssetMenu(menuName = "Survive/Crafting/Recipe Book")]
-    public class RecipeBookSO : ScriptableObject
-    {
-        public RecipeSO[] recipes = new RecipeSO[0];
-    }
 }
