@@ -14,10 +14,10 @@ namespace Survive.Progression
         CreatureHealth _health;
 
         void Awake() => _health = GetComponent<CreatureHealth>();
-        void OnEnable() { if (_health != null) _health.Died += 보고; }
-        void OnDisable() { if (_health != null) _health.Died -= 보고; }
+        void OnEnable() { if (_health != null) _health.Died += Report; }
+        void OnDisable() { if (_health != null) _health.Died -= Report; }
 
-        void 보고(CreatureHealth h)
+        void Report(CreatureHealth h)
         {
             var id = h.Definition != null ? h.Definition.id : null;
             if (string.IsNullOrEmpty(id)) return;

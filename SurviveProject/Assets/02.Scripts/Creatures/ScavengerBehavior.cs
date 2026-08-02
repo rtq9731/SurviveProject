@@ -22,29 +22,29 @@ namespace Survive.Creatures
         [Header("피드백")]
         [SerializeField] MMF_Player collectFeedback;
 
-        float _다음회수시각;
-        Transform _목표;
+        float _nextCollectTime;
+        Transform _target;
 
         public int Collected { get; private set; }
 
         /// <summary>CreatureBrain이 이동 목표로 쓴다.</summary>
         public bool TryGetScavengeTarget(out Vector3 pos)
         {
-            if (_목표 == null) 가장가까운잔해();
-            if (_목표 == null)
+            if (_target == null) NearestPickup();
+            if (_target == null)
             {
                 pos = Vector3.zero;
                 return false;
             }
-            pos = _목표.position;
+            pos = _target.position;
             return true;
         }
 
         void Update()
         {
-            if (Time.time < _다음회수시각) return;
+            if (Time.time < _nextCollectTime) return;
 
-            var pickup = 가장가까운잔해();
+            var pickup = NearestPickup();
             if (pickup == null) return;
 
             if (Vector3.Distance(transform.position, pickup.transform.position) > collectRange) return;
@@ -52,14 +52,14 @@ namespace Survive.Creatures
             // 회수 = 세계에서 사라진다. 분해자는 코어로 가져간다는 설정이다.
             Destroy(pickup.gameObject);
             Collected++;
-            _목표 = null;
-            _다음회수시각 = Time.time + collectCooldown;
+            _target = null;
+            _nextCollectTime = Time.time + collectCooldown;
             collectFeedback?.PlayFeedbacks();
         }
 
         static readonly Collider[] _buf = new Collider[24];
 
-        ItemPickup 가장가까운잔해()
+        ItemPickup NearestPickup()
         {
             int n = Physics.OverlapSphereNonAlloc(transform.position, searchRadius, _buf,
                                                   ~0, QueryTriggerInteraction.Collide);
@@ -75,7 +75,7 @@ namespace Survive.Creatures
                 if (d < bestD) { bestD = d; best = p; }
             }
 
-            _목표 = best != null ? best.transform : null;
+            _target = best != null ? best.transform : null;
             return best;
         }
     }

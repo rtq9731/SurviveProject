@@ -30,8 +30,8 @@ namespace Survive.Harvesting
         /// </summary>
         public List<ItemStack> Roll(System.Random rng)
         {
-            var 결과 = new List<ItemStack>();
-            if (entries == null) return 결과;
+            var result = new List<ItemStack>();
+            if (entries == null) return result;
             if (rng == null) rng = new System.Random();
 
             foreach (var e in entries)
@@ -43,12 +43,12 @@ namespace Survive.Harvesting
 
                 int min = Mathf.Min(e.minCount, e.maxCount);
                 int max = Mathf.Max(e.minCount, e.maxCount);
-                int 개수 = min == max ? min : rng.Next(min, max + 1);
-                if (개수 <= 0) continue;
+                int count = min == max ? min : rng.Next(min, max + 1);
+                if (count <= 0) continue;
 
-                결과.Add(new ItemStack(e.item, 개수));
+                result.Add(new ItemStack(e.item, count));
             }
-            return 결과;
+            return result;
         }
     }
 }

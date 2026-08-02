@@ -24,7 +24,7 @@ namespace Survive.UI
         readonly List<InventorySlotView> _slots = new List<InventorySlotView>();
         PlayerInventory _inventory;
         Survive.Player.PlayerContext _player;
-        bool _열림;
+        bool _isOpen;
 
         void Awake()
         {
@@ -36,29 +36,29 @@ namespace Survive.UI
                     if (v != null) _slots.Add(v);
                 }
             }
-            즉시닫기();
+            CloseImmediate();
         }
 
         void OnEnable()
         {
             if (input != null) input.ToggleInventoryEvent += Toggle;
-            StartCoroutine(연결대기());
+            StartCoroutine(BindWhenReady());
         }
 
         void OnDisable()
         {
             if (input != null) input.ToggleInventoryEvent -= Toggle;
-            if (_inventory?.Inventory != null) _inventory.Inventory.Changed -= 갱신;
+            if (_inventory?.Inventory != null) _inventory.Inventory.Changed -= Refresh;
         }
 
-        IEnumerator 연결대기()
+        IEnumerator BindWhenReady()
         {
             yield return null;
             if (GameServices.TryGet<PlayerInventory>(out var inv))
             {
                 _inventory = inv;
-                _inventory.Inventory.Changed += 갱신;
-                갱신();
+                _inventory.Inventory.Changed += Refresh;
+                Refresh();
             }
             _player = UnityEngine.Object.FindFirstObjectByType<Survive.Player.PlayerContext>(FindObjectsInactive.Exclude);
         }
@@ -67,13 +67,13 @@ namespace Survive.UI
         /// 입력 맵을 UI로 전환하지 않는다. Tab은 Gameplay 맵에만 있어서
         /// 전환하면 인벤토리를 닫을 수 없게 된다. 대신 이동·시점만 잠근다.
         /// </summary>
-        void 조작잠금(bool 잠글까)
+        void LockControls(bool locked)
         {
-            _player?.Locomotion?.SetMovementLocked(잠글까);
-            _player?.CameraRig?.SetLookLocked(잠글까);
+            _player?.Locomotion?.SetMovementLocked(locked);
+            _player?.CameraRig?.SetLookLocked(locked);
         }
 
-        void 갱신()
+        void Refresh()
         {
             if (_inventory?.Inventory == null) return;
             var slots = _inventory.Inventory.Slots;
@@ -81,19 +81,19 @@ namespace Survive.UI
                 _slots[i].Render(i < slots.Count ? slots[i] : null);
         }
 
-        public bool IsOpen => _열림;
+        public bool IsOpen => _isOpen;
 
         public void Toggle()
         {
-            if (_열림) Close();
+            if (_isOpen) Close();
             else Open();
         }
 
         public void Open()
         {
-            if (_열림) return;
-            _열림 = true;
-            갱신();
+            if (_isOpen) return;
+            _isOpen = true;
+            Refresh();
 
             if (panel != null) panel.gameObject.SetActive(true);
             if (group != null)
@@ -109,14 +109,14 @@ namespace Survive.UI
                 panel.DOScale(1f, tweenSeconds).SetEase(Ease.OutBack);
             }
 
-            조작잠금(true);
+            LockControls(true);
             if (GameServices.TryGet<UIStateService>(out var ui)) ui.NotifyOpened(this);
         }
 
         public void Close()
         {
-            if (!_열림) return;
-            _열림 = false;
+            if (!_isOpen) return;
+            _isOpen = false;
 
             if (group != null)
             {
@@ -127,15 +127,15 @@ namespace Survive.UI
                     if (panel != null) panel.gameObject.SetActive(false);
                 });
             }
-            else 즉시닫기();
+            else CloseImmediate();
 
-            조작잠금(false);
+            LockControls(false);
             if (GameServices.TryGet<UIStateService>(out var ui)) ui.NotifyClosed(this);
         }
 
-        void 즉시닫기()
+        void CloseImmediate()
         {
-            _열림 = false;
+            _isOpen = false;
             if (group != null)
             {
                 group.alpha = 0f;

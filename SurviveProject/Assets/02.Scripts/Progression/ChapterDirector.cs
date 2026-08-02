@@ -53,9 +53,9 @@ namespace Survive.Progression
         void OnEnable() => GameServices.Register(this);
         void OnDisable() => GameServices.Unregister<ChapterDirector>();
 
-        void Start() => StartCoroutine(진행());
+        void Start() => StartCoroutine(RunChapter());
 
-        IEnumerator 진행()
+        IEnumerator RunChapter()
         {
             yield return null;
             GameServices.TryGet<PlayerInventory>(out _inventory);
@@ -63,16 +63,16 @@ namespace Survive.Progression
             CurrentIndex = 0;
             ObjectiveChanged?.Invoke(Current);
 
-            var 대기 = new WaitForSeconds(checkInterval);
+            var wait = new WaitForSeconds(checkInterval);
             while (chapter != null && CurrentIndex < chapter.objectives.Length)
             {
-                var 목표 = Current;
-                if (목표 != null && 목표.IsComplete(this)) 다음으로();
-                yield return 대기;
+                var objective = Current;
+                if (objective != null && objective.IsComplete(this)) Advance();
+                yield return wait;
             }
         }
 
-        void 다음으로()
+        void Advance()
         {
             CurrentIndex++;
             if (chapter != null && CurrentIndex >= chapter.objectives.Length)
@@ -85,7 +85,7 @@ namespace Survive.Progression
         }
 
         /// <summary>PlayMode 스모크 테스트용. 현재 목표를 강제로 넘긴다.</summary>
-        public void ForceCompleteCurrent() => 다음으로();
+        public void ForceCompleteCurrent() => Advance();
 
         public float CurrentProgress => Current != null ? Current.Evaluate(this) : 0f;
     }

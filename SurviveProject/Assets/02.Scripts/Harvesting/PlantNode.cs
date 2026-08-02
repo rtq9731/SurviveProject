@@ -23,14 +23,14 @@ namespace Survive.Harvesting
         [SerializeField] MMF_Player harvestFeedback;
         [SerializeField] MMF_Player witherFeedback;
 
-        int _단계;
-        float _성장타이머;
-        float _시든시간;
-        bool _소멸됨;
+        int _stage;
+        float _growTimer;
+        float _witherTimer;
+        bool _gone;
 
         public PlantNodeSO Definition => definition;
-        public int Stage => _단계;
-        public bool IsEdible => !_소멸됨 && _단계 > 0;
+        public int Stage => _stage;
+        public bool IsEdible => !_gone && _stage > 0;
 
         /// <summary>먹히거나 캐여서 단계가 내려갈 때.</summary>
         public event Action<PlantNode> Consumed;
@@ -38,46 +38,46 @@ namespace Survive.Harvesting
         void Awake()
         {
             if (visual == null) visual = transform;
-            _단계 = definition != null ? definition.maxStage : 1;
-            크기갱신();
+            _stage = definition != null ? definition.maxStage : 1;
+            RefreshScale();
         }
 
         void Update()
         {
-            if (_소멸됨 || definition == null) return;
+            if (_gone || definition == null) return;
 
-            if (_단계 < definition.maxStage)
+            if (_stage < definition.maxStage)
             {
-                _성장타이머 += Time.deltaTime;
-                if (_성장타이머 >= definition.growSeconds)
+                _growTimer += Time.deltaTime;
+                if (_growTimer >= definition.growSeconds)
                 {
-                    _성장타이머 = 0f;
-                    _단계++;
-                    _시든시간 = 0f;
-                    크기갱신();
+                    _growTimer = 0f;
+                    _stage++;
+                    _witherTimer = 0f;
+                    RefreshScale();
                 }
             }
 
             // 0단계로 오래 남아 있으면 시든다
-            if (_단계 <= 0 && definition.witherSeconds > 0f)
+            if (_stage <= 0 && definition.witherSeconds > 0f)
             {
-                _시든시간 += Time.deltaTime;
-                if (_시든시간 >= definition.witherSeconds) 시들기();
+                _witherTimer += Time.deltaTime;
+                if (_witherTimer >= definition.witherSeconds) Wither();
             }
         }
 
-        void 크기갱신()
+        void RefreshScale()
         {
             if (definition == null || visual == null) return;
-            float t = definition.maxStage <= 0 ? 1f : _단계 / (float)definition.maxStage;
+            float t = definition.maxStage <= 0 ? 1f : _stage / (float)definition.maxStage;
             float s = Mathf.Lerp(definition.minScale, definition.maxScale, t);
             visual.localScale = Vector3.one * s;
-            visual.gameObject.SetActive(_단계 > 0);
+            visual.gameObject.SetActive(_stage > 0);
         }
 
-        void 시들기()
+        void Wither()
         {
-            _소멸됨 = true;
+            _gone = true;
             witherFeedback?.PlayFeedbacks();
             gameObject.SetActive(false);
         }
@@ -89,10 +89,10 @@ namespace Survive.Harvesting
         public float Eat()
         {
             if (!IsEdible) return 0f;
-            _단계--;
-            _성장타이머 = 0f;
-            _시든시간 = 0f;
-            크기갱신();
+            _stage--;
+            _growTimer = 0f;
+            _witherTimer = 0f;
+            RefreshScale();
             Consumed?.Invoke(this);
             return definition.nutritionPerStage;
         }
@@ -105,8 +105,8 @@ namespace Survive.Harvesting
         {
             get
             {
-                if (definition == null || _소멸됨) return "";
-                if (_단계 <= 0) return $"{definition.displayName} — 아직 자라지 않았다";
+                if (definition == null || _gone) return "";
+                if (_stage <= 0) return $"{definition.displayName} — 아직 자라지 않았다";
                 return $"[E] 길게 눌러 {definition.displayName} 채집";
             }
         }
@@ -120,19 +120,19 @@ namespace Survive.Harvesting
         {
             if (!IsEdible) return;
 
-            _단계--;
-            _성장타이머 = 0f;
-            _시든시간 = 0f;
-            크기갱신();
+            _stage--;
+            _growTimer = 0f;
+            _witherTimer = 0f;
+            RefreshScale();
             harvestFeedback?.PlayFeedbacks();
 
             if (definition.dropsPerStage != null)
             {
                 foreach (var stack in definition.dropsPerStage.Roll(new System.Random()))
                 {
-                    int 남은수 = player.Inventory.Add(stack.item, stack.count);
-                    if (남은수 > 0)
-                        Debug.LogWarning($"[PlantNode] 인벤토리가 가득 차 {stack.item.displayName} {남은수}개를 넣지 못했습니다.", this);
+                    int remaining = player.Inventory.Add(stack.item, stack.count);
+                    if (remaining > 0)
+                        Debug.LogWarning($"[PlantNode] 인벤토리가 가득 차 {stack.item.displayName} {remaining}개를 넣지 못했습니다.", this);
                 }
             }
 

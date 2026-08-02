@@ -14,8 +14,8 @@ namespace Survive.Player
 
         float _yaw;
         float _pitch;
-        bool _잠김;
-        Vector2 _시점 = Vector2.zero;
+        bool _locked;
+        Vector2 _lookInput = Vector2.zero;
 
         public Transform CameraTransform => cameraTransform;
 
@@ -33,22 +33,22 @@ namespace Survive.Player
 
         void OnEnable()
         {
-            if (input != null) input.LookEvent += 시점입력;
+            if (input != null) input.LookEvent += OnLookInput;
         }
 
         void OnDisable()
         {
-            if (input != null) input.LookEvent -= 시점입력;
+            if (input != null) input.LookEvent -= OnLookInput;
         }
 
-        void 시점입력(Vector2 v) => _시점 = v;
+        void OnLookInput(Vector2 v) => _lookInput = v;
 
         public void SetLookLocked(bool locked)
         {
-            _잠김 = locked;
+            _locked = locked;
             Cursor.lockState = locked ? CursorLockMode.None : CursorLockMode.Locked;
             Cursor.visible = locked;
-            if (locked) _시점 = Vector2.zero;
+            if (locked) _lookInput = Vector2.zero;
         }
 
         /// <summary>
@@ -77,20 +77,20 @@ namespace Survive.Player
 
         void LateUpdate()
         {
-            if (_잠김) return;
+            if (_locked) return;
 
-            _yaw += _시점.x * mouseSensitivity;
-            _pitch = Mathf.Clamp(_pitch - _시점.y * mouseSensitivity, minPitch, maxPitch);
+            _yaw += _lookInput.x * mouseSensitivity;
+            _pitch = Mathf.Clamp(_pitch - _lookInput.y * mouseSensitivity, minPitch, maxPitch);
 
-            var 몸각도 = transform.localEulerAngles;
-            몸각도.y = _yaw;
-            transform.localEulerAngles = 몸각도;
+            var bodyAngles = transform.localEulerAngles;
+            bodyAngles.y = _yaw;
+            transform.localEulerAngles = bodyAngles;
 
             if (cameraTransform != null)
             {
-                var 카메라각도 = cameraTransform.localEulerAngles;
-                카메라각도.x = _pitch;
-                cameraTransform.localEulerAngles = 카메라각도;
+                var camAngles = cameraTransform.localEulerAngles;
+                camAngles.x = _pitch;
+                cameraTransform.localEulerAngles = camAngles;
             }
         }
     }

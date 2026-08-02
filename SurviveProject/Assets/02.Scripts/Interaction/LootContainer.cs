@@ -10,36 +10,36 @@ namespace Survive.Interaction
     public class LootContainer : MonoBehaviour, IInteractable
     {
         [Serializable]
-        public class 내용물
+        public class Entry
         {
             public ItemDataSO item;
             [Min(1)] public int count = 1;
         }
 
         [SerializeField] string displayName = "잔해";
-        [SerializeField] 내용물[] contents = new 내용물[0];
+        [SerializeField] Entry[] contents = new Entry[0];
 
         [Tooltip("열 때 재생")]
         [SerializeField] MMF_Player openFeedback;
 
-        bool _열림;
+        bool _isOpen;
 
-        public string InteractionPrompt => _열림 ? "" : $"[E] {displayName} 뒤지기";
+        public string InteractionPrompt => _isOpen ? "" : $"[E] {displayName} 뒤지기";
 
-        public bool CanInteract(PlayerContext player) => !_열림 && player?.Inventory != null;
+        public bool CanInteract(PlayerContext player) => !_isOpen && player?.Inventory != null;
 
         public void Interact(PlayerContext player)
         {
-            if (_열림) return;
-            _열림 = true;
+            if (_isOpen) return;
+            _isOpen = true;
             openFeedback?.PlayFeedbacks();
 
             foreach (var c in contents)
             {
                 if (c?.item == null) continue;
-                int 남은수 = player.Inventory.Add(c.item, c.count);
-                if (남은수 > 0)
-                    Debug.LogWarning($"[LootContainer] 인벤토리가 가득 차 {c.item.displayName} {남은수}개를 넣지 못했습니다.", this);
+                int remaining = player.Inventory.Add(c.item, c.count);
+                if (remaining > 0)
+                    Debug.LogWarning($"[LootContainer] 인벤토리가 가득 차 {c.item.displayName} {remaining}개를 넣지 못했습니다.", this);
             }
         }
     }

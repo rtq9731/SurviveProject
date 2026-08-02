@@ -10,10 +10,10 @@ namespace Survive.Player
         [SerializeField] float walkSpeedReference = 5f;
 
         // 파라미터 이름은 기존 애니메이터 컨트롤러와 맞춰야 하므로 바꾸지 않는다.
-        static readonly int 수평 = Animator.StringToHash("HorizontalMove");
-        static readonly int 수직 = Animator.StringToHash("VerticalMove");
-        static readonly int 속도 = Animator.StringToHash("Speed");
-        static readonly int 이동중 = Animator.StringToHash("isMove");
+        static readonly int planar = Animator.StringToHash("HorizontalMove");
+        static readonly int vertical = Animator.StringToHash("VerticalMove");
+        static readonly int speed = Animator.StringToHash("Speed");
+        static readonly int moving = Animator.StringToHash("isMove");
 
         void Awake()
         {
@@ -25,13 +25,13 @@ namespace Survive.Player
         {
             if (animator == null || locomotion == null) return;
 
-            Vector3 지역속도 = transform.InverseTransformDirection(locomotion.PlanarVelocity);
-            float 크기 = locomotion.CurrentSpeed;
+            Vector3 localVel = transform.InverseTransformDirection(locomotion.PlanarVelocity);
+            float magnitude = locomotion.CurrentSpeed;
 
-            animator.SetFloat(수평, 크기 > 0.01f ? 지역속도.x / 크기 : 0f);
-            animator.SetFloat(수직, 크기 > 0.01f ? 지역속도.z / 크기 : 0f);
-            animator.SetFloat(속도, walkSpeedReference <= 0f ? 1f : 크기 / walkSpeedReference);
-            animator.SetBool(이동중, 크기 > 0.1f);
+            animator.SetFloat(planar, magnitude > 0.01f ? localVel.x / magnitude : 0f);
+            animator.SetFloat(vertical, magnitude > 0.01f ? localVel.z / magnitude : 0f);
+            animator.SetFloat(speed, walkSpeedReference <= 0f ? 1f : magnitude / walkSpeedReference);
+            animator.SetBool(moving, magnitude > 0.1f);
         }
     }
 }

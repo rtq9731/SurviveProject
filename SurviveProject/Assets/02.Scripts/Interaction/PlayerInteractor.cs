@@ -25,9 +25,9 @@ namespace Survive.Interaction
         public event Action<string> PromptChanged;       // null이면 숨김
         public event Action<float> HoldProgressChanged;  // 0~1
 
-        IHoldInteractable _누르는중;
-        float _누른시간;
-        string _마지막문구;
+        IHoldInteractable _holding;
+        float _holdElapsed;
+        string _lastPrompt;
 
         void Awake()
         {
@@ -39,24 +39,24 @@ namespace Survive.Interaction
         void OnEnable()
         {
             if (input == null) return;
-            input.InteractEvent += 상호작용시작;
-            input.InteractCancelledEvent += 상호작용취소;
+            input.InteractEvent += BeginInteract;
+            input.InteractCancelledEvent += CancelInteract;
         }
 
         void OnDisable()
         {
             if (input == null) return;
-            input.InteractEvent -= 상호작용시작;
-            input.InteractCancelledEvent -= 상호작용취소;
+            input.InteractEvent -= BeginInteract;
+            input.InteractCancelledEvent -= CancelInteract;
         }
 
         void Update()
         {
-            대상갱신();
-            누름진행();
+            RefreshTarget();
+            AdvanceHold();
         }
 
-        void 대상갱신()
+        void RefreshTarget()
         {
             if (rayOrigin == null) return;
 
@@ -67,55 +67,55 @@ namespace Survive.Interaction
                                              detectDistance, interactableMask,
                                              QueryTriggerInteraction.Collide);
 
-            IInteractable 찾은것 = null;
-            float 가장가까운 = float.MaxValue;
+            IInteractable found = null;
+            float nearest = float.MaxValue;
 
             foreach (var hit in hits)
             {
-                if (자기몸인가(hit.collider)) continue;
+                if (IsOwnBody(hit.collider)) continue;
 
-                var 후보 = hit.collider.GetComponentInParent<IInteractable>();
-                if (후보 == null) continue;
+                var candidates = hit.collider.GetComponentInParent<IInteractable>();
+                if (candidates == null) continue;
 
-                if (hit.distance < 가장가까운)
+                if (hit.distance < nearest)
                 {
-                    가장가까운 = hit.distance;
-                    찾은것 = 후보;
+                    nearest = hit.distance;
+                    found = candidates;
                 }
             }
 
-            if (!ReferenceEquals(찾은것, Current))
+            if (!ReferenceEquals(found, Current))
             {
-                if (_누르는중 != null) 상호작용취소();
-                Current = 찾은것;
+                if (_holding != null) CancelInteract();
+                Current = found;
             }
 
-            string 문구 = null;
+            string prompt = null;
             if (Current != null && Current.CanInteract(_player))
-                문구 = Current.InteractionPrompt;
+                prompt = Current.InteractionPrompt;
 
-            if (문구 != _마지막문구)
+            if (prompt != _lastPrompt)
             {
-                _마지막문구 = 문구;
-                PromptChanged?.Invoke(문구);
+                _lastPrompt = prompt;
+                PromptChanged?.Invoke(prompt);
             }
         }
 
         /// <summary>플레이어 자신의 콜라이더인지. 카메라가 몸 안에 있어 반드시 걸러야 한다.</summary>
-        bool 자기몸인가(Collider col)
+        bool IsOwnBody(Collider col)
         {
             if (_playerRoot == null) return false;
             return col.transform == _playerRoot || col.transform.IsChildOf(_playerRoot);
         }
 
-        void 상호작용시작()
+        void BeginInteract()
         {
             if (Current == null || !Current.CanInteract(_player)) return;
 
             if (Current is IHoldInteractable hold && hold.HoldDuration > 0f)
             {
-                _누르는중 = hold;
-                _누른시간 = 0f;
+                _holding = hold;
+                _holdElapsed = 0f;
             }
             else
             {
@@ -123,31 +123,31 @@ namespace Survive.Interaction
             }
         }
 
-        void 상호작용취소()
+        void CancelInteract()
         {
-            if (_누르는중 == null) return;
-            _누르는중.OnHoldCancelled();
-            _누르는중 = null;
-            _누른시간 = 0f;
+            if (_holding == null) return;
+            _holding.OnHoldCancelled();
+            _holding = null;
+            _holdElapsed = 0f;
             HoldProgressChanged?.Invoke(0f);
         }
 
-        void 누름진행()
+        void AdvanceHold()
         {
-            if (_누르는중 == null) return;
+            if (_holding == null) return;
 
-            _누른시간 += Time.deltaTime;
-            float 진행도 = Mathf.Clamp01(_누른시간 / _누르는중.HoldDuration);
-            _누르는중.OnHoldProgress(진행도);
-            HoldProgressChanged?.Invoke(진행도);
+            _holdElapsed += Time.deltaTime;
+            float progress = Mathf.Clamp01(_holdElapsed / _holding.HoldDuration);
+            _holding.OnHoldProgress(progress);
+            HoldProgressChanged?.Invoke(progress);
 
-            if (진행도 >= 1f)
+            if (progress >= 1f)
             {
-                var 완료할것 = _누르는중;
-                _누르는중 = null;
-                _누른시간 = 0f;
+                var toComplete = _holding;
+                _holding = null;
+                _holdElapsed = 0f;
                 HoldProgressChanged?.Invoke(0f);
-                완료할것.Interact(_player);
+                toComplete.Interact(_player);
             }
         }
     }

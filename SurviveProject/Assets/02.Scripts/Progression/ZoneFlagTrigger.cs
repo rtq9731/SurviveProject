@@ -17,7 +17,7 @@ namespace Survive.Progression
         [SerializeField] string flagKey;
         [SerializeField] bool once = true;
 
-        bool _발동됨;
+        bool _fired;
 
         void Reset()
         {
@@ -27,13 +27,13 @@ namespace Survive.Progression
 
         void OnTriggerEnter(Collider other)
         {
-            if (once && _발동됨) return;
+            if (once && _fired) return;
             if (other.GetComponentInParent<PlayerVitals>() == null) return;
 
             if (GameServices.TryGet<ChapterDirector>(out var dir))
             {
                 dir.SetFlag(flagKey, 1);
-                _발동됨 = true;
+                _fired = true;
             }
         }
     }

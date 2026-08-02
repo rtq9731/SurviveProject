@@ -19,15 +19,15 @@ namespace Survive.World
         [SerializeField] bool useOverride = false;
 
         Bounds _bounds;
-        bool _잼;
+        bool _boundsCached;
 
-        public float SurfaceY => useOverride ? surfaceOverride : 경계.max.y;
+        public float SurfaceY => useOverride ? surfaceOverride : WorldBounds.max.y;
 
-        Bounds 경계
+        Bounds WorldBounds
         {
             get
             {
-                if (_잼) return _bounds;
+                if (_boundsCached) return _bounds;
 
                 var rends = GetComponentsInChildren<Renderer>();
                 if (rends.Length > 0)
@@ -37,17 +37,17 @@ namespace Survive.World
                 }
                 else _bounds = new Bounds(transform.position, Vector3.one);
 
-                _잼 = true;
+                _boundsCached = true;
                 return _bounds;
             }
         }
 
-        void OnEnable() { _잼 = false; _all.Add(this); }
+        void OnEnable() { _boundsCached = false; _all.Add(this); }
         void OnDisable() => _all.Remove(this);
 
         public bool ContainsHorizontally(Vector3 p)
         {
-            var b = 경계;
+            var b = WorldBounds;
             return p.x >= b.min.x && p.x <= b.max.x && p.z >= b.min.z && p.z <= b.max.z;
         }
 

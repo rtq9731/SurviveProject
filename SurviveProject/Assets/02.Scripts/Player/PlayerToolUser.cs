@@ -18,8 +18,8 @@ namespace Survive.Player
         [SerializeField] PlayerInventory inventory;
         [SerializeField] LanternController lantern;
 
-        readonly List<ToolItemSO> _도구목록 = new List<ToolItemSO>();
-        int _현재 = -1;
+        readonly List<ToolItemSO> _tools = new List<ToolItemSO>();
+        int _currentIndex = -1;
 
         void Awake()
         {
@@ -31,54 +31,54 @@ namespace Survive.Player
         void OnEnable()
         {
             if (input == null) return;
-            input.NextToolEvent += 다음도구;
-            input.ToggleLanternEvent += 랜턴토글;
+            input.NextToolEvent += NextTool;
+            input.ToggleLanternEvent += ToggleLantern;
         }
 
         void OnDisable()
         {
             if (input == null) return;
-            input.NextToolEvent -= 다음도구;
-            input.ToggleLanternEvent -= 랜턴토글;
+            input.NextToolEvent -= NextTool;
+            input.ToggleLanternEvent -= ToggleLantern;
         }
 
-        void 도구목록갱신()
+        void RefreshToolList()
         {
-            _도구목록.Clear();
+            _tools.Clear();
             var inv = inventory?.Inventory;
             if (inv == null) return;
 
             foreach (var s in inv.Slots)
             {
                 if (s.IsEmpty) continue;
-                if (s.item is ToolItemSO tool && !_도구목록.Contains(tool)) _도구목록.Add(tool);
+                if (s.item is ToolItemSO tool && !_tools.Contains(tool)) _tools.Add(tool);
             }
         }
 
-        void 다음도구()
+        void NextTool()
         {
-            도구목록갱신();
+            RefreshToolList();
 
-            if (_도구목록.Count == 0)
+            if (_tools.Count == 0)
             {
                 holder?.Unequip();
                 lantern?.SetOn(false);
-                _현재 = -1;
+                _currentIndex = -1;
                 return;
             }
 
-            _현재 = (_현재 + 1) % _도구목록.Count;
-            장착(_도구목록[_현재]);
+            _currentIndex = (_currentIndex + 1) % _tools.Count;
+            EquipTool(_tools[_currentIndex]);
         }
 
-        void 장착(ToolItemSO tool)
+        void EquipTool(ToolItemSO tool)
         {
             holder?.Equip(tool);
             // 랜턴을 손에 들면 켜고, 다른 도구로 바꾸면 끈다.
             lantern?.SetOn(tool != null && tool.id == "lantern");
         }
 
-        void 랜턴토글()
+        void ToggleLantern()
         {
             if (lantern == null) return;
 
@@ -98,12 +98,12 @@ namespace Survive.Player
         /// <summary>인벤토리에서 지정 도구를 찾아 장착한다. 제작 직후 편의용.</summary>
         public bool EquipFirst(string itemId)
         {
-            도구목록갱신();
-            for (int i = 0; i < _도구목록.Count; i++)
+            RefreshToolList();
+            for (int i = 0; i < _tools.Count; i++)
             {
-                if (_도구목록[i].id != itemId) continue;
-                _현재 = i;
-                장착(_도구목록[i]);
+                if (_tools[i].id != itemId) continue;
+                _currentIndex = i;
+                EquipTool(_tools[i]);
                 return true;
             }
             return false;

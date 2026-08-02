@@ -26,25 +26,25 @@ namespace Survive.Harvesting
         [Tooltip("채집이 끝났을 때. 파편·획득음")]
         [SerializeField] MMF_Player completeFeedback;
 
-        bool _고갈됨;
-        PlayerToolHolder _도구;
+        bool _depleted;
+        PlayerToolHolder _toolHolder;
 
         public HarvestNodeSO Definition => definition;
-        public bool IsDepleted => _고갈됨;
+        public bool IsDepleted => _depleted;
 
         void Awake()
         {
             if (visual == null) visual = gameObject;
         }
 
-        ToolItemSO 장착도구 => _도구 != null ? _도구.EquippedTool : null;
+        ToolItemSO equipped => _toolHolder != null ? _toolHolder.EquippedTool : null;
 
         public float HoldDuration
         {
             get
             {
                 if (definition == null) return 1f;
-                float power = 장착도구 != null ? Mathf.Max(0.01f, 장착도구.harvestPower) : 1f;
+                float power = equipped != null ? Mathf.Max(0.01f, equipped.harvestPower) : 1f;
                 return definition.baseDuration / power;
             }
         }
@@ -53,29 +53,29 @@ namespace Survive.Harvesting
         {
             get
             {
-                if (definition == null || _고갈됨) return "";
+                if (definition == null || _depleted) return "";
                 // 홀드형이므로 프롬프트에서 그 사실이 드러나야 한다.
                 // "[E]"만 쓰면 탭으로 오해한다.
-                if (도구충족(장착도구)) return $"[E] 길게 눌러 {definition.displayName} 채집";
-                return $"{definition.displayName} — {도구이름(definition.requiredTool)} 필요";
+                if (ToolSatisfied(equipped)) return $"[E] 길게 눌러 {definition.displayName} 채집";
+                return $"{definition.displayName} — {ToolName(definition.requiredTool)} 필요";
             }
         }
 
         public bool CanInteract(PlayerContext player)
         {
-            if (definition == null || _고갈됨 || player == null) return false;
-            _도구 = player.ToolHolder;
-            return 도구충족(장착도구);
+            if (definition == null || _depleted || player == null) return false;
+            _toolHolder = player.ToolHolder;
+            return ToolSatisfied(equipped);
         }
 
-        bool 도구충족(ToolItemSO tool)
+        bool ToolSatisfied(ToolItemSO tool)
         {
             if (definition.requiredTool == ToolType.None) return true;
             if (tool == null) return false;
             return tool.toolType == definition.requiredTool && tool.tier >= definition.requiredTier;
         }
 
-        static string 도구이름(ToolType t) => t switch
+        static string ToolName(ToolType t) => t switch
         {
             ToolType.Pickaxe => "곡괭이",
             ToolType.Hammer => "망치",
@@ -93,33 +93,33 @@ namespace Survive.Harvesting
 
         public void Interact(PlayerContext player)
         {
-            if (_고갈됨 || definition == null) return;
+            if (_depleted || definition == null) return;
 
             startFeedback?.StopFeedbacks();
-            _고갈됨 = true;
+            _depleted = true;
 
             if (definition.drops != null)
             {
-                var 전리품 = definition.drops.Roll(new System.Random());
-                foreach (var stack in 전리품)
+                var loot = definition.drops.Roll(new System.Random());
+                foreach (var stack in loot)
                 {
-                    int 남은수 = player.Inventory.Add(stack.item, stack.count);
-                    if (남은수 > 0)
-                        Debug.LogWarning($"[HarvestNode] 인벤토리가 가득 차 {stack.item.displayName} {남은수}개를 넣지 못했습니다.", this);
+                    int remaining = player.Inventory.Add(stack.item, stack.count);
+                    if (remaining > 0)
+                        Debug.LogWarning($"[HarvestNode] 인벤토리가 가득 차 {stack.item.displayName} {remaining}개를 넣지 못했습니다.", this);
                 }
             }
 
             completeFeedback?.PlayFeedbacks();
             visual.SetActive(false);
 
-            if (definition.respawnSeconds > 0f) StartCoroutine(재생성());
+            if (definition.respawnSeconds > 0f) StartCoroutine(Respawn());
         }
 
-        IEnumerator 재생성()
+        IEnumerator Respawn()
         {
             yield return new WaitForSeconds(definition.respawnSeconds);
             visual.SetActive(true);
-            _고갈됨 = false;
+            _depleted = false;
         }
     }
 }

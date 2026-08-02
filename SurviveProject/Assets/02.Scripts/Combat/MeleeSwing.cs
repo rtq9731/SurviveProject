@@ -29,8 +29,8 @@ namespace Survive.Combat
         [Tooltip("무언가에 맞았을 때만 재생. 화면 흔들림·히트스톱·타격음")]
         [SerializeField] MMF_Player hitFeedback;
 
-        float _다음가능시각;
-        readonly List<IDamageable> _이번에맞은것 = new List<IDamageable>();
+        float _nextSwingTime;
+        readonly List<IDamageable> _hitThisSwing = new List<IDamageable>();
 
         void Awake()
         {
@@ -52,33 +52,33 @@ namespace Survive.Combat
         {
             var tool = toolHolder != null ? toolHolder.EquippedTool : null;
             if (tool == null) return;                       // 맨손으로는 때리지 않는다
-            if (Time.time < _다음가능시각) return;
+            if (Time.time < _nextSwingTime) return;
             if (swingOrigin == null) return;
 
-            _다음가능시각 = Time.time + tool.attackCooldown;
-            _이번에맞은것.Clear();
+            _nextSwingTime = Time.time + tool.attackCooldown;
+            _hitThisSwing.Clear();
             swingFeedback?.PlayFeedbacks();
 
-            var 후보 = Physics.OverlapSphere(swingOrigin.position, tool.attackRange,
+            var candidates = Physics.OverlapSphere(swingOrigin.position, tool.attackRange,
                                              targetMask, QueryTriggerInteraction.Collide);
 
-            float 코사인한계 = Mathf.Cos(coneAngle * 0.5f * Mathf.Deg2Rad);
+            float cosLimit = Mathf.Cos(coneAngle * 0.5f * Mathf.Deg2Rad);
 
-            foreach (var col in 후보)
+            foreach (var col in candidates)
             {
-                var 대상 = col.GetComponentInParent<IDamageable>();
-                if (대상 == null || 대상.IsDead) continue;
-                if (_이번에맞은것.Contains(대상)) continue;        // 콜라이더 여러 개인 대상 중복 방지
+                var target = col.GetComponentInParent<IDamageable>();
+                if (target == null || target.IsDead) continue;
+                if (_hitThisSwing.Contains(target)) continue;        // 콜라이더 여러 개인 대상 중복 방지
 
-                Vector3 방향 = (col.bounds.center - swingOrigin.position).normalized;
-                if (Vector3.Dot(swingOrigin.forward, 방향) < 코사인한계) continue;
+                Vector3 dir = (col.bounds.center - swingOrigin.position).normalized;
+                if (Vector3.Dot(swingOrigin.forward, dir) < cosLimit) continue;
 
-                _이번에맞은것.Add(대상);
-                대상.TakeDamage(new DamageInfo(tool.damage, gameObject,
-                                              col.ClosestPoint(swingOrigin.position), -방향));
+                _hitThisSwing.Add(target);
+                target.TakeDamage(new DamageInfo(tool.damage, gameObject,
+                                              col.ClosestPoint(swingOrigin.position), -dir));
             }
 
-            if (_이번에맞은것.Count > 0) hitFeedback?.PlayFeedbacks();
+            if (_hitThisSwing.Count > 0) hitFeedback?.PlayFeedbacks();
         }
     }
 }

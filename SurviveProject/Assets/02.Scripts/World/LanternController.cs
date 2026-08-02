@@ -40,20 +40,20 @@ namespace Survive.World
         [Tooltip("스크랩으로 충전할 때 재생")]
         [SerializeField] MMF_Player rechargeFeedback;
 
-        float _배터리;
-        bool _켜짐;
-        bool _경고중;
+        float _battery;
+        bool _on;
+        bool _warning;
         Tween _flicker;
 
-        public float Battery => _배터리;
-        public float BatteryNormalized => maxBattery <= 0f ? 0f : _배터리 / maxBattery;
-        public bool IsOn => _켜짐;
+        public float Battery => _battery;
+        public float BatteryNormalized => maxBattery <= 0f ? 0f : _battery / maxBattery;
+        public bool IsOn => _on;
 
         public event Action<float, float> BatteryChanged;   // (현재, 최대)
 
         void Awake()
         {
-            _배터리 = maxBattery;
+            _battery = maxBattery;
             if (inventory == null) inventory = GetComponentInParent<PlayerInventory>();
             if (lampLight == null) lampLight = GetComponentInChildren<Light>(true);
             SetOn(false);
@@ -64,37 +64,37 @@ namespace Survive.World
 
         public void SetOn(bool on)
         {
-            _켜짐 = on && _배터리 > 0f;
-            if (lampLight != null) lampLight.enabled = _켜짐;
-            빛갱신();
+            _on = on && _battery > 0f;
+            if (lampLight != null) lampLight.enabled = _on;
+            RefreshLight();
         }
 
-        public void Toggle() => SetOn(!_켜짐);
+        public void Toggle() => SetOn(!_on);
 
         void Update()
         {
-            if (!_켜짐) return;
+            if (!_on) return;
 
-            _배터리 = Mathf.Max(0f, _배터리 - drainPerSecond * Time.deltaTime);
-            BatteryChanged?.Invoke(_배터리, maxBattery);
+            _battery = Mathf.Max(0f, _battery - drainPerSecond * Time.deltaTime);
+            BatteryChanged?.Invoke(_battery, maxBattery);
 
-            if (_배터리 <= 0f)
+            if (_battery <= 0f)
             {
                 SetOn(false);
                 return;
             }
 
-            경고갱신();
-            빛갱신();
+            RefreshWarning();
+            RefreshLight();
         }
 
-        void 경고갱신()
+        void RefreshWarning()
         {
-            bool 위험 = BatteryNormalized <= flickerThreshold;
+            bool danger = BatteryNormalized <= flickerThreshold;
 
-            if (위험 && !_경고중)
+            if (danger && !_warning)
             {
-                _경고중 = true;
+                _warning = true;
                 lowBatteryFeedback?.PlayFeedbacks();
 
                 // 꺼지기 직전의 깜빡임. 남은 배터리를 눈으로 알 수 있게 한다.
@@ -106,18 +106,18 @@ namespace Survive.World
                                         .SetEase(Ease.InOutQuad);
                 }
             }
-            else if (!위험 && _경고중)
+            else if (!danger && _warning)
             {
-                _경고중 = false;
+                _warning = false;
                 lowBatteryFeedback?.StopFeedbacks();
                 _flicker?.Kill();
                 _flicker = null;
             }
         }
 
-        void 빛갱신()
+        void RefreshLight()
         {
-            if (lampLight == null || _경고중) return;   // 깜빡이는 동안은 트윈에 맡긴다
+            if (lampLight == null || _warning) return;   // 깜빡이는 동안은 트윈에 맡긴다
             lampLight.intensity = fullIntensity;
             lampLight.range = fullRange;
         }
@@ -126,9 +126,9 @@ namespace Survive.World
         public void Recharge(float amount)
         {
             if (amount <= 0f) return;
-            float 이전 = _배터리;
-            _배터리 = Mathf.Min(maxBattery, _배터리 + amount);
-            if (!Mathf.Approximately(이전, _배터리)) BatteryChanged?.Invoke(_배터리, maxBattery);
+            float prev = _battery;
+            _battery = Mathf.Min(maxBattery, _battery + amount);
+            if (!Mathf.Approximately(prev, _battery)) BatteryChanged?.Invoke(_battery, maxBattery);
         }
 
         /// <summary>스크랩을 태워 현장에서 충전한다.</summary>

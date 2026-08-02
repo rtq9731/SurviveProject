@@ -15,6 +15,9 @@ namespace Survive.Items
 
         public Inventory Inventory { get; private set; }
 
+        /// <summary>아이템 정의를 id로 찾을 때 쓴다 (저장 복원·검증 하네스).</summary>
+        public ItemDatabaseSO Database => database;
+
         public const string ScrapId = "scrap";
         public int ScrapCount => Inventory?.CountOf(ScrapId) ?? 0;
 
@@ -29,7 +32,7 @@ namespace Survive.Items
         // ── 저장 ─────────────────────────────────────────────────
 
         [Serializable]
-        public class 저장상태
+        public class SaveState
         {
             public List<string> itemIds = new List<string>();
             public List<int> counts = new List<int>();
@@ -39,7 +42,7 @@ namespace Survive.Items
 
         public object CaptureState()
         {
-            var s = new 저장상태();
+            var s = new SaveState();
             foreach (var slot in Inventory.Slots)
             {
                 s.itemIds.Add(slot.IsEmpty ? "" : slot.item.id);
@@ -50,7 +53,7 @@ namespace Survive.Items
 
         public void RestoreState(object state)
         {
-            if (!(state is 저장상태 s)) return;
+            if (!(state is SaveState s)) return;
             if (database == null)
             {
                 Debug.LogError("[PlayerInventory] database가 비어 있어 복원할 수 없습니다.", this);
@@ -58,8 +61,8 @@ namespace Survive.Items
             }
 
             Inventory = new Inventory(slotCount);
-            int 개수 = Mathf.Min(s.itemIds.Count, Inventory.SlotCount);
-            for (int i = 0; i < 개수; i++)
+            int count = Mathf.Min(s.itemIds.Count, Inventory.SlotCount);
+            for (int i = 0; i < count; i++)
             {
                 if (string.IsNullOrEmpty(s.itemIds[i])) continue;
                 if (!database.TryGetById(s.itemIds[i], out var item)) continue;

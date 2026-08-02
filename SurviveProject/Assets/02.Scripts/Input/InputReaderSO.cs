@@ -61,7 +61,7 @@ namespace Survive.Input
             _actions.UI.Enable();
 
             // 게임플레이 맵을 끄면 콜백이 오지 않으므로 이동이 눌린 채로 남는다.
-            초기화();
+            ResetValues();
             MoveEvent?.Invoke(Vector2.zero);
             LookEvent?.Invoke(Vector2.zero);
         }
@@ -70,10 +70,10 @@ namespace Survive.Input
         {
             _actions?.Gameplay.Disable();
             _actions?.UI.Disable();
-            초기화();
+            ResetValues();
         }
 
-        void 초기화()
+        void ResetValues()
         {
             MoveValue = Vector2.zero;
             LookValue = Vector2.zero;

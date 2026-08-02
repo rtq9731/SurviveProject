@@ -44,7 +44,7 @@ namespace Survive.Narrative
             }
         }
 
-        public void 숨기기(bool 즉시 = false)
+        public void HideView(bool immediate = false)
         {
             if (group == null)
             {
@@ -53,7 +53,7 @@ namespace Survive.Narrative
             }
 
             group.DOKill();
-            if (즉시)
+            if (immediate)
             {
                 group.alpha = 0f;
                 gameObject.SetActive(false);

@@ -29,17 +29,17 @@ namespace Survive.Vitals
 
         public void Modify(float delta)
         {
-            float 이전 = _current;
+            float prev = _current;
             _current = Mathf.Clamp(_current + delta, 0f, _max);
-            if (!Mathf.Approximately(이전, _current)) Changed?.Invoke(_current, _max);
+            if (!Mathf.Approximately(prev, _current)) Changed?.Invoke(_current, _max);
         }
 
         public void SetMax(float value)
         {
             _max = Mathf.Max(0f, value);
-            float 이전 = _current;
+            float prev = _current;
             _current = Mathf.Clamp(_current, 0f, _max);
-            if (!Mathf.Approximately(이전, _current)) Changed?.Invoke(_current, _max);
+            if (!Mathf.Approximately(prev, _current)) Changed?.Invoke(_current, _max);
         }
     }
 }

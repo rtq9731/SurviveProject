@@ -31,33 +31,33 @@ namespace Survive.Items
         {
             if (item == null || count <= 0) return count > 0 ? count : 0;
 
-            int 남은수 = count;
+            int remaining = count;
 
             // 1단계 — 기존 스택 채우기
-            for (int i = 0; i < _slots.Length && 남은수 > 0; i++)
+            for (int i = 0; i < _slots.Length && remaining > 0; i++)
             {
                 var slot = _slots[i];
                 if (slot.IsEmpty || slot.item != item) continue;
 
-                int 넣을수 = Mathf.Min(slot.RemainingSpace, 남은수);
-                slot.count += 넣을수;
-                남은수 -= 넣을수;
+                int toAdd = Mathf.Min(slot.RemainingSpace, remaining);
+                slot.count += toAdd;
+                remaining -= toAdd;
             }
 
             // 2단계 — 빈 슬롯 쓰기
-            for (int i = 0; i < _slots.Length && 남은수 > 0; i++)
+            for (int i = 0; i < _slots.Length && remaining > 0; i++)
             {
                 var slot = _slots[i];
                 if (!slot.IsEmpty) continue;
 
-                int 넣을수 = Mathf.Min(item.maxStack, 남은수);
+                int toAdd = Mathf.Min(item.maxStack, remaining);
                 slot.item = item;
-                slot.count = 넣을수;
-                남은수 -= 넣을수;
+                slot.count = toAdd;
+                remaining -= toAdd;
             }
 
-            if (남은수 != count) Changed?.Invoke();
-            return 남은수;
+            if (remaining != count) Changed?.Invoke();
+            return remaining;
         }
 
         /// <summary>수량이 모자라면 아무것도 건드리지 않고 false를 돌려준다.</summary>
@@ -66,15 +66,15 @@ namespace Survive.Items
             if (string.IsNullOrEmpty(itemId) || count <= 0) return false;
             if (!Has(itemId, count)) return false;
 
-            int 남은수 = count;
-            for (int i = 0; i < _slots.Length && 남은수 > 0; i++)
+            int remaining = count;
+            for (int i = 0; i < _slots.Length && remaining > 0; i++)
             {
                 var slot = _slots[i];
                 if (slot.IsEmpty || slot.item.id != itemId) continue;
 
-                int 뺄수 = Mathf.Min(slot.count, 남은수);
-                slot.count -= 뺄수;
-                남은수 -= 뺄수;
+                int toRemove = Mathf.Min(slot.count, remaining);
+                slot.count -= toRemove;
+                remaining -= toRemove;
                 if (slot.count <= 0) slot.Clear();
             }
 
@@ -85,10 +85,10 @@ namespace Survive.Items
         public int CountOf(string itemId)
         {
             if (string.IsNullOrEmpty(itemId)) return 0;
-            int 합 = 0;
+            int sum = 0;
             foreach (var slot in _slots)
-                if (!slot.IsEmpty && slot.item.id == itemId) 합 += slot.count;
-            return 합;
+                if (!slot.IsEmpty && slot.item.id == itemId) sum += slot.count;
+            return sum;
         }
 
         public bool Has(string itemId, int count) => CountOf(itemId) >= count;
@@ -98,7 +98,7 @@ namespace Survive.Items
         /// </summary>
         public void MoveOrSwap(int fromSlot, int toSlot)
         {
-            if (!유효한슬롯(fromSlot) || !유효한슬롯(toSlot) || fromSlot == toSlot) return;
+            if (!IsValidSlot(fromSlot) || !IsValidSlot(toSlot) || fromSlot == toSlot) return;
 
             var from = _slots[fromSlot];
             var to = _slots[toSlot];
@@ -106,26 +106,26 @@ namespace Survive.Items
 
             if (!to.IsEmpty && to.item == from.item)
             {
-                int 옮길수 = Mathf.Min(to.RemainingSpace, from.count);
-                if (옮길수 <= 0) return;
+                int moved = Mathf.Min(to.RemainingSpace, from.count);
+                if (moved <= 0) return;
 
-                to.count += 옮길수;
-                from.count -= 옮길수;
+                to.count += moved;
+                from.count -= moved;
                 if (from.count <= 0) from.Clear();
             }
             else
             {
-                var 임시아이템 = to.item;
-                var 임시개수 = to.count;
+                var tmpItem = to.item;
+                var tmpCount = to.count;
                 to.item = from.item;
                 to.count = from.count;
-                from.item = 임시아이템;
-                from.count = 임시개수;
+                from.item = tmpItem;
+                from.count = tmpCount;
             }
 
             Changed?.Invoke();
         }
 
-        bool 유효한슬롯(int index) => index >= 0 && index < _slots.Length;
+        bool IsValidSlot(int index) => index >= 0 && index < _slots.Length;
     }
 }

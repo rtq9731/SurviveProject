@@ -23,7 +23,7 @@ namespace Survive.UI
 
         IEnumerator Start()
         {
-            보임(false, 즉시: true);
+            SetVisible(false, immediate: true);
 
             // 플레이어가 준비될 때까지 기다린다
             for (int i = 0; i < 120 && _interactor == null; i++)
@@ -34,31 +34,31 @@ namespace Survive.UI
             }
 
             if (_interactor == null) yield break;
-            _interactor.HoldProgressChanged += 갱신;
+            _interactor.HoldProgressChanged += Refresh;
         }
 
         void OnDestroy()
         {
-            if (_interactor != null) _interactor.HoldProgressChanged -= 갱신;
+            if (_interactor != null) _interactor.HoldProgressChanged -= Refresh;
         }
 
-        void 갱신(float 진행도)
+        void Refresh(float progress)
         {
-            if (fill != null) fill.fillAmount = 진행도;
-            보임(진행도 > 0.001f);
+            if (fill != null) fill.fillAmount = progress;
+            SetVisible(progress > 0.001f);
         }
 
-        void 보임(bool 보일까, bool 즉시 = false)
+        void SetVisible(bool visible, bool immediate = false)
         {
             if (group == null) return;
 
             _fade?.Kill();
-            if (즉시)
+            if (immediate)
             {
-                group.alpha = 보일까 ? 1f : 0f;
+                group.alpha = visible ? 1f : 0f;
                 return;
             }
-            _fade = group.DOFade(보일까 ? 1f : 0f, 0.12f);
+            _fade = group.DOFade(visible ? 1f : 0f, 0.12f);
         }
     }
 }

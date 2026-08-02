@@ -30,46 +30,46 @@ namespace Survive.Testing
         }
 
         /// <summary>씬에 러너가 없으면 만든다.</summary>
-        public static E2ERunner 준비()
+        public static E2ERunner EnsureExists()
         {
             if (Instance != null) return Instance;
             var go = new GameObject("E2ERunner");
             return go.AddComponent<E2ERunner>();
         }
 
-        public static void 실행(string name, IEnumerator 시나리오)
+        public static void Run(string name, IEnumerator routine)
         {
-            var runner = 준비();
+            var runner = EnsureExists();
             runner.StopAllCoroutines();
-            runner.StartCoroutine(runner.감싸기(name, 시나리오));
+            runner.StartCoroutine(runner.RunGuarded(name, routine));
         }
 
-        IEnumerator 감싸기(string name, IEnumerator 시나리오)
+        IEnumerator RunGuarded(string name, IEnumerator routine)
         {
-            E2EHarness.로그비우기();
+            E2EHarness.ClearLog();
             ScenarioName = name;
             FailReason = "";
             Status = RunStatus.Running;
             ElapsedSeconds = 0f;
 
             var sw = Stopwatch.StartNew();
-            E2EHarness.기록("=== " + name + " 시작 ===");
+            E2EHarness.Log("=== " + name + " 시작 ===");
 
             // 코루틴 안에서 던진 예외는 바깥에서 try/catch로 못 잡는다.
             // 한 단계씩 직접 굴리면서 잡는다.
             var stack = new System.Collections.Generic.Stack<IEnumerator>();
-            stack.Push(시나리오);
+            stack.Push(routine);
 
             while (stack.Count > 0)
             {
                 var top = stack.Peek();
                 object current = null;
-                bool 계속;
+                bool hasNext;
 
                 try
                 {
-                    계속 = top.MoveNext();
-                    if (계속) current = top.Current;
+                    hasNext = top.MoveNext();
+                    if (hasNext) current = top.Current;
                 }
                 catch (Exception e)
                 {
@@ -77,25 +77,27 @@ namespace Survive.Testing
                     ElapsedSeconds = (float)sw.Elapsed.TotalSeconds;
                     FailReason = e.Message;
                     Status = RunStatus.Failed;
-                    E2EHarness.기록("실패: " + e.Message);
-                    E2EHarness.기록($"=== {name} 실패 ({ElapsedSeconds:F1}초) ===");
+                    E2EHarness.Log("실패: " + e.Message);
+                    E2EHarness.Log($"=== {name} 실패 ({ElapsedSeconds:F1}초) ===");
+                    E2EHarness.RemoveDevice();
                     yield break;
                 }
 
-                if (!계속) { stack.Pop(); continue; }
+                if (!hasNext) { stack.Pop(); continue; }
 
-                if (current is IEnumerator 안쪽) stack.Push(안쪽);
+                if (current is IEnumerator inner) stack.Push(inner);
                 else yield return current;
             }
 
             sw.Stop();
             ElapsedSeconds = (float)sw.Elapsed.TotalSeconds;
             Status = RunStatus.Passed;
-            E2EHarness.기록($"=== {name} 통과 ({ElapsedSeconds:F1}초) ===");
+            E2EHarness.Log($"=== {name} 통과 ({ElapsedSeconds:F1}초) ===");
+            E2EHarness.RemoveDevice();
         }
 
         /// <summary>uloop에서 폴링할 한 줄 요약.</summary>
-        public static string 요약()
+        public static string Summary()
         {
             return $"{ScenarioName} | {Status}" +
                    (Status == RunStatus.Failed ? " | " + FailReason : "") +

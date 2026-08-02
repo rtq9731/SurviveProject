@@ -18,45 +18,45 @@ namespace Survive.UI
         [SerializeField] float rollSeconds = 0.35f;
 
         PlayerInventory _inventory;
-        int _표시중;
+        int _shown;
         Tween _tween;
 
         public void Bind(PlayerInventory inventory)
         {
-            해제();
+            Unbind();
             _inventory = inventory;
             if (_inventory?.Inventory == null) return;
 
-            _inventory.Inventory.Changed += 갱신;
-            _표시중 = _inventory.ScrapCount;
-            찍기(_표시중);
+            _inventory.Inventory.Changed += Refresh;
+            _shown = _inventory.ScrapCount;
+            Render(_shown);
         }
 
-        void OnDisable() => 해제();
+        void OnDisable() => Unbind();
 
-        void 해제()
+        void Unbind()
         {
             _tween?.Kill();
             _tween = null;
-            if (_inventory?.Inventory != null) _inventory.Inventory.Changed -= 갱신;
+            if (_inventory?.Inventory != null) _inventory.Inventory.Changed -= Refresh;
             _inventory = null;
         }
 
-        void 갱신()
+        void Refresh()
         {
-            int 목표 = _inventory.ScrapCount;
-            if (목표 == _표시중) return;
+            int target = _inventory.ScrapCount;
+            if (target == _shown) return;
 
             _tween?.Kill();
-            int 시작 = _표시중;
-            _tween = DOVirtual.Int(시작, 목표, rollSeconds, v =>
+            int start = _shown;
+            _tween = DOVirtual.Int(start, target, rollSeconds, v =>
             {
-                _표시중 = v;
-                찍기(v);
+                _shown = v;
+                Render(v);
             }).SetEase(Ease.OutCubic);
         }
 
-        void 찍기(int v)
+        void Render(int v)
         {
             if (label != null) label.text = string.Format(format, v);
         }

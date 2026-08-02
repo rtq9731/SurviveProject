@@ -21,8 +21,8 @@ namespace Survive.Interaction
 
         public void Interact(PlayerContext player)
         {
-            int 남은수 = player.Inventory.Add(item, count);
-            if (남은수 <= 0)
+            int remaining = player.Inventory.Add(item, count);
+            if (remaining <= 0)
             {
                 pickupFeedback?.PlayFeedbacks();
                 Destroy(gameObject);
@@ -30,10 +30,10 @@ namespace Survive.Interaction
             }
 
             // 일부만 들어갔으면 남은 만큼만 남긴다
-            if (남은수 != count)
+            if (remaining != count)
             {
                 pickupFeedback?.PlayFeedbacks();
-                count = 남은수;
+                count = remaining;
             }
         }
 

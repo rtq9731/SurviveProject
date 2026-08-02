@@ -21,9 +21,9 @@ namespace Survive.UI
         [SerializeField] ScrapCounterView scrapCounter;
         [SerializeField] Text interactionPrompt;
 
-        void Start() => StartCoroutine(연결대기());
+        void Start() => StartCoroutine(BindWhenReady());
 
-        IEnumerator 연결대기()
+        IEnumerator BindWhenReady()
         {
             // 플레이어 컴포넌트들이 OnEnable에서 자신을 등록하므로 한 프레임 기다린다.
             yield return null;
@@ -42,16 +42,16 @@ namespace Survive.UI
             var interactor = UnityEngine.Object.FindFirstObjectByType<PlayerInteractor>(FindObjectsInactive.Exclude);
             if (interactor != null)
             {
-                interactor.PromptChanged += 프롬프트갱신;
-                프롬프트갱신(null);
+                interactor.PromptChanged += RefreshPrompt;
+                RefreshPrompt(null);
             }
         }
 
-        void 프롬프트갱신(string 문구)
+        void RefreshPrompt(string prompt)
         {
             if (interactionPrompt == null) return;
-            interactionPrompt.text = 문구 ?? "";
-            interactionPrompt.gameObject.SetActive(!string.IsNullOrEmpty(문구));
+            interactionPrompt.text = prompt ?? "";
+            interactionPrompt.gameObject.SetActive(!string.IsNullOrEmpty(prompt));
         }
     }
 }

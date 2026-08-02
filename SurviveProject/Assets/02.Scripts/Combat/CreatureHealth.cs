@@ -26,51 +26,51 @@ namespace Survive.Combat
         [Tooltip("축적한 스크랩을 떨굴 때 쓸 아이템. 보통 scrap")]
         [SerializeField] ItemDataSO _scrapItem;
 
-        float _체력;
+        float _health;
 
         public CreatureDefinitionSO Definition => definition;
         public bool IsDead { get; private set; }
         public event Action<CreatureHealth> Died;
         public event Action<CreatureHealth, DamageInfo> Damaged;
 
-        void Awake() => _체력 = definition != null ? definition.maxHealth : 10f;
+        void Awake() => _health = definition != null ? definition.maxHealth : 10f;
 
         public void TakeDamage(in DamageInfo info)
         {
             if (IsDead) return;
 
-            _체력 -= info.Amount;
+            _health -= info.Amount;
             hitFeedback?.PlayFeedbacks();
             Damaged?.Invoke(this, info);
 
-            if (_체력 <= 0f) 사망();
+            if (_health <= 0f) Die();
         }
 
-        void 사망()
+        void Die()
         {
             IsDead = true;
             deathFeedback?.PlayFeedbacks();
-            전리품떨구기();
+            DropLoot();
             Died?.Invoke(this);
             Destroy(gameObject, 0.1f);
         }
 
-        void 전리품떨구기()
+        void DropLoot()
         {
             if (definition?.drops == null) return;
 
-            var 전리품 = definition.drops.Roll(new System.Random());
+            var loot = definition.drops.Roll(new System.Random());
 
             // 생산자가 먹어서 축적한 스크랩을 더한다.
             // 배부른 개체를 노리면 더 얻는다 — 관찰에 대한 보상이다.
             var feeding = GetComponent<Survive.Creatures.CreatureFeeding>();
             if (feeding != null && feeding.Stored > 0f && _scrapItem != null)
             {
-                int 추가 = Mathf.RoundToInt(feeding.Stored);
-                if (추가 > 0) 전리품.Add(new Survive.Items.ItemStack(_scrapItem, 추가));
+                int added = Mathf.RoundToInt(feeding.Stored);
+                if (added > 0) loot.Add(new Survive.Items.ItemStack(_scrapItem, added));
             }
 
-            foreach (var stack in 전리품)
+            foreach (var stack in loot)
             {
                 GameObject go;
                 if (pickupPrefab != null)

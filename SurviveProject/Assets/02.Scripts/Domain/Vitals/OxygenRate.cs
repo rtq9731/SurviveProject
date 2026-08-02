@@ -15,18 +15,18 @@ namespace Survive.Vitals
         {
             if (modifiers == null || modifiers.Count == 0) return baseRate;
 
-            bool 하나라도있음 = false;
-            float 최댓값 = float.NegativeInfinity;
+            bool any = false;
+            float best = float.NegativeInfinity;
 
             for (int i = 0; i < modifiers.Count; i++)
             {
                 var m = modifiers[i];
                 if (m == null) continue;
-                하나라도있음 = true;
-                if (m.OxygenDeltaPerSecond > 최댓값) 최댓값 = m.OxygenDeltaPerSecond;
+                any = true;
+                if (m.OxygenDeltaPerSecond > best) best = m.OxygenDeltaPerSecond;
             }
 
-            return 하나라도있음 ? 최댓값 : baseRate;
+            return any ? best : baseRate;
         }
     }
 }

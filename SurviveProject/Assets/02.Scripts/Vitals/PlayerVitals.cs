@@ -40,18 +40,18 @@ namespace Survive.Vitals
 
         public event Action Died;
 
-        bool _죽음통보함;
-        bool _경고중;
+        bool _deathReported;
+        bool _warning;
 
         void Awake()
         {
-            Health = 만들기(healthDefinition, 100f);
-            Oxygen = 만들기(oxygenDefinition, 100f);
+            Health = Create(healthDefinition, 100f);
+            Oxygen = Create(oxygenDefinition, 100f);
         }
 
-        static Vital 만들기(VitalDefinitionSO def, float 기본최대)
+        static Vital Create(VitalDefinitionSO def, float defaultMax)
         {
-            if (def == null) return new Vital(기본최대, 기본최대);
+            if (def == null) return new Vital(defaultMax, defaultMax);
             return new Vital(def.maxValue, def.startValue);
         }
 
@@ -69,28 +69,28 @@ namespace Survive.Vitals
             else if (healthDefinition != null && healthDefinition.passiveRatePerSecond != 0f)
                 Health.Modify(healthDefinition.passiveRatePerSecond * dt);
 
-            산소경고갱신();
+            RefreshOxygenWarning();
 
-            if (Health.IsEmpty && !_죽음통보함)
+            if (Health.IsEmpty && !_deathReported)
             {
-                _죽음통보함 = true;
+                _deathReported = true;
                 deathFeedback?.PlayFeedbacks();
                 Died?.Invoke();
             }
         }
 
-        void 산소경고갱신()
+        void RefreshOxygenWarning()
         {
-            bool 위험 = Oxygen.Normalized <= oxygenWarningThreshold;
+            bool danger = Oxygen.Normalized <= oxygenWarningThreshold;
 
-            if (위험 && !_경고중)
+            if (danger && !_warning)
             {
-                _경고중 = true;
+                _warning = true;
                 oxygenWarningFeedback?.PlayFeedbacks();
             }
-            else if (!위험 && _경고중)
+            else if (!danger && _warning)
             {
-                _경고중 = false;
+                _warning = false;
                 oxygenWarningFeedback?.StopFeedbacks();
                 oxygenRecoveredFeedback?.PlayFeedbacks();
             }
@@ -98,8 +98,8 @@ namespace Survive.Vitals
 
         public float CurrentOxygenRate()
         {
-            float 기본 = oxygenDefinition != null ? oxygenDefinition.passiveRatePerSecond : -1f;
-            return OxygenRate.Calculate(기본, _oxygenModifiers);
+            float baseRate = oxygenDefinition != null ? oxygenDefinition.passiveRatePerSecond : -1f;
+            return OxygenRate.Calculate(baseRate, _oxygenModifiers);
         }
 
         public void RegisterOxygenModifier(IOxygenModifier modifier)

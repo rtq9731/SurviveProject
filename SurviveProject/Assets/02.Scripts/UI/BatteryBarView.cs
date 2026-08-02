@@ -27,37 +27,37 @@ namespace Survive.UI
             yield return null;
             if (!GameServices.TryGet<LanternController>(out _lantern))
             {
-                보임(false);
+                SetVisible(false);
                 yield break;
             }
 
-            _lantern.BatteryChanged += 갱신;
-            갱신(_lantern.Battery, 100f);
+            _lantern.BatteryChanged += Refresh;
+            Refresh(_lantern.Battery, 100f);
         }
 
         void OnDestroy()
         {
-            if (_lantern != null) _lantern.BatteryChanged -= 갱신;
+            if (_lantern != null) _lantern.BatteryChanged -= Refresh;
         }
 
-        void 갱신(float 현재, float 최대)
+        void Refresh(float current, float max)
         {
-            보임(_lantern != null && _lantern.IsOn);
+            SetVisible(_lantern != null && _lantern.IsOn);
 
-            float n = 최대 <= 0f ? 0f : 현재 / 최대;
+            float n = max <= 0f ? 0f : current / max;
             if (fill != null)
             {
                 fill.fillAmount = n;
                 fill.color = Color.Lerp(emptyColor, fullColor, n);
             }
-            if (label != null) label.text = $"배터리 {Mathf.RoundToInt(현재)}";
+            if (label != null) label.text = $"배터리 {Mathf.RoundToInt(current)}";
         }
 
-        void 보임(bool 보일까)
+        void SetVisible(bool visible)
         {
             if (group == null) return;
             group.DOKill();
-            group.DOFade(보일까 ? 1f : 0f, 0.25f);
+            group.DOFade(visible ? 1f : 0f, 0.25f);
         }
     }
 }

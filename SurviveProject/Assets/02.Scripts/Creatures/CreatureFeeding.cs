@@ -37,61 +37,61 @@ namespace Survive.Creatures
         [Header("피드백")]
         [SerializeField] MMF_Player eatFeedback;
 
-        float _축적;
-        float _다음섭취시각;
-        Vector3 _원래크기;
+        float _stored;
+        float _nextEatTime;
+        Vector3 _baseScale;
         MaterialPropertyBlock _mpb;
-        Transform _목표식물;
+        Transform _targetPlant;
 
         /// <summary>축적한 스크랩 가치. 사망 시 드롭량에 더해진다.</summary>
-        public float Stored => _축적;
-        public float Fullness => fullAt <= 0f ? 0f : Mathf.Clamp01(_축적 / fullAt);
-        public bool IsFull => _축적 >= fullAt;
+        public float Stored => _stored;
+        public float Fullness => fullAt <= 0f ? 0f : Mathf.Clamp01(_stored / fullAt);
+        public bool IsFull => _stored >= fullAt;
 
         void Awake()
         {
-            _원래크기 = transform.localScale;
+            _baseScale = transform.localScale;
             if (glowRenderer == null) glowRenderer = GetComponentInChildren<Renderer>();
             _mpb = new MaterialPropertyBlock();
-            표현갱신();
+            RefreshAppearance();
         }
 
         void Update()
         {
             if (IsFull) return;
-            if (Time.time < _다음섭취시각) return;
+            if (Time.time < _nextEatTime) return;
 
-            var plant = 가장가까운식물();
+            var plant = NearestPlant();
             if (plant == null) return;
 
-            _목표식물 = plant.transform;
+            _targetPlant = plant.transform;
             if (Vector3.Distance(transform.position, plant.transform.position) > eatRange) return;
 
-            float 영양 = plant.Eat();
-            if (영양 <= 0f) return;
+            float nutrition = plant.Eat();
+            if (nutrition <= 0f) return;
 
-            _축적 += 영양;
-            _다음섭취시각 = Time.time + eatCooldown;
+            _stored += nutrition;
+            _nextEatTime = Time.time + eatCooldown;
             eatFeedback?.PlayFeedbacks();
-            표현갱신();
+            RefreshAppearance();
         }
 
         /// <summary>CreatureBrain이 이동 목표로 쓴다.</summary>
         public bool TryGetFeedTarget(out Vector3 pos)
         {
-            if (!IsFull && _목표식물 == null) 가장가까운식물();
-            if (IsFull || _목표식물 == null)
+            if (!IsFull && _targetPlant == null) NearestPlant();
+            if (IsFull || _targetPlant == null)
             {
                 pos = Vector3.zero;
                 return false;
             }
-            pos = _목표식물.position;
+            pos = _targetPlant.position;
             return true;
         }
 
         static readonly Collider[] _buf = new Collider[24];
 
-        PlantNode 가장가까운식물()
+        PlantNode NearestPlant()
         {
             int n = Physics.OverlapSphereNonAlloc(transform.position, searchRadius, _buf,
                                                   ~0, QueryTriggerInteraction.Collide);
@@ -107,14 +107,14 @@ namespace Survive.Creatures
                 if (d < bestD) { bestD = d; best = p; }
             }
 
-            _목표식물 = best != null ? best.transform : null;
+            _targetPlant = best != null ? best.transform : null;
             return best;
         }
 
-        void 표현갱신()
+        void RefreshAppearance()
         {
             float f = Fullness;
-            transform.localScale = _원래크기 * Mathf.Lerp(1f, swellScale, f);
+            transform.localScale = _baseScale * Mathf.Lerp(1f, swellScale, f);
 
             if (glowRenderer == null) return;
             glowRenderer.GetPropertyBlock(_mpb);

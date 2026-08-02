@@ -35,11 +35,11 @@ namespace Survive.Player
         [SerializeField] float climbOutBoost = 3.2f;
 
         CharacterController _cc;
-        Vector2 _입력 = Vector2.zero;
-        float _수직속도;
-        float _다음점프시각;
-        bool _잠김;
-        bool _상승중;
+        Vector2 _moveInput = Vector2.zero;
+        float _verticalSpeed;
+        float _nextJumpTime;
+        bool _locked;
+        bool _ascending;
 
         public bool IsGrounded => _cc != null && _cc.isGrounded;
         public float CurrentSpeed { get; private set; }
@@ -55,127 +55,127 @@ namespace Survive.Player
         void OnEnable()
         {
             if (input == null) return;
-            input.MoveEvent += 이동입력;
-            input.JumpEvent += 점프;
-            input.SprintEvent += 상승입력;
+            input.MoveEvent += OnMoveInput;
+            input.JumpEvent += OnJump;
+            input.SprintEvent += OnAscendInput;
         }
 
         void OnDisable()
         {
             if (input == null) return;
-            input.MoveEvent -= 이동입력;
-            input.JumpEvent -= 점프;
-            input.SprintEvent -= 상승입력;
+            input.MoveEvent -= OnMoveInput;
+            input.JumpEvent -= OnJump;
+            input.SprintEvent -= OnAscendInput;
         }
 
-        void 이동입력(Vector2 v) => _입력 = v;
-        void 상승입력(bool 눌림) => _상승중 = 눌림;
+        void OnMoveInput(Vector2 v) => _moveInput = v;
+        void OnAscendInput(bool pressed) => _ascending = pressed;
 
-        void 점프()
+        void OnJump()
         {
-            if (_잠김) return;
+            if (_locked) return;
 
             // 물속에서는 점프 키가 상승이다
             if (swimming != null && swimming.IsSwimming)
             {
-                _수직속도 = swimVerticalSpeed;
+                _verticalSpeed = swimVerticalSpeed;
                 return;
             }
 
-            if (Time.time < _다음점프시각) return;
+            if (Time.time < _nextJumpTime) return;
             if (!_cc.isGrounded) return;
-            _수직속도 = jumpPower;
-            _다음점프시각 = Time.time + jumpCooldown;
+            _verticalSpeed = jumpPower;
+            _nextJumpTime = Time.time + jumpCooldown;
         }
 
         public void SetMovementLocked(bool locked)
         {
-            _잠김 = locked;
-            if (locked) _입력 = Vector2.zero;
+            _locked = locked;
+            if (locked) _moveInput = Vector2.zero;
         }
 
         void Update()
         {
             float dt = Time.deltaTime;
-            bool 헤엄 = swimming != null && swimming.IsSwimming;
+            bool isSwimming = swimming != null && swimming.IsSwimming;
 
-            Vector3 방향 = _잠김 ? Vector3.zero : new Vector3(_입력.x, 0f, _입력.y);
-            if (방향.sqrMagnitude > 1f) 방향.Normalize();
+            Vector3 dir = _locked ? Vector3.zero : new Vector3(_moveInput.x, 0f, _moveInput.y);
+            if (dir.sqrMagnitude > 1f) dir.Normalize();
 
-            if (헤엄) 수영이동(방향, dt);
-            else 지상이동(방향, dt);
+            if (isSwimming) SwimMove(dir, dt);
+            else GroundMove(dir, dt);
         }
 
-        void 지상이동(Vector3 방향, float dt)
+        void GroundMove(Vector3 dir, float dt)
         {
-            bool 달림 = input != null && input.IsSprinting;
-            float 속도 = 달림 ? runSpeed : walkSpeed;
+            bool sprinting = input != null && input.IsSprinting;
+            float speed = sprinting ? runSpeed : walkSpeed;
 
             // 허리까지 잠기면 느려진다
-            if (swimming != null && swimming.IsWading) 속도 *= wadeSpeedFactor;
+            if (swimming != null && swimming.IsWading) speed *= wadeSpeedFactor;
 
-            Vector3 수평 = transform.TransformDirection(방향) * 속도;
+            Vector3 planar = transform.TransformDirection(dir) * speed;
 
-            if (_cc.isGrounded && _수직속도 < 0f) _수직속도 = -1f;
-            _수직속도 += -9.81f * gravityScale * dt;
+            if (_cc.isGrounded && _verticalSpeed < 0f) _verticalSpeed = -1f;
+            _verticalSpeed += -9.81f * gravityScale * dt;
 
-            _cc.Move((수평 + Vector3.up * _수직속도) * dt);
+            _cc.Move((planar + Vector3.up * _verticalSpeed) * dt);
 
-            PlanarVelocity = 수평;
-            CurrentSpeed = 수평.magnitude;
+            PlanarVelocity = planar;
+            CurrentSpeed = planar.magnitude;
         }
 
-        void 수영이동(Vector3 방향, float dt)
+        void SwimMove(Vector3 dir, float dt)
         {
             // 물속에서는 보는 방향으로 나아간다. 위아래를 보면 그쪽으로 간다.
-            Vector3 전방 = transform.forward;
+            Vector3 forward = transform.forward;
             var camT = cameraRig != null ? cameraRig.CameraTransform : null;
-            if (camT != null) 전방 = camT.forward;
+            if (camT != null) forward = camT.forward;
 
-            Vector3 오른쪽 = transform.right;
-            Vector3 이동 = (전방 * 방향.z + 오른쪽 * 방향.x) * swimSpeed;
+            Vector3 right = transform.right;
+            Vector3 MoveTo = (forward * dir.z + right * dir.x) * swimSpeed;
 
-            bool 상승조작 = false;
+            bool ascendInput = false;
 
             // 상하 조작: Shift는 하강 (Space 상승은 점프 이벤트에서 처리)
-            if (!_잠김 && _상승중) { _수직속도 = -swimVerticalSpeed; }
-            else if (_수직속도 > buoyancy + 0.05f) 상승조작 = true;   // Space로 밀어 올린 상태
+            if (!_locked && _ascending) { _verticalSpeed = -swimVerticalSpeed; }
+            else if (_verticalSpeed > buoyancy + 0.05f) ascendInput = true;   // Space로 밀어 올린 상태
 
             // 물의 저항. 수직 속도가 부력 쪽으로 서서히 수렴한다
-            _수직속도 = Mathf.MoveTowards(_수직속도, buoyancy, dt * 3.5f);
-            _수직속도 = swimming.DampBuoyancyNearSurface(_수직속도, _cc.isGrounded, 상승조작);
+            _verticalSpeed = Mathf.MoveTowards(_verticalSpeed, buoyancy, dt * 3.5f);
+            _verticalSpeed = swimming.DampBuoyancyNearSurface(_verticalSpeed, _cc.isGrounded, ascendInput);
 
             // 물가로 나가려 할 때: 앞이 막혀 있고 발밑에 지면이 있으면 밀어 올린다.
             // 이게 없으면 경사를 못 타고 물에 갇힌다.
-            if (방향.sqrMagnitude > 0.01f && 물가오르기(이동))
-                _수직속도 = Mathf.Max(_수직속도, climbOutBoost);
+            if (dir.sqrMagnitude > 0.01f && CanClimbOut(MoveTo))
+                _verticalSpeed = Mathf.Max(_verticalSpeed, climbOutBoost);
 
-            _cc.Move((이동 + Vector3.up * _수직속도) * dt);
+            _cc.Move((MoveTo + Vector3.up * _verticalSpeed) * dt);
 
-            PlanarVelocity = new Vector3(이동.x, 0f, 이동.z);
+            PlanarVelocity = new Vector3(MoveTo.x, 0f, MoveTo.z);
             CurrentSpeed = PlanarVelocity.magnitude;
         }
 
         /// <summary>
         /// 진행 방향에 오를 만한 턱이 있는지. 물가에서 뭍으로 나가는 것을 돕는다.
         /// </summary>
-        bool 물가오르기(Vector3 이동)
+        bool CanClimbOut(Vector3 MoveTo)
         {
-            Vector3 수평 = new Vector3(이동.x, 0f, 이동.z);
-            if (수평.sqrMagnitude < 0.01f) return false;
+            Vector3 planar = new Vector3(MoveTo.x, 0f, MoveTo.z);
+            if (planar.sqrMagnitude < 0.01f) return false;
 
-            Vector3 앞 = 수평.normalized;
-            Vector3 발밑 = transform.position - Vector3.up * (_cc.height * 0.5f - _cc.radius);
+            Vector3 ahead = planar.normalized;
+            Vector3 feet = transform.position - Vector3.up * (_cc.height * 0.5f - _cc.radius);
 
             // 가슴 높이에 벽이 있는데 그 위는 비어 있으면 오를 수 있는 턱이다
-            bool 벽 = Physics.SphereCast(발밑, _cc.radius * 0.8f, 앞, out _, 0.7f,
+            bool wall = Physics.SphereCast(feet, _cc.radius * 0.8f, ahead, out _, 0.7f,
                                         ~0, QueryTriggerInteraction.Ignore);
-            if (!벽) return false;
+            if (!wall) return false;
 
-            Vector3 위 = 발밑 + Vector3.up * (_cc.height * 0.9f);
-            bool 머리막힘 = Physics.SphereCast(위, _cc.radius * 0.8f, 앞, out _, 0.7f,
+            Vector3 head = feet + Vector3.up * (_cc.height * 0.9f);
+            bool headBlocked = Physics.SphereCast(head, _cc.radius * 0.8f, ahead, out _, 0.7f,
                                              ~0, QueryTriggerInteraction.Ignore);
-            return !머리막힘;
+            return !headBlocked;
         }
     }
 }

@@ -13,19 +13,19 @@ namespace Survive.UI
 
         public void Render(ItemStack stack)
         {
-            bool 비었나 = stack == null || stack.IsEmpty;
+            bool empty = stack == null || stack.IsEmpty;
 
             if (icon != null)
             {
-                icon.enabled = !비었나 && stack.item.icon != null;
-                if (!비었나) icon.sprite = stack.item.icon;
+                icon.enabled = !empty && stack.item.icon != null;
+                if (!empty) icon.sprite = stack.item.icon;
             }
 
             if (countLabel != null)
             {
-                bool 표시 = !비었나 && stack.count > 1;
-                countLabel.enabled = 표시;
-                if (표시) countLabel.text = stack.count.ToString();
+                bool show = !empty && stack.count > 1;
+                countLabel.enabled = show;
+                if (show) countLabel.text = stack.count.ToString();
             }
         }
     }

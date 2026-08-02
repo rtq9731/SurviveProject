@@ -11,7 +11,7 @@ namespace Survive.Core
     public class SaveService
     {
         [Serializable]
-        class 항목
+        class entry
         {
             public string key;
             public string json;
@@ -19,10 +19,10 @@ namespace Survive.Core
         }
 
         [Serializable]
-        class 저장본
+        class snapshot
         {
             public string sceneName;
-            public List<항목> entries = new List<항목>();
+            public List<entry> entries = new List<entry>();
         }
 
         readonly List<ISaveable> _saveables = new List<ISaveable>();
@@ -34,14 +34,14 @@ namespace Survive.Core
 
         public void Unregister(ISaveable s) => _saveables.Remove(s);
 
-        static string 경로(string slot) =>
+        static string PathFor(string slot) =>
             Path.Combine(Application.persistentDataPath, $"save_{slot}.json");
 
-        public bool HasSave(string slot) => File.Exists(경로(slot));
+        public bool HasSave(string slot) => File.Exists(PathFor(slot));
 
         public void Save(string slot)
         {
-            var 본 = new 저장본
+            var save = new snapshot
             {
                 sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name
             };
@@ -52,7 +52,7 @@ namespace Survive.Core
                 var state = s.CaptureState();
                 if (state == null) continue;
 
-                본.entries.Add(new 항목
+                save.entries.Add(new entry
                 {
                     key = s.SaveKey,
                     type = state.GetType().AssemblyQualifiedName,
@@ -62,8 +62,8 @@ namespace Survive.Core
 
             try
             {
-                File.WriteAllText(경로(slot), JsonUtility.ToJson(본, true));
-                Debug.Log($"[SaveService] 저장 완료: {경로(slot)} ({본.entries.Count}개 항목)");
+                File.WriteAllText(PathFor(slot), JsonUtility.ToJson(save, true));
+                Debug.Log($"[SaveService] 저장 완료: {PathFor(slot)} ({save.entries.Count}개 항목)");
             }
             catch (Exception e)
             {
@@ -75,19 +75,19 @@ namespace Survive.Core
         {
             if (!HasSave(slot)) return false;
 
-            저장본 본;
+            snapshot save;
             try
             {
-                본 = JsonUtility.FromJson<저장본>(File.ReadAllText(경로(slot)));
+                save = JsonUtility.FromJson<snapshot>(File.ReadAllText(PathFor(slot)));
             }
             catch (Exception e)
             {
                 Debug.LogError($"[SaveService] 불러오기 실패: {e.Message}");
                 return false;
             }
-            if (본 == null) return false;
+            if (save == null) return false;
 
-            foreach (var entry in 본.entries)
+            foreach (var entry in save.entries)
             {
                 var target = _saveables.Find(s => s != null && s.SaveKey == entry.key);
                 if (target == null) continue;
@@ -107,7 +107,7 @@ namespace Survive.Core
 
         public void Delete(string slot)
         {
-            if (HasSave(slot)) File.Delete(경로(slot));
+            if (HasSave(slot)) File.Delete(PathFor(slot));
         }
     }
 }

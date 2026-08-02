@@ -31,10 +31,10 @@ namespace Survive.UI
         readonly List<(RecipeSO recipe, Button button, Text label)> _rows = new List<(RecipeSO, Button, Text)>();
         PlayerInventory _inventory;
         Survive.Player.PlayerContext _player;
-        StationType _현재스테이션 = StationType.None;
-        bool _열림;
+        StationType _station = StationType.None;
+        bool _isOpen;
 
-        public bool IsOpen => _열림;
+        public bool IsOpen => _isOpen;
 
         void Awake()
         {
@@ -48,25 +48,25 @@ namespace Survive.UI
                 group.blocksRaycasts = false;
                 group.interactable = false;
             }
-            _열림 = false;
+            _isOpen = false;
         }
 
         void OnEnable()
         {
             // ESC 처리는 UIStateService가 전담한다. 여기서 따로 듣지 않는다 —
             // 패널마다 각자 들으면 닫히는 것과 안 닫히는 것이 생긴다.
-            StartCoroutine(연결대기());
+            StartCoroutine(BindWhenReady());
         }
 
-        IEnumerator 연결대기()
+        IEnumerator BindWhenReady()
         {
             yield return null;
             GameServices.TryGet<PlayerInventory>(out _inventory);
             _player = UnityEngine.Object.FindFirstObjectByType<Survive.Player.PlayerContext>(FindObjectsInactive.Exclude);
-            행만들기();
+            BuildRows();
         }
 
-        void 행만들기()
+        void BuildRows()
         {
             if (rowParent == null || book == null) return;
             foreach (var (_, b, _) in _rows) if (b != null) Destroy(b.gameObject);
@@ -101,30 +101,30 @@ namespace Survive.UI
                 txt.color = Color.white;
                 txt.raycastTarget = false;
 
-                var 캡처 = r;
-                btn.onClick.AddListener(() => 제작시도(캡처));
+                var captured = r;
+                btn.onClick.AddListener(() => TryCraft(captured));
 
                 _rows.Add((r, btn, txt));
             }
-            목록갱신();
+            RefreshList();
         }
 
-        void 목록갱신()
+        void RefreshList()
         {
             var inv = _inventory?.Inventory;
             foreach (var (recipe, button, label) in _rows)
             {
-                bool 가능 = inv != null && CraftingService.CanCraft(recipe, inv, _현재스테이션);
-                if (button != null) button.interactable = 가능;
+                bool canMake = inv != null && CraftingService.CanCraft(recipe, inv, _station);
+                if (button != null) button.interactable = canMake;
                 if (label != null)
                 {
-                    label.text = 설명(recipe, inv);
-                    label.color = 가능 ? Color.white : new Color(0.65f, 0.65f, 0.7f, 1f);
+                    label.text = Describe(recipe, inv);
+                    label.color = canMake ? Color.white : new Color(0.65f, 0.65f, 0.7f, 1f);
                 }
             }
         }
 
-        string 설명(RecipeSO r, Inventory inv)
+        string Describe(RecipeSO r, Inventory inv)
         {
             var sb = new StringBuilder();
             sb.Append(string.IsNullOrEmpty(r.displayName) ? r.result?.item?.displayName ?? r.id : r.displayName);
@@ -133,42 +133,42 @@ namespace Survive.UI
             if (r.ingredients == null || r.ingredients.Length == 0) sb.Append("재료 없음");
             else
             {
-                bool 첫 = true;
+                bool first = true;
                 foreach (var need in r.ingredients)
                 {
                     if (need?.item == null) continue;
-                    if (!첫) sb.Append(", ");
-                    int 보유 = inv != null ? inv.CountOf(need.item.id) : 0;
-                    sb.Append($"{need.item.displayName} {보유}/{need.count}");
-                    첫 = false;
+                    if (!first) sb.Append(", ");
+                    int held = inv != null ? inv.CountOf(need.item.id) : 0;
+                    sb.Append($"{need.item.displayName} {held}/{need.count}");
+                    first = false;
                 }
             }
             if (r.requiredStation != StationType.None) sb.Append("  (제작대 필요)");
             return sb.ToString();
         }
 
-        void 제작시도(RecipeSO r)
+        void TryCraft(RecipeSO r)
         {
             var inv = _inventory?.Inventory;
             if (inv == null) return;
 
-            if (CraftingService.Craft(r, inv, _현재스테이션))
+            if (CraftingService.Craft(r, inv, _station))
                 craftFeedback?.PlayFeedbacks();
 
-            목록갱신();
+            RefreshList();
         }
 
         public void Open(StationType station)
         {
-            _현재스테이션 = station;
-            if (_열림) { 목록갱신(); return; }
+            _station = station;
+            if (_isOpen) { RefreshList(); return; }
 
-            _열림 = true;
+            _isOpen = true;
 
             // 행이 아직 없으면 지금 만든다. 오브젝트가 꺼져 있어
             // 연결대기 코루틴이 돌지 못했을 수 있다.
-            if (_rows.Count == 0) 행만들기();
-            목록갱신();
+            if (_rows.Count == 0) BuildRows();
+            RefreshList();
 
             if (group != null)
             {
@@ -184,14 +184,14 @@ namespace Survive.UI
                 panel.DOScale(1f, tweenSeconds).SetEase(Ease.OutBack);
             }
 
-            조작잠금(true);
+            LockControls(true);
             if (GameServices.TryGet<UIStateService>(out var ui)) ui.NotifyOpened(this);
         }
 
         public void Close()
         {
-            if (!_열림) return;
-            _열림 = false;
+            if (!_isOpen) return;
+            _isOpen = false;
 
             if (group != null)
             {
@@ -201,19 +201,19 @@ namespace Survive.UI
                 group.DOFade(0f, tweenSeconds);
             }
 
-            조작잠금(false);
+            LockControls(false);
             if (GameServices.TryGet<UIStateService>(out var ui)) ui.NotifyClosed(this);
         }
 
-        void 조작잠금(bool 잠글까)
+        void LockControls(bool locked)
         {
-            _player?.Locomotion?.SetMovementLocked(잠글까);
-            _player?.CameraRig?.SetLookLocked(잠글까);
+            _player?.Locomotion?.SetMovementLocked(locked);
+            _player?.CameraRig?.SetLookLocked(locked);
         }
 
-        void 즉시닫기()
+        void CloseImmediate()
         {
-            _열림 = false;
+            _isOpen = false;
             if (group == null) return;
             group.alpha = 0f;
             group.blocksRaycasts = false;

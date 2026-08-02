@@ -22,9 +22,9 @@ namespace Survive.Narrative
         [SerializeField] float startDelay = 0.5f;
 
         PlayerContext _player;
-        bool _재생중;
+        bool _playing;
 
-        public bool IsPlaying => _재생중;
+        public bool IsPlaying => _playing;
         public event Action<SequenceSO> SequenceFinished;
 
         void OnEnable() => GameServices.Register(this);
@@ -47,8 +47,8 @@ namespace Survive.Narrative
             if (sequence == null || sequence.lines == null || sequence.lines.Length == 0)
                 yield break;
 
-            _재생중 = true;
-            if (sequence.lockInput) 조작잠금(true);
+            _playing = true;
+            if (sequence.lockInput) LockControls(true);
 
             foreach (var line in sequence.lines)
             {
@@ -57,17 +57,17 @@ namespace Survive.Narrative
                 yield return new WaitForSeconds(line.holdSeconds);
             }
 
-            subtitle?.숨기기();
-            if (sequence.lockInput) 조작잠금(false);
-            _재생중 = false;
+            subtitle?.HideView();
+            if (sequence.lockInput) LockControls(false);
+            _playing = false;
 
             SequenceFinished?.Invoke(sequence);
         }
 
-        void 조작잠금(bool 잠글까)
+        void LockControls(bool locked)
         {
-            _player?.Locomotion?.SetMovementLocked(잠글까);
-            _player?.CameraRig?.SetLookLocked(잠글까);
+            _player?.Locomotion?.SetMovementLocked(locked);
+            _player?.CameraRig?.SetLookLocked(locked);
         }
     }
 }

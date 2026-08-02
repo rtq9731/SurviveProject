@@ -29,12 +29,12 @@ namespace Survive.Creatures
         CreatureFeeding _feeding;
         ScavengerBehavior _scavenger;
         Transform _player;
-        State _상태 = State.Idle;
-        float _상태타이머;
-        float _어그로남은시간;
-        float _다음공격시각;
-        Vector3 _시작위치;
-        Vector3 _목표지점;
+        State _state = State.Idle;
+        float _stateTimer;
+        float _aggroLeft;
+        float _nextAttackTime;
+        Vector3 _homePosition;
+        Vector3 _destination;
 
         void Awake()
         {
@@ -42,7 +42,7 @@ namespace Survive.Creatures
             if (definition == null) definition = _health.Definition;
             if (agent == null) agent = GetComponent<NavMeshAgent>();
             if (flyer == null) flyer = GetComponent<FlyerMotor>();
-            _시작위치 = transform.position;
+            _homePosition = transform.position;
 
             _feeding = GetComponent<CreatureFeeding>();
             _scavenger = GetComponent<ScavengerBehavior>();
@@ -53,42 +53,42 @@ namespace Survive.Creatures
 
         void OnEnable()
         {
-            _health.Died += 사망처리;
-            _health.Damaged += 피격처리;
+            _health.Died += OnDied;
+            _health.Damaged += OnDamaged;
         }
 
         void OnDisable()
         {
-            _health.Died -= 사망처리;
-            _health.Damaged -= 피격처리;
+            _health.Died -= OnDied;
+            _health.Damaged -= OnDamaged;
         }
 
-        void 사망처리(CreatureHealth _)
+        void OnDied(CreatureHealth _)
         {
-            _상태 = State.Dead;
+            _state = State.Dead;
             if (agent != null && agent.isOnNavMesh) agent.isStopped = true;
         }
 
-        void 피격처리(CreatureHealth _, DamageInfo info)
+        void OnDamaged(CreatureHealth _, DamageInfo info)
         {
             if (definition == null) return;
 
             switch (definition.behavior)
             {
                 case BehaviorProfile.Skittish:
-                    전환(State.Flee);
+                    TransitionTo(State.Flee);
                     break;
                 case BehaviorProfile.Defensive:
                 case BehaviorProfile.Aggressive:
-                    _어그로남은시간 = definition.aggroSeconds;
-                    전환(State.Chase);
+                    _aggroLeft = definition.aggroSeconds;
+                    TransitionTo(State.Chase);
                     break;
             }
         }
 
         void Update()
         {
-            if (_상태 == State.Dead || definition == null) return;
+            if (_state == State.Dead || definition == null) return;
 
             if (_player == null)
             {
@@ -96,42 +96,42 @@ namespace Survive.Creatures
                 if (ctx != null) _player = ctx.transform;
             }
 
-            _상태타이머 -= Time.deltaTime;
-            if (_어그로남은시간 > 0f) _어그로남은시간 -= Time.deltaTime;
+            _stateTimer -= Time.deltaTime;
+            if (_aggroLeft > 0f) _aggroLeft -= Time.deltaTime;
 
-            float 거리 = _player != null
+            float distance = _player != null
                 ? Vector3.Distance(transform.position, _player.position)
                 : float.MaxValue;
 
-            상태갱신(거리);
-            행동실행(거리);
+            UpdateState(distance);
+            RunState(distance);
         }
 
-        void 상태갱신(float 거리)
+        void UpdateState(float distance)
         {
-            bool 감지됨 = 거리 <= definition.detectRadius;
+            bool detected = distance <= definition.detectRadius;
 
             switch (definition.behavior)
             {
                 case BehaviorProfile.Passive:
-                    if (_상태타이머 <= 0f) 전환(생태행동());
+                    if (_stateTimer <= 0f) TransitionTo(PickEcologyState());
                     break;
 
                 case BehaviorProfile.Skittish:
-                    if (감지됨) 전환(State.Flee);
-                    else if (_상태타이머 <= 0f) 전환(생태행동());
+                    if (detected) TransitionTo(State.Flee);
+                    else if (_stateTimer <= 0f) TransitionTo(PickEcologyState());
                     break;
 
                 case BehaviorProfile.Defensive:
-                    if (_어그로남은시간 > 0f)
-                        전환(거리 <= definition.attackRange ? State.Attack : State.Chase);
-                    else if (_상태타이머 <= 0f) 전환(생태행동());
+                    if (_aggroLeft > 0f)
+                        TransitionTo(distance <= definition.attackRange ? State.Attack : State.Chase);
+                    else if (_stateTimer <= 0f) TransitionTo(PickEcologyState());
                     break;
 
                 case BehaviorProfile.Aggressive:
-                    if (감지됨 || _어그로남은시간 > 0f)
-                        전환(거리 <= definition.attackRange ? State.Attack : State.Chase);
-                    else if (_상태타이머 <= 0f) 전환(State.Wander);
+                    if (detected || _aggroLeft > 0f)
+                        TransitionTo(distance <= definition.attackRange ? State.Attack : State.Chase);
+                    else if (_stateTimer <= 0f) TransitionTo(State.Wander);
                     break;
             }
         }
@@ -140,105 +140,105 @@ namespace Survive.Creatures
         /// 위협이 없을 때 무엇을 할지. 생산자는 먹으러, 분해자는 주우러 간다.
         /// 할 일이 없으면 배회한다.
         /// </summary>
-        State 생태행동()
+        State PickEcologyState()
         {
             if (_feeding != null && _feeding.TryGetFeedTarget(out var food))
             {
-                _목표지점 = food;
+                _destination = food;
                 return State.Feed;
             }
             if (_scavenger != null && _scavenger.TryGetScavengeTarget(out var junk))
             {
-                _목표지점 = junk;
+                _destination = junk;
                 return State.Scavenge;
             }
             return State.Wander;
         }
 
-        void 전환(State 새상태)
+        void TransitionTo(State next)
         {
-            if (_상태 == 새상태 && _상태타이머 > 0f) return;
-            _상태 = 새상태;
+            if (_state == next && _stateTimer > 0f) return;
+            _state = next;
 
-            switch (새상태)
+            switch (next)
             {
                 case State.Wander:
-                    _목표지점 = _시작위치 + Random.insideUnitSphere * wanderRadius;
-                    _목표지점.y = _시작위치.y;
-                    _상태타이머 = Random.Range(2f, 4f);
+                    _destination = _homePosition + Random.insideUnitSphere * wanderRadius;
+                    _destination.y = _homePosition.y;
+                    _stateTimer = Random.Range(2f, 4f);
                     break;
 
                 case State.Feed:
                 case State.Scavenge:
                     // 목표는 생태행동()에서 이미 잡았다
-                    _상태타이머 = 1.5f;
+                    _stateTimer = 1.5f;
                     break;
 
                 case State.Flee:
                     if (_player != null)
                     {
-                        Vector3 반대 = (transform.position - _player.position).normalized;
-                        _목표지점 = transform.position + 반대 * fleeDistance;
-                        _목표지점.y = _시작위치.y;
+                        Vector3 away = (transform.position - _player.position).normalized;
+                        _destination = transform.position + away * fleeDistance;
+                        _destination.y = _homePosition.y;
                     }
-                    _상태타이머 = 1.5f;
+                    _stateTimer = 1.5f;
                     break;
 
                 default:
-                    _상태타이머 = 0.5f;
+                    _stateTimer = 0.5f;
                     break;
             }
         }
 
-        void 행동실행(float 거리)
+        void RunState(float distance)
         {
-            switch (_상태)
+            switch (_state)
             {
                 case State.Wander:
                 case State.Flee:
                 case State.Feed:
                 case State.Scavenge:
-                    이동(_목표지점);
+                    MoveTo(_destination);
                     break;
 
                 case State.Chase:
-                    if (_player != null) 이동(_player.position);
+                    if (_player != null) MoveTo(_player.position);
                     break;
 
                 case State.Attack:
-                    정지();
-                    공격();
+                    StopMoving();
+                    Attack();
                     break;
 
                 default:
-                    정지();
+                    StopMoving();
                     break;
             }
         }
 
-        void 이동(Vector3 목적지)
+        void MoveTo(Vector3 destination)
         {
-            if (agent != null && agent.isOnNavMesh) agent.SetDestination(목적지);
-            else if (flyer != null) flyer.MoveTowards(목적지);
+            if (agent != null && agent.isOnNavMesh) agent.SetDestination(destination);
+            else if (flyer != null) flyer.MoveTowards(destination);
         }
 
-        void 정지()
+        void StopMoving()
         {
             if (agent != null && agent.isOnNavMesh) agent.isStopped = true;
             else flyer?.Stop();
         }
 
-        void 공격()
+        void Attack()
         {
-            if (_player == null || Time.time < _다음공격시각) return;
-            _다음공격시각 = Time.time + definition.attackCooldown;
+            if (_player == null || Time.time < _nextAttackTime) return;
+            _nextAttackTime = Time.time + definition.attackCooldown;
 
-            var 대상 = _player.GetComponentInChildren<IDamageable>();
-            if (대상 == null || 대상.IsDead) return;
+            var target = _player.GetComponentInChildren<IDamageable>();
+            if (target == null || target.IsDead) return;
 
-            Vector3 방향 = (_player.position - transform.position).normalized;
-            대상.TakeDamage(new DamageInfo(definition.attackDamage, gameObject,
-                                          transform.position + 방향, -방향));
+            Vector3 dir = (_player.position - transform.position).normalized;
+            target.TakeDamage(new DamageInfo(definition.attackDamage, gameObject,
+                                          transform.position + dir, -dir));
         }
     }
 }

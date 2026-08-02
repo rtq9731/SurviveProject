@@ -25,29 +25,29 @@ namespace Survive.UI
             yield return null;
             if (!GameServices.TryGet<ChapterDirector>(out _director))
             {
-                숨김();
+                Hide();
                 yield break;
             }
 
-            _director.ObjectiveChanged += 목표바뀜;
-            목표바뀜(_director.Current);
+            _director.ObjectiveChanged += OnObjectiveChanged;
+            OnObjectiveChanged(_director.Current);
 
-            var 대기 = new WaitForSeconds(refreshInterval);
+            var wait = new WaitForSeconds(refreshInterval);
             while (true)
             {
-                갱신();
-                yield return 대기;
+                Refresh();
+                yield return wait;
             }
         }
 
         void OnDestroy()
         {
-            if (_director != null) _director.ObjectiveChanged -= 목표바뀜;
+            if (_director != null) _director.ObjectiveChanged -= OnObjectiveChanged;
         }
 
-        void 목표바뀜(ObjectiveSO 목표)
+        void OnObjectiveChanged(ObjectiveSO objective)
         {
-            if (목표 == null) { 숨김(); return; }
+            if (objective == null) { Hide(); return; }
 
             if (group != null)
             {
@@ -55,22 +55,22 @@ namespace Survive.UI
                 group.alpha = 0f;
                 group.DOFade(1f, 0.3f);
             }
-            갱신();
+            Refresh();
         }
 
-        void 갱신()
+        void Refresh()
         {
             if (_director == null || label == null) return;
-            var 목표 = _director.Current;
-            if (목표 == null) { 숨김(); return; }
+            var objective = _director.Current;
+            if (objective == null) { Hide(); return; }
 
             float p = _director.CurrentProgress;
             label.text = p > 0f && p < 1f
-                ? $"◆ {목표.displayText}  ({Mathf.RoundToInt(p * 100f)}%)"
-                : $"◆ {목표.displayText}";
+                ? $"◆ {objective.displayText}  ({Mathf.RoundToInt(p * 100f)}%)"
+                : $"◆ {objective.displayText}";
         }
 
-        void 숨김()
+        void Hide()
         {
             if (group != null)
             {

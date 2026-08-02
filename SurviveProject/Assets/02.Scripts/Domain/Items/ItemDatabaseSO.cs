@@ -12,7 +12,7 @@ namespace Survive.Items
 
         void OnEnable() => _byId = null;   // 재생성 강제
 
-        void 색인만들기()
+        void BuildIndex()
         {
             _byId = new Dictionary<string, ItemDataSO>();
             if (items == null) return;
@@ -31,7 +31,7 @@ namespace Survive.Items
 
         public bool TryGetById(string id, out ItemDataSO item)
         {
-            if (_byId == null) 색인만들기();
+            if (_byId == null) BuildIndex();
             if (string.IsNullOrEmpty(id))
             {
                 item = null;
@@ -46,35 +46,35 @@ namespace Survive.Items
         /// </summary>
         public IReadOnlyList<string> Validate()
         {
-            var 문제 = new List<string>();
-            var 본것 = new HashSet<string>();
+            var problems = new List<string>();
+            var seen = new HashSet<string>();
 
-            if (items == null) return 문제;
+            if (items == null) return problems;
 
             for (int i = 0; i < items.Length; i++)
             {
                 var it = items[i];
                 if (it == null)
                 {
-                    문제.Add($"{i}번 항목이 비어 있습니다.");
+                    problems.Add($"{i}번 항목이 비어 있습니다.");
                     continue;
                 }
                 if (string.IsNullOrWhiteSpace(it.id))
                 {
-                    문제.Add($"{i}번 항목({it.name})의 id가 비어 있습니다.");
+                    problems.Add($"{i}번 항목({it.name})의 id가 비어 있습니다.");
                     continue;
                 }
-                if (!본것.Add(it.id))
-                    문제.Add($"id가 중복되었습니다: {it.id}");
+                if (!seen.Add(it.id))
+                    problems.Add($"id가 중복되었습니다: {it.id}");
             }
-            return 문제;
+            return problems;
         }
 
         void OnValidate()
         {
             _byId = null;
-            foreach (var 문제 in Validate())
-                Debug.LogError($"[ItemDatabaseSO] {문제}", this);
+            foreach (var problems in Validate())
+                Debug.LogError($"[ItemDatabaseSO] {problems}", this);
         }
     }
 }

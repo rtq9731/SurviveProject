@@ -25,7 +25,7 @@ namespace Survive.UI
         [SerializeField] MonoBehaviour[] panelBehaviours;
 
         readonly List<IClosablePanel> _panels = new List<IClosablePanel>();
-        readonly List<IClosablePanel> _열린순서 = new List<IClosablePanel>();
+        readonly List<IClosablePanel> _openOrder = new List<IClosablePanel>();
 
         public bool AnyPanelOpen => _panels.Any(p => p != null && p.IsOpen);
 
@@ -37,7 +37,7 @@ namespace Survive.UI
                 input.PauseEvent += OnEscape;
                 input.CancelEvent += OnEscape;
             }
-            StartCoroutine(수집());
+            StartCoroutine(CollectPanels());
         }
 
         void OnDisable()
@@ -56,7 +56,7 @@ namespace Survive.UI
             input.CancelEvent -= OnEscape;
         }
 
-        IEnumerator 수집()
+        IEnumerator CollectPanels()
         {
             yield return null;   // 패널들의 Awake가 끝나기를 기다린다
 
@@ -84,21 +84,21 @@ namespace Survive.UI
         public void NotifyOpened(IClosablePanel panel)
         {
             if (panel == null) return;
-            _열린순서.Remove(panel);
-            _열린순서.Add(panel);
+            _openOrder.Remove(panel);
+            _openOrder.Add(panel);
             if (!_panels.Contains(panel)) _panels.Add(panel);
         }
 
-        public void NotifyClosed(IClosablePanel panel) => _열린순서.Remove(panel);
+        public void NotifyClosed(IClosablePanel panel) => _openOrder.Remove(panel);
 
         void OnEscape()
         {
             // 가장 나중에 연 것부터 닫는다
-            for (int i = _열린순서.Count - 1; i >= 0; i--)
+            for (int i = _openOrder.Count - 1; i >= 0; i--)
             {
-                var p = _열린순서[i];
-                if (p == null) { _열린순서.RemoveAt(i); continue; }
-                if (!p.IsOpen) { _열린순서.RemoveAt(i); continue; }
+                var p = _openOrder[i];
+                if (p == null) { _openOrder.RemoveAt(i); continue; }
+                if (!p.IsOpen) { _openOrder.RemoveAt(i); continue; }
 
                 p.Close();
                 return;
@@ -130,7 +130,7 @@ namespace Survive.UI
         {
             foreach (var p in _panels)
                 if (p != null && p.IsOpen) p.Close();
-            _열린순서.Clear();
+            _openOrder.Clear();
         }
     }
 }

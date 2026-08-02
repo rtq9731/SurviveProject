@@ -11,7 +11,7 @@ namespace Survive.Crafting
         {
             if (recipe == null || inventory == null) return false;
             if (recipe.result == null || recipe.result.item == null) return false;
-            if (!스테이션충족(recipe.requiredStation, available)) return false;
+            if (!StationSatisfied(recipe.requiredStation, available)) return false;
 
             if (recipe.ingredients != null)
             {
@@ -41,11 +41,11 @@ namespace Survive.Crafting
                 }
             }
 
-            int 남은수 = inventory.TryAdd(recipe.result.item, recipe.result.count);
-            if (남은수 > 0)
+            int remaining = inventory.TryAdd(recipe.result.item, recipe.result.count);
+            if (remaining > 0)
             {
                 // 되돌린다
-                inventory.TryRemove(recipe.result.item.id, recipe.result.count - 남은수);
+                inventory.TryRemove(recipe.result.item.id, recipe.result.count - remaining);
                 if (recipe.ingredients != null)
                 {
                     foreach (var need in recipe.ingredients)
@@ -59,10 +59,10 @@ namespace Survive.Crafting
             return true;
         }
 
-        static bool 스테이션충족(StationType 필요, StationType 가능)
+        static bool StationSatisfied(StationType needed, StationType canMake)
         {
-            if (필요 == StationType.None) return true;   // 휴대 제작은 어디서든
-            return 필요 == 가능;
+            if (needed == StationType.None) return true;   // 휴대 제작은 어디서든
+            return needed == canMake;
         }
     }
 }

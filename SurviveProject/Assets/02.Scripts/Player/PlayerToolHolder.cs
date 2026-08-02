@@ -19,7 +19,7 @@ namespace Survive.Player
 
         void Awake()
         {
-            if (handSocket != null) 전부끄기();
+            if (handSocket != null) HideAllTools();
         }
 
         public void Equip(ToolItemSO tool)
@@ -30,13 +30,13 @@ namespace Survive.Player
                 return;
             }
 
-            전부끄기();
+            HideAllTools();
             EquippedTool = tool;
 
             if (tool != null && !string.IsNullOrEmpty(tool.socketChildName))
             {
-                var 자식 = handSocket.Find(tool.socketChildName);
-                if (자식 != null) 자식.gameObject.SetActive(true);
+                var child = handSocket.Find(tool.socketChildName);
+                if (child != null) child.gameObject.SetActive(true);
                 else Debug.LogWarning(
                     $"[PlayerToolHolder] 손 소켓에 '{tool.socketChildName}' 자식이 없습니다.", this);
             }
@@ -46,7 +46,7 @@ namespace Survive.Player
 
         public void Unequip() => Equip(null);
 
-        void 전부끄기()
+        void HideAllTools()
         {
             for (int i = 0; i < handSocket.childCount; i++)
                 handSocket.GetChild(i).gameObject.SetActive(false);

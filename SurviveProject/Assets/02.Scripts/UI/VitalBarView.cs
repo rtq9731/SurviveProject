@@ -24,7 +24,7 @@ namespace Survive.UI
 
         public void Bind(PlayerVitals vitals)
         {
-            해제();
+            Unbind();
             if (vitals == null || bar == null) return;
 
             _vital = kind == Kind.Health ? vitals.Health : vitals.Oxygen;
@@ -32,17 +32,17 @@ namespace Survive.UI
 
             bar.RefreshMaxValue(_vital.Max);
             bar.SetValueDirect(_vital.Current);
-            _vital.Changed += 값바뀜;
+            _vital.Changed += OnValueChanged;
         }
 
-        void OnDisable() => 해제();
+        void OnDisable() => Unbind();
 
-        void 해제()
+        void Unbind()
         {
-            if (_vital != null) _vital.Changed -= 값바뀜;
+            if (_vital != null) _vital.Changed -= OnValueChanged;
             _vital = null;
         }
 
-        void 값바뀜(float current, float max) => bar.SetValueDirect(current);
+        void OnValueChanged(float current, float max) => bar.SetValueDirect(current);
     }
 }
