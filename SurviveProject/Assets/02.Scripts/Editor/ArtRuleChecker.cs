@@ -65,11 +65,27 @@ namespace Survive.EditorTools
                     sb.AppendLine($"  {f.AssetPath}  (metallic {f.Metallic:0.##})");
             }
 
+            // 패키지 기본 머티리얼을 그대로 쓰고 있는 것도 사람이 볼 일이다.
+            // 규칙 위반은 아니지만(우리 에셋이 아니므로), 대개는 머티리얼을
+            // 지정하는 것을 잊은 것이다 — 게임에서 회색 기본 재질로 보인다.
+            if (PackageMaterials.Count > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine($"[사람 확인] 패키지 기본 머티리얼을 참조하는 것 {PackageMaterials.Count}개 — 검사 대상이 아니지만 대개 지정을 잊은 것이다");
+                foreach (var p in PackageMaterials.OrderBy(x => x))
+                    sb.AppendLine($"  {p}");
+            }
+
             return sb.ToString();
         }
 
+        /// <summary>검사에서 제외한 패키지 머티리얼. 사람이 볼 목록으로만 쓴다.</summary>
+        static readonly HashSet<string> PackageMaterials = new HashSet<string>();
+
         static List<MaterialFacts> Collect()
         {
+            PackageMaterials.Clear();
+
             var roots = new List<string>(ScenePaths);
             roots.AddRange(AssetDatabase
                 .FindAssets("t:Prefab", PrefabRoots)
@@ -77,7 +93,23 @@ namespace Survive.EditorTools
 
             var matPaths = new HashSet<string>();
             foreach (var dep in AssetDatabase.GetDependencies(roots.ToArray(), true))
-                if (dep.EndsWith(".mat")) matPaths.Add(dep);
+            {
+                if (!dep.EndsWith(".mat")) continue;
+
+                // 패키지 안의 머티리얼은 검사하지 않는다.
+                //
+                // 이 규칙은 "우리가 만든 에셋을 한 세계로 묶는다"는 것이지
+                // 써드파티 패키지의 내용을 우리 취향에 맞추라는 것이 아니다.
+                // 그리고 패키지는 Library/PackageCache에 있어 git이 추적하지 않는다 —
+                // 거기를 고치면 새로 클론하거나 Library를 지우는 순간 원복되고,
+                // 커밋에도 남지 않아 아무도 그 변경을 볼 수 없다.
+                //
+                // 실제로 URP 기본 머티리얼(Packages/com.unity.render-pipelines.universal/
+                // Runtime/Materials/Lit.mat)을 한 번 고쳤다가 이 문제를 확인했다.
+                if (dep.StartsWith("Packages/")) { PackageMaterials.Add(dep); continue; }
+
+                matPaths.Add(dep);
+            }
 
             var result = new List<MaterialFacts>();
             foreach (var path in matPaths)
