@@ -130,7 +130,7 @@ namespace Survive.UI
             var img = src != null ? src.GetComponent<Image>() : null;
             if (img != null && img.sprite != null) return img.sprite;
 
-            return Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
+            return UISkin.Panel;
         }
 
         void Build()

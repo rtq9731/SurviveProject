@@ -114,7 +114,7 @@ namespace Survive.UI
         {
             if (slotParent == null) return;
 
-            var sprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
+            var sprite = UISkin.Panel;
             int total = 18;
 
             for (int i = 0; i < total; i++)

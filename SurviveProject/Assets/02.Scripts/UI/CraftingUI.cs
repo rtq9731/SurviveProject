@@ -88,7 +88,7 @@ namespace Survive.UI
                 rt.sizeDelta = new Vector2(520f, 44f);
 
                 var img = go.AddComponent<Image>();
-                img.color = new Color(0.12f, 0.14f, 0.18f, 0.9f);
+                UISkin.ApplyPanel(img, new Color(0.12f, 0.14f, 0.18f, 0.9f));
 
                 var btn = go.AddComponent<Button>();
 

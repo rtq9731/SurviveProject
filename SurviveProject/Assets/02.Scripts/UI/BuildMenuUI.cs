@@ -35,6 +35,7 @@ namespace Survive.UI
             new List<(BuildableSO, Button, TMP_Text)>();
 
         bool _isOpen;
+        Survive.Player.PlayerContext _player;
 
         public bool IsOpen => _isOpen;
 
@@ -67,7 +68,7 @@ namespace Survive.UI
             foreach (var (_, b, _) in _rows) if (b != null) Destroy(b.gameObject);
             _rows.Clear();
 
-            var sprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
+            var sprite = UISkin.Panel;
 
             foreach (var e in catalog.entries)
             {
@@ -187,6 +188,7 @@ namespace Survive.UI
                 panel.DOScale(1f, tweenSeconds).SetEase(Ease.OutBack);
             }
 
+            LockControls(true);
             if (Survive.Core.GameServices.TryGet<UIStateService>(out var ui)) ui.NotifyOpened(this);
         }
 
@@ -203,7 +205,26 @@ namespace Survive.UI
                 group.DOFade(0f, tweenSeconds);
             }
 
+            LockControls(false);
             if (Survive.Core.GameServices.TryGet<UIStateService>(out var ui)) ui.NotifyClosed(this);
+        }
+
+        /// <summary>
+        /// 목록이 떠 있는 동안은 커서를 풀어 준다. 제작창과 같은 처리다 —
+        /// 이게 빠져 있어서 B를 눌러도 마우스가 시야에 묶인 채였고,
+        /// 목록은 떴는데 아무것도 고를 수 없었다.
+        ///
+        /// 닫을 때 되돌린다. 고른 직후에는 유령을 조준해야 하니
+        /// 커서가 다시 잠기는 것이 맞다.
+        /// </summary>
+        void LockControls(bool locked)
+        {
+            if (_player == null)
+                _player = Object.FindFirstObjectByType<Survive.Player.PlayerContext>(
+                    FindObjectsInactive.Exclude);
+
+            _player?.Locomotion?.SetMovementLocked(locked);
+            _player?.CameraRig?.SetLookLocked(locked);
         }
 
         void CloseImmediate()

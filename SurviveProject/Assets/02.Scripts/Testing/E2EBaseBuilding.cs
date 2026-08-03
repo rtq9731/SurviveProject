@@ -165,9 +165,19 @@ namespace Survive.Testing
             yield return null;
             E2EHarness.Assert(menu.IsOpen, "B로 건설 목록이 열린다");
 
+            // 목록이 떴는데 커서가 시야에 묶여 있으면 아무것도 고를 수 없다.
+            // 열리는 것과 쓸 수 있는 것은 다르다.
+            E2EHarness.Assert(Cursor.lockState == CursorLockMode.None,
+                              "목록이 열리면 마우스를 쓸 수 있다");
+            E2EHarness.Assert(Cursor.visible, "커서가 보인다");
+
             yield return E2EHarness.TapKey(Key.B);
             yield return null;
             E2EHarness.Assert(!menu.IsOpen, "B로 건설 목록이 닫힌다");
+
+            // 닫으면 되돌아와야 한다. 유령을 조준하려면 시야가 마우스에 물려야 한다.
+            E2EHarness.Assert(Cursor.lockState == CursorLockMode.Locked,
+                              "목록을 닫으면 시야 조작으로 돌아온다");
         }
 
         /// <summary>
