@@ -31,10 +31,25 @@ namespace Survive.Domain.Art
             "Universal Render Pipeline/Unlit",
             "Universal Render Pipeline/Particles/Unlit",
             "Universal Render Pipeline/Terrain/Lit",
-            "Stylized Water For URP/Water",
             "TextMeshPro/Distance Field",
             "TextMeshPro/Mobile/Distance Field",
             "Skybox/Procedural",
+
+            // 아래는 URP/Lit으로 대체할 수 없는 정당한 예외다. 치환하면 기능 자체가 사라진다.
+            // 실제 프로젝트 머티리얼이 물고 있는 셰이더 이름을 직접 확인하고 적었다
+            // (에디터에서 값만 확인한 이름을 추측으로 적지 않는다).
+
+            // Stylized Water For URP 패키지가 실제로 물고 있는 셰이더 이름(폴더명과 다르다).
+            // 굴절·깊이 기반 색 변화(얕은 물/깊은 물)를 셰이더가 직접 계산하고,
+            // _BaseColor/_BaseMap 같은 Lit 호환 프로퍼티가 아예 없어 옮길 값도 없다.
+            "Stylized Water",
+            // IgniteCoders Simple Water Shader(Shader Graph). 위와 마찬가지로 굴절·반사를
+            // 셰이더 그래프에서 계산하며, 표준 컬러/텍스처 프로퍼티(_BaseColor 등)조차 없다 —
+            // Lit으로 옮길 속성이 없다.
+            "Shader Graphs/WaterShader",
+            // SpeedTree7(폴리퍼펙트 나무·식생). 바람 흔들림 애니메이션과 거리별
+            // 빌보드 크로스페이드를 셰이더가 담당한다 — Lit로 바꾸면 두 기능이 모두 사라진다.
+            "Universal Render Pipeline/Nature/SpeedTree7",
         };
 
         public static bool IsAllowedShader(string shaderName)

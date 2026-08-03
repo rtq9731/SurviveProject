@@ -35,7 +35,10 @@ namespace Survive.Tests.EditMode
         [Test]
         public void Water_shader_is_allowed()
         {
-            Assert.IsTrue(MaterialRule.IsAllowedShader("Stylized Water For URP/Water"));
+            // "Stylized Water For URP" 패키지가 실제로 물고 있는 셰이더 이름은
+            // 폴더명과 다르게 그냥 "Stylized Water"다. 프로젝트에 실제로 존재하는
+            // 이름을 검증해야 이 테스트가 실체 없는 이름을 통과시키지 않는다.
+            Assert.IsTrue(MaterialRule.IsAllowedShader("Stylized Water"));
         }
 
         [TestCase(0.1f)]
