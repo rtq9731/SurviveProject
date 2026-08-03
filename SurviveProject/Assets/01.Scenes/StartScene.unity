@@ -20,10 +20,10 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
+  m_AmbientSkyColor: {r: 0.1, g: 0.11, b: 0.14, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
-  m_AmbientIntensity: 1
+  m_AmbientIntensity: 1.05
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
   m_SkyboxMaterial: {fileID: 2100000, guid: 656058fe318eb48558d21d66d1a79a2b, type: 2}
@@ -2216,7 +2216,7 @@ Light:
   serializedVersion: 13
   m_Type: 1
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
-  m_Intensity: 1.05
+  m_Intensity: 1.9
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -2225,7 +2225,7 @@ Light:
     m_Type: 2
     m_Resolution: -1
     m_CustomResolution: -1
-    m_Strength: 0.72
+    m_Strength: 0.85
     m_Bias: 0.05
     m_NormalBias: 0.4
     m_NearPlane: 0.2
@@ -2253,7 +2253,7 @@ Light:
   m_RenderMode: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 4294967039
   m_RenderingLayerMask: 1
   m_Lightmapping: 1
   m_LightShadowCasterMode: 0
@@ -3789,6 +3789,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8852171523659162985, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1032691148}
+    - targetCorrespondingSourceObject: {fileID: 8852171523659162985, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1032691152}
+    - targetCorrespondingSourceObject: {fileID: 8852171523659162985, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1032691151}
   m_SourcePrefab: {fileID: 100100000, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
 --- !u!1 &1032691146 stripped
 GameObject:
@@ -3819,6 +3825,58 @@ MonoBehaviour:
   windUpAngles: {x: -55, y: 10, z: 0}
   strikeAngles: {x: 48, y: -14, z: 0}
   lungeDistance: 0.12
+--- !u!114 &1032691149 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4915590162468517264, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
+  m_PrefabInstance: {fileID: 1032691145}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1032691146}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74d26adecbb19aa488f8d9d2a51ed1c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Survive.Player.PlayerSwimming
+--- !u!4 &1032691150 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 946388037763592013, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
+  m_PrefabInstance: {fileID: 1032691145}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1032691151
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1032691146}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 175722d5509de1e4d8b1d08b6b82793c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Survive.Player.SwimPoseDriver
+  body: {fileID: 1032691150}
+  swimming: {fileID: 1032691149}
+  pitchDegrees: 72
+  wadePitchDegrees: 12
+  blendSeconds: 0.3
+  bobAmplitude: 0.08
+  bobSpeed: 1.6
+--- !u!114 &1032691152
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1032691146}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 279577744537be548b8ac7aa110ac92e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Survive.Player.UnderwaterView
+  swimming: {fileID: 1032691149}
+  eye: {fileID: 963194227}
+  underwaterFog: {r: 0.1, g: 0.26, b: 0.33, a: 1}
+  underwaterFogDensity: 0.028
+  blendSeconds: 0.35
 --- !u!4 &1045183892 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4452881278709086, guid: caaa7ae63a9ddff43a592237cf4c65fc, type: 3}

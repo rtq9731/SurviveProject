@@ -20,4 +20,4 @@ MonoBehaviour:
   - item: {fileID: 11400000, guid: 920a6043919ea1043985803e52162d69, type: 2}
     minCount: 1
     maxCount: 1
-    chance: 0.4
+    chance: 0.6

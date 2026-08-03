@@ -115,8 +115,12 @@ namespace Survive.Interaction
             return col.transform == _playerRoot || col.transform.IsChildOf(_playerRoot);
         }
 
+        /// <summary>E를 누르고 있는가. 연속 채집 판단에 쓴다.</summary>
+        bool _interactHeld;
+
         void BeginInteract()
         {
+            _interactHeld = true;
             if (Current == null || !Current.CanInteract(_player)) return;
 
             if (Current is IHoldInteractable hold && hold.HoldDuration > 0f)
@@ -132,11 +136,29 @@ namespace Survive.Interaction
 
         void CancelInteract()
         {
+            _interactHeld = false;
             if (_holding == null) return;
             _holding.OnHoldCancelled();
             _holding = null;
             _holdElapsed = 0f;
             HoldProgressChanged?.Invoke(0f);
+        }
+
+        /// <summary>
+        /// 누른 채로 있으면 다음 대상을 이어서 캔다.
+        /// 대상이 사라졌으면 다음 프레임의 RefreshTarget이 새 대상을 잡아 주므로,
+        /// 여기서는 이번 프레임에 이미 잡혀 있는 것만 본다.
+        /// </summary>
+        void TryContinueHold()
+        {
+            RefreshTarget();
+
+            if (Current is IHoldInteractable next && next.HoldDuration > 0f &&
+                Current.CanInteract(_player))
+            {
+                _holding = next;
+                _holdElapsed = 0f;
+            }
         }
 
         void AdvanceHold()
@@ -155,6 +177,11 @@ namespace Survive.Interaction
                 _holdElapsed = 0f;
                 HoldProgressChanged?.Invoke(0f);
                 toComplete.Interact(_player);
+
+                // 손을 떼지 않았으면 다음 것으로 이어서 캔다.
+                // 잔해 하나 캘 때마다 E를 다시 눌러야 하면 열 개를 모으는 데
+                // 손가락이 먼저 지친다. 조준만 옮기면 계속 캐진다.
+                if (_interactHeld) TryContinueHold();
             }
         }
     }
