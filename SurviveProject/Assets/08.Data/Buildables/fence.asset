@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Survive.Domain::Survive.Building.BuildableSO
   id: fence
   displayName: "\uC6B8\uD0C0\uB9AC"
-  prefab: {fileID: 9211698460132936489, guid: 8301da340a6d9e449ad0e21e0073b852, type: 3}
+  prefab: {fileID: 2771557067633115533, guid: 1c21a697b87c0de438d67062d31fb233, type: 3}
   ghostPrefab: {fileID: 9211698460132936489, guid: 8301da340a6d9e449ad0e21e0073b852, type: 3}
   cost:
   - item: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}

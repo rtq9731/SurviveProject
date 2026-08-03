@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Survive.Domain::Survive.Building.BuildableSO
   id: bench
   displayName: "\uAC04\uC774 \uC81C\uC791\uB300"
-  prefab: {fileID: 409596104273510355, guid: 35c025aa17f5c9a4b9bc0ed6fd450a35, type: 3}
+  prefab: {fileID: 6678132547748562446, guid: a54edeccf49bc0345ae87ad2efed0474, type: 3}
   ghostPrefab: {fileID: 409596104273510355, guid: 35c025aa17f5c9a4b9bc0ed6fd450a35, type: 3}
   cost:
   - item: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}

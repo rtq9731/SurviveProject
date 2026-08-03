@@ -17879,7 +17879,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.01
+  near clip plane: 0.001
   far clip plane: 3000
   field of view: 60
   orthographic: 0
@@ -81569,6 +81569,8 @@ MonoBehaviour:
   menu: {fileID: 301521547171322060}
   melee: {fileID: 2003020731}
   rotateStepPerNotch: 15
+  demolishRange: 4
+  rayOrigin: {fileID: 0}
 --- !u!114 &8759864735453020575
 MonoBehaviour:
   m_ObjectHideFlags: 0
