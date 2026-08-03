@@ -596,6 +596,11 @@ namespace Survive.Testing
             var swim = Object.FindFirstObjectByType<PlayerSwimming>(FindObjectsInactive.Exclude);
             if (swim == null) { E2EHarness.Log("  PlayerSwimming이 없어 건너뛴다"); yield break; }
 
+            // P0에서 씬 안개가 항상 켜져 있게 바뀌어 RenderSettings.fog만으로는
+            // 물속/뭍을 구분할 수 없다. 물에 들어가기 전의 안개 색/밀도를 기준으로 삼는다.
+            var landFogColor = RenderSettings.fogColor;
+            var landFogDensity = RenderSettings.fogDensity;
+
             var water = GameObject.FindGameObjectsWithTag("Untagged")
                                   .FirstOrDefault(g => g.name.Contains("Water"));
             if (water == null)
@@ -661,21 +666,25 @@ namespace Survive.Testing
 
             var view = Object.FindFirstObjectByType<UnderwaterView>(FindObjectsInactive.Exclude);
             E2EHarness.Assert(view != null, "수중 시야 처리가 있다");
-            E2EHarness.Assert(RenderSettings.fog, "머리가 잠기면 시야가 흐려진다");
+            // 씬 안개가 상시 켜진 뒤로는 RenderSettings.fog가 항상 true라 이 자체로는
+            // 아무것도 증명하지 못한다. 물속 색으로 실제로 바뀌었는지를 본다.
+            E2EHarness.Assert(RenderSettings.fogColor != landFogColor, "머리가 잠기면 안개 색이 물속 색으로 바뀐다");
 
             yield return DescendAndSprint(swim, deepest, best);
             yield return CanSurface(swim, deepest, best, surface);
 
-            // 물 밖으로 나오면 원래대로 돌아와야 한다. 안개가 남으면 지상이 물속처럼 보인다.
+            // 물 밖으로 나오면 원래대로 돌아와야 한다. 안개 색/밀도가 남으면 지상이 물속처럼 보인다.
             E2EHarness.Teleport(deepest + Vector3.up * (best + 4f));
             yield return null;
             float back = 0f;
-            while (back < 2f && RenderSettings.fog) { back += Time.deltaTime; yield return null; }
+            while (back < 2f && RenderSettings.fogColor != landFogColor) { back += Time.deltaTime; yield return null; }
 
             E2EHarness.Assert(!swim.IsHeadSubmerged, "물 밖으로 나왔다");
-            E2EHarness.Assert(!RenderSettings.fog, "물 밖으로 나오면 시야가 돌아온다");
+            E2EHarness.Assert(RenderSettings.fogColor == landFogColor
+                               && Mathf.Approximately(RenderSettings.fogDensity, landFogDensity),
+                               "물 밖으로 나오면 안개 색/밀도가 뭍 값으로 돌아온다");
 
-            E2EHarness.Log($"  수영={swim.IsSwimming} 머리잠김={swim.IsHeadSubmerged} 안개={RenderSettings.fog}");
+            E2EHarness.Log($"  수영={swim.IsSwimming} 머리잠김={swim.IsHeadSubmerged} 안개색={RenderSettings.fogColor}");
         }
 
         /// <summary>
