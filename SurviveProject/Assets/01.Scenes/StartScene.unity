@@ -5789,6 +5789,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 301521547292152601, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
+      propertyPath: m_AdditionalShaderChannelsFlag
+      value: 25
+      objectReference: {fileID: 0}
     - target: {fileID: 301521547391049822, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
@@ -5976,6 +5980,10 @@ PrefabInstance:
     - target: {fileID: 3536494986929256568, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3769492807598393769, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
       objectReference: {fileID: 0}
     - target: {fileID: 5029954730727923731, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
       propertyPath: m_AnchorMax.y

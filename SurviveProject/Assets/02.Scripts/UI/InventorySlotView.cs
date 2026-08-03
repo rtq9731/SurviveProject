@@ -1,4 +1,5 @@
 using UnityEngine;
+using TMPro;
 using UnityEngine.UI;
 using Survive.Items;
 
@@ -9,7 +10,7 @@ namespace Survive.UI
     public class InventorySlotView : MonoBehaviour
     {
         [SerializeField] Image icon;
-        [SerializeField] Text countLabel;
+        [SerializeField] TMP_Text countLabel;
 
         public void Render(ItemStack stack)
         {

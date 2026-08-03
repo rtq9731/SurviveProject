@@ -26,10 +26,6 @@ namespace Survive.UI
         [Tooltip("차오르는 동안 빛나는 테두리. 없어도 된다")]
         [SerializeField] Image frame;
 
-        // TMP 에센셜이 이 프로젝트에 없어 TMP_Text는 폰트가 비어 렌더링되지 않는다.
-        // 나머지 UI와 같은 레거시 Text를 쓴다.
-        [Tooltip("퍼센트 표시. 없어도 된다")]
-        [SerializeField] Text percentLabel;
 
         [Header("연출")]
         [SerializeField] float fadeSeconds = 0.1f;
@@ -91,8 +87,6 @@ namespace Survive.UI
             }
             if (frame != null)
                 frame.color = new Color(1f, 1f, 1f, Mathf.Lerp(0.25f, 0.9f, progress));
-            if (percentLabel != null)
-                percentLabel.text = Mathf.RoundToInt(progress * 100f) + "%";
 
             // 매 프레임 트윈을 죽이고 다시 걸면 알파가 제자리걸음을 한다.
             // 상태가 바뀔 때만 건드린다.

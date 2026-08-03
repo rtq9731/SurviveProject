@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using TMPro;
 using UnityEngine.UI;
 using Survive.Core;
 using Survive.Interaction;
@@ -19,7 +20,7 @@ namespace Survive.UI
         [SerializeField] VitalBarView healthBar;
         [SerializeField] VitalBarView oxygenBar;
         [SerializeField] ScrapCounterView scrapCounter;
-        [SerializeField] Text interactionPrompt;
+        [SerializeField] TMP_Text interactionPrompt;
 
         void Start() => StartCoroutine(BindWhenReady());
 

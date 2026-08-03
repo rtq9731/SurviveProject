@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 using UnityEngine.UI;
 using DG.Tweening;
 using Survive.Core;
@@ -23,7 +24,7 @@ namespace Survive.UI
     public class ControlHintView : MonoBehaviour
     {
         [SerializeField] CanvasGroup group;
-        [SerializeField] Text label;
+        [SerializeField] TMP_Text label;
 
         [Tooltip("한 줄을 띄워 두는 시간")]
         [SerializeField] float holdSeconds = 4.5f;
@@ -74,7 +75,7 @@ namespace Survive.UI
 
             // 도구는 손에 들어야 쓸 수 있다. 만든 그 순간에 알려준다.
             if (inv.Has("pickaxe", 1))
-                Show("pickaxe", "[Q] 도구를 손에 든다 — 곡괭이로 광맥을 부순다");
+                Show("pickaxe", "[Q] 도구를 손에 든다 · 곡괭이로 광맥을 부순다");
 
             if (inv.Has("lantern", 1))
                 Show("lantern", "[F] 랜턴 켜기 / 끄기");

@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using TMPro;
 using UnityEngine.UI;
 using DG.Tweening;
 using Survive.Core;
@@ -16,7 +17,7 @@ namespace Survive.UI
     {
         [SerializeField] CanvasGroup group;
         [SerializeField] Image fill;
-        [SerializeField] Text label;
+        [SerializeField] TMP_Text label;
         [SerializeField] Color fullColor = new Color(1f, 0.85f, 0.45f);
         [SerializeField] Color emptyColor = new Color(0.6f, 0.2f, 0.15f);
 

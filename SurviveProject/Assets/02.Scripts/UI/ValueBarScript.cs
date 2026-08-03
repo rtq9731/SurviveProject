@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 using UnityEngine.UI;
 
 public class ValueBarScript : MonoBehaviour
@@ -15,7 +16,7 @@ public class ValueBarScript : MonoBehaviour
     [SerializeField] Image _fillImage = null;
     [SerializeField] Image _fillLookImage = null;
 
-    [SerializeField] Text textValue = null;
+    [SerializeField] TMP_Text textValue = null;
 
     [SerializeField] float lerpTime = 0.5f;
 

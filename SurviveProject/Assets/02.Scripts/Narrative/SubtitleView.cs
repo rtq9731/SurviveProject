@@ -1,4 +1,5 @@
 using UnityEngine;
+using TMPro;
 using UnityEngine.UI;
 using DG.Tweening;
 
@@ -13,7 +14,7 @@ namespace Survive.Narrative
     public class SubtitleView : MonoBehaviour
     {
         [SerializeField] CanvasGroup group;
-        [SerializeField] Text label;
+        [SerializeField] TMP_Text label;
         [SerializeField] float fadeSeconds = 0.25f;
 
         void Awake()

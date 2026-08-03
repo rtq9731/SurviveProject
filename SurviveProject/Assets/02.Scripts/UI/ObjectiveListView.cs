@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using TMPro;
 using UnityEngine.UI;
 using DG.Tweening;
 using Survive.Core;
@@ -15,7 +16,7 @@ namespace Survive.UI
     public class ObjectiveListView : MonoBehaviour
     {
         [SerializeField] CanvasGroup group;
-        [SerializeField] Text label;
+        [SerializeField] TMP_Text label;
         [SerializeField] float refreshInterval = 0.25f;
 
         ChapterDirector _director;

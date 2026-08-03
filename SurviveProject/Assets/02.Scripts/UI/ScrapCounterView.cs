@@ -1,4 +1,5 @@
 using UnityEngine;
+using TMPro;
 using UnityEngine.UI;
 using DG.Tweening;
 using Survive.Items;
@@ -13,7 +14,7 @@ namespace Survive.UI
     [DisallowMultipleComponent]
     public class ScrapCounterView : MonoBehaviour
     {
-        [SerializeField] Text label;
+        [SerializeField] TMP_Text label;
         [SerializeField] string format = "스크랩 {0}";
         [SerializeField] float rollSeconds = 0.35f;
 

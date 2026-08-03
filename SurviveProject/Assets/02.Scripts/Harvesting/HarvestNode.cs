@@ -95,11 +95,11 @@ namespace Survive.Harvesting
                 if (IsBreakable)
                 {
                     if (!ToolSatisfied(equipped))
-                        return $"{definition.displayName} — {ToolName(definition.requiredTool)} 필요";
+                        return $"{definition.displayName} · {ToolName(definition.requiredTool)} 필요";
 
                     // 부수는 대상에는 E가 아니라 공격 키를 안내해야 한다
                     int pct = Mathf.CeilToInt(HealthNormalized * 100f);
-                    return $"{definition.displayName} — 좌클릭으로 부순다 ({pct}%)";
+                    return $"{definition.displayName} · 좌클릭으로 부순다 ({pct}%)";
                 }
 
                 // 홀드형이므로 프롬프트에서 그 사실이 드러나야 한다.

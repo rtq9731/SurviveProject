@@ -106,7 +106,7 @@ namespace Survive.Harvesting
             get
             {
                 if (definition == null || _gone) return "";
-                if (_stage <= 0) return $"{definition.displayName} — 아직 자라지 않았다";
+                if (_stage <= 0) return $"{definition.displayName} · 아직 자라지 않았다";
                 return $"[E] 길게 눌러 {definition.displayName} 채집";
             }
         }

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using TMPro;
 using UnityEngine.UI;
 using DG.Tweening;
 using MoreMountains.Feedbacks;
@@ -24,11 +25,13 @@ namespace Survive.UI
         [SerializeField] RectTransform panel;
         [SerializeField] CanvasGroup group;
         [SerializeField] Transform rowParent;
-        [SerializeField] Font font;
+        [Tooltip("비우면 TMP 기본 폰트를 쓴다")]
+        [SerializeField] TMP_FontAsset font;
         [SerializeField] MMF_Player craftFeedback;
         [SerializeField] float tweenSeconds = 0.18f;
 
-        readonly List<(RecipeSO recipe, Button button, Text label)> _rows = new List<(RecipeSO, Button, Text)>();
+        readonly List<(RecipeSO recipe, Button button, TMP_Text label)> _rows =
+            new List<(RecipeSO, Button, TMP_Text)>();
         PlayerInventory _inventory;
         Survive.Player.PlayerContext _player;
         StationType _station = StationType.None;
@@ -94,12 +97,16 @@ namespace Survive.UI
                 lrt.offsetMin = new Vector2(12f, 0f);
                 lrt.offsetMax = new Vector2(-12f, 0f);
 
-                var txt = labelGo.AddComponent<Text>();
-                txt.font = font != null ? font : Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-                txt.fontSize = 20;
-                txt.alignment = TextAnchor.MiddleLeft;
+                var txt = labelGo.AddComponent<TextMeshProUGUI>();
+                if (font != null) txt.font = font;
+                txt.fontSize = 20f;
+                txt.alignment = TextAlignmentOptions.Left;
                 txt.color = Color.white;
                 txt.raycastTarget = false;
+                // 재료가 많은 레시피는 한 줄을 넘긴다. 줄이 늘면 행이 밀리므로 줄인다.
+                txt.enableAutoSizing = true;
+                txt.fontSizeMin = 13f;
+                txt.fontSizeMax = 20f;
 
                 var captured = r;
                 btn.onClick.AddListener(() => TryCraft(captured));
@@ -128,7 +135,7 @@ namespace Survive.UI
         {
             var sb = new StringBuilder();
             sb.Append(string.IsNullOrEmpty(r.displayName) ? r.result?.item?.displayName ?? r.id : r.displayName);
-            sb.Append("  —  ");
+            sb.Append("  ·  ");
 
             if (r.ingredients == null || r.ingredients.Length == 0) sb.Append("재료 없음");
             else
