@@ -1,3 +1,5 @@
 
 # 임시 모델 생성 결과 (tools/gen 으로 언제든 재생성 가능)
 /assets/generated/
+
+.superpowers/
