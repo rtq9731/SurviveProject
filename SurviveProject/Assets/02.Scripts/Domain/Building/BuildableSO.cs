@@ -50,5 +50,18 @@ namespace Survive.Building
 
         [Tooltip("Y축 회전 단위(도). 0이면 자유 회전")]
         [Min(0f)] public float rotationStep = 15f;
+
+        [Header("모듈 건축")]
+        [Tooltip("모듈 조각이면 그 종류. None이면 화톳불처럼 단독으로 놓는 물건이다")]
+        public BuildPieceKind pieceKind = BuildPieceKind.None;
+
+        [Tooltip("붙일 자리를 이 거리 안에서 찾는다")]
+        [Min(0f)] public float snapRadius = 3.5f;
+
+        [Tooltip("켜면 붙일 자리가 있어야만 놓을 수 있다. 토대는 꺼 둔다 — 첫 조각은 붙일 곳이 없다")]
+        public bool requiresSnap = false;
+
+        /// <summary>격자에 물리는 조각인가.</summary>
+        public bool IsModular => pieceKind != BuildPieceKind.None;
     }
 }

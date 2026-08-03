@@ -131,9 +131,23 @@ namespace Survive.Building
 
             if (_selected == null || rayOrigin == null) return PlacementResult.NoSurface;
 
-            if (!Physics.Raycast(rayOrigin.position, rayOrigin.forward, out var hit,
-                                 maxDistance, surfaceMask, QueryTriggerInteraction.Ignore))
-                return PlacementResult.NoSurface;
+            bool hitSomething = Physics.Raycast(rayOrigin.position, rayOrigin.forward, out var hit,
+                                                maxDistance, surfaceMask, QueryTriggerInteraction.Ignore);
+
+            // 모듈 조각은 지형이 아니라 이미 세운 것에 물린다.
+            // 지면 각도나 겹침을 따지기 전에 붙일 자리부터 본다 —
+            // 벽은 원래 바닥에 딱 붙어야 하므로 겹침 판정에 걸리는 게 정상이다.
+            //
+            // 허공을 봐도 된다. 2층 바닥이나 벽 위 조각은 뒤에 아무것도 없는 쪽을
+            // 보게 되는데, 거기서 "놓을 면이 없다"고 막으면 위로는 지을 수가 없다.
+            if (_selected.IsModular)
+            {
+                var aim = hitSomething ? hit.point
+                                       : rayOrigin.position + rayOrigin.forward * maxDistance;
+                return EvaluateModular(aim, hitSomething, ref position, ref rotation);
+            }
+
+            if (!hitSomething) return PlacementResult.NoSurface;
 
             position = hit.point;
 
@@ -183,6 +197,86 @@ namespace Survive.Building
             return PlacementResult.Ok;
         }
 
+        /// <summary>
+        /// 모듈 조각의 자리를 정한다.
+        ///
+        /// 붙일 자리를 찾으면 그 자세를 그대로 쓴다. 플레이어의 휠 회전은 무시한다 —
+        /// 격자에 물린 조각을 손으로 돌릴 수 있으면 그건 격자가 아니다.
+        /// 토대만 예외로, 붙일 곳이 없으면 지면에 자유롭게 놓는다.
+        /// </summary>
+        PlacementResult EvaluateModular(Vector3 aim, bool onSurface,
+                                        ref Vector3 position, ref Quaternion rotation)
+        {
+            var kind = _selected.pieceKind;
+
+            if (SnapGraph.TryFindNearest(aim, kind, _selected.snapRadius, out var snapPos, out var snapRot))
+            {
+                position = snapPos;
+                rotation = snapRot;
+
+                if (SlotOccupied(position, kind)) return PlacementResult.SlotTaken;
+                if (!HasResources()) return PlacementResult.NotEnoughResources;
+                return PlacementResult.Ok;
+            }
+
+            // 붙을 곳이 없다. 토대가 아니면 여기서 끝이다.
+            if (_selected.requiresSnap) return PlacementResult.NoAnchor;
+
+            // 토대는 지면이 있어야 한다. 허공에 첫 조각을 띄울 수는 없다.
+            if (!onSurface) return PlacementResult.NoSurface;
+
+            // 첫 토대는 지면에 놓는다. 지면 판정은 이때만 의미가 있다.
+            if (!Physics.Raycast(aim + Vector3.up * 2f, Vector3.down, out var ground,
+                                 6f, surfaceMask, QueryTriggerInteraction.Ignore))
+                return PlacementResult.NoSurface;
+
+            if (Vector3.Angle(ground.normal, Vector3.up) > _selected.maxSlopeDegrees)
+                return PlacementResult.TooSteep;
+
+            position = ground.point;
+            rotation = Quaternion.Euler(0f, _yaw, 0f);
+
+            if (SlotOccupied(position, kind)) return PlacementResult.SlotTaken;
+            if (!HasResources()) return PlacementResult.NotEnoughResources;
+            return PlacementResult.Ok;
+        }
+
+        /// <summary>
+        /// 한 자리를 두고 다투는 조각들을 한 묶음으로 본다.
+        ///
+        /// 종류로 비교하면 벽이 선 자리에 문간이 또 들어간다 — 둘은 다른 종류지만
+        /// 같은 모서리를 쓴다. 경사로도 그 모서리에서 시작하므로 같은 묶음이다.
+        /// 반대로 바닥 모서리에 벽을 세우는 건 다른 묶음이라 막지 않는다.
+        /// </summary>
+        static BuildPieceKind SlotGroup(BuildPieceKind kind)
+        {
+            if ((kind & BuildPieceKind.Platform) != 0) return BuildPieceKind.Platform;
+            return BuildPieceKind.Upright | BuildPieceKind.Ramp;
+        }
+
+        /// <summary>그 자리를 이미 같은 묶음의 조각이 차지했는가.</summary>
+        bool SlotOccupied(Vector3 at, BuildPieceKind kind)
+        {
+            var group = SlotGroup(kind);
+
+            int n = Physics.OverlapSphereNonAlloc(at, 1.0f, _overlapBuffer, ~0,
+                                                  QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < n; i++)
+            {
+                var c = _overlapBuffer[i];
+                if (c == null) continue;
+                if (_ghost != null && c.transform.IsChildOf(_ghost.transform)) continue;
+
+                var piece = c.GetComponentInParent<ModularPiece>();
+                if (piece == null) continue;
+                if ((piece.Kind & group) == 0) continue;
+                if (Vector3.Distance(piece.transform.position, at) > 0.6f) continue;
+
+                return true;
+            }
+            return false;
+        }
+
         /// <summary>세운다. 성공하면 만들어진 오브젝트를 돌려준다.</summary>
         public GameObject TryBuild()
         {
@@ -208,6 +302,13 @@ namespace Survive.Building
             // 아무도 실험하지 않는다.
             if (go.GetComponent<StructureDemolisher>() == null)
                 go.AddComponent<StructureDemolisher>();
+
+            if (_selected.IsModular)
+            {
+                var piece = go.GetComponent<ModularPiece>();
+                if (piece == null) piece = go.AddComponent<ModularPiece>();
+                piece.Setup(_selected.pieceKind);
+            }
 
             Built?.Invoke(go);
             return go;
@@ -259,6 +360,13 @@ namespace Survive.Building
             foreach (var c in _ghost.GetComponentsInChildren<Collider>(true)) c.enabled = false;
             foreach (var b in _ghost.GetComponentsInChildren<MonoBehaviour>(true)) b.enabled = false;
             foreach (var rb in _ghost.GetComponentsInChildren<Rigidbody>(true)) rb.isKinematic = true;
+
+            // 끄는 것만으로는 모자라다. 컴포넌트를 꺼도 FindObjectsByType는 찾아내므로
+            // 미리보기가 "세워진 조각"으로 세어진다 — 격자 검사가 유령을 보고
+            // 어긋났다고 판정했다. 조각으로 오해될 것은 아예 떼어 낸다.
+            foreach (var p in _ghost.GetComponentsInChildren<ModularPiece>(true)) Destroy(p);
+            foreach (var s in _ghost.GetComponentsInChildren<BuildSnapPoint>(true)) Destroy(s);
+            foreach (var m in _ghost.GetComponentsInChildren<BuiltStructure>(true)) Destroy(m);
 
             _ghostRenderers = _ghost.GetComponentsInChildren<Renderer>(true);
         }

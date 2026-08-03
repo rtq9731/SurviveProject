@@ -19,6 +19,12 @@ namespace Survive.Building
 
         /// <summary>이 배치 모드가 요구하는 바닥이 아니다.</summary>
         WrongSurface,
+
+        /// <summary>모듈 조각인데 붙일 자리가 근처에 없다.</summary>
+        NoAnchor,
+
+        /// <summary>그 자리에는 같은 조각이 이미 있다.</summary>
+        SlotTaken,
     }
 
     public static class PlacementCheckText
@@ -32,6 +38,8 @@ namespace Survive.Building
             PlacementResult.Blocked => "다른 것과 겹친다",
             PlacementResult.NotEnoughResources => "재료가 모자라다",
             PlacementResult.WrongSurface => "여기엔 놓을 수 없다",
+            PlacementResult.NoAnchor => "붙일 곳이 없다 — 토대부터 놓아라",
+            PlacementResult.SlotTaken => "그 자리엔 이미 있다",
             _ => "",
         };
     }

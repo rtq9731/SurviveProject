@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89593161a02e39c48a02fec0f507d952, type: 3}
+  m_Name: piece_floor
+  m_EditorClassIdentifier: Survive.Domain::Survive.Building.BuildableSO
+  id: piece_floor
+  displayName: "\uBC14\uB2E5"
+  prefab: {fileID: 3887848618564863563, guid: eff525f4c6df22642a638b1a1572de52, type: 3}
+  ghostPrefab: {fileID: 3887848618564863563, guid: eff525f4c6df22642a638b1a1572de52, type: 3}
+  cost:
+  - item: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}
+    count: 6
+  placement: 0
+  maxSlopeDegrees: 35
+  clearanceRadius: 0
+  gridSnap: 0
+  rotationStep: 90
+  pieceKind: 2
+  snapRadius: 4.5
+  requiresSnap: 1
