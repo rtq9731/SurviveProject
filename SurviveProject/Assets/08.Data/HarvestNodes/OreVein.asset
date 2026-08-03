@@ -15,7 +15,7 @@ MonoBehaviour:
   displayName: "\uB9E4\uD06C\uB85C\uB284 \uAD11\uB9E5"
   requiredTool: 1
   requiredTier: 1
-  baseDuration: 2.6
-  durability: 44
+  baseDuration: 1.4
+  durability: 34
   drops: {fileID: 11400000, guid: c54d9b9bbfccd2d43a46b7e95ec3b882, type: 2}
   respawnSeconds: 0

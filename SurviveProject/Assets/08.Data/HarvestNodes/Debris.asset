@@ -15,7 +15,7 @@ MonoBehaviour:
   displayName: "\uAE30\uACC4 \uC794\uD574"
   requiredTool: 1
   requiredTier: 1
-  baseDuration: 2
-  durability: 20
+  baseDuration: 1
+  durability: 16
   drops: {fileID: 11400000, guid: f12c36fc11e41a0448d6c4fdef85f6fc, type: 2}
   respawnSeconds: 0

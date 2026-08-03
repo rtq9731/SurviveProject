@@ -15,6 +15,7 @@ MonoBehaviour:
   displayName: "\uD769\uC5B4\uC9C4 \uC794\uD574"
   requiredTool: 0
   requiredTier: 0
-  baseDuration: 1.4
+  baseDuration: 0.75
+  durability: 12
   drops: {fileID: 11400000, guid: 59b17180032d16041866f58a35c9acf4, type: 2}
   respawnSeconds: 0

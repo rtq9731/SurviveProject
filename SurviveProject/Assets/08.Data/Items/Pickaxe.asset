@@ -25,5 +25,5 @@ MonoBehaviour:
   harvestPower: 1
   damage: 12
   attackRange: 2.2
-  attackCooldown: 0.6
+  attackCooldown: 0.4
   socketChildName: pickaxe01

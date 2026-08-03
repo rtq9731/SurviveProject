@@ -18,6 +18,6 @@ MonoBehaviour:
   minScale: 0.35
   maxScale: 1
   dropsPerStage: {fileID: 11400000, guid: d6ca434c0775e12419009c52397cf7a5, type: 2}
-  harvestSeconds: 1.2
+  harvestSeconds: 0.65
   witherSeconds: 90
   nutritionPerStage: 2
