@@ -42,7 +42,7 @@ Light:
   m_Enabled: 0
   serializedVersion: 13
   m_Type: 0
-  m_Color: {r: 1, g: 0.93, b: 0.78, a: 1}
+  m_Color: {r: 1, g: 0.6039216, b: 0.18039216, a: 1}
   m_Intensity: 2.2
   m_Range: 14
   m_SpotAngle: 70
@@ -1110,6 +1110,7 @@ MonoBehaviour:
   jumpCooldown: 1
   swimSpeed: 3.2
   swimVerticalSpeed: 2.6
+  swimSprintFactor: 1.45
   buoyancy: 0.9
   wadeSpeedFactor: 0.55
   climbOutBoost: 3.2
