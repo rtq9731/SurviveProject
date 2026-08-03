@@ -1,0 +1,42 @@
+# ArtRuleChecker 착수 시점 출력 — 2026-08-03, 커밋 a7d30a9b
+[아트 규칙 점검] 씬 도달 머티리얼 33개
+  Assets/Other Assets/Art/Crystal_Mine/Materials/Beams.mat
+      - 스무스니스가 3단 밖: 1 (허용 0.1 / 0.35 / 0.6)
+  Assets/Other Assets/Art/Crystal_Mine/Materials/Floor.mat
+      - 스무스니스가 3단 밖: 0 (허용 0.1 / 0.35 / 0.6)
+  Assets/Other Assets/Art/LowPolyRockPack/Materials/Green.mat
+      - 스무스니스가 3단 밖: 0.5 (허용 0.1 / 0.35 / 0.6)
+      - 광원 4색 밖 발광: 000000
+  Assets/Other Assets/Art/LowPolyRockPack/Materials/Grey.mat
+      - 스무스니스가 3단 밖: 0.5 (허용 0.1 / 0.35 / 0.6)
+      - 광원 4색 밖 발광: 000000
+  Assets/Other Assets/Art/LowPolyRockPack/Materials/Sand.mat
+      - 스무스니스가 3단 밖: 0.5 (허용 0.1 / 0.35 / 0.6)
+      - 광원 4색 밖 발광: 000000
+  Assets/Other Assets/Art/Runemark Studio/Freebies/PolyDesert Mobile/Meshes/Materials/polydesert_atlas.mat
+      - 스무스니스가 3단 밖: 0 (허용 0.1 / 0.35 / 0.6)
+  Assets/Other Assets/IgniteCoders/Simple Water Shader/Resources/Water_mat_01.mat
+      - 허용 목록 밖 셰이더: 'Shader Graphs/WaterShader'
+  Assets/Other Assets/Standard Assets/ParticleSystems/Materials/ParticleDuststorm.mat
+      - 허용 목록 밖 셰이더: 'Legacy Shaders/Particles/Alpha Blended'
+  Assets/polyperfect/Poly Universal Pack/Materials/M_Foliage_A.mat
+      - 허용 목록 밖 셰이더: 'Universal Render Pipeline/Nature/SpeedTree7'
+  Assets/polyperfect/Poly Universal Pack/Materials/M_Universal_A.mat
+      - 스무스니스가 3단 밖: 1 (허용 0.1 / 0.35 / 0.6)
+      - 광원 4색 밖 발광: FFFFFF
+  Assets/Stylized 3D Tools/Materials/Axe01.mat
+      - 스무스니스가 3단 밖: 0.75 (허용 0.1 / 0.35 / 0.6)
+  Assets/Stylized 3D Tools/Materials/Hammer01.mat
+      - 스무스니스가 3단 밖: 0.75 (허용 0.1 / 0.35 / 0.6)
+  Assets/Stylized 3D Tools/Materials/Pickaxe01.mat
+      - 스무스니스가 3단 밖: 0.75 (허용 0.1 / 0.35 / 0.6)
+  Assets/Stylized Water For URP/Materials/Wavy.mat
+      - 허용 목록 밖 셰이더: 'Stylized Water'
+  Assets/Unvik_3D/Cross_Plains/FBX/Materials/Cross_Plains.mat
+      - 스무스니스가 3단 밖: 0.5 (허용 0.1 / 0.35 / 0.6)
+  Packages/com.unity.render-pipelines.universal/Runtime/Materials/Lit.mat
+      - 스무스니스가 3단 밖: 0.5 (허용 0.1 / 0.35 / 0.6)
+위반 20건.
+
+[사람 확인] Metallic > 0 인 머티리얼 1개 — 기계·인공 구조물만 허용된다
+  Assets/polyperfect/Poly Universal Pack/Materials/M_Universal_A.mat  (metallic 1)
