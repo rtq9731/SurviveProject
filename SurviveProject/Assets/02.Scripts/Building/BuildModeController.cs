@@ -28,8 +28,18 @@ namespace Survive.Building
 
         [SerializeField] float rotateStepPerNotch = 15f;
 
+        [Header("철거")]
+        [Tooltip("R을 누르고 있으면 바라보는 구조물을 부순다")]
+        [SerializeField] float demolishRange = 4f;
+
+        [SerializeField] Transform rayOrigin;
+
+        StructureDemolisher _demolishing;
+        float _demolishElapsed;
+
         void Awake()
         {
+            if (rayOrigin == null && Camera.main != null) rayOrigin = Camera.main.transform;
             if (placer == null) placer = GetComponentInParent<BuildPlacer>();
             if (melee == null) melee = GetComponentInParent<Survive.Combat.MeleeSwing>();
             if (menu == null) menu = Object.FindFirstObjectByType<Survive.UI.BuildMenuUI>(FindObjectsInactive.Include);
@@ -42,6 +52,8 @@ namespace Survive.Building
             if (kb == null) return;
 
             if (kb.bKey.wasPressedThisFrame) ToggleMenu();
+
+            AdvanceDemolish(kb);
 
             if (placer == null || !placer.IsActive) return;
 
@@ -59,6 +71,60 @@ namespace Survive.Building
             }
 
             if (kb.escapeKey.wasPressedThisFrame) Exit();
+        }
+
+        /// <summary>
+        /// R 홀드로 철거. 채집과 같은 몸짓이라 따로 배울 것이 없다.
+        /// 탭이 아니라 홀드인 이유: 상자를 열려다 실수로 부수면 안 된다.
+        /// </summary>
+        void AdvanceDemolish(Keyboard kb)
+        {
+            if (!kb.rKey.isPressed)
+            {
+                if (_demolishing != null) StopDemolish();
+                return;
+            }
+
+            var target = FindTarget();
+            if (target == null || target != _demolishing)
+            {
+                _demolishing = target;
+                _demolishElapsed = 0f;
+                if (_demolishing == null) { StopDemolish(); return; }
+            }
+
+            _demolishElapsed += Time.deltaTime;
+            float progress = Mathf.Clamp01(_demolishElapsed / Mathf.Max(0.05f, _demolishing.HoldSeconds));
+            ReportProgress(progress);
+
+            if (progress < 1f) return;
+
+            var player = GetComponentInParent<PlayerContext>();
+            _demolishing.Demolish(player);
+            StopDemolish();
+        }
+
+        StructureDemolisher FindTarget()
+        {
+            if (rayOrigin == null) return null;
+            if (!Physics.Raycast(rayOrigin.position, rayOrigin.forward, out var hit,
+                                 demolishRange, ~0, QueryTriggerInteraction.Collide))
+                return null;
+            return hit.collider.GetComponentInParent<StructureDemolisher>();
+        }
+
+        void StopDemolish()
+        {
+            _demolishing = null;
+            _demolishElapsed = 0f;
+            ReportProgress(0f);
+        }
+
+        /// <summary>채집과 같은 게이지를 쓴다. 새 UI를 만들 이유가 없다.</summary>
+        void ReportProgress(float p)
+        {
+            if (Survive.Core.GameServices.TryGet<Survive.UI.HoldProgressView>(out var view))
+                view.SetExternalProgress(p);
         }
 
         void ToggleMenu()

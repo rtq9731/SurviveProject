@@ -72,6 +72,15 @@ namespace Survive.UI
             _pop?.Kill();
         }
 
+        void OnEnable() => Survive.Core.GameServices.Register(this);
+        void OnDisable() => Survive.Core.GameServices.Unregister<HoldProgressView>();
+
+        /// <summary>
+        /// 상호작용 말고 다른 경로(철거 등)에서 진행도를 밀어 넣는다.
+        /// 게이지 하나를 여럿이 쓰는 편이 화면에 막대가 늘어나는 것보다 낫다.
+        /// </summary>
+        public void SetExternalProgress(float p) => Refresh(p);
+
         void Refresh(float progress)
         {
             bool wantVisible = progress > 0.001f;

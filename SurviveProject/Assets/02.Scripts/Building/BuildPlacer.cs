@@ -204,6 +204,11 @@ namespace Survive.Building
             if (marker == null) marker = go.AddComponent<BuiltStructure>();
             marker.Setup(_selected);
 
+            // 지은 것은 전부 부술 수 있어야 한다. 잘못 지은 순간 재료가 날아가면
+            // 아무도 실험하지 않는다.
+            if (go.GetComponent<StructureDemolisher>() == null)
+                go.AddComponent<StructureDemolisher>();
+
             Built?.Invoke(go);
             return go;
         }

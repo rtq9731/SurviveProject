@@ -81,6 +81,7 @@ namespace Survive.EditorTools
             // 비우면 런타임에 Camera.main / 자기 컴포넌트로 대체된다.
             ["PlayerInteractor.rayOrigin"] = "비우면 Camera.main으로 대체",
             ["MeleeSwing.swingOrigin"] = "비우면 Camera.main으로 대체",
+            ["BuildModeController.rayOrigin"] = "비우면 Camera.main으로 대체",
             ["UIStateService.panelBehaviours"] = "비우면 씬에서 자동 수집",
             ["CreatureFeeding.glowRenderer"] = "비우면 자기 렌더러 사용",
             ["QuickSlotBar.styleSource"] = "비우면 인벤토리 슬롯을 찾아 그 모양을 빌린다",
