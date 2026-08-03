@@ -35,6 +35,9 @@ namespace Survive.UI
         PlayerInventory _inventory;
         Survive.Player.PlayerContext _player;
         StationType _station = StationType.None;
+
+        /// <summary>지금 열려 있는 목록이 어느 작업대 기준인지. 소지품 UI가 구분에 쓴다.</summary>
+        public StationType CurrentStation => _station;
         bool _isOpen;
 
         public bool IsOpen => _isOpen;
@@ -121,6 +124,14 @@ namespace Survive.UI
             var inv = _inventory?.Inventory;
             foreach (var (recipe, button, label) in _rows)
             {
+                // 손 제작 목록에서는 제작대 전용을 아예 숨긴다.
+                // 회색으로 남겨두면 "왜 안 되지"를 매번 확인하게 된다.
+                bool visible = _station != StationType.None ||
+                               recipe.requiredStation == StationType.None;
+                if (button != null && button.gameObject.activeSelf != visible)
+                    button.gameObject.SetActive(visible);
+                if (!visible) continue;
+
                 bool canMake = inv != null && CraftingService.CanCraft(recipe, inv, _station);
                 if (button != null) button.interactable = canMake;
                 if (label != null)

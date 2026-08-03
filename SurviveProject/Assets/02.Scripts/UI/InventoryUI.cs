@@ -21,6 +21,12 @@ namespace Survive.UI
         [SerializeField] CanvasGroup group;
         [SerializeField] float tweenSeconds = 0.18f;
 
+        [Tooltip("소지품을 열 때 손 제작 목록도 같이 연다. 비우면 씬에서 찾는다")]
+        [SerializeField] CraftingUI handCrafting;
+
+        [Tooltip("손 제작 목록을 같이 열지")]
+        [SerializeField] bool openHandCrafting = true;
+
         readonly List<InventorySlotView> _slots = new List<InventorySlotView>();
         PlayerInventory _inventory;
         Survive.Player.PlayerContext _player;
@@ -91,6 +97,16 @@ namespace Survive.UI
 
         public void Open()
         {
+            // 러스트·아크처럼 소지품 화면에서 바로 만든다.
+            // 제작대가 필요한 것은 제작대에서만 뜨고, 손으로 되는 것만 여기 보인다 —
+            // 두 목록을 나누는 기준은 이미 레시피의 requiredStation에 있다.
+            if (openHandCrafting)
+            {
+                if (handCrafting == null)
+                    handCrafting = Object.FindFirstObjectByType<CraftingUI>(FindObjectsInactive.Include);
+                handCrafting?.Open(Survive.Crafting.StationType.None);
+            }
+
             if (_isOpen) return;
             _isOpen = true;
             Refresh();
@@ -115,6 +131,10 @@ namespace Survive.UI
 
         public void Close()
         {
+            // 제작대에서 연 목록까지 닫으면 안 되므로, 손 제작으로 연 것만 닫는다.
+            if (openHandCrafting && handCrafting != null && handCrafting.CurrentStation == Survive.Crafting.StationType.None)
+                handCrafting.Close();
+
             if (!_isOpen) return;
             _isOpen = false;
 

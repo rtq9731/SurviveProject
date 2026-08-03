@@ -84,6 +84,10 @@ namespace Survive.EditorTools
             ["UIStateService.panelBehaviours"] = "비우면 씬에서 자동 수집",
             ["CreatureFeeding.glowRenderer"] = "비우면 자기 렌더러 사용",
             ["QuickSlotBar.styleSource"] = "비우면 인벤토리 슬롯을 찾아 그 모양을 빌린다",
+            // UI 프리팹은 플레이어를 참조할 수 없다 — 씬마다 다른 인스턴스다.
+            ["BuildMenuUI.placer"] = "Awake에서 씬의 BuildPlacer를 찾는다",
+            ["BuildMenuUI.inventory"] = "Awake에서 씬의 PlayerInventory를 찾는다",
+            ["BuildPlacer.builtParent"] = "비우면 씬 루트에 세운다",
             ["QuickSlotBar.inventory"] = "런타임에 찾는다",
             ["QuickSlotBar.toolUser"] = "런타임에 찾는다",
             ["QuickSlotBar.holder"] = "런타임에 찾는다",

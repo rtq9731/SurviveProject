@@ -2702,6 +2702,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Jellyfish_Big_Cluster_A_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 7212683786701634623, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8021835746373641861, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
       propertyPath: m_LocalScale.x
       value: 2.1716754
@@ -2754,7 +2758,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 7555334150964429165, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -4830,6 +4835,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Jellyfish_Big_Cluster_A_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 7212683786701634623, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8021835746373641861, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
       propertyPath: m_LocalScale.x
       value: 2.1716754
@@ -4882,7 +4891,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 7555334150964429165, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -5981,7 +5991,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Jellyfish_Big_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 2050548860382342744, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 1203704110845973268, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -6055,7 +6070,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Fluffy_Giant_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 7988613259695155863, guid: cea03717b10d2174a8acf1223f583ef1, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 7069570314997848001, guid: cea03717b10d2174a8acf1223f583ef1, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -9009,6 +9029,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Drip_Giant_Single_B_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 3503592517977954512, guid: 3552a7776d9271d40a689c02b34f15c6, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4311231794196939370, guid: 3552a7776d9271d40a689c02b34f15c6, type: 3}
       propertyPath: m_LocalScale.x
       value: 4.0140624
@@ -9061,7 +9085,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 4349961590222087614, guid: 3552a7776d9271d40a689c02b34f15c6, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -9508,6 +9533,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Jellyfish_Big_Cluster_A_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 7212683786701634623, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8021835746373641861, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
       propertyPath: m_LocalScale.x
       value: 2.1716757
@@ -9560,7 +9589,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 7555334150964429165, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -12288,7 +12318,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Fluffy_Giant_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 7988613259695155863, guid: cea03717b10d2174a8acf1223f583ef1, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 7069570314997848001, guid: cea03717b10d2174a8acf1223f583ef1, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -12769,6 +12804,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Fluffy_Giant_C_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 7192918955496399363, guid: decacbf9f3ed4384b994277c38c9cb69, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7537250076519381177, guid: decacbf9f3ed4384b994277c38c9cb69, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.3765186
@@ -12821,7 +12860,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8003750307752599407, guid: decacbf9f3ed4384b994277c38c9cb69, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -13045,7 +13085,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Glow_Giant_B_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 763109208071466870, guid: a1e72ac88988de746a0ebe5757896378, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 456677868016030250, guid: a1e72ac88988de746a0ebe5757896378, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 134205721643169228, guid: a1e72ac88988de746a0ebe5757896378, type: 3}
@@ -15591,6 +15636,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Drip_Giant_Single_B_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 3503592517977954512, guid: 3552a7776d9271d40a689c02b34f15c6, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4311231794196939370, guid: 3552a7776d9271d40a689c02b34f15c6, type: 3}
       propertyPath: m_LocalScale.x
       value: 2.7323701
@@ -15643,7 +15692,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 4349961590222087614, guid: 3552a7776d9271d40a689c02b34f15c6, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -18154,7 +18204,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Glow_Giant_B_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 763109208071466870, guid: a1e72ac88988de746a0ebe5757896378, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 456677868016030250, guid: a1e72ac88988de746a0ebe5757896378, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 134205721643169228, guid: a1e72ac88988de746a0ebe5757896378, type: 3}
@@ -21813,6 +21868,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Drip_Giant_Cluster_A_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 2565578026800824655, guid: fa1ee6abd37f196498dca03b9e89786e, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2941153144797830133, guid: fa1ee6abd37f196498dca03b9e89786e, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.5695812
@@ -21865,7 +21924,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 3412508397718732003, guid: fa1ee6abd37f196498dca03b9e89786e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -25172,6 +25232,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Drip_Giant_Cluster_A_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 2565578026800824655, guid: fa1ee6abd37f196498dca03b9e89786e, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2941153144797830133, guid: fa1ee6abd37f196498dca03b9e89786e, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.5695807
@@ -25224,7 +25288,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 3412508397718732003, guid: fa1ee6abd37f196498dca03b9e89786e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -25299,6 +25364,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Fluffy_Giant_C_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 7192918955496399363, guid: decacbf9f3ed4384b994277c38c9cb69, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7537250076519381177, guid: decacbf9f3ed4384b994277c38c9cb69, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.3765191
@@ -25351,7 +25420,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8003750307752599407, guid: decacbf9f3ed4384b994277c38c9cb69, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -27490,6 +27560,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Jellyfish_Big_Cluster_A_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 7212683786701634623, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8021835746373641861, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
       propertyPath: m_LocalScale.x
       value: 2.171675
@@ -27542,7 +27616,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 7555334150964429165, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -28613,7 +28688,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Glow_Giant_B_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 763109208071466870, guid: a1e72ac88988de746a0ebe5757896378, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 456677868016030250, guid: a1e72ac88988de746a0ebe5757896378, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 134205721643169228, guid: a1e72ac88988de746a0ebe5757896378, type: 3}
@@ -29016,7 +29096,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Jellyfish_Big_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 2050548860382342744, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 1203704110845973268, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -33036,6 +33121,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Drip_Giant_Single_B_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 3503592517977954512, guid: 3552a7776d9271d40a689c02b34f15c6, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4311231794196939370, guid: 3552a7776d9271d40a689c02b34f15c6, type: 3}
       propertyPath: m_LocalScale.x
       value: 4.024471
@@ -33088,7 +33177,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 4349961590222087614, guid: 3552a7776d9271d40a689c02b34f15c6, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -33893,6 +33983,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Fluffy_Giant_C_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 7192918955496399363, guid: decacbf9f3ed4384b994277c38c9cb69, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7537250076519381177, guid: decacbf9f3ed4384b994277c38c9cb69, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.3765192
@@ -33945,7 +34039,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8003750307752599407, guid: decacbf9f3ed4384b994277c38c9cb69, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -34540,6 +34635,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Drip_Giant_Single_B_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 3503592517977954512, guid: 3552a7776d9271d40a689c02b34f15c6, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4311231794196939370, guid: 3552a7776d9271d40a689c02b34f15c6, type: 3}
       propertyPath: m_LocalScale.x
       value: 3.9330366
@@ -34592,7 +34691,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 4349961590222087614, guid: 3552a7776d9271d40a689c02b34f15c6, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -36928,7 +37028,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Glow_Giant_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 6688902936611065186, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 5769858902066212926, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 6311814001293875160, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
@@ -37713,7 +37818,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Glow_Giant_B_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 763109208071466870, guid: a1e72ac88988de746a0ebe5757896378, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 456677868016030250, guid: a1e72ac88988de746a0ebe5757896378, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 134205721643169228, guid: a1e72ac88988de746a0ebe5757896378, type: 3}
@@ -38743,7 +38853,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Fluffy_Giant_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 7988613259695155863, guid: cea03717b10d2174a8acf1223f583ef1, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 7069570314997848001, guid: cea03717b10d2174a8acf1223f583ef1, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -38764,6 +38879,10 @@ PrefabInstance:
     - target: {fileID: 7212683786701634623, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
       propertyPath: m_Name
       value: Mushroom_Jellyfish_Big_Cluster_A_Fantasy
+      objectReference: {fileID: 0}
+    - target: {fileID: 7212683786701634623, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8021835746373641861, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
       propertyPath: m_LocalScale.x
@@ -38817,7 +38936,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 7555334150964429165, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -39831,6 +39951,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Drip_Giant_Cluster_A_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 2565578026800824655, guid: fa1ee6abd37f196498dca03b9e89786e, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2941153144797830133, guid: fa1ee6abd37f196498dca03b9e89786e, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.5695809
@@ -39883,7 +40007,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 3412508397718732003, guid: fa1ee6abd37f196498dca03b9e89786e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -41007,7 +41132,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Fluffy_Giant_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 7988613259695155863, guid: cea03717b10d2174a8acf1223f583ef1, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 7069570314997848001, guid: cea03717b10d2174a8acf1223f583ef1, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -41156,7 +41286,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Jellyfish_Big_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 2050548860382342744, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 1203704110845973268, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -42054,7 +42189,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Glow_Giant_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 6688902936611065186, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 5769858902066212926, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 6311814001293875160, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
@@ -44623,7 +44763,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Glow_Giant_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 6688902936611065186, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 5769858902066212926, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 6311814001293875160, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
@@ -44700,7 +44845,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Jellyfish_Big_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 2050548860382342744, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 1203704110845973268, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -51336,7 +51486,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Glow_Giant_B_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 763109208071466870, guid: a1e72ac88988de746a0ebe5757896378, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 456677868016030250, guid: a1e72ac88988de746a0ebe5757896378, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 134205721643169228, guid: a1e72ac88988de746a0ebe5757896378, type: 3}
@@ -52771,7 +52926,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Jellyfish_Big_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 2050548860382342744, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 1203704110845973268, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -53532,7 +53692,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Fluffy_Giant_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 7988613259695155863, guid: cea03717b10d2174a8acf1223f583ef1, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 7069570314997848001, guid: cea03717b10d2174a8acf1223f583ef1, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -53932,7 +54097,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Glow_Giant_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 6688902936611065186, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 5769858902066212926, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 6311814001293875160, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
@@ -54445,6 +54615,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Jellyfish_Big_Cluster_A_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 7212683786701634623, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8021835746373641861, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
       propertyPath: m_LocalScale.x
       value: 2.1716747
@@ -54497,7 +54671,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 7555334150964429165, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -54682,7 +54857,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Jellyfish_Big_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 2050548860382342744, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 1203704110845973268, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -54756,7 +54936,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Glow_Giant_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 6688902936611065186, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 5769858902066212926, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 6311814001293875160, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
@@ -54780,6 +54965,10 @@ PrefabInstance:
     - target: {fileID: 2565578026800824655, guid: fa1ee6abd37f196498dca03b9e89786e, type: 3}
       propertyPath: m_Name
       value: Mushroom_Drip_Giant_Cluster_A_Fantasy
+      objectReference: {fileID: 0}
+    - target: {fileID: 2565578026800824655, guid: fa1ee6abd37f196498dca03b9e89786e, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2941153144797830133, guid: fa1ee6abd37f196498dca03b9e89786e, type: 3}
       propertyPath: m_LocalScale.x
@@ -54833,7 +55022,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 3412508397718732003, guid: fa1ee6abd37f196498dca03b9e89786e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -56608,7 +56798,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Jellyfish_Big_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 2050548860382342744, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 1203704110845973268, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -56723,6 +56918,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Fluffy_Giant_C_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 7192918955496399363, guid: decacbf9f3ed4384b994277c38c9cb69, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7537250076519381177, guid: decacbf9f3ed4384b994277c38c9cb69, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.3765188
@@ -56775,7 +56974,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8003750307752599407, guid: decacbf9f3ed4384b994277c38c9cb69, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -57196,7 +57396,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Jellyfish_Big_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 2050548860382342744, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 1203704110845973268, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -58200,7 +58405,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Jellyfish_Big_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 2050548860382342744, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 1203704110845973268, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -58523,7 +58733,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Glow_Giant_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 6688902936611065186, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 5769858902066212926, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 6311814001293875160, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
@@ -62017,6 +62232,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Fluffy_Giant_C_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 7192918955496399363, guid: decacbf9f3ed4384b994277c38c9cb69, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7537250076519381177, guid: decacbf9f3ed4384b994277c38c9cb69, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.3765191
@@ -62069,7 +62288,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8003750307752599407, guid: decacbf9f3ed4384b994277c38c9cb69, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -63687,6 +63907,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Drip_Giant_Single_B_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 3503592517977954512, guid: 3552a7776d9271d40a689c02b34f15c6, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4311231794196939370, guid: 3552a7776d9271d40a689c02b34f15c6, type: 3}
       propertyPath: m_LocalScale.x
       value: 3.2759705
@@ -63739,7 +63963,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 4349961590222087614, guid: 3552a7776d9271d40a689c02b34f15c6, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -64222,7 +64447,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Jellyfish_Big_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 2050548860382342744, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 1203704110845973268, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -65907,7 +66137,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Jellyfish_Big_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 2050548860382342744, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 1203704110845973268, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -66908,6 +67143,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Drip_Giant_Cluster_A_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 2565578026800824655, guid: fa1ee6abd37f196498dca03b9e89786e, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2941153144797830133, guid: fa1ee6abd37f196498dca03b9e89786e, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.5695807
@@ -66960,7 +67199,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 3412508397718732003, guid: fa1ee6abd37f196498dca03b9e89786e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -67538,6 +67778,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Drip_Giant_Single_B_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 3503592517977954512, guid: 3552a7776d9271d40a689c02b34f15c6, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4311231794196939370, guid: 3552a7776d9271d40a689c02b34f15c6, type: 3}
       propertyPath: m_LocalScale.x
       value: 2.5212505
@@ -67590,7 +67834,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 4349961590222087614, guid: 3552a7776d9271d40a689c02b34f15c6, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -68553,6 +68798,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Jellyfish_Big_Cluster_A_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 7212683786701634623, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8021835746373641861, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
       propertyPath: m_LocalScale.x
       value: 2.1716752
@@ -68605,7 +68854,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 7555334150964429165, guid: 9dafc6cd5e206f242936b5ab0b7ccdd3, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -69990,7 +70240,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Glow_Giant_B_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 763109208071466870, guid: a1e72ac88988de746a0ebe5757896378, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 456677868016030250, guid: a1e72ac88988de746a0ebe5757896378, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 134205721643169228, guid: a1e72ac88988de746a0ebe5757896378, type: 3}
@@ -70672,6 +70927,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Drip_Giant_Single_B_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 3503592517977954512, guid: 3552a7776d9271d40a689c02b34f15c6, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4311231794196939370, guid: 3552a7776d9271d40a689c02b34f15c6, type: 3}
       propertyPath: m_LocalScale.x
       value: 3.3067832
@@ -70724,7 +70983,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 4349961590222087614, guid: 3552a7776d9271d40a689c02b34f15c6, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -71569,6 +71829,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Fluffy_Giant_C_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 7192918955496399363, guid: decacbf9f3ed4384b994277c38c9cb69, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7537250076519381177, guid: decacbf9f3ed4384b994277c38c9cb69, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.376519
@@ -71621,7 +71885,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 8003750307752599407, guid: decacbf9f3ed4384b994277c38c9cb69, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -72989,6 +73254,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Drip_Giant_Cluster_A_Fantasy
       objectReference: {fileID: 0}
+    - target: {fileID: 2565578026800824655, guid: fa1ee6abd37f196498dca03b9e89786e, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2941153144797830133, guid: fa1ee6abd37f196498dca03b9e89786e, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.5695813
@@ -73041,7 +73310,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 3412508397718732003, guid: fa1ee6abd37f196498dca03b9e89786e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -75710,7 +75980,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Fluffy_Giant_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 7988613259695155863, guid: cea03717b10d2174a8acf1223f583ef1, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 7069570314997848001, guid: cea03717b10d2174a8acf1223f583ef1, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -76381,6 +76656,28 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 2218485608572127914, guid: f6a289e552784404699ad8352146ef36, type: 3}
   m_PrefabInstance: {fileID: 2001631941}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &2003020730 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1330457528169490069, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
+  m_PrefabInstance: {fileID: 8759864735453020566}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8759864735453020569}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ecd5eec00c4b1b748850f4222d6e6121, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Survive.Items.PlayerInventory
+--- !u!114 &2003020731 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7519376547813232497, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
+  m_PrefabInstance: {fileID: 8759864735453020566}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8759864735453020569}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e5ab4d6dd62247b4ea3a5f1b6a4a922c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Survive.Combat.MeleeSwing
 --- !u!4 &2006875779 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 476412, guid: 36cf43d46aeb7494b82aa54d61da3bd7, type: 3}
@@ -78316,7 +78613,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Glow_Giant_B_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 763109208071466870, guid: a1e72ac88988de746a0ebe5757896378, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 456677868016030250, guid: a1e72ac88988de746a0ebe5757896378, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 134205721643169228, guid: a1e72ac88988de746a0ebe5757896378, type: 3}
@@ -78571,7 +78873,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Glow_Giant_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 6688902936611065186, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 5769858902066212926, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 6311814001293875160, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
@@ -78979,7 +79286,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Jellyfish_Big_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 2050548860382342744, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 1203704110845973268, guid: 39223e6bd8331864bab08bab61117c8e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -79902,7 +80214,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mushroom_Glow_Giant_A_Fantasy
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    - target: {fileID: 6688902936611065186, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 5769858902066212926, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 6311814001293875160, guid: caeeaa1fcdaa9d1438a8393ee97bbe8c, type: 3}
@@ -80882,6 +81199,14 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7721096880253602455, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
+      propertyPath: placer
+      value: 
+      objectReference: {fileID: 8759864735453020575}
+    - target: {fileID: 7721096880253602455, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
+      propertyPath: inventory
+      value: 
+      objectReference: {fileID: 2003020730}
     - target: {fileID: 8226224592226892235, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -80948,6 +81273,17 @@ PrefabInstance:
       addedObject: {fileID: 972555469}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
+--- !u!114 &301521547171322060 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7721096880253602455, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
+  m_PrefabInstance: {fileID: 301521547171322059}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 84106e8d17562cf4ea3662c1ec570b35, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Survive.UI.BuildMenuUI
 --- !u!224 &301521547171322061 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 301521547292152600, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
@@ -81135,6 +81471,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8852171523659162985, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8759864735453020572}
+    - targetCorrespondingSourceObject: {fileID: 8852171523659162985, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8759864735453020575}
+    - targetCorrespondingSourceObject: {fileID: 8852171523659162985, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8759864735453020574}
   m_SourcePrefab: {fileID: 100100000, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
 --- !u!4 &8759864735453020567 stripped
 Transform:
@@ -81211,6 +81553,44 @@ MonoBehaviour:
   underwaterFog: {r: 0.1, g: 0.26, b: 0.33, a: 1}
   underwaterFogDensity: 0.028
   blendSeconds: 0.35
+--- !u!114 &8759864735453020574
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8759864735453020569}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3e4c9ace8818f14e9de72985439c7d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Survive.Building.BuildModeController
+  placer: {fileID: 8759864735453020575}
+  menu: {fileID: 301521547171322060}
+  melee: {fileID: 2003020731}
+  rotateStepPerNotch: 15
+--- !u!114 &8759864735453020575
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8759864735453020569}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 011c3872b40b86f4782aca00f10b6cdd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Survive.Building.BuildPlacer
+  catalog: {fileID: 11400000, guid: fc2850c697da14641adf389dea527003, type: 2}
+  rayOrigin: {fileID: 440471802}
+  inventory: {fileID: 2003020730}
+  builtParent: {fileID: 0}
+  maxDistance: 6
+  surfaceMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  okColor: {r: 0.45, g: 0.95, b: 0.55, a: 0.45}
+  blockedColor: {r: 0.95, g: 0.35, b: 0.3, a: 0.45}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
