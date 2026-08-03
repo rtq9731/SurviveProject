@@ -162,6 +162,28 @@ namespace Survive.Testing
             yield return null;
         }
 
+        /// <summary>좌클릭을 누른 채로 버틴다. 꾹 눌러 연속으로 휘두르는지 볼 때 쓴다.</summary>
+        public static IEnumerator HoldAttack(float seconds)
+        {
+            _mouseState.WithButton(MouseButton.Left, true);
+            QueueMouse();
+            yield return null;
+
+            float t = 0f;
+            while (t < seconds)
+            {
+                QueueMouse();           // 누른 상태를 매 프레임 유지한다
+                t += Time.deltaTime;
+                yield return null;
+            }
+
+            _mouseState.WithButton(MouseButton.Left, false);
+            QueueMouse();
+            yield return null;
+            QueueMouse();
+            yield return null;
+        }
+
         /// <summary>시나리오가 끝나면 가상 입력 장치를 치운다.</summary>
         public static void RemoveDevice()
         {

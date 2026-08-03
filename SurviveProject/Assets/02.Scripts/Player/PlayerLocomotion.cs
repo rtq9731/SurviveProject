@@ -22,8 +22,11 @@ namespace Survive.Player
         [Tooltip("헤엄칠 때 이동 속도")]
         [SerializeField] float swimSpeed = 3.2f;
 
-        [Tooltip("물속에서 위아래로 움직이는 속도. Space=상승, LeftShift=하강")]
+        [Tooltip("물속에서 위아래로 움직이는 속도. Space=상승, Ctrl=하강")]
         [SerializeField] float swimVerticalSpeed = 2.6f;
+
+        [Tooltip("물속에서 Shift로 빨라지는 배율")]
+        [SerializeField] float swimSprintFactor = 1.45f;
 
         [Tooltip("가만히 있을 때 수면으로 떠오르는 속도")]
         [SerializeField] float buoyancy = 0.9f;
@@ -39,7 +42,6 @@ namespace Survive.Player
         float _verticalSpeed;
         float _nextJumpTime;
         bool _locked;
-        bool _ascending;
 
         public bool IsGrounded => _cc != null && _cc.isGrounded;
         public float CurrentSpeed { get; private set; }
@@ -57,7 +59,6 @@ namespace Survive.Player
             if (input == null) return;
             input.MoveEvent += OnMoveInput;
             input.JumpEvent += OnJump;
-            input.SprintEvent += OnAscendInput;
         }
 
         void OnDisable()
@@ -65,11 +66,9 @@ namespace Survive.Player
             if (input == null) return;
             input.MoveEvent -= OnMoveInput;
             input.JumpEvent -= OnJump;
-            input.SprintEvent -= OnAscendInput;
         }
 
         void OnMoveInput(Vector2 v) => _moveInput = v;
-        void OnAscendInput(bool pressed) => _ascending = pressed;
 
         void OnJump()
         {
@@ -133,16 +132,20 @@ namespace Survive.Player
             if (camT != null) forward = camT.forward;
 
             Vector3 right = transform.right;
-            Vector3 MoveTo = (forward * dir.z + right * dir.x) * swimSpeed;
+
+            // Shift는 어디서나 빨라지는 것이다. 물에 들어갔다고 뜻이 바뀌면
+            // 같은 손가락이 두 가지를 하게 되고, 그건 익힐 것이 하나 더 느는 것이다.
+            float speed = swimSpeed * (input != null && input.IsSprinting ? swimSprintFactor : 1f);
+            Vector3 MoveTo = (forward * dir.z + right * dir.x) * speed;
 
             bool ascendInput = false;
 
-            // 상하 조작: Shift는 하강, Space는 상승. 둘 다 누르고 있는 동안 계속이다.
+            // 상하 조작: Ctrl은 하강, Space는 상승. 둘 다 누르고 있는 동안 계속이다.
             //
             // 전에는 Space가 점프 이벤트 한 번뿐이라, 누르고 있어도 곧 부력 속도로
             // 수렴했다. 툴팁은 "Space=상승"이라고 적혀 있는데 실제로는 한 번 튀고 마니
             // 깊은 곳에서 손을 놓지 않고도 익사했다.
-            if (!_locked && _ascending) { _verticalSpeed = -swimVerticalSpeed; }
+            if (!_locked && input != null && input.IsDescending) { _verticalSpeed = -swimVerticalSpeed; }
             else if (!_locked && input != null && input.IsJumpHeld)
             {
                 _verticalSpeed = swimVerticalSpeed;

@@ -35,6 +35,9 @@ namespace Survive.Combat
         float _nextSwingTime;
         readonly List<IDamageable> _hitThisSwing = new List<IDamageable>();
 
+        /// <summary>지금까지 휘두른 횟수. 쿨타임에 막힌 시도는 세지 않는다.</summary>
+        public int SwingCount { get; private set; }
+
         void Awake()
         {
             if (toolHolder == null) toolHolder = GetComponentInParent<PlayerToolHolder>();
@@ -52,6 +55,19 @@ namespace Survive.Combat
             if (input != null) input.AttackEvent -= TrySwing;
         }
 
+        /// <summary>
+        /// 꾹 누르고 있으면 쿨타임마다 다시 휘두른다.
+        ///
+        /// 광맥 하나를 부수는 데 여러 번 때려야 하는데, 그때마다 클릭을 요구하면
+        /// 손가락만 바쁘고 얻는 것은 같다. 홀드 채집(E)과 같은 몸짓이 되기도 한다.
+        /// 쿨타임은 그대로라 연타로 더 빨라지지는 않는다.
+        /// </summary>
+        void Update()
+        {
+            if (input == null || !input.IsAttackHeld) return;
+            TrySwing();
+        }
+
         public void TrySwing()
         {
             var tool = toolHolder != null ? toolHolder.EquippedTool : null;
@@ -61,6 +77,7 @@ namespace Survive.Combat
 
             _nextSwingTime = Time.time + tool.attackCooldown;
             _hitThisSwing.Clear();
+            SwingCount++;
 
             // 반응은 화면이 아니라 때린 물건에서 나와야 한다.
             swingAnimator?.Play();

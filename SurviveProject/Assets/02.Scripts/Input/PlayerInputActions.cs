@@ -191,6 +191,16 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""initialStateCheck"": false,
                     ""priority"": 0
+                },
+                {
+                    ""name"": ""Descend"",
+                    ""type"": ""Button"",
+                    ""id"": ""11111111-2222-3333-4444-555555555501"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
                 }
             ],
             ""bindings"": [
@@ -347,6 +357,17 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
                     ""action"": ""ToggleLantern"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""11111111-2222-3333-4444-555555555502"",
+                    ""path"": ""<Keyboard>/ctrl"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Descend"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         },
@@ -436,6 +457,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         m_Gameplay_Pause = m_Gameplay.FindAction("Pause", throwIfNotFound: true);
         m_Gameplay_NextTool = m_Gameplay.FindAction("NextTool", throwIfNotFound: true);
         m_Gameplay_ToggleLantern = m_Gameplay.FindAction("ToggleLantern", throwIfNotFound: true);
+        m_Gameplay_Descend = m_Gameplay.FindAction("Descend", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Point = m_UI.FindAction("Point", throwIfNotFound: true);
@@ -532,6 +554,7 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Gameplay_Pause;
     private readonly InputAction m_Gameplay_NextTool;
     private readonly InputAction m_Gameplay_ToggleLantern;
+    private readonly InputAction m_Gameplay_Descend;
     /// <summary>
     /// Provides access to input actions defined in input action map "Gameplay".
     /// </summary>
@@ -583,6 +606,10 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Gameplay/ToggleLantern".
         /// </summary>
         public InputAction @ToggleLantern => m_Wrapper.m_Gameplay_ToggleLantern;
+        /// <summary>
+        /// Provides access to the underlying input action "Gameplay/Descend".
+        /// </summary>
+        public InputAction @Descend => m_Wrapper.m_Gameplay_Descend;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -639,6 +666,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @ToggleLantern.started += instance.OnToggleLantern;
             @ToggleLantern.performed += instance.OnToggleLantern;
             @ToggleLantern.canceled += instance.OnToggleLantern;
+            @Descend.started += instance.OnDescend;
+            @Descend.performed += instance.OnDescend;
+            @Descend.canceled += instance.OnDescend;
         }
 
         /// <summary>
@@ -680,6 +710,9 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
             @ToggleLantern.started -= instance.OnToggleLantern;
             @ToggleLantern.performed -= instance.OnToggleLantern;
             @ToggleLantern.canceled -= instance.OnToggleLantern;
+            @Descend.started -= instance.OnDescend;
+            @Descend.performed -= instance.OnDescend;
+            @Descend.canceled -= instance.OnDescend;
         }
 
         /// <summary>
@@ -908,6 +941,13 @@ public partial class @PlayerInputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnToggleLantern(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Descend" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnDescend(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.

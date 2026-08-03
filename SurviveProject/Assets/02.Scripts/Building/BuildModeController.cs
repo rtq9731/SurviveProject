@@ -55,7 +55,14 @@ namespace Survive.Building
 
             AdvanceDemolish(kb);
 
-            if (placer == null || !placer.IsActive) return;
+            if (placer == null || !placer.IsActive)
+            {
+                // 건설 모드가 아니면 곡괭이는 돌아와 있어야 한다.
+                // Exit()에서만 되돌리면, 다른 경로로 배치가 취소됐을 때
+                // 곡괭이가 조용히 죽은 채로 남는다.
+                if (melee != null && !melee.enabled) melee.enabled = true;
+                return;
+            }
 
             // 건설 중에는 곡괭이가 나가면 안 된다
             if (melee != null && melee.enabled) melee.enabled = false;

@@ -35,6 +35,12 @@ namespace Survive.Input
 
         /// <summary>점프 키가 눌려 있는가. 물속 상승처럼 계속 미는 조작에 쓴다.</summary>
         public bool IsJumpHeld { get; private set; }
+
+        /// <summary>하강 키(Ctrl)가 눌려 있는가. 물속에서 가라앉는 데 쓴다.</summary>
+        public bool IsDescending { get; private set; }
+
+        /// <summary>공격 버튼이 눌려 있는가. 꾹 누른 채로 계속 휘두르는 데 쓴다.</summary>
+        public bool IsAttackHeld { get; private set; }
         public bool IsInteractHeld { get; private set; }
 
         void OnEnable()
@@ -83,6 +89,8 @@ namespace Survive.Input
             IsSprinting = false;
             IsInteractHeld = false;
             IsJumpHeld = false;
+            IsDescending = false;
+            IsAttackHeld = false;
         }
 
         // ── Gameplay ─────────────────────────────────────────────
@@ -113,6 +121,17 @@ namespace Survive.Input
             else if (ctx.canceled) { IsSprinting = false; SprintEvent?.Invoke(false); }
         }
 
+        /// <summary>
+        /// 하강. 전에는 Shift가 물속에서 하강이었는데, 땅에서는 달리기라
+        /// 물에 들어가는 순간 같은 손가락이 다른 뜻이 됐다.
+        /// Shift는 어디서나 빨라지는 것으로 두고 하강은 Ctrl로 뺀다.
+        /// </summary>
+        public void OnDescend(InputAction.CallbackContext ctx)
+        {
+            if (ctx.performed) IsDescending = true;
+            else if (ctx.canceled) IsDescending = false;
+        }
+
         public void OnInteract(InputAction.CallbackContext ctx)
         {
             if (ctx.performed) { IsInteractHeld = true; InteractEvent?.Invoke(); }
@@ -121,7 +140,11 @@ namespace Survive.Input
 
         public void OnAttack(InputAction.CallbackContext ctx)
         {
-            if (ctx.performed) AttackEvent?.Invoke();
+            // 한 번 누른 순간과 누르고 있는 상태를 둘 다 내보낸다.
+            // 채집은 같은 바위를 여러 번 때려야 하는데, 그때마다 클릭하게 두면
+            // 손가락만 아프고 얻는 것은 같다.
+            if (ctx.performed) { IsAttackHeld = true; AttackEvent?.Invoke(); }
+            else if (ctx.canceled) IsAttackHeld = false;
         }
 
         public void OnToggleInventory(InputAction.CallbackContext ctx)

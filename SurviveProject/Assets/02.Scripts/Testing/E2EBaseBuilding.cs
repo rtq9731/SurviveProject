@@ -63,6 +63,7 @@ namespace Survive.Testing
             yield return DemolishRefunds(fire);
 
             yield return SwimAndSee();
+            yield return HoldToSwing();
 
             E2EHarness.Log("=== 거점 시스템 완주 ===");
         }
@@ -85,18 +86,23 @@ namespace Survive.Testing
 
             // 목록을 손으로 적으면 건축물에 재료가 하나 추가될 때마다 낡는다.
             // 카탈로그가 요구하는 것을 그대로 채운다.
-            var placer = Placer;
             var needed = new System.Collections.Generic.HashSet<string>
                              { "scrap", "machine_part", "alien_alloy" };
 
-            foreach (var id in new[] { "bench", "storage", "campfire", "fence" })
+            yield return E2EHarness.WaitUntil(() => Placer != null, "BuildPlacer가 준비된다", 8f);
+
+            var placer = Placer;
+            if (placer != null)
             {
-                placer.SelectById(id);
-                var cost = placer.Selected?.cost;
-                if (cost == null) continue;
-                foreach (var c in cost) if (c?.item != null) needed.Add(c.item.id);
+                foreach (var id in new[] { "bench", "storage", "campfire", "fence" })
+                {
+                    placer.SelectById(id);
+                    var cost = placer.Selected?.cost;
+                    if (cost == null) continue;
+                    foreach (var c in cost) if (c?.item != null) needed.Add(c.item.id);
+                }
+                placer.Cancel();
             }
-            placer.Cancel();
 
             foreach (var id in needed)
             {
@@ -427,10 +433,7 @@ namespace Survive.Testing
             yield return AimForDemolish(box, r => aimed = r);
             E2EHarness.Assert(aimed, "보관함을 조준할 수 있다");
 
-            // R 홀드. 실제 조작 경로다.
-            yield return E2EHarness.HoldKey(Key.R, dem.HoldSeconds + 0.5f);
-            yield return null;
-            yield return null;
+            yield return HoldDemolish(box, dem.HoldSeconds);
 
             E2EHarness.Assert(box == null, "R 홀드로 보관함이 부서졌다");
 
@@ -492,6 +495,33 @@ namespace Survive.Testing
             result(false);
         }
 
+        /// <summary>
+        /// R을 누른 채 대상을 계속 겨눈다.
+        ///
+        /// 한 번 조준하고 손을 놓으면 걸어온 관성 때문에 시선이 밀리고,
+        /// 그러면 철거 대상이 풀려 진행도가 0으로 돌아간다.
+        /// 사람도 부수는 동안에는 그것을 계속 본다.
+        /// </summary>
+        static IEnumerator HoldDemolish(GameObject structure, float holdSeconds)
+        {
+            var col = structure.GetComponentInChildren<Collider>();
+            var target = col != null ? col.bounds.center : structure.transform.position;
+
+            yield return E2EHarness.PressKey(Key.R);
+
+            float t = 0f;
+            float limit = holdSeconds + 2f;
+            while (t < limit && structure != null)
+            {
+                E2EHarness.LookAt(target);
+                t += Time.deltaTime;
+                yield return null;
+            }
+
+            yield return E2EHarness.ReleaseKey(Key.R);
+            yield return null;
+        }
+
         // ── 화톳불 ──────────────────────────────────────────────
 
         /// <summary>
@@ -548,9 +578,7 @@ namespace Survive.Testing
             yield return AimForDemolish(structure, r => aimed = r);
             E2EHarness.Assert(aimed, "구조물을 조준할 수 있다");
 
-            yield return E2EHarness.HoldKey(Key.R, dem.HoldSeconds + 0.5f);
-            yield return null;
-            yield return null;
+            yield return HoldDemolish(structure, dem.HoldSeconds);
 
             E2EHarness.Assert(structure == null, "R 홀드로 구조물이 부서졌다");
             E2EHarness.Assert(Inv.CountOf(first.item.id) > before,
@@ -635,6 +663,7 @@ namespace Survive.Testing
             E2EHarness.Assert(view != null, "수중 시야 처리가 있다");
             E2EHarness.Assert(RenderSettings.fog, "머리가 잠기면 시야가 흐려진다");
 
+            yield return DescendAndSprint(swim, deepest, best);
             yield return CanSurface(swim, deepest, best, surface);
 
             // 물 밖으로 나오면 원래대로 돌아와야 한다. 안개가 남으면 지상이 물속처럼 보인다.
@@ -647,6 +676,123 @@ namespace Survive.Testing
             E2EHarness.Assert(!RenderSettings.fog, "물 밖으로 나오면 시야가 돌아온다");
 
             E2EHarness.Log($"  수영={swim.IsSwimming} 머리잠김={swim.IsHeadSubmerged} 안개={RenderSettings.fog}");
+        }
+
+        /// <summary>
+        /// 물속 상하 조작이 바뀐 뒤를 확인한다.
+        ///
+        /// Shift는 땅에서 달리기였는데 물에서만 하강이었다. 같은 손가락이
+        /// 장소에 따라 다른 뜻을 갖는 건 익힐 것이 하나 더 느는 것이다.
+        /// 이제 Shift는 어디서나 빨라지고, 하강은 Ctrl이다.
+        /// </summary>
+        static IEnumerator DescendAndSprint(PlayerSwimming swim, Vector3 deepest, float depth)
+        {
+            // 수면 근처에서 시작해 Ctrl로 내려간다
+            E2EHarness.Teleport(deepest + Vector3.up * (depth - 1.5f));
+            yield return null;
+            yield return null;
+
+            float startY = E2EHarness.Player.transform.position.y;
+            yield return E2EHarness.PressKey(Key.LeftCtrl);
+
+            float t = 0f;
+            while (t < 1.5f) { t += Time.deltaTime; yield return null; }
+            yield return E2EHarness.ReleaseKey(Key.LeftCtrl);
+
+            float sank = startY - E2EHarness.Player.transform.position.y;
+            E2EHarness.Log($"  Ctrl 1.5초에 {sank:F1}m 내려갔다");
+            E2EHarness.Assert(sank > 0.5f, "Ctrl로 물속에서 가라앉는다");
+
+            // 하강 속도가 남은 채로 재면 Shift 탓으로 보인다. 가라앉는 힘이
+            // 부력으로 수렴할 때까지 기다린 뒤에 잰다.
+            t = 0f;
+            while (t < 2.0f) { t += Time.deltaTime; yield return null; }
+
+            // Shift는 하강이 아니라 달리기여야 한다
+            float beforeY = E2EHarness.Player.transform.position.y;
+            yield return E2EHarness.PressKey(Key.LeftShift);
+
+            t = 0f;
+            while (t < 1.0f) { t += Time.deltaTime; yield return null; }
+            yield return E2EHarness.ReleaseKey(Key.LeftShift);
+
+            float rose = E2EHarness.Player.transform.position.y - beforeY;
+            E2EHarness.Log($"  Shift 1.0초 동안 수직 변화 {rose:+0.0;-0.0}m (양수면 떠오름)");
+            E2EHarness.Assert(rose > -0.1f, "Shift는 더 이상 하강이 아니다");
+
+            // 그리고 실제로 빨라져야 한다. 앞으로 가면서 재 본다.
+            // 물속에서는 보는 방향으로 나아가므로 수평으로 맞춰 놓고 잰다 —
+            // 위를 본 채로 재면 수평 속도가 줄어 두 번의 조건이 달라진다.
+            float normal = 0f, sprint = 0f;
+            yield return MeasureSwimSpeed(false, r => normal = r);
+            yield return MeasureSwimSpeed(true, r => sprint = r);
+
+            E2EHarness.Log($"  헤엄 속도 보통 {normal:F1}m/s → Shift {sprint:F1}m/s");
+            E2EHarness.Assert(sprint > normal * 1.15f, "물속에서도 Shift로 빨라진다");
+        }
+
+        /// <summary>앞으로 1초 헤엄쳐 수평 속도를 잰다.</summary>
+        static IEnumerator MeasureSwimSpeed(bool sprinting, System.Action<float> result)
+        {
+            // 수평으로 겨눈다. 두 측정의 조건이 같아야 비교가 된다.
+            var here = E2EHarness.Player.transform.position;
+            E2EHarness.LookAt(here + E2EHarness.Player.transform.forward * 10f);
+            yield return null;
+
+            if (sprinting) yield return E2EHarness.PressKey(Key.LeftShift);
+            yield return E2EHarness.PressKey(Key.W);
+
+            // 가속이 붙을 시간을 준다
+            float warm = 0f;
+            while (warm < 0.3f) { warm += Time.deltaTime; yield return null; }
+
+            var from = E2EHarness.Player.transform.position;
+            float t = 0f;
+            while (t < 1.0f) { t += Time.deltaTime; yield return null; }
+            var to = E2EHarness.Player.transform.position;
+
+            yield return E2EHarness.ReleaseKey(Key.W);
+            if (sprinting) yield return E2EHarness.ReleaseKey(Key.LeftShift);
+
+            var flat = new Vector3(to.x - from.x, 0f, to.z - from.z);
+            result(flat.magnitude / Mathf.Max(0.01f, t));
+        }
+
+        /// <summary>
+        /// 좌클릭을 꾹 누르면 쿨타임마다 다시 휘두르는지 본다.
+        ///
+        /// 광맥 하나에 여러 번 때려야 하는데 매번 클릭을 요구하면
+        /// 손가락만 바쁘다. 쿨타임은 그대로라 연타로 빨라지지는 않는다.
+        /// </summary>
+        static IEnumerator HoldToSwing()
+        {
+            var user = E2EHarness.Player.GetComponent<Survive.Player.PlayerToolUser>();
+            if (user == null || !user.EquipFirst("pickaxe"))
+            {
+                E2EHarness.Log("  곡괭이가 없어 홀드 휘두르기를 건너뛴다");
+                yield break;
+            }
+            yield return null;
+
+            var tool = E2EHarness.Player.ToolHolder?.EquippedTool;
+            E2EHarness.Assert(tool != null, "곡괭이를 들었다");
+            if (tool == null) yield break;
+
+            var melee = Object.FindFirstObjectByType<Survive.Combat.MeleeSwing>(
+                FindObjectsInactive.Exclude);
+            E2EHarness.Assert(melee != null, "근접 공격 컴포넌트가 있다");
+            if (melee == null) yield break;
+
+            int before = melee.SwingCount;
+            float hold = tool.attackCooldown * 3.5f;
+
+            yield return E2EHarness.HoldAttack(hold);
+            yield return null;
+
+            int swings = melee.SwingCount - before;
+            E2EHarness.Log($"  {hold:F1}초 꾹 누르는 동안 {swings}번 휘둘렀다 " +
+                           $"(쿨타임 {tool.attackCooldown:F2}초)");
+            E2EHarness.Assert(swings >= 3, "꾹 누르면 쿨타임마다 다시 휘두른다");
         }
 
         /// <summary>
