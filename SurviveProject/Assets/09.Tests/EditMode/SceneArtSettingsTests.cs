@@ -49,9 +49,17 @@ namespace Survive.Tests.EditMode
             float regionMax = Mathf.Max(region.r, Mathf.Max(region.g, region.b));
             float ambientMax = Mathf.Max(ambient.r, Mathf.Max(ambient.g, ambient.b));
 
-            Assert.Greater(ambientMax, 0f, $"{scenePath}: 환경광이 완전한 검정이다 — 광원 밖이 판독 불가가 된다");
             Assert.LessOrEqual(ambientMax, regionMax + ColorTolerance,
                 $"{scenePath}: 환경광이 구역 포그보다 밝다 (스펙 §5 — 지하에 태양은 없다)");
+
+            // 완전한 검정은 허용한다.
+            //
+            // 처음에는 "형태만 겨우 읽히는 하한"을 남기라고 스펙에 썼고 여기서도
+            // 0보다 커야 한다고 단언했다. 플레이해 보니 그 전제가 틀렸다 —
+            // 환경광이 조금이라도 있으면 광원이 없는 곳까지 지면과 풀이 읽혀서
+            // 따라다니는 밝기 거품이 생기고 암흑이 성립하지 않는다.
+            // 빛기둥·발광 버섯·랜턴이 있으니 환경광이 대신 밝혀줄 이유가 없다.
+            if (ambientMax <= 0f) return;
 
             var normRegion = region / regionMax;
             var normAmbient = ambient / ambientMax;
