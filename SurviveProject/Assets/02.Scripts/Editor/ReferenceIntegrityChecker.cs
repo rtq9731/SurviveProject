@@ -88,6 +88,7 @@ namespace Survive.EditorTools
             ["BuildMenuUI.placer"] = "Awake에서 씬의 BuildPlacer를 찾는다",
             ["BuildMenuUI.inventory"] = "Awake에서 씬의 PlayerInventory를 찾는다",
             ["BuildPlacer.builtParent"] = "비우면 씬 루트에 세운다",
+            ["BuiltStructure.definition"] = "프리팹에서는 비어 있다. BuildPlacer가 세울 때 Setup으로 채운다",
             ["QuickSlotBar.inventory"] = "런타임에 찾는다",
             ["QuickSlotBar.toolUser"] = "런타임에 찾는다",
             ["QuickSlotBar.holder"] = "런타임에 찾는다",

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Survive.Domain::Survive.Building.BuildableSO
   id: storage
   displayName: "\uBCF4\uAD00\uD568"
-  prefab: {fileID: 8982321192280136747, guid: 7dec5f95ceb65f2479bbbbe4854fe90d, type: 3}
+  prefab: {fileID: 4548732715891723395, guid: a68f2851e36e11043bfdd1c853e2d0ba, type: 3}
   ghostPrefab: {fileID: 8982321192280136747, guid: 7dec5f95ceb65f2479bbbbe4854fe90d, type: 3}
   cost:
   - item: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}

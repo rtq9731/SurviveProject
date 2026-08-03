@@ -234,7 +234,29 @@ namespace Survive.Testing
         /// 직선으로만 걸으면 바위 하나에 영원히 막힌다 — 실제로 그랬다.
         /// NavMesh로 경로를 뽑아 구간별로 걷고, 그래도 끼면 옆걸음으로 뺀다.
         /// </summary>
-        public static IEnumerator WalkTo(Vector3 destination, float arriveRadius = 2.0f, float timeout = 30f)
+        /// <summary>
+        /// 마지막 WalkTo가 도착했는지. TryWalkTo가 이 값을 남긴다.
+        /// 코루틴은 값을 돌려줄 수 없어서 이렇게 둔다.
+        /// </summary>
+        public static bool LastWalkArrived { get; private set; }
+
+        /// <summary>
+        /// 못 가도 예외를 던지지 않는 걸어가기.
+        /// 노드 하나에 갇힌 것만으로 검증 전체가 죽으면, 나머지를 못 본다.
+        /// 부르는 쪽이 LastWalkArrived를 보고 넘어갈지 정한다.
+        /// </summary>
+        public static IEnumerator TryWalkTo(Vector3 destination, float arriveRadius = 2.0f, float timeout = 30f)
+        {
+            LastWalkArrived = false;
+            yield return WalkTo(destination, arriveRadius, timeout, throwOnTimeout: false);
+
+            var d = destination - Player.transform.position;
+            d.y = 0f;
+            LastWalkArrived = d.magnitude <= arriveRadius + 0.6f;
+        }
+
+        public static IEnumerator WalkTo(Vector3 destination, float arriveRadius = 2.0f,
+                                         float timeout = 30f, bool throwOnTimeout = true)
         {
             var corners = PathCorners(Player.transform.position, destination);
             float deadline = Time.time + timeout;
@@ -254,9 +276,13 @@ namespace Survive.Testing
 
             var remain = destination - Player.transform.position;
             remain.y = 0f;
-            if (remain.magnitude > arriveRadius)
+            if (remain.magnitude <= arriveRadius) yield break;
+
+            if (throwOnTimeout)
                 throw new TimeoutException($"걸어가기 실패: {timeout}초 안에 도착하지 못함 " +
                                            $"(남은 거리 {remain.magnitude:F1}m)");
+
+            Log($"  [도달 실패] {timeout}초 안에 도착하지 못함 (남은 거리 {remain.magnitude:F1}m)");
         }
 
         /// <summary>

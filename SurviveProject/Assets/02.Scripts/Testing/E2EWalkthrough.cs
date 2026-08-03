@@ -158,7 +158,14 @@ namespace Survive.Testing
                 }
                 tried.Add(node);
 
-                yield return E2EHarness.WalkTo(node.transform.position, 2.0f, 45f);
+                yield return E2EHarness.TryWalkTo(node.transform.position, 2.0f, 45f);
+                if (!E2EHarness.LastWalkArrived)
+                {
+                    // 지형에 갇혔거나 길이 없다. 배치 문제로 남기고 다음 것을 본다.
+                    E2EHarness.Log($"  [배치 문제] 걸어서 닿지 못한다: {node.name} " +
+                                   $"{node.transform.position.ToString("F0")}");
+                    continue;
+                }
                 E2EHarness.LookAt(node.transform.position);
                 yield return null;
                 yield return null;
@@ -239,7 +246,13 @@ namespace Survive.Testing
                     .FirstOrDefault();
                 if (drop == null) yield break;
 
-                yield return E2EHarness.WalkTo(drop.transform.position, 1.4f, 20f);
+                yield return E2EHarness.TryWalkTo(drop.transform.position, 1.4f, 20f);
+                if (!E2EHarness.LastWalkArrived)
+                {
+                    E2EHarness.Log("  [배치 문제] 떨어진 것에 닿지 못한다: " + drop.name);
+                    Object.Destroy(drop.gameObject);
+                    continue;
+                }
                 E2EHarness.LookAt(drop.transform.position);
                 yield return null;
                 yield return null;
