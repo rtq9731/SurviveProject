@@ -137,9 +137,18 @@ namespace Survive.Player
 
             bool ascendInput = false;
 
-            // 상하 조작: Shift는 하강 (Space 상승은 점프 이벤트에서 처리)
+            // 상하 조작: Shift는 하강, Space는 상승. 둘 다 누르고 있는 동안 계속이다.
+            //
+            // 전에는 Space가 점프 이벤트 한 번뿐이라, 누르고 있어도 곧 부력 속도로
+            // 수렴했다. 툴팁은 "Space=상승"이라고 적혀 있는데 실제로는 한 번 튀고 마니
+            // 깊은 곳에서 손을 놓지 않고도 익사했다.
             if (!_locked && _ascending) { _verticalSpeed = -swimVerticalSpeed; }
-            else if (_verticalSpeed > buoyancy + 0.05f) ascendInput = true;   // Space로 밀어 올린 상태
+            else if (!_locked && input != null && input.IsJumpHeld)
+            {
+                _verticalSpeed = swimVerticalSpeed;
+                ascendInput = true;
+            }
+            else if (_verticalSpeed > buoyancy + 0.05f) ascendInput = true;
 
             // 물의 저항. 수직 속도가 부력 쪽으로 서서히 수렴한다
             _verticalSpeed = Mathf.MoveTowards(_verticalSpeed, buoyancy, dt * 3.5f);

@@ -32,6 +32,9 @@ namespace Survive.Input
         public Vector2 MoveValue { get; private set; }
         public Vector2 LookValue { get; private set; }
         public bool IsSprinting { get; private set; }
+
+        /// <summary>점프 키가 눌려 있는가. 물속 상승처럼 계속 미는 조작에 쓴다.</summary>
+        public bool IsJumpHeld { get; private set; }
         public bool IsInteractHeld { get; private set; }
 
         void OnEnable()
@@ -79,6 +82,7 @@ namespace Survive.Input
             LookValue = Vector2.zero;
             IsSprinting = false;
             IsInteractHeld = false;
+            IsJumpHeld = false;
         }
 
         // ── Gameplay ─────────────────────────────────────────────
@@ -97,7 +101,10 @@ namespace Survive.Input
 
         public void OnJump(InputAction.CallbackContext ctx)
         {
-            if (ctx.performed) JumpEvent?.Invoke();
+            // 땅에서는 한 번 누르는 것이지만 물속에서는 누르고 있는 것이다.
+            // 눌린 상태를 함께 내보낸다 — SprintEvent와 같은 방식이다.
+            if (ctx.performed) { IsJumpHeld = true; JumpEvent?.Invoke(); }
+            else if (ctx.canceled) IsJumpHeld = false;
         }
 
         public void OnSprint(InputAction.CallbackContext ctx)

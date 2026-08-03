@@ -441,31 +441,39 @@ namespace Survive.Testing
         /// </summary>
         static IEnumerator AimForDemolish(GameObject structure, System.Action<bool> result)
         {
-            var target = structure.transform.position;
             var eye = E2EHarness.Eye;
 
-            for (int a = 0; a < 8; a++)
+            // 조준점은 콜라이더의 한가운데를 쓴다. transform 원점은 대개 발밑이라
+            // 그쪽을 겨누면 레이가 지면을 먼저 맞는다.
+            var col = structure.GetComponentInChildren<Collider>();
+            var target = col != null ? col.bounds.center : structure.transform.position;
+
+            foreach (float dist in new[] { 2.4f, 3.0f, 3.6f })
             {
-                var dir = Quaternion.Euler(0f, a * 45f, 0f) * Vector3.forward;
-                var want = target + dir * 3f;
-
-                if (!UnityEngine.AI.NavMesh.SamplePosition(want, out var nav, 2.5f,
-                                                           UnityEngine.AI.NavMesh.AllAreas))
-                    continue;
-
-                yield return E2EHarness.TryWalkTo(nav.position, 1.5f, 15f);
-
-                E2EHarness.LookAt(target + Vector3.up * 0.4f);
-                yield return null;
-                yield return null;
-
-                if (eye != null &&
-                    Physics.Raycast(eye.transform.position, eye.transform.forward, out var hit,
-                                    4f, ~0, QueryTriggerInteraction.Collide) &&
-                    hit.collider.GetComponentInParent<StructureDemolisher>() != null)
+                for (int a = 0; a < 8; a++)
                 {
-                    result(true);
-                    yield break;
+                    if (structure == null) { result(false); yield break; }
+
+                    var dir = Quaternion.Euler(0f, a * 45f, 0f) * Vector3.forward;
+
+                    if (!UnityEngine.AI.NavMesh.SamplePosition(target + dir * dist, out var nav,
+                                                               2.0f, UnityEngine.AI.NavMesh.AllAreas))
+                        continue;
+
+                    yield return E2EHarness.TryWalkTo(nav.position, 1.5f, 12f);
+
+                    E2EHarness.LookAt(target);
+                    yield return null;
+                    yield return null;
+
+                    if (eye != null &&
+                        Physics.Raycast(eye.transform.position, eye.transform.forward, out var hit,
+                                        4f, ~0, QueryTriggerInteraction.Collide) &&
+                        hit.collider.GetComponentInParent<StructureDemolisher>() != null)
+                    {
+                        result(true);
+                        yield break;
+                    }
                 }
             }
 
@@ -650,11 +658,8 @@ namespace Survive.Testing
 
             float startOxygen = vitals.Oxygen.Current;
 
-            // 물속에서는 보는 방향으로 나아간다. 위를 보고 앞으로 = 상승이다.
-            // 스페이스는 1회성 임펄스라 누르고 있어도 곧 부력 속도로 수렴한다.
-            E2EHarness.LookAt(deepest + Vector3.up * 40f);
-            yield return null;
-            yield return E2EHarness.PressKey(Key.W);
+            // 스페이스를 누르고 있으면 올라온다. 툴팁이 약속하는 그대로다.
+            yield return E2EHarness.PressKey(Key.Space);
 
             float t = 0f;
             while (t < 30f && swim.IsHeadSubmerged && vitals.Oxygen.Current > 0f)
@@ -663,21 +668,22 @@ namespace Survive.Testing
                 yield return null;
             }
 
-            yield return E2EHarness.ReleaseKey(Key.W);
+            yield return E2EHarness.ReleaseKey(Key.Space);
 
-            E2EHarness.Log($"  수심 {depth:F0}m에서 부상 {t:F1}초, " +
+            E2EHarness.Log($"  수심 {depth:F0}m, 스페이스 홀드 부상 {t:F1}초, " +
                            $"산소 {startOxygen:F0} → {vitals.Oxygen.Current:F0}");
 
             E2EHarness.Assert(!swim.IsHeadSubmerged,
-                              $"가장 깊은 곳({depth:F0}m)에서도 스스로 올라온다");
+                              $"가장 깊은 곳({depth:F0}m)에서도 스페이스로 올라온다");
             E2EHarness.Assert(vitals.Oxygen.Current > 0f,
                               "올라오는 동안 산소가 바닥나지 않는다");
 
-            // 아무것도 누르지 않으면 부력만으로 뜬다. 그 속도로 감당 가능한 깊이를
-            // 같이 적어 둔다 — 당황해서 손을 놓은 플레이어가 죽는 깊이다.
+            // 아무것도 누르지 않았을 때도 재 둔다. 당황해서 손을 놓은 플레이어가
+            // 죽는지 아닌지는 밸런스 판단이라 여기서는 수치만 남긴다.
             float budget = vitals.Oxygen.Max / Mathf.Max(0.01f, drainPerSecondGuess);
-            E2EHarness.Log($"  산소 {vitals.Oxygen.Max:F0} / 잠수 소모 {drainPerSecondGuess:F0}per초 " +
-                           $"= {budget:F0}초. 부력(0.9m/s)만으로 오를 수 있는 깊이는 약 {budget * 0.9f:F0}m");
+            E2EHarness.Log($"  참고: 산소 {vitals.Oxygen.Max:F0} / 잠수 소모 " +
+                           $"{drainPerSecondGuess:F0}per초 = {budget:F0}초. " +
+                           $"부력(0.9m/s)만으로는 약 {budget * 0.9f:F0}m까지다");
         }
     }
 }
