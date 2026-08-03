@@ -122,6 +122,8 @@ namespace Survive.UI
         void RefreshList()
         {
             var inv = _inventory?.Inventory;
+            int shown = 0;
+
             foreach (var (recipe, button, label) in _rows)
             {
                 // 손 제작 목록에서는 제작대 전용을 아예 숨긴다.
@@ -131,6 +133,7 @@ namespace Survive.UI
                 if (button != null && button.gameObject.activeSelf != visible)
                     button.gameObject.SetActive(visible);
                 if (!visible) continue;
+                shown++;
 
                 bool canMake = inv != null && CraftingService.CanCraft(recipe, inv, _station);
                 if (button != null) button.interactable = canMake;
@@ -140,6 +143,28 @@ namespace Survive.UI
                     label.color = canMake ? Color.white : new Color(0.65f, 0.65f, 0.7f, 1f);
                 }
             }
+
+            FitPanel(shown);
+        }
+
+        /// <summary>
+        /// 보이는 줄 수에 맞춰 판때기를 늘린다.
+        ///
+        /// 손 제작과 제작대는 보이는 줄 수가 다르다. 높이를 하나로 고정해 두면
+        /// 한쪽은 아래가 비고 다른 쪽은 흘러넘친다.
+        /// </summary>
+        void FitPanel(int visibleRows)
+        {
+            var rowsRect = rowParent as RectTransform;
+            if (panel == null || rowsRect == null || _rows.Count == 0) return;
+
+            var first = _rows[0].button != null ? (RectTransform)_rows[0].button.transform : null;
+            float rowHeight = first != null ? first.sizeDelta.y : 44f;
+
+            var layout = rowsRect.GetComponent<VerticalLayoutGroup>();
+            float spacing = layout != null ? layout.spacing : 8f;
+
+            UISkin.FitPanelHeight(panel, rowsRect, visibleRows, rowHeight, spacing);
         }
 
         string Describe(RecipeSO r, Inventory inv)

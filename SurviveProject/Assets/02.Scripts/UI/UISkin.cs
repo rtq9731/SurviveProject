@@ -38,6 +38,28 @@ namespace Survive.UI
         }
 
         /// <summary>
+        /// 목록 길이에 맞춰 패널 높이를 늘린다.
+        ///
+        /// 패널 높이를 고정해 두면 항목이 늘어난 날 아래가 잘려 나간다.
+        /// 건설 목록에 모듈 조각 다섯을 더하자마자 네 줄이 판때기 밖으로 흘렀다.
+        ///
+        /// 위아래 여백(제목 자리 포함)은 Rows의 인셋에서 그대로 읽는다 —
+        /// 숫자를 코드에 또 적으면 디자인을 고칠 때 두 군데가 어긋난다.
+        /// </summary>
+        public static void FitPanelHeight(RectTransform panel, RectTransform rows,
+                                          int visibleRows, float rowHeight, float spacing)
+        {
+            if (panel == null || rows == null) return;
+
+            float chrome = rows.offsetMin.y - rows.offsetMax.y;   // 아래 여백 + 위 여백
+            float content = visibleRows <= 0
+                ? 0f
+                : visibleRows * rowHeight + (visibleRows - 1) * spacing;
+
+            panel.sizeDelta = new Vector2(panel.sizeDelta.x, content + chrome);
+        }
+
+        /// <summary>
         /// 판때기용 Image를 한 번에 맞춘다.
         /// Sliced로 두어야 32px 테두리가 살고, 크기를 키워도 모서리가 늘어나지 않는다.
         /// </summary>

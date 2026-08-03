@@ -109,7 +109,24 @@ namespace Survive.UI
 
                 _rows.Add((e, btn, txt));
             }
+
+            FitPanel();
             Refresh();
+        }
+
+        /// <summary>목록이 길어진 만큼 판때기도 길어져야 한다.</summary>
+        void FitPanel()
+        {
+            var rowsRect = rowParent as RectTransform;
+            if (panel == null || rowsRect == null || _rows.Count == 0) return;
+
+            var first = _rows[0].button != null ? (RectTransform)_rows[0].button.transform : null;
+            float rowHeight = first != null ? first.sizeDelta.y : 44f;
+
+            var layout = rowsRect.GetComponent<VerticalLayoutGroup>();
+            float spacing = layout != null ? layout.spacing : 6f;
+
+            UISkin.FitPanelHeight(panel, rowsRect, _rows.Count, rowHeight, spacing);
         }
 
         void Choose(BuildableSO b)

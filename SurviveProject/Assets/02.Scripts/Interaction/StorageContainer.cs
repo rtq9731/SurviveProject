@@ -53,6 +53,15 @@ namespace Survive.Interaction
                 coord.Service?.Register(this);
         }
 
+        // 등록만 하고 빠지지 않으면, 부순 보관함이 저장 목록에 죽은 채로 남는다.
+        // 다음 저장에서 그 참조를 건드리는 순간 MissingReferenceException이 난다 —
+        // 게임은 계속 돌아가서 눈에 안 띄고, 콘솔에만 쌓인다.
+        void OnDisable()
+        {
+            if (GameServices.TryGet<SaveCoordinator>(out var coord))
+                coord.Service?.Unregister(this);
+        }
+
         // ── 저장 ─────────────────────────────────────────────────
         //
         // 보관함은 여러 개가 생긴다. SaveKey가 겹치면 나중 것이 앞의 것을 덮어쓴다.
