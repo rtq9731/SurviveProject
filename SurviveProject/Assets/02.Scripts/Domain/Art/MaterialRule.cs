@@ -67,28 +67,11 @@ namespace Survive.Domain.Art
 
         /// <summary>
         /// HDR 발광은 강도가 1을 넘으므로 밝기가 아니라 색으로 본다.
-        /// 가장 밝은 채널을 1로 맞춘 뒤 비교한다.
+        /// 가장 밝은 채널을 1로 맞춘 뒤 비교한다. 이 정규화·비교 로직은
+        /// LightRule도 그대로 쓴다 — EmissionPaletteMatch 참조.
         /// </summary>
         public static bool IsAllowedEmission(Color c)
-        {
-            var a = Normalize(c);
-            foreach (var allowed in ArtPalette.AllowedEmission)
-            {
-                var b = Normalize(allowed);
-                if (Mathf.Abs(a.r - b.r) <= EmissionChannelTolerance
-                 && Mathf.Abs(a.g - b.g) <= EmissionChannelTolerance
-                 && Mathf.Abs(a.b - b.b) <= EmissionChannelTolerance)
-                    return true;
-            }
-            return false;
-        }
-
-        static Color Normalize(Color c)
-        {
-            float max = Mathf.Max(c.r, Mathf.Max(c.g, c.b));
-            if (max <= 0.0001f) return Color.black;
-            return new Color(c.r / max, c.g / max, c.b / max, 1f);
-        }
+            => EmissionPaletteMatch.IsAllowed(c, EmissionChannelTolerance);
 
         /// <summary>위반을 전부 모아 돌려준다. 하나만 보고하고 멈추지 않는다.</summary>
         public static IReadOnlyList<string> Violations(in MaterialFacts m)
@@ -103,7 +86,7 @@ namespace Survive.Domain.Art
                          $"(허용 {SmoothnessMatte} / {SmoothnessSemi} / {SmoothnessMetal})");
 
             if (m.HasEmission && !IsAllowedEmission(m.EmissionColor))
-                list.Add($"광원 4색 밖 발광: {ColorUtility.ToHtmlStringRGB(Normalize(m.EmissionColor))}");
+                list.Add($"광원 4색 밖 발광: {ColorUtility.ToHtmlStringRGB(EmissionPaletteMatch.Normalize(m.EmissionColor))}");
 
             return list;
         }

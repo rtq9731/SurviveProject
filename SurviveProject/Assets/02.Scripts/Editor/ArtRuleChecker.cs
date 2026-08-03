@@ -3,7 +3,9 @@ using System.Linq;
 using System.Text;
 using Survive.Domain.Art;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Survive.EditorTools
 {
@@ -32,6 +34,8 @@ namespace Survive.EditorTools
             int n = 0;
             foreach (var f in Collect())
                 n += MaterialRule.Violations(f).Count;
+            foreach (var f in CollectLights())
+                n += LightRule.Violations(f).Count;
             return n;
         }
 
@@ -54,6 +58,43 @@ namespace Survive.EditorTools
             sb.AppendLine(violations == 0
                 ? "위반 없음."
                 : $"위반 {violations}건.");
+
+            // 광원 4색 규칙은 머티리얼의 Emission뿐 아니라 Light 컴포넌트 자체에도 적용된다.
+            // 이 둘을 같은 도구가 같이 봐야 한다 — 머티리얼만 보면 실제로 씬을 밝히는
+            // Light는 전혀 검사하지 않은 채로 "위반 없음"을 낼 수 있다.
+            var lights = CollectLights();
+            sb.AppendLine();
+            sb.AppendLine($"[아트 규칙 점검] 라이트 {lights.Count}개");
+
+            int lightViolations = 0;
+            foreach (var f in lights.OrderBy(x => x.AssetPath).ThenBy(x => x.GameObjectName))
+            {
+                var v = LightRule.Violations(f);
+                if (v.Count == 0) continue;
+                lightViolations += v.Count;
+                sb.AppendLine($"  {f.AssetPath} :: {f.GameObjectName}");
+                foreach (var line in v) sb.AppendLine($"      - {line}");
+            }
+
+            sb.AppendLine(lightViolations == 0
+                ? "라이트 위반 없음."
+                : $"라이트 위반 {lightViolations}건.");
+
+            // Directional은 LightRule이 판정하지 않는다(태양·전역 조명이므로). 하지만
+            // 지하 씬에 Directional이 존재하는 것 자체는 원칙 1("지하에 태양이 없다")과
+            // 맞는지 사람이 볼 일이다. 프롤로그(StartScene)의 태양은 정당하다(§5).
+            var directional = lights.Where(f => f.Type == LightType.Directional)
+                                     .OrderBy(f => f.AssetPath).ToList();
+            if (directional.Count > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine($"[사람 확인] Directional 라이트 {directional.Count}개 — " +
+                              "색은 판정 대상이 아니다(전역/태양광). 지하 씬에 있다면 " +
+                              "'지하에 태양 없음' 원칙에 맞는지 사람이 본다");
+                foreach (var f in directional)
+                    sb.AppendLine($"  {f.AssetPath} :: {f.GameObjectName} " +
+                                  $"({ColorUtility.ToHtmlStringRGB(f.Color)}, intensity {f.Intensity:0.##})");
+            }
 
             // Metallic은 자동 판정하지 않는다. 사람이 볼 목록만 낸다.
             var metallic = facts.Where(f => f.Metallic > 0.01f).OrderBy(f => f.AssetPath).ToList();
@@ -130,5 +171,50 @@ namespace Survive.EditorTools
             }
             return result;
         }
+
+        /// <summary>
+        /// 씬 두 개 + Assets/05.Prefabs 아래 프리팹에서 Light 컴포넌트를 전부 모은다.
+        ///
+        /// 머티리얼과 달리 Light.color는 AssetDatabase.GetDependencies로 얻을 수 없다 —
+        /// 실제 씬 콘텐츠를 열어야 하는 값이다. ReferenceIntegrityChecker가 이미 같은
+        /// 이유로 씬을 Single 모드로 열었다 닫는 방식을 쓰고 있어 그 패턴을 그대로 따른다.
+        /// </summary>
+        static List<LightFacts> CollectLights()
+        {
+            var result = new List<LightFacts>();
+            string activeBefore = SceneManager.GetActiveScene().path;
+
+            foreach (var path in ScenePaths)
+            {
+                if (AssetDatabase.LoadAssetAtPath<SceneAsset>(path) == null) continue;
+
+                var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
+                foreach (var root in scene.GetRootGameObjects())
+                    foreach (var light in root.GetComponentsInChildren<Light>(true))
+                        result.Add(ToFacts(light, path));
+            }
+
+            // 마지막으로 열었던 씬 그대로 두지 않는다 — 사람이 에디터에서 보던 씬으로 되돌린다.
+            if (!string.IsNullOrEmpty(activeBefore) && activeBefore != SceneManager.GetActiveScene().path)
+                EditorSceneManager.OpenScene(activeBefore, OpenSceneMode.Single);
+
+            foreach (var root in PrefabRoots)
+            {
+                foreach (var guid in AssetDatabase.FindAssets("t:Prefab", new[] { root }))
+                {
+                    var path = AssetDatabase.GUIDToAssetPath(guid);
+                    var go = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                    if (go == null) continue;
+
+                    foreach (var light in go.GetComponentsInChildren<Light>(true))
+                        result.Add(ToFacts(light, path));
+                }
+            }
+
+            return result;
+        }
+
+        static LightFacts ToFacts(Light light, string assetPath)
+            => new LightFacts(assetPath, light.gameObject.name, light.color, light.type, light.intensity);
     }
 }
