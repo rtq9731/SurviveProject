@@ -17,28 +17,28 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 2
   neutralHDRRangeReductionMode:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 2
   acesPreset:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 3
   hueShiftAmount:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 0
   detectPaperWhite:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 0
   paperWhite:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 300
   detectBrightnessLimits:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 1
   minNits:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 0.005
   maxNits:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 1000
 --- !u!114 &-4473008097006389778
 MonoBehaviour:
@@ -63,7 +63,7 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: {r: 1, g: 1, b: 1, a: 1}
   hueShift:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 0
   saturation:
     m_OverrideState: 1
@@ -82,10 +82,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.Vignette
   active: 1
   color:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: {r: 0, g: 0, b: 0, a: 1}
   center:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: {x: 0.5, y: 0.5}
   intensity:
     m_OverrideState: 1
@@ -94,7 +94,7 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 0.4
   rounded:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 0
 --- !u!114 &11400000
 MonoBehaviour:
@@ -113,6 +113,7 @@ MonoBehaviour:
   - {fileID: 581640783924834394}
   - {fileID: -4473008097006389778}
   - {fileID: -1270234449305473444}
+  - {fileID: 4004008097006392001}
 --- !u!114 &581640783924834394
 MonoBehaviour:
   m_ObjectHideFlags: 2
@@ -127,7 +128,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.Bloom
   active: 1
   skipIterations:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 1
   threshold:
     m_OverrideState: 1
@@ -139,27 +140,46 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 0.7
   clamp:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 65472
   tint:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: {r: 1, g: 1, b: 1, a: 1}
   highQualityFiltering:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 0
   filter:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 0
   downscale:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 0
   maxIterations:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 6
   dirtTexture:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: {fileID: 0}
     dimension: 1
   dirtIntensity:
+    m_OverrideState: 0
+    m_Value: 0
+--- !u!114 &4004008097006392001
+MonoBehaviour:
+  m_ObjectHideFlags: 2
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 221518ef91623a7438a71fef23660601, type: 3}
+  m_Name: WhiteBalance
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.WhiteBalance
+  active: 1
+  temperature:
     m_OverrideState: 1
+    m_Value: -20
+  tint:
+    m_OverrideState: 0
     m_Value: 0

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Survive.Domain.Art
@@ -30,11 +31,17 @@ namespace Survive.Domain.Art
         public static readonly Color FogPlainsNight = FromHex(0x140A1E);  // 평야의 밤. 자홍 기운이 돈다
         public static readonly Color FogCliffs = FromHex(0x2C1240);       // 깊은 절벽. 매크로늄이 노출되어 고인다
 
-        /// <summary>발광이 허용되는 색. 이 밖의 Emission은 위반이다.</summary>
-        public static readonly Color[] AllowedEmission =
+        // readonly 배열은 참조만 고정할 뿐 원소는 그대로 변경 가능하다
+        // (ArtPalette.AllowedEmission[0] = Color.red 가 컴파일된다). 이 배열은
+        // MaterialRule·LightRule이 검증 기준으로 삼는 팔레트 그 자체이므로,
+        // 바깥에는 인덱서 set이 없는 IReadOnlyList로만 노출한다.
+        static readonly Color[] AllowedEmissionColors =
         {
             LightShaft, Glowshroom, Flame, Macronium, MacroniumHighlight,
         };
+
+        /// <summary>발광이 허용되는 색. 이 밖의 Emission은 위반이다.</summary>
+        public static IReadOnlyList<Color> AllowedEmission => AllowedEmissionColors;
 
         /// <summary>0xRRGGBB 정수를 불투명 Color로. 스펙의 hex를 그대로 옮겨 쓰기 위한 것이다.</summary>
         public static Color FromHex(int rgb) => new Color(

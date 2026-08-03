@@ -80,8 +80,11 @@ Play Mode에서 `E2EHarness`로 플레이어를 세우고 찍었다. 에디트 �
 |---|---|
 | 스펙 §11의 매크로늄 액면 확인 | 해당 지형이 아직 없다. P2에서 만든다 |
 | 스펙 §9의 생성 FBX 4개 실루엣 점검 | **하지 못했다.** 세션 예산이 다했다. P3 착수 시 첫 항목으로 한다 |
-| **스펙 §7의 White Balance** | 계획 수립 시점에 빠졌다. 두 Volume 프로파일(MainScene·StartScene) 모두 Tonemapping·Bloom·Color Adjustments·Vignette 넷만 들어갔고, 표에 있던 다섯 번째 항목인 White Balance는 구현되지 않았다. 의도적 보류가 아니라 드리프트다 |
-| **스펙 §11의 "씬 설정 단언 테스트"** | 작성되지 않았다. 포그 활성 여부, 환경광 상한, Volume 프로파일 컴포넌트 존재를 코드로 단언하는 EditMode 테스트가 없다 — 씬의 실제 색상값을 `ArtPalette`에 다시 묶어 줄 바로 그 테스트다 |
+
+**후속 조치로 닫힘 (2026-08-04, P0 최종 리뷰의 "일반 후속 조치" 4건 중 2건)**
+
+- **스펙 §7의 White Balance** — 드리프트였다(계획 수립 시점에 빠짐). `Volume_Islands.asset`·`Volume_Surface.asset` 양쪽에 `WhiteBalance` 오버라이드(`temperature`)를 추가했다. Islands는 `-20`(한랭 — 근흑색 청동굴), Surface는 `+8`(온난이지만 소폭만 — 표면은 이미 주황 환경광·포그·`colorFilter`·상향 노출이 겹쳐 근단색조에 가깝다는 사람 피드백이 있었으므로, 더 주황 쪽으로 밀지 않았다). `tint`는 오버라이드하지 않는다(스펙이 정한 것은 색온도뿐이다).
+- **스펙 §11의 "씬 설정 단언 테스트"** — `Assets/09.Tests/EditMode/SceneArtSettingsTests.cs`로 작성했다. MainScene·StartScene을 `OpenScene(..., OpenSceneMode.Additive)`로 열고(이미 열려 있던 씬은 재로드하지 않는다) `SceneManager.SetActiveScene`으로 활성화한 뒤, 포그 활성 여부·포그 색·환경광 색이 각 구역의 `ArtPalette` 상수(`FogIslands`/`FogSurface`)와 일치하는지, 전역 `Volume`이 존재하고 `sharedProfile`이 널이 아닌지, 그 프로파일에서 `Tonemapping`·`Bloom`·`ColorAdjustments`·`Vignette` 네 컴포넌트가 `TryGet<T>`으로 실제로 리졸브되는지(단순 개수가 아니라)를 단언한다.
 
 ---
 

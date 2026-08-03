@@ -37,7 +37,7 @@ namespace Survive.Tests.EditMode
         [Test]
         public void AllowedEmission_has_exactly_the_five_light_colors()
         {
-            Assert.AreEqual(5, ArtPalette.AllowedEmission.Length,
+            Assert.AreEqual(5, ArtPalette.AllowedEmission.Count,
                 "광원은 넷이고 매크로늄만 하이라이트를 하나 더 갖는다. 늘리려면 스펙 §4를 먼저 고친다.");
             CollectionAssert.Contains(ArtPalette.AllowedEmission, ArtPalette.LightShaft);
             CollectionAssert.Contains(ArtPalette.AllowedEmission, ArtPalette.Glowshroom);
