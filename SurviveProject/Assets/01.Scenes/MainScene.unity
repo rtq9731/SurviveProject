@@ -20,7 +20,7 @@ RenderSettings:
   m_FogDensity: 0.045
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.047058824, g: 0.05882353, b: 0.08235294, a: 1}
+  m_AmbientSkyColor: {r: 0.007058824, g: 0.00882353, b: 0.0123529425, a: 0.15}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 0.15
@@ -18152,7 +18152,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.01
+  near clip plane: 0.001
   far clip plane: 3000
   field of view: 60
   orthographic: 0
@@ -81764,7 +81764,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 301521547391049822, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -16
+      value: -26
       objectReference: {fileID: 0}
     - target: {fileID: 439837985351130429, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
       propertyPath: m_Type

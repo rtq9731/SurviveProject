@@ -39,6 +39,26 @@ namespace Survive.Tests.EditMode
         public void StartScene_fog_and_ambient_match_FogSurface()
             => AssertSceneArtSettings(StartScenePath, ArtPalette.FogSurface);
 
+        /// <summary>
+        /// 환경광이 구역 포그와 같은 색조인지, 그리고 포그보다 밝지 않은지 본다.
+        /// 채널 비율을 비교하므로 명도를 어떻게 낮추든 통과하고,
+        /// 색조가 틀어지면(예: 청록 구역인데 환경광만 주황) 잡힌다.
+        /// </summary>
+        static void AssertSameHueButDarker(Color region, Color ambient, string scenePath)
+        {
+            float regionMax = Mathf.Max(region.r, Mathf.Max(region.g, region.b));
+            float ambientMax = Mathf.Max(ambient.r, Mathf.Max(ambient.g, ambient.b));
+
+            Assert.Greater(ambientMax, 0f, $"{scenePath}: 환경광이 완전한 검정이다 — 광원 밖이 판독 불가가 된다");
+            Assert.LessOrEqual(ambientMax, regionMax + ColorTolerance,
+                $"{scenePath}: 환경광이 구역 포그보다 밝다 (스펙 §5 — 지하에 태양은 없다)");
+
+            var normRegion = region / regionMax;
+            var normAmbient = ambient / ambientMax;
+            AssertColorApprox(normRegion, normAmbient,
+                $"{scenePath}: 환경광의 색조가 구역 포그와 다르다 (밝기가 아니라 색이 틀어졌다)");
+        }
+
         static void AssertSceneArtSettings(string scenePath, Color expectedRegionColor)
         {
             var previousActive = SceneManager.GetActiveScene();
@@ -51,8 +71,16 @@ namespace Survive.Tests.EditMode
                 Assert.IsTrue(RenderSettings.fog, $"{scenePath}: 포그가 꺼져 있다");
                 AssertColorApprox(expectedRegionColor, RenderSettings.fogColor,
                     $"{scenePath}: 포그 색이 ArtPalette와 다르다");
-                AssertColorApprox(expectedRegionColor, RenderSettings.ambientLight,
-                    $"{scenePath}: 환경광 색이 포그 색과 다르다 (스펙 §5)");
+                // 환경광은 구역 포그와 **같은 색조**이되 더 어둡다.
+                //
+                // 처음에는 두 값이 같아야 한다고 단언했는데, 실제로 플레이해 보니
+                // 광원이 하나도 없는 곳에서도 지면과 풀이 읽혔다. 지하에 태양이 없으면
+                // 안 보이는 게 맞다. 그래서 환경광을 포그 색보다 낮춰 잡는다.
+                //
+                // 세기(ambientIntensity)로는 못 낮춘다 — Flat 모드에서 Unity가 그 배율을
+                // 무시한다. 실측으로 확인했다(0.15 → 5로 33배 올려도 화면 밝기 8% 변화).
+                // 그래서 색의 명도로 조절하고, 색조가 어긋나지 않았는지를 여기서 지킨다.
+                AssertSameHueButDarker(expectedRegionColor, RenderSettings.ambientLight, scenePath);
 
                 var volume = scene.GetRootGameObjects()
                     .SelectMany(go => go.GetComponentsInChildren<Volume>(true))
