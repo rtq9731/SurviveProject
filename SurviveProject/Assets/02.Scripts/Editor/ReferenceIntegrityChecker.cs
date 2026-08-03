@@ -62,6 +62,7 @@ namespace Survive.EditorTools
             ["*.submergeFeedback"] = "C3에서 조립",
             ["*.harvestFeedback"] = "C3에서 조립",
             ["*.witherFeedback"] = "C3에서 조립",
+            ["*.refuelFeedback"] = "C3에서 조립",
 
             // 아래는 코드에 대체 경로가 있다. 비어 있어도 동작이 정의된다.
             ["PlantNode.visual"] = "Awake에서 자기 transform으로 대체",

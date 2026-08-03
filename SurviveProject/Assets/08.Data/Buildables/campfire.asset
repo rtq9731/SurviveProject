@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Survive.Domain::Survive.Building.BuildableSO
   id: campfire
   displayName: "\uD654\uD1B3\uBD88"
-  prefab: {fileID: 2873088987840556442, guid: f06327bc4fd0b88408fd324acab99d20, type: 3}
+  prefab: {fileID: 3258567538917525628, guid: 8dab524a8a3af9040acd7ff34874222f, type: 3}
   ghostPrefab: {fileID: 2873088987840556442, guid: f06327bc4fd0b88408fd324acab99d20, type: 3}
   cost:
   - item: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}
