@@ -27,8 +27,8 @@ namespace Survive.World
         [SerializeField] float batteryPerScrap = 20f;
 
         [Header("빛")]
-        [SerializeField] float fullIntensity = 2.2f;
-        [SerializeField] float fullRange = 14f;
+        [SerializeField] float fullIntensity = 5.5f;
+        [SerializeField] float fullRange = 26f;
 
         [Tooltip("배터리가 이 비율 아래로 떨어지면 깜빡인다")]
         [Range(0f, 1f)] [SerializeField] float flickerThreshold = 0.2f;

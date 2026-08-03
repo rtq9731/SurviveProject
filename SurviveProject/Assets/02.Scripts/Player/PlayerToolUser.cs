@@ -74,8 +74,7 @@ namespace Survive.Player
         void EquipTool(ToolItemSO tool)
         {
             holder?.Equip(tool);
-            // 랜턴을 손에 들면 켜고, 다른 도구로 바꾸면 끈다.
-            lantern?.SetOn(tool != null && tool.id == "lantern");
+            // 랜턴 점등은 손에 무엇을 들었는지와 무관하다. 아래 ToggleLantern 참고.
         }
 
         void ToggleLantern()
@@ -87,11 +86,9 @@ namespace Survive.Player
             var inv = inventory?.Inventory;
             if (inv == null || !inv.Has("lantern", 1)) return;
 
-            // 손에 들고 있지 않으면 먼저 꺼낸다. 꺼내면서 켜지므로 여기서 끝난다.
-            if (holder != null && (holder.EquippedTool == null || holder.EquippedTool.id != "lantern"))
-            {
-                if (EquipFirst("lantern")) return;
-            }
+            // 손에 든 것과 무관하게 켜고 끈다.
+            // 곡괭이를 들 때마다 불이 꺼지면 캐는 동안 앞이 안 보인다 —
+            // 랜턴은 손에 드는 도구가 아니라 몸에 다는 조명으로 다룬다.
             lantern.Toggle();
         }
 

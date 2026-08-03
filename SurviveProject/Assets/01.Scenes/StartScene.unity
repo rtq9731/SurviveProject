@@ -3726,6 +3726,18 @@ PrefabInstance:
       propertyPath: database
       value: 
       objectReference: {fileID: 11400000, guid: 7d54c2e8f303ec94d8a3acd7199dce41, type: 2}
+    - target: {fileID: 3917828094864583151, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
+      propertyPath: fullRange
+      value: 26
+      objectReference: {fileID: 0}
+    - target: {fileID: 3917828094864583151, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
+      propertyPath: fullIntensity
+      value: 5.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 7519376547813232497, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
+      propertyPath: swingAnimator
+      value: 
+      objectReference: {fileID: 1032691148}
     - target: {fileID: 8183862635712233427, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
       propertyPath: m_LocalPosition.x
       value: 29.346
@@ -3773,8 +3785,40 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8852171523659162985, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1032691148}
   m_SourcePrefab: {fileID: 100100000, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
+--- !u!1 &1032691146 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8852171523659162985, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
+  m_PrefabInstance: {fileID: 1032691145}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1032691147 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 952630379500360950, guid: 0bdb928f6d08e29408e304c71b4ffe0f, type: 3}
+  m_PrefabInstance: {fileID: 1032691145}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1032691148
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1032691146}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b30a1dc4c2c6e5749b3670e0ff3e9402, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Survive.Combat.ToolSwingAnimator
+  handSocket: {fileID: 1032691147}
+  windUpSeconds: 0.09
+  strikeSeconds: 0.07
+  recoverSeconds: 0.16
+  windUpAngles: {x: -55, y: 10, z: 0}
+  strikeAngles: {x: 48, y: -14, z: 0}
+  lungeDistance: 0.12
 --- !u!4 &1045183892 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4452881278709086, guid: caaa7ae63a9ddff43a592237cf4c65fc, type: 3}

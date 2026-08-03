@@ -29,6 +29,9 @@ namespace Survive.Combat
         [Tooltip("무언가에 맞았을 때만 재생. 화면 흔들림·히트스톱·타격음")]
         [SerializeField] MMF_Player hitFeedback;
 
+        [Tooltip("손에 든 도구를 휘두르는 연출. 비우면 자동으로 찾는다")]
+        [SerializeField] ToolSwingAnimator swingAnimator;
+
         float _nextSwingTime;
         readonly List<IDamageable> _hitThisSwing = new List<IDamageable>();
 
@@ -36,6 +39,7 @@ namespace Survive.Combat
         {
             if (toolHolder == null) toolHolder = GetComponentInParent<PlayerToolHolder>();
             if (swingOrigin == null && Camera.main != null) swingOrigin = Camera.main.transform;
+            if (swingAnimator == null) swingAnimator = GetComponentInParent<ToolSwingAnimator>();
         }
 
         void OnEnable()
@@ -57,6 +61,9 @@ namespace Survive.Combat
 
             _nextSwingTime = Time.time + tool.attackCooldown;
             _hitThisSwing.Clear();
+
+            // 반응은 화면이 아니라 때린 물건에서 나와야 한다.
+            swingAnimator?.Play();
             swingFeedback?.PlayFeedbacks();
 
             var candidates = Physics.OverlapSphere(swingOrigin.position, tool.attackRange,
@@ -78,7 +85,11 @@ namespace Survive.Combat
                                               col.ClosestPoint(swingOrigin.position), -dir));
             }
 
-            if (_hitThisSwing.Count > 0) hitFeedback?.PlayFeedbacks();
+            if (_hitThisSwing.Count > 0)
+            {
+                swingAnimator?.PlayImpact();
+                hitFeedback?.PlayFeedbacks();
+            }
         }
     }
 }
