@@ -1060,10 +1060,21 @@ uloop `run-tests` (EditMode 전체) + uloop `get-logs`.
 
 - [ ] **Step 6: 커밋**
 
+**`git add -A`를 쓰지 않는다.** 작업 트리에는 내 변경이 아닌 Unity 생성 dirt가 셋 있다
+(`Assets/07.Fonts/TMP/ChosunGu SDF.asset`, `ProjectSettings/EditorSettings.asset`,
+`ProjectSettings/TimeManager.asset`). 쓸어담으면 이 커밋이 무엇을 바꿨는지 알 수 없게 된다.
+
+`git status --short`로 실제 수정된 `.mat` 경로를 확인한 뒤 그것만 지정한다.
+
 ```bash
-git add -A SurviveProject/Assets
+cd E:/SurviveProject
+git status --short | grep '\.mat$'          # 바뀐 머티리얼만 확인
+git add <위에서 확인한 .mat 경로들>          # 하나씩 명시한다
+git status --short                           # dirt 3개가 스테이징 안 됐는지 재확인
 git commit -m "P0: 씬이 쓰는 머티리얼을 규칙에 맞췄다"
 ```
+
+`MaterialRule.cs`의 허용 셰이더 목록을 수정했다면 그 파일도 함께 add 한다.
 
 ---
 
