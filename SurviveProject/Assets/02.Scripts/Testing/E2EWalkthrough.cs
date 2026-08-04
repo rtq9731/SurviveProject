@@ -57,15 +57,17 @@ namespace Survive.Testing
             Mark();
 
             // ── 목표 1·2: 걸어서 지대에 들어간다 ────────────────
+            // 트리거는 44m 폭의 판이다. 중심에 설 이유는 없고 — 그 자리는 포탈 장치
+            // 너머 바위 위다 — 게임이 요구하는 것은 판을 밟는 것뿐이다.
             var trigger = GameObject.Find("Trigger_Surveyed");
             E2EHarness.Assert(trigger != null, "탐색 트리거가 있다");
-            yield return E2EHarness.WalkTo(trigger.transform.position, 3f, 45f);
+            yield return E2EHarness.WalkInto(trigger, 60f);
             yield return E2EHarness.WaitUntil(() => dir.CurrentIndex >= 1, "목표1 완료", 6f);
             Lap("목표1 착지 이탈");
 
             var grove = GameObject.Find("LightZone_1");
             E2EHarness.Assert(grove != null, "버섯 군락 지대가 있다");
-            yield return E2EHarness.WalkTo(grove.transform.position, 3f, 60f);
+            yield return E2EHarness.WalkInto(grove, 60f);
             yield return E2EHarness.WaitUntil(() => dir.CurrentIndex >= 2, "목표2 완료", 6f);
             Lap("목표2 군락 발견");
 
@@ -236,11 +238,16 @@ namespace Survive.Testing
             float wait = 0f;
             while (wait < 0.8f) { wait += Time.deltaTime; yield return null; }
 
+            // 포기한 것을 기억한다. Destroy는 프레임 끝에야 실제로 지워지므로
+            // 바로 다음 순회에서 같은 것이 또 잡히고, 그 다음엔 이미 지워진 것을
+            // 만지다 터진다 — 실제로 그렇게 시나리오가 죽었다.
+            var 포기한것 = new HashSet<ItemPickup>();
+
             for (int n = 0; n < 8; n++)
             {
                 var from = E2EHarness.Player.transform.position;
                 var drop = Object.FindObjectsByType<ItemPickup>(FindObjectsSortMode.None)
-                    .Where(p => p.name.StartsWith("Drop_") &&
+                    .Where(p => p != null && !포기한것.Contains(p) && p.name.StartsWith("Drop_") &&
                                 Vector3.Distance(p.transform.position, from) < 14f)
                     .OrderBy(p => Vector3.Distance(p.transform.position, from))
                     .FirstOrDefault();
@@ -250,7 +257,9 @@ namespace Survive.Testing
                 if (!E2EHarness.LastWalkArrived)
                 {
                     E2EHarness.Log("  [배치 문제] 떨어진 것에 닿지 못한다: " + drop.name);
+                    포기한것.Add(drop);
                     Object.Destroy(drop.gameObject);
+                    yield return null;
                     continue;
                 }
                 E2EHarness.LookAt(drop.transform.position);
@@ -262,7 +271,9 @@ namespace Survive.Testing
                 if (it.Current == null)
                 {
                     E2EHarness.Log("  [배치 문제] 떨어진 것을 주울 수 없다: " + drop.name);
+                    포기한것.Add(drop);
                     Object.Destroy(drop.gameObject);   // 무한 루프를 막는다
+                    yield return null;
                     continue;
                 }
 
