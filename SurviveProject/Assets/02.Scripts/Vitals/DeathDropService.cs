@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using Survive.Core;
 using Survive.Items;
@@ -16,9 +17,15 @@ namespace Survive.Vitals
     /// <b>왜 씬에 놓지 않고 스스로 붙는가.</b> 플레이어 프리팹과 MainScene은
     /// 병합할 수 없는 단일 파일이라 여러 갈래로 나뉘어 일하는 동안 손대지 않기로 했다.
     /// 대신 실행 시점에 스스로 서고, 씬이 다시 올라오면 새 플레이어를 다시 잡는다.
+    ///
+    /// <b>가방의 저장 주체이기도 하다.</b> 가방은 플레이 중에 생겨나는 물건이라
+    /// 스스로 <c>ISaveable</c>이 되면 불러오기가 되살릴 주체가 없다 —
+    /// 저장본에 유령 항목만 남는다. 씬을 넘어 상주하는 이쪽이 살아 있는 가방들을
+    /// 한 칸에 모아 적고, 불러올 때 그 자리에 다시 세운다.
+    /// 적는 형식은 <see cref="DeathDropBagSave"/>(Domain)가 안다.
     /// </summary>
     [DisallowMultipleComponent]
-    public class DeathDropService : MonoBehaviour
+    public class DeathDropService : MonoBehaviour, ISaveable
     {
         static DeathDropService _instance;
 
@@ -103,8 +110,15 @@ namespace Survive.Vitals
         /// 겉모습이 정해지기 전에 프리팹을 박아 두면 나중에 그 자리를 다시 뜯어야 한다.
         /// 어두운 데서 눈에 띄는 것이 지금 필요한 전부다.
         /// </summary>
-        static DeathDropBag SpawnBag(Vector3 where, System.Collections.Generic.IReadOnlyList<ItemStack> stacks,
-                                     int slotCount)
+        static DeathDropBag SpawnBag(Vector3 where, IReadOnlyList<ItemStack> stacks, int slotCount)
+        {
+            var bag = SpawnEmptyBag(where);
+            bag.Fill(stacks, slotCount);
+            return bag;
+        }
+
+        /// <summary>겉모습만 세운다. 속을 무엇으로 채울지는 부르는 쪽이 안다.</summary>
+        static DeathDropBag SpawnEmptyBag(Vector3 where)
         {
             var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
             go.name = "DeathDropBag";
@@ -117,9 +131,7 @@ namespace Survive.Vitals
 
             Tint(go);
 
-            var bag = go.AddComponent<DeathDropBag>();
-            bag.Fill(stacks, slotCount);
-            return bag;
+            return go.AddComponent<DeathDropBag>();
         }
 
         static void Tint(GameObject go)
@@ -137,6 +149,67 @@ namespace Survive.Vitals
             mat.EnableKeyword("_EMISSION");
             mat.SetColor("_EmissionColor", tint * 0.6f);
             rend.sharedMaterial = mat;
+        }
+
+        // ── 저장 ─────────────────────────────────────────────────
+        //
+        // 가방은 세계에 여럿 있을 수 있고 어느 것도 씬에 미리 놓여 있지 않다.
+        // 그래서 가방마다 한 칸씩 쓰는 대신 전부를 한 칸에 모아 쓴다 —
+        // 저장본의 칸은 "복원할 대상"과 짝지어지는데, 짝지을 대상 자체를
+        // 이쪽이 만들어야 하므로 목록의 주인도 하나여야 한다.
+
+        public string SaveKey => "death_drop_bags";
+
+        public object CaptureState()
+        {
+            var state = new DeathDropBagsState();
+
+            var live = DeathDropBag.Active;
+            for (int i = 0; i < live.Count; i++)
+            {
+                var bag = live[i];
+                if (bag == null) continue;
+
+                var record = DeathDropBagSave.Capture(bag.transform.position, bag.Contents);
+                if (record != null) state.bags.Add(record);
+            }
+
+            return state;
+        }
+
+        public void RestoreState(object state)
+        {
+            if (state is not DeathDropBagsState s) return;
+
+            if (!GameServices.TryGet<PlayerInventory>(out var inventory) || inventory == null ||
+                inventory.Database == null)
+            {
+                Debug.LogWarning("[DeathDropService] 아이템 데이터베이스가 없어 가방을 되살리지 못했습니다.");
+                return;
+            }
+
+            // 지금 세계에 있는 가방은 저장본에 없던 것이다. 남겨 두면
+            // 불러온 판에 되찾을 것이 두 배로 놓인다.
+            var stale = new List<DeathDropBag>(DeathDropBag.Active);
+            for (int i = 0; i < stale.Count; i++)
+                if (stale[i] != null) Destroy(stale[i].gameObject);
+
+            LastBag = null;
+            if (s.bags == null) return;
+
+            int restored = 0;
+            for (int i = 0; i < s.bags.Count; i++)
+            {
+                var contents = DeathDropBagSave.Restore(s.bags[i], inventory.Database);
+                if (contents == null) continue;
+
+                var bag = SpawnEmptyBag(s.bags[i].position);
+                bag.Adopt(contents);
+                LastBag = bag;
+                restored++;
+            }
+
+            Debug.Log($"[DeathDropService] 가방 {restored}개를 저장본에서 되살렸다");
         }
     }
 }
