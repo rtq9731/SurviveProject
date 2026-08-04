@@ -44,6 +44,7 @@ namespace Survive.UI
         void OnDestroy()
         {
             if (_director != null) _director.ObjectiveChanged -= OnObjectiveChanged;
+            group?.DOKill();
         }
 
         void OnObjectiveChanged(ObjectiveSO objective)

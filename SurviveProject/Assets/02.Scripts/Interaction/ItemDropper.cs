@@ -108,10 +108,14 @@ namespace Survive.Interaction
             else
                 target.y = origin.y;
 
+            // SetLink: 착지 애니메이션 도중 주워지면(Destroy) 트윈이 갈 곳을 잃는다.
+            // static 유틸이라 OnDestroy 훅이 없으니 DOTween이 대상 파괴를 직접 감시하게 한다.
             t.position = origin + Vector3.up * 0.35f;
             t.DOJump(target, 0.55f, 1, 0.5f).SetEase(Ease.OutQuad)
+             .SetLink(t.gameObject)
              .OnComplete(() => Idle(t, target));
-            t.DORotate(new Vector3(0f, Random.Range(180f, 540f), 0f), 0.5f, RotateMode.LocalAxisAdd);
+            t.DORotate(new Vector3(0f, Random.Range(180f, 540f), 0f), 0.5f, RotateMode.LocalAxisAdd)
+             .SetLink(t.gameObject);
         }
 
         /// <summary>착지 후 계속 떠다니며 돈다. 움직이는 것에 눈이 간다.</summary>

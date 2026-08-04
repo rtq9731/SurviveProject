@@ -110,6 +110,12 @@ namespace Survive.UI
             group.interactable = false;
         }
 
+        void OnDestroy()
+        {
+            group?.DOKill();
+            panel?.DOKill();
+        }
+
         void BuildSlots()
         {
             if (slotParent == null) return;

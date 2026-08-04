@@ -39,6 +39,7 @@ namespace Survive.UI
         void OnDestroy()
         {
             if (_lantern != null) _lantern.BatteryChanged -= Refresh;
+            group?.DOKill();
         }
 
         void Refresh(float current, float max)

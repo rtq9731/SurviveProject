@@ -38,6 +38,7 @@ namespace Survive.UI
 
         void OnEnable() => GameServices.Register(this);
         void OnDisable() => GameServices.Unregister<ScreenFader>();
+        void OnDestroy() => _tween?.Kill();
 
         IEnumerator Start()
         {

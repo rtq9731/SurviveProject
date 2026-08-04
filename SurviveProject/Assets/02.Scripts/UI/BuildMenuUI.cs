@@ -252,5 +252,11 @@ namespace Survive.UI
             group.blocksRaycasts = false;
             group.interactable = false;
         }
+
+        void OnDestroy()
+        {
+            group?.DOKill();
+            panel?.DOKill();
+        }
     }
 }

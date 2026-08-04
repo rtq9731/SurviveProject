@@ -66,6 +66,7 @@ namespace Survive.UI
         {
             if (_inventory?.Inventory != null)
                 _inventory.Inventory.Changed -= OnInventoryChanged;
+            group?.DOKill();
         }
 
         void OnInventoryChanged()

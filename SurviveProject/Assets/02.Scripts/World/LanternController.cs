@@ -61,6 +61,7 @@ namespace Survive.World
 
         void OnEnable() => GameServices.Register(this);
         void OnDisable() => GameServices.Unregister<LanternController>();
+        void OnDestroy() => _flicker?.Kill();
 
         public void SetOn(bool on)
         {

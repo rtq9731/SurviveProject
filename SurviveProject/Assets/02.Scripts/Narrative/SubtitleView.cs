@@ -31,6 +31,8 @@ namespace Survive.Narrative
             }
         }
 
+        void OnDestroy() => group?.DOKill();
+
         public void Show(string speaker, string text)
         {
             gameObject.SetActive(true);   // Awake가 여기서 처음 돌 수 있다

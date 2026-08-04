@@ -163,5 +163,11 @@ namespace Survive.UI
             }
             if (panel != null) panel.gameObject.SetActive(false);
         }
+
+        void OnDestroy()
+        {
+            group?.DOKill();
+            panel?.DOKill();
+        }
     }
 }

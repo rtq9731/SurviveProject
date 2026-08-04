@@ -13,17 +13,23 @@ namespace Survive.Narrative
     {
         [SerializeField] CanvasGroup group;
 
+        Tween _tween;
+
         void Awake()
         {
             if (group == null) group = GetComponent<CanvasGroup>();
             group.blocksRaycasts = false;
         }
 
+        void OnDestroy() => _tween?.Kill();
+
         /// <summary>화면이 밝아진다 (alpha 1 → 0).</summary>
         public IEnumerator FadeIn(float seconds)
         {
             group.blocksRaycasts = true;
-            yield return group.DOFade(0f, seconds).SetUpdate(true).WaitForCompletion();
+            _tween?.Kill();
+            _tween = group.DOFade(0f, seconds).SetUpdate(true);
+            yield return _tween.WaitForCompletion();
             group.blocksRaycasts = false;
         }
 
@@ -31,7 +37,9 @@ namespace Survive.Narrative
         public IEnumerator FadeOut(float seconds)
         {
             group.blocksRaycasts = true;
-            yield return group.DOFade(1f, seconds).SetUpdate(true).WaitForCompletion();
+            _tween?.Kill();
+            _tween = group.DOFade(1f, seconds).SetUpdate(true);
+            yield return _tween.WaitForCompletion();
         }
 
         public void SetBlack(bool black)

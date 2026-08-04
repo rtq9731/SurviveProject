@@ -79,6 +79,7 @@ namespace Survive.UI
         {
             if (inventory?.Inventory != null) inventory.Inventory.Changed -= Refresh;
             if (holder != null) holder.ToolChanged -= OnToolChanged;
+            foreach (var s in _slots) s.rect?.DOKill();
         }
 
         void OnToolChanged(ToolItemSO _) => Refresh();

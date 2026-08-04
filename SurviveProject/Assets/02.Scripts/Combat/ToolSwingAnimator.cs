@@ -42,6 +42,7 @@ namespace Survive.Combat
         Quaternion _restRotation;
         Vector3 _restPosition;
         Sequence _swing;
+        Tween _impact;
         bool _captured;
 
         void Awake()
@@ -98,9 +99,14 @@ namespace Survive.Combat
         {
             if (handSocket == null) return;
             // 휘두르던 트윈은 그대로 두고 흔들림만 얹는다.
-            handSocket.DOShakePosition(0.12f, 0.035f, 14, 60f, false, false);
+            _impact?.Kill();
+            _impact = handSocket.DOShakePosition(0.12f, 0.035f, 14, 60f, false, false);
         }
 
-        void OnDestroy() => _swing?.Kill();
+        void OnDestroy()
+        {
+            _swing?.Kill();
+            _impact?.Kill();
+        }
     }
 }

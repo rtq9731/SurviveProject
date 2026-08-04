@@ -71,6 +71,8 @@ namespace Survive.Harvesting
             _baseScale = transform.localScale;
         }
 
+        void OnDestroy() => _shake?.Kill();
+
         ToolItemSO equipped => _toolHolder != null ? _toolHolder.EquippedTool : null;
 
         // ── 맨손 채집 (홀드) ─────────────────────────────────────
