@@ -37,6 +37,15 @@ namespace Survive.Player
         [Tooltip("물가에서 뭍으로 기어오를 때의 상승 속도")]
         [SerializeField] float climbOutBoost = 3.2f;
 
+        // 물의 저항. 수직 속도가 부력 속도로 수렴하는 초당 비율이다.
+        // 크면 손을 뗀 순간 뚝 멈춰 물이 아니라 젤리 같고, 작으면 상승·하강이 한참 남는다.
+        const float BuoyancyConvergeRate = 3.5f;
+
+        // 물가 기어오르기 판정의 앞쪽 탐지 거리. 가슴 높이와 머리 높이를 같은 거리로 본다 —
+        // 두 값이 어긋나면 "벽은 있는데 그 위는 비었다"가 서로 다른 지점을 가리키게 되어
+        // 오를 수 없는 턱을 오를 수 있다고 판정한다.
+        const float ClimbOutProbeDistance = 0.7f;
+
         CharacterController _cc;
         Vector2 _moveInput = Vector2.zero;
         float _verticalSpeed;
@@ -154,7 +163,7 @@ namespace Survive.Player
             else if (_verticalSpeed > buoyancy + 0.05f) ascendInput = true;
 
             // 물의 저항. 수직 속도가 부력 쪽으로 서서히 수렴한다
-            _verticalSpeed = Mathf.MoveTowards(_verticalSpeed, buoyancy, dt * 3.5f);
+            _verticalSpeed = Mathf.MoveTowards(_verticalSpeed, buoyancy, dt * BuoyancyConvergeRate);
             _verticalSpeed = swimming.DampBuoyancyNearSurface(_verticalSpeed, _cc.isGrounded, ascendInput);
 
             // 물가로 나가려 할 때: 앞이 막혀 있고 발밑에 지면이 있으면 밀어 올린다.
@@ -180,12 +189,12 @@ namespace Survive.Player
             Vector3 feet = transform.position - Vector3.up * (_cc.height * 0.5f - _cc.radius);
 
             // 가슴 높이에 벽이 있는데 그 위는 비어 있으면 오를 수 있는 턱이다
-            bool wall = Physics.SphereCast(feet, _cc.radius * 0.8f, ahead, out _, 0.7f,
+            bool wall = Physics.SphereCast(feet, _cc.radius * 0.8f, ahead, out _, ClimbOutProbeDistance,
                                         ~0, QueryTriggerInteraction.Ignore);
             if (!wall) return false;
 
             Vector3 head = feet + Vector3.up * (_cc.height * 0.9f);
-            bool headBlocked = Physics.SphereCast(head, _cc.radius * 0.8f, ahead, out _, 0.7f,
+            bool headBlocked = Physics.SphereCast(head, _cc.radius * 0.8f, ahead, out _, ClimbOutProbeDistance,
                                              ~0, QueryTriggerInteraction.Ignore);
             return !headBlocked;
         }
