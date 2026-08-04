@@ -39,11 +39,21 @@ namespace Survive.UI
         bool _isOpen;
 
         public bool IsOpen => _isOpen;
+        public UIPanelKind PanelKind => UIPanelKind.Storage;
 
         void Awake() => CloseImmediate();
 
-        void OnEnable() => GameServices.Register(this);
-        void OnDisable() => GameServices.Unregister<StorageUI>();
+        void OnEnable()
+        {
+            GameServices.Register(this);
+            if (GameServices.TryGet<UIStateService>(out var ui)) ui.RegisterPanel(this);
+        }
+
+        void OnDisable()
+        {
+            if (GameServices.TryGet<UIStateService>(out var ui)) ui.UnregisterPanel(this);
+            GameServices.Unregister<StorageUI>();
+        }
 
         public void Open(StorageContainer container, PlayerContext player)
         {
@@ -77,10 +87,8 @@ namespace Survive.UI
 
             // 손 제작 목록은 보관함과 같은 자리를 쓴다. 겹치면 둘 다 못 읽는다.
             // 상자 앞에 서 있는 사람이 지금 하려는 것은 제작이 아니라 정리다.
-            var craft = Object.FindFirstObjectByType<CraftingUI>(FindObjectsInactive.Include);
-            if (craft != null && craft.IsOpen && craft.CurrentStation == Survive.Crafting.StationType.None)
-                craft.Close();
-
+            // 그 판단은 이제 배타 규칙 표에 적혀 있고, NotifyOpened가 실행한다 —
+            // 방금 소지품을 열면서 딸려 온 목록도 이 시점에 같이 닫힌다.
             if (GameServices.TryGet<UIStateService>(out var ui)) ui.NotifyOpened(this);
         }
 

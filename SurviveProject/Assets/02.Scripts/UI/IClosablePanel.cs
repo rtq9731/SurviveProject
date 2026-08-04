@@ -9,5 +9,11 @@ namespace Survive.UI
     {
         bool IsOpen { get; }
         void Close();
+
+        /// <summary>
+        /// 배타 규칙(<see cref="PanelExclusionRules"/>)에서 이 패널을 부르는 이름.
+        /// 규칙에 걸릴 일이 없으면 <see cref="UIPanelKind.None"/>을 준다.
+        /// </summary>
+        UIPanelKind PanelKind { get; }
     }
 }

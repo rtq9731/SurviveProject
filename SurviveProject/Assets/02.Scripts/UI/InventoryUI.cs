@@ -48,12 +48,14 @@ namespace Survive.UI
         void OnEnable()
         {
             if (input != null) input.ToggleInventoryEvent += Toggle;
+            if (GameServices.TryGet<UIStateService>(out var ui)) ui.RegisterPanel(this);
             StartCoroutine(BindWhenReady());
         }
 
         void OnDisable()
         {
             if (input != null) input.ToggleInventoryEvent -= Toggle;
+            if (GameServices.TryGet<UIStateService>(out var ui)) ui.UnregisterPanel(this);
             if (_inventory?.Inventory != null) _inventory.Inventory.Changed -= Refresh;
         }
 
@@ -88,6 +90,7 @@ namespace Survive.UI
         }
 
         public bool IsOpen => _isOpen;
+        public UIPanelKind PanelKind => UIPanelKind.Inventory;
 
         public void Toggle()
         {
@@ -132,7 +135,9 @@ namespace Survive.UI
         public void Close()
         {
             // 제작대에서 연 목록까지 닫으면 안 되므로, 손 제작으로 연 것만 닫는다.
-            if (openHandCrafting && handCrafting != null && handCrafting.CurrentStation == Survive.Crafting.StationType.None)
+            // 어느 쪽이 딸려 닫히는지는 배타 규칙 표가 안다.
+            if (openHandCrafting && handCrafting != null &&
+                UIStateService.ActiveRules.ClosesTogether(PanelKind, handCrafting.PanelKind))
                 handCrafting.Close();
 
             if (!_isOpen) return;

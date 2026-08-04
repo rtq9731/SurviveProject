@@ -38,6 +38,7 @@ namespace Survive.UI
         Survive.Player.PlayerContext _player;
 
         public bool IsOpen => _isOpen;
+        public UIPanelKind PanelKind => UIPanelKind.BuildMenu;
 
         void Awake()
         {
@@ -54,11 +55,13 @@ namespace Survive.UI
         void OnEnable()
         {
             if (inventory?.Inventory != null) inventory.Inventory.Changed += Refresh;
+            if (Survive.Core.GameServices.TryGet<UIStateService>(out var ui)) ui.RegisterPanel(this);
         }
 
         void OnDisable()
         {
             if (inventory?.Inventory != null) inventory.Inventory.Changed -= Refresh;
+            if (Survive.Core.GameServices.TryGet<UIStateService>(out var ui)) ui.UnregisterPanel(this);
         }
 
         void BuildRows()
