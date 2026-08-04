@@ -30,9 +30,6 @@ namespace Survive.Building
         /// </summary>
         public const float PassUnderHeight = 2f;
 
-        /// <summary>아래 NavMesh를 찾을 때 훑는 거리.</summary>
-        const float GroundProbeDistance = 12f;
-
         /// <summary>
         /// 이 오브젝트의 단단한 콜라이더마다 장애물을 붙인다. 붙인 개수를 돌려준다.
         /// 여러 번 불러도 안전하다 — 이미 붙은 곳은 건너뛴다.
@@ -64,18 +61,26 @@ namespace Survive.Building
             return added;
         }
 
-        /// <summary>이 덩어리 밑으로 생물이 지나갈 수 있는가.</summary>
+        /// <summary>
+        /// 이 덩어리 밑으로 생물이 지나갈 수 있는가.
+        ///
+        /// 묻는 방식이 곧 답이다 — "이 콜라이더의 밑동에서 <see cref="PassUnderHeight"/>
+        /// 안에 걸어다닐 수 있는 바닥이 있는가". 있으면 그 바닥을 도려내야 하고,
+        /// 없으면 도려낼 것도 없다.
+        ///
+        /// 훑는 거리를 딱 그 높이로 묶는 것이 핵심이다. 넉넉하게 잡으면
+        /// <see cref="NavMesh.SamplePosition"/>이 <b>가장 가까운</b> 지점을 주므로
+        /// 동굴 안에서는 10m 위 천장의 NavMesh를 집어 와, 상인방이 자기 아래
+        /// 바닥보다 낮다는 답이 나온다. 지면을 아래로 쏜 레이로 찾는 방법도 안 된다 —
+        /// 건축물의 밑동은 대개 지형에 조금 파묻혀 있어 레이가 콜라이더 안에서
+        /// 출발하고, 그러면 지면을 통째로 놓친다.
+        /// </summary>
         static bool PassesUnder(Collider col)
         {
             var bounds = col.bounds;
             var foot = new Vector3(bounds.center.x, bounds.min.y, bounds.center.z);
 
-            // 아래에 NavMesh가 없으면 애초에 생물이 다닐 곳이 아니다.
-            // 판단할 근거가 없을 때는 막는 쪽을 고른다 — 뚫린 벽보다 낫다.
-            if (!NavMesh.SamplePosition(foot, out var hit, GroundProbeDistance, NavMesh.AllAreas))
-                return false;
-
-            return bounds.min.y - hit.position.y >= PassUnderHeight;
+            return !NavMesh.SamplePosition(foot, out _, PassUnderHeight, NavMesh.AllAreas);
         }
 
         /// <summary>장애물 상자를 콜라이더 모양에 맞춘다.</summary>
