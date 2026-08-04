@@ -388,6 +388,11 @@ namespace Survive.Building
             foreach (var s in _ghost.GetComponentsInChildren<BuildSnapPoint>(true)) Destroy(s);
             foreach (var m in _ghost.GetComponentsInChildren<BuiltStructure>(true)) Destroy(m);
 
+            // 미리보기가 NavMesh를 도려내면 아직 짓지 않은 벽이 생물의 길을 막는다.
+            // 프리팹이 장애물을 이미 들고 있는 경우까지 여기서 걷어 낸다.
+            foreach (var o in _ghost.GetComponentsInChildren<UnityEngine.AI.NavMeshObstacle>(true))
+                Destroy(o);
+
             _ghostRenderers = _ghost.GetComponentsInChildren<Renderer>(true);
         }
 
