@@ -32,6 +32,9 @@ namespace Survive.Creatures
         /// <summary>한 프레임에 걸러 낼 몸의 최대 개수. 무리가 겹쳐 있어도 넉넉하다.</summary>
         const int MaxProbeSkips = 8;
 
+        /// <summary>천장 아래로 남겨 둘 여유. 몸이 바위에 박혀 보이지 않을 만큼만.</summary>
+        const float CeilingClearance = 0.6f;
+
         public float Speed { get; set; } = 3f;
 
         Vector3 _velocity;
@@ -56,8 +59,7 @@ namespace Survive.Creatures
             _bobPhase += dt * bobFrequency;
 
             Vector3 desired = _halted ? transform.position : _target;
-            desired.y = GroundHeight(transform.position) + hoverHeight
-                        + Mathf.Sin(_bobPhase) * bobAmplitude;
+            desired.y = TargetHeight(transform.position);
 
             Vector3 dir = desired - transform.position;
             if (!_halted && dir.sqrMagnitude > 0.01f)
@@ -77,6 +79,61 @@ namespace Survive.Creatures
             Vector3 MoveTo = _velocity * dt;
             MoveTo.y = (desired.y - transform.position.y) * Mathf.Clamp01(dt * 3f);
             transform.position += MoveTo;
+        }
+
+        /// <summary>
+        /// 이 자리에서 떠 있어야 할 높이. 지면에서 <see cref="hoverHeight"/>만큼 띄우되,
+        /// <b>머리 위에 바위가 있으면 그 아래에 머문다.</b>
+        ///
+        /// 천장을 따로 봐야 하는 이유는 <see cref="GroundHeight"/>가 보는 방향에 있다.
+        /// 그쪽은 몸보다 <see cref="ProbeRise"/>만큼 <i>위에서</i> 내려다보는데, 동굴 안에
+        /// 있는 생물의 머리 위 50m는 이미 바위 천장 바깥이다. 그러면 광선이 천장의
+        /// <b>윗면</b>부터 맞고, 그 높이가 "지면"이 되어 목표 고도가 천장 위로 잡힌다.
+        /// 고도 보정은 물리를 보지 않으므로 생물은 그대로 바위를 뚫고 올라갔다
+        /// (실측: 천장 아랫면 62.42 아래 59.42에 있던 눈이 8초 만에 66.86까지 올라감).
+        ///
+        /// 벽은 <see cref="CreatureCollisionGuard"/>가 막지만 그쪽은 수평 전용이라
+        /// 세로 방향은 여기서 막는다.
+        /// </summary>
+        float TargetHeight(Vector3 pos)
+        {
+            float wanted = GroundHeight(pos) + hoverHeight + Mathf.Sin(_bobPhase) * bobAmplitude;
+
+            float ceiling = CeilingHeight(pos);
+            if (ceiling < float.MaxValue)
+                wanted = Mathf.Min(wanted, ceiling - CeilingClearance);
+
+            return wanted;
+        }
+
+        /// <summary>
+        /// 머리 위를 덮은 것의 아랫면 높이. 하늘만 있으면 <see cref="float.MaxValue"/>다 —
+        /// 그래야 트인 곳에서는 아무것도 달라지지 않는다.
+        ///
+        /// 아래를 볼 때와 같은 이유로 몸은 천장이 아니다. 무리가 위아래로 겹치면
+        /// 아래쪽이 위쪽을 천장으로 삼아 눌러앉고, 그러면 이번엔 반대가 되어 서로를
+        /// 밀어 내린다. <see cref="IsBody"/>로 아래쪽과 똑같이 걸러 낸다.
+        /// </summary>
+        float CeilingHeight(Vector3 pos)
+        {
+            Vector3 origin = pos;
+            float remaining = ProbeLength;
+
+            for (int i = 0; i < MaxProbeSkips; i++)
+            {
+                if (!Physics.Raycast(origin, Vector3.up, out var hit, remaining,
+                                     groundMask, QueryTriggerInteraction.Ignore))
+                    break;
+
+                if (!IsBody(hit.collider)) return hit.point.y;
+
+                float step = hit.distance + ProbeSkipEpsilon;
+                origin += Vector3.up * step;
+                remaining -= step;
+                if (remaining <= 0f) break;
+            }
+
+            return float.MaxValue;
         }
 
         /// <summary>

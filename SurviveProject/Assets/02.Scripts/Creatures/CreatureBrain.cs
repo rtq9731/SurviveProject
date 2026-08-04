@@ -230,9 +230,25 @@ namespace Survive.Creatures
             }
         }
 
+        /// <summary>
+        /// 다시 걷기 시작하는 자리. <b>멈춰 세웠던 것을 여기서 되돌린다.</b>
+        ///
+        /// <see cref="StopMoving"/>가 켠 <see cref="NavMeshAgent.isStopped"/>는
+        /// <see cref="NavMeshAgent.SetDestination"/>으로는 풀리지 않는다. 그래서 한 번
+        /// 공격 자세를 잡은 생물은 어그로가 식어 배회로 돌아간 뒤에도 영영 굳어 있었다 —
+        /// 목적지는 매번 새로 잡히는데(hasPath=True) 속도는 0이었다.
+        /// 실측: 공이 사거리 안에서 한 번 멈춘 뒤 20초 동안 0.000m 움직였다.
+        ///
+        /// 비행 쪽은 <see cref="FlyerMotor.MoveTowards"/>가 이미 제 멈춤 표시를 푼다.
+        /// 지상도 같은 자리에서 같은 일을 하게 맞춘 것뿐이다.
+        /// </summary>
         void MoveTo(Vector3 destination)
         {
-            if (agent != null && agent.isOnNavMesh) agent.SetDestination(destination);
+            if (agent != null && agent.isOnNavMesh)
+            {
+                agent.isStopped = false;
+                agent.SetDestination(destination);
+            }
             else if (flyer != null) flyer.MoveTowards(destination);
         }
 
