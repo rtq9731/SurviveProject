@@ -133,7 +133,8 @@ var specs = new[]
     new { name = "Island4_Surface", pos = new Vector3(309f, 0f, 77f), radius = 36f, topY = 51.0f, belly = 5f, spike = 56f, seed = 44 },
 };
 
-var mat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Unvik_3D/Cross_Plains/FBX/Materials/Cross_Plains.mat");
+// 섬 전용 머티리얼. Cross_Plains는 다른 목적으로 어둡게 맞춰둔 것이라 쓰지 않는다.
+var mat = AssetDatabase.LoadAssetAtPath<Material>("Assets/03.Materials/IslandRock.mat");
 var report = new List<string>();
 
 // ── 1) 생성 후 FBX로 내보낸다 ──
@@ -149,8 +150,12 @@ foreach (var s in specs)
     int srcVerts = mesh.vertexCount;
     var srcSize = mesh.bounds.size;
 
+    // 반드시 바이너리로. 익스포터의 기본값은 ASCII인데
+    // 블렌더는 ASCII FBX를 못 읽는다 — 그러면 FBX로 바꾼 이유가 사라진다.
+    var opt = new ExportModelOptions { ExportFormat = ExportFormat.Binary };
+
     string fbx = "Assets/10.Generated/Islands/" + s.name + ".fbx";
-    ModelExporter.ExportObject(fbx, tmp);
+    ModelExporter.ExportObject(fbx, tmp, opt);
     Object.DestroyImmediate(tmp);
     Object.DestroyImmediate(mesh);
 
