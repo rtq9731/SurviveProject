@@ -45,8 +45,8 @@ namespace Survive.Creatures
 
         /// <summary>축적한 스크랩 가치. 사망 시 드롭량에 더해진다.</summary>
         public float Stored => _stored;
-        public float Fullness => fullAt <= 0f ? 0f : Mathf.Clamp01(_stored / fullAt);
-        public bool IsFull => _stored >= fullAt;
+        public float Fullness => FeedingStore.Fullness(_stored, fullAt);
+        public bool IsFull => FeedingStore.IsFull(_stored, fullAt);
 
         void Awake()
         {
@@ -59,13 +59,14 @@ namespace Survive.Creatures
         void Update()
         {
             if (IsFull) return;
-            if (Time.time < _nextEatTime) return;
+            if (!CreatureDecision.IsReady(Time.time, _nextEatTime)) return;
 
             var plant = NearestPlant();
             if (plant == null) return;
 
             _targetPlant = plant.transform;
-            if (Vector3.Distance(transform.position, plant.transform.position) > eatRange) return;
+            float distance = Vector3.Distance(transform.position, plant.transform.position);
+            if (!CreatureDecision.IsWithinRange(distance, eatRange)) return;
 
             float nutrition = plant.Eat();
             if (nutrition <= 0f) return;
