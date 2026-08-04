@@ -4,30 +4,38 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-// 착지 지점을 '한 점에서 터져나간 자국'으로 만든다.
+// 착지 지점 = 한 점에서 터져나간 자국. 부호를 고친 판.
 //
-// 앞선 시도가 별로였던 이유: 넘어지는 방향을 랜덤 yaw로 굴린 뒤,
-// 스폰을 비운다고 또 바깥으로 밀었다. 두 번 흩어서 충격파가 아니라 난장판이 됐다.
+// 앞판의 버그: fallAxis를 (-o.z, 0, o.x)로 잡았다. Unity에서 축 a로 돌리면
+// up은 a × up = (-a.z, 0, a.x) 방향으로 간다. 그 축을 넣으면 (-o.x, 0, -o.z),
+// 즉 안쪽으로 눕는다. 갓이 웅덩이 위로 더 밀려들었다.
+// 바깥으로 눕히려면 a = (o.z, 0, -o.x)여야 한다.
 //
-// 이번 규칙은 하나다 — 모든 것이 충돌점에서 '바깥으로' 눕는다.
-//   · 중심에 가까울수록 더 납작하게 눕고 더 눌린다
-//   · 밑동은 제자리에 둔다(밑동을 축으로 회전). 나무가 넘어지듯이
-//   · 정중앙은 아예 박살난 것으로 본다 — 그래서 스폰이 저절로 비워진다
-//   · 무작위는 각도에 ±7도만. 방향은 절대 굴리지 않는다
+// 또 하나: 대상을 밑동 거리로 고르면 '갓만 뻗친' 거대버섯이 전부 샌다.
+// 바운즈가 웅덩이 위로 겹치는지로 고른다.
 
-const float BlastRadius = 12f;      // 이 밖은 건드리지 않는다
-const float GroundZero  = 3.2f;     // 이 안은 형체가 남지 않는다
-const float MinHeight   = 3f;       // 이보다 낮은 것은 원래 빛을 안 막는다
+const float PoolRadius  = 10f;
+const float GroundZero  = 3.2f;
+const float MinHeight   = 3f;
+const float OverheadY   = 56f;      // 이보다 높은 것만이 빛을 막는다
 var rnd = new System.Random(90125);
 
 var spot = GameObject.Find("LightShaft").GetComponentInChildren<Light>(true);
-var impact = new Vector2(spot.transform.position.x, spot.transform.position.z);
+var o = spot.transform.position;
+var impact = new Vector2(o.x, o.z);
 
 float GroundAt(float x, float z)
 {
     var hits = Physics.RaycastAll(new Vector3(x, 200f, z), Vector3.down, 300f, ~0, QueryTriggerInteraction.Ignore)
         .Where(h => h.collider.name.StartsWith("Island")).OrderByDescending(h => h.point.y).ToArray();
     return hits.Length > 0 ? hits[0].point.y : float.NaN;
+}
+
+bool Overhangs(Bounds b, float radius)
+{
+    float dx = Mathf.Max(0f, Mathf.Abs(b.center.x - impact.x) - b.extents.x);
+    float dz = Mathf.Max(0f, Mathf.Abs(b.center.z - impact.y) - b.extents.z);
+    return dx * dx + dz * dz < radius * radius;
 }
 
 var flora = GameObject.Find("Chapter1_Flora").transform;
@@ -39,63 +47,97 @@ if (bucket == null)
     bucket = g.transform;
 }
 
-Physics.SyncTransforms();
+// ── 떠 있는 판: floe.011 / 013 / 014. 콜라이더가 없어 레이로는 안 잡힌다 ──
+int floes = 0;
+foreach (var mr in Object.FindObjectsByType<MeshRenderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None).ToArray())
+{
+    if (!mr.gameObject.name.StartsWith("floe")) continue;
+    if (mr.bounds.min.y < OverheadY) continue;
+    if (!Overhangs(mr.bounds, PoolRadius + 4f)) continue;
+    Debug.Log($"[판] {mr.gameObject.name} (부모 {mr.transform.parent?.name}) 밑면 y={mr.bounds.min.y:0.#} → 끔");
+    mr.gameObject.SetActive(false);
+    EditorUtility.SetDirty(mr.gameObject);
+    floes++;
+}
+Debug.Log($"[판] {floes}개");
 
-var targets = flora.GetComponentsInChildren<MeshRenderer>(false)
-    .Where(mr => mr.gameObject.name.Contains("Mushroom"))
-    .Where(mr => mr.transform.parent != bucket)
-    .Select(mr => new { t = mr.transform, mr, b = mr.bounds })
-    .Where(x => x.b.size.y >= MinHeight)
-    .Select(x => new { x.t, x.mr, x.b, d = Vector2.Distance(new Vector2(x.t.position.x, x.t.position.z), impact) })
-    .Where(x => x.d <= BlastRadius)
-    .OrderBy(x => x.d)
-    .ToList();
-
+// ── 폭발 ──
+var done = new HashSet<Transform>();
 int vaporized = 0, felled = 0;
 
-foreach (var x in targets)
+void Fell(Transform t, Bounds b)
 {
-    // 폭심 — 형체가 남지 않는다
-    if (x.d < GroundZero)
-    {
-        x.t.gameObject.SetActive(false);
-        x.t.SetParent(bucket, true);
-        EditorUtility.SetDirty(x.t.gameObject);
-        vaporized++;
-        continue;
-    }
+    float d = Vector2.Distance(new Vector2(t.position.x, t.position.z), impact);
+    float k = Mathf.Clamp01(Mathf.InverseLerp(GroundZero, 22f, d));
 
-    float k = Mathf.InverseLerp(GroundZero, BlastRadius, x.d);   // 0=가깝다, 1=가장자리
-
-    // 바깥 방향. 이것만이 방향을 정한다
-    var outward = new Vector3(x.t.position.x - impact.x, 0f, x.t.position.z - impact.y);
+    var outward = new Vector3(t.position.x - impact.x, 0f, t.position.z - impact.y);
     if (outward.sqrMagnitude < 0.0001f) outward = Vector3.forward;
     outward.Normalize();
-    var fallAxis = new Vector3(-outward.z, 0f, outward.x);       // 바깥으로 눕는 회전축
 
-    // 가까울수록 납작하게. 무작위는 각도에만 ±7도
-    float angle = Mathf.Lerp(86f, 26f, k) + ((float)rnd.NextDouble() - 0.5f) * 14f;
+    // 바깥으로 눕는 축. a × up = outward 가 되도록 a = (o.z, 0, -o.x)
+    var fallAxis = new Vector3(outward.z, 0f, -outward.x);
 
-    // 밑동을 축으로 회전한다 — 밑동은 제자리에 남는다
-    float g = GroundAt(x.t.position.x, x.t.position.z);
-    if (float.IsNaN(g)) g = x.b.min.y;
-    var pivot = new Vector3(x.t.position.x, g, x.t.position.z);
+    // 멀리 선 것도 갓이 웅덩이 위에 있으면 충분히 눕혀야 걷힌다 — 최소 48도
+    float angle = Mathf.Lerp(86f, 48f, k) + ((float)rnd.NextDouble() - 0.5f) * 12f;
+
+    float g = GroundAt(t.position.x, t.position.z);
+    if (float.IsNaN(g)) g = b.min.y;
+    var pivot = new Vector3(t.position.x, g, t.position.z);
     var rot = Quaternion.AngleAxis(angle, fallAxis);
-    x.t.position = pivot + rot * (x.t.position - pivot);
-    x.t.rotation = rot * x.t.rotation;
-
-    // 가까울수록 더 눌린다
-    x.t.localScale *= Mathf.Lerp(0.72f, 1f, k);
-
-    x.t.SetParent(bucket, true);
-    EditorUtility.SetDirty(x.t.gameObject);
+    t.position = pivot + rot * (t.position - pivot);
+    t.rotation = rot * t.rotation;
+    t.localScale *= Mathf.Lerp(0.72f, 1f, k);
+    t.SetParent(bucket, true);
+    EditorUtility.SetDirty(t.gameObject);
+    done.Add(t);
     felled++;
 }
 
-Physics.SyncTransforms();
-Debug.Log($"[충격] 폭심 {GroundZero}m 안 {vaporized}개 소멸, 바깥으로 {felled}개 쓰러뜨림 (반경 {BlastRadius}m)");
+for (int pass = 1; pass <= 5; pass++)
+{
+    Physics.SyncTransforms();
+    var targets = flora.GetComponentsInChildren<MeshRenderer>(false)
+        .Where(mr => mr.gameObject.name.Contains("Mushroom"))
+        .Where(mr => !done.Contains(mr.transform))
+        .Select(mr => new { t = mr.transform, b = mr.bounds })
+        .Where(x => x.b.size.y >= MinHeight)
+        .Where(x => x.b.max.y > OverheadY)
+        .Where(x => Overhangs(x.b, PoolRadius))
+        .ToArray();
 
-// 쓰러진 것을 바닥에 앉힌다 — 피벗이 모델마다 달라 회전만으로는 안 붙는다
+    Debug.Log($"[{pass}차] 갓이 웅덩이 위로 뻗은 것 {targets.Length}개");
+    if (targets.Length == 0) break;
+
+    foreach (var x in targets)
+    {
+        float d = Vector2.Distance(new Vector2(x.t.position.x, x.t.position.z), impact);
+        if (d < GroundZero)
+        {
+            x.t.gameObject.SetActive(false);
+            x.t.SetParent(bucket, true);
+            EditorUtility.SetDirty(x.t.gameObject);
+            done.Add(x.t); vaporized++;
+        }
+        else Fell(x.t, x.b);
+    }
+}
+
+// 폭심 안에 남은 것은 형체가 남지 않는다
+Physics.SyncTransforms();
+foreach (var mr in flora.GetComponentsInChildren<MeshRenderer>(false).ToArray())
+{
+    if (!mr.gameObject.name.Contains("Mushroom")) continue;
+    if (mr.transform.parent == bucket) continue;
+    if (Vector2.Distance(new Vector2(mr.transform.position.x, mr.transform.position.z), impact) >= GroundZero) continue;
+    mr.gameObject.SetActive(false);
+    mr.transform.SetParent(bucket, true);
+    EditorUtility.SetDirty(mr.gameObject);
+    vaporized++;
+}
+Debug.Log($"[충격] 폭심 {vaporized}개 소멸, 바깥으로 {felled}개 쓰러뜨림");
+
+// ── 안착 ──
+Physics.SyncTransforms();
 int settled = 0;
 foreach (var mr in bucket.GetComponentsInChildren<MeshRenderer>(false))
 {
@@ -109,40 +151,25 @@ foreach (var mr in bucket.GetComponentsInChildren<MeshRenderer>(false))
     settled++;
 }
 Physics.SyncTransforms();
-Debug.Log($"[안착] {settled}개를 바닥에 앉힘");
+Debug.Log($"[안착] {settled}개");
 
-// 스폰 확인 — 폭심을 비웠으니 깨끗해야 한다
-var player = GameObject.FindWithTag("Player")
-    ?? Object.FindObjectsByType<CharacterController>(FindObjectsInactive.Include, FindObjectsSortMode.None).First().gameObject;
-var cc = player.GetComponent<CharacterController>();
-var sp = player.transform.position;
-var over = Physics.OverlapCapsule(sp + Vector3.up * cc.radius, sp + Vector3.up * (cc.height - cc.radius),
-                                  cc.radius + 0.3f, ~0, QueryTriggerInteraction.Ignore)
-    .Where(c => c.transform.root != player.transform.root).ToArray();
-foreach (var c in over)
-{
-    // 그래도 남은 것이 있으면 그것도 박살난 것으로 친다
-    var root = c.transform;
-    while (root.parent != null && root.parent != flora && root.parent != bucket) root = root.parent;
-    if (root.name.Contains("Mushroom")) { root.gameObject.SetActive(false); Debug.Log($"[스폰] {root.name} 추가 제거"); }
-    else Debug.LogWarning($"[스폰] 버섯이 아닌 것이 겹친다: {c.name}");
-}
-Physics.SyncTransforms();
-var still = Physics.OverlapCapsule(sp + Vector3.up * cc.radius, sp + Vector3.up * (cc.height - cc.radius),
-                                   cc.radius + 0.3f, ~0, QueryTriggerInteraction.Ignore)
-    .Where(c => c.transform.root != player.transform.root).ToArray();
-Debug.Log($"[스폰] 캡슐 겹침 {still.Length}개" + (still.Length == 0 ? " — 깨끗함" : ": " + string.Join(", ", still.Select(c => c.name))));
-
-// 빛기둥 세기 — 40m 거리에서 34는 감쇠로 0.017밖에 안 남는다
+// ── 나머지 복원 ──
 spot.intensity = 1200f;
 EditorUtility.SetDirty(spot);
 
-// 착지 지점 14m 위에 떠서 빛을 가로채던 판
-var floe = Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None)
-    .FirstOrDefault(t => t.name == "floe.014");
-if (floe != null) { floe.gameObject.SetActive(false); EditorUtility.SetDirty(floe.gameObject); Debug.Log("[floe] floe.014 끔"); }
+var mac = AssetDatabase.LoadAssetAtPath<Material>("Assets/03.Materials/MacroniumSurface.mat");
+foreach (var mr in Object.FindObjectsByType<MeshRenderer>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+    if (mr.sharedMaterial != null && mr.sharedMaterial.name == "Wavy")
+    { mr.sharedMaterial = mac; EditorUtility.SetDirty(mr); Debug.Log($"[매크로늄] {mr.gameObject.name}"); }
 
-// 섬 안에 묻혀 있던 군락등
+foreach (var b in Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+{
+    if (b == null || b.GetType().Name != "UnderwaterView") continue;
+    var so = new SerializedObject(b);
+    var p = so.FindProperty("underwaterFog");
+    if (p != null) { p.colorValue = new Color32(0x2C, 0x12, 0x40, 255); so.ApplyModifiedProperties(); EditorUtility.SetDirty(b); }
+}
+
 int raised = 0;
 foreach (var l in Object.FindObjectsByType<Light>(FindObjectsInactive.Include, FindObjectsSortMode.None))
 {
@@ -150,10 +177,45 @@ foreach (var l in Object.FindObjectsByType<Light>(FindObjectsInactive.Include, F
     float g = GroundAt(l.transform.position.x, l.transform.position.z);
     if (float.IsNaN(g) || l.transform.position.y >= g + 1.4f) continue;
     l.transform.position = new Vector3(l.transform.position.x, g + 1.5f, l.transform.position.z);
-    EditorUtility.SetDirty(l.gameObject);
-    raised++;
+    EditorUtility.SetDirty(l.gameObject); raised++;
 }
 Debug.Log($"[군락등] {raised}개 지면 위로");
+
+// ── 스폰 ──
+var player = GameObject.FindWithTag("Player")
+    ?? Object.FindObjectsByType<CharacterController>(FindObjectsInactive.Include, FindObjectsSortMode.None).First().gameObject;
+var cc = player.GetComponent<CharacterController>();
+var sp = player.transform.position;
+Physics.SyncTransforms();
+foreach (var c in Physics.OverlapCapsule(sp + Vector3.up * cc.radius, sp + Vector3.up * (cc.height - cc.radius),
+                                         cc.radius + 0.3f, ~0, QueryTriggerInteraction.Ignore)
+         .Where(c => c.transform.root != player.transform.root))
+{
+    var root = c.transform;
+    while (root.parent != null && root.parent != flora && root.parent != bucket) root = root.parent;
+    if (root.name.Contains("Mushroom")) { root.gameObject.SetActive(false); Debug.Log($"[스폰] {root.name} 제거"); }
+    else Debug.LogWarning($"[스폰] 버섯 아닌 것이 겹침: {c.name}");
+}
+Physics.SyncTransforms();
+var still = Physics.OverlapCapsule(sp + Vector3.up * cc.radius, sp + Vector3.up * (cc.height - cc.radius),
+                                   cc.radius + 0.3f, ~0, QueryTriggerInteraction.Ignore)
+    .Where(c => c.transform.root != player.transform.root).ToArray();
+Debug.Log($"[스폰] 캡슐 겹침 {still.Length}개");
+
+// ── 결과 ──
+int floor = 0, overhead = 0, total = 0;
+var left = new Dictionary<string, int>();
+for (int ix = -9; ix <= 9; ix++)
+for (int iz = -9; iz <= 9; iz++)
+{
+    if (ix * ix + iz * iz > 81) continue;
+    total++;
+    if (!Physics.Raycast(new Vector3(o.x + ix, o.y, o.z + iz), Vector3.down, out var h, 300f, ~0, QueryTriggerInteraction.Ignore)) continue;
+    if (h.collider.name.StartsWith("Island")) floor++;
+    else if (h.point.y > 55f) { overhead++; left.TryGetValue(h.collider.name, out int c); left[h.collider.name] = c + 1; }
+}
+Debug.Log($"[결과] {total}점 — 섬 바닥 {floor} / 머리 위 차폐 {overhead}");
+foreach (var kv in left.OrderByDescending(k => k.Value).Take(6)) Debug.Log($"   {kv.Value,3}점 {kv.Key}");
 
 EditorSceneManager.MarkSceneDirty(player.scene);
 EditorSceneManager.SaveScene(player.scene);
