@@ -50,6 +50,12 @@ namespace Survive.Domain.Art
             // SpeedTree7(폴리퍼펙트 나무·식생). 바람 흔들림 애니메이션과 거리별
             // 빌보드 크로스페이드를 셰이더가 담당한다 — Lit로 바꾸면 두 기능이 모두 사라진다.
             "Universal Render Pipeline/Nature/SpeedTree7",
+            // 빛기둥(LightShaft) 전용 손작성 셰이더(Assets/03.Materials/LightShaftBeam.shader).
+            // URP/Lit은 거리 안개를 강제로 적용하며 끌 방법이 없다 — 화면을 가득 채우는
+            // 반투명 빛기둥이 안개색(#0C0F15, 거의 검정)으로 당겨져 랜드마크로 보여야 할
+            // 먼 거리에서 정확히 사라지는 원인이었다. 이 셰이더는 안개 매크로를 아예 쓰지
+            // 않으므로, 이 셰이더로만 그 결함을 없앨 수 있다.
+            "Survive/LightShaft",
         };
 
         public static bool IsAllowedShader(string shaderName)
