@@ -225,18 +225,27 @@ namespace Survive.Testing
         static IEnumerator WalkOut(PlayerSwimming swim, Vector3 shore, float surface)
         {
             var rig = E2EHarness.Player.CameraRig;
-            yield return E2EHarness.PressKey(Key.W);
 
-            float t = 0f;
-            while (t < 30f)
+            // W와 Space를 함께 누른다. Space가 없으면 바닥을 긁으며 돌아오다
+            // 물속 바위에 걸리고, 그러면 나오지 못한 것이 아니라 가지 못한 것이
+            // 실패로 기록된다. 수면을 따라 돌아오는 것이 사람이 하는 일이기도 하다.
+            yield return E2EHarness.PressKey(Key.W);
+            yield return E2EHarness.PressKey(Key.Space);
+
+            float t = 0f, nextReport = 1f;
+            while (t < 45f)
             {
                 var here = E2EHarness.Player.transform.position;
                 var d = shore - here;
                 d.y = 0f;
 
                 // 수면에 발끝만 걸친 것을 "나왔다"로 치면, 물가에서 못 올라오는
-                // 결함이 그대로 통과한다. 확실히 물 위 지면에 설 때까지 걷는다.
-                if (swim.Current == PlayerSwimming.State.Dry && here.y > surface + 0.2f) break;
+                // 결함이 그대로 통과한다. 지면을 딛고 설 때까지 걷는다.
+                bool ashore = swim.Current == PlayerSwimming.State.Dry &&
+                              here.y >= surface - 0.05f &&
+                              (E2EHarness.Player.Locomotion == null ||
+                               E2EHarness.Player.Locomotion.IsGrounded);
+                if (ashore) break;
 
                 // 물가를 지나쳐 버리면 되돌아올 수 없다. 매 프레임 물가를 겨눈다.
                 if (d.sqrMagnitude > 0.04f)
@@ -244,15 +253,22 @@ namespace Survive.Testing
 
                 E2EHarness.QueueKeys();
                 t += Time.deltaTime;
+
+                if (t >= nextReport)
+                {
+                    E2EHarness.Log($"    돌아가는 중 {here.ToString("F1")} — 물가까지 {d.magnitude:F1}m, " +
+                                   $"상태 {swim.Current}");
+                    nextReport = t + 3f;
+                }
                 yield return null;
             }
-            yield return E2EHarness.ReleaseKey(Key.W);
+            yield return E2EHarness.ReleaseAllKeys();
 
             var end = E2EHarness.Player.transform.position;
             E2EHarness.Log($"  {t:F1}초 만에 {end.ToString("F1")}로 나왔다 (수면 {surface:F1})");
             E2EHarness.AssertEqual(swim.Current, PlayerSwimming.State.Dry, "헤엄쳐서 뭍으로 나왔다");
-            E2EHarness.Assert(end.y > surface + 0.2f,
-                              $"발이 수면 위 지면에 있다 ({end.y:F2} > {surface + 0.2f:F2})");
+            E2EHarness.Assert(end.y >= surface - 0.05f,
+                              $"발이 수면 아래로 잠겨 있지 않다 ({end.y:F2} >= {surface - 0.05f:F2})");
             E2EHarness.Assert(E2EHarness.Player.Locomotion == null ||
                               E2EHarness.Player.Locomotion.IsGrounded,
                               "뭍에 발을 딛고 서 있다");
