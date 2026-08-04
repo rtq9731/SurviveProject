@@ -42,12 +42,13 @@ namespace Survive.Creatures
 
         void Update()
         {
-            if (Time.time < _nextCollectTime) return;
+            if (!CreatureDecision.IsReady(Time.time, _nextCollectTime)) return;
 
             var pickup = NearestPickup();
             if (pickup == null) return;
 
-            if (Vector3.Distance(transform.position, pickup.transform.position) > collectRange) return;
+            float distance = Vector3.Distance(transform.position, pickup.transform.position);
+            if (!CreatureDecision.IsWithinRange(distance, collectRange)) return;
 
             // 회수 = 세계에서 사라진다. 분해자는 코어로 가져간다는 설정이다.
             Destroy(pickup.gameObject);
