@@ -102,6 +102,24 @@ namespace Survive.Vitals
             }
         }
 
+        /// <summary>
+        /// 되살아난다. 체력과 산소를 가득 채우고 사망 걸쇠를 그 자리에서 푼다.
+        ///
+        /// <b>왜 둘 다 채우는가.</b> 체력만 채우면 익사로 죽은 사람은 산소 0인 채로
+        /// 되살아나 곧바로 다시 깎이기 시작한다 — 부활한 자리에서 몇 초 만에 또 죽는
+        /// 고리가 된다. 부분 회복은 그 고리를 늘릴 뿐 끊지 못하므로, 잃은 것은
+        /// 죽은 자리에 남은 가방이 대신 짊어지게 두고 몸은 온전히 돌려준다.
+        ///
+        /// 걸쇠를 여기서 직접 푸는 이유는 <see cref="Update"/>가 다음 프레임에 풀어 주기를
+        /// 기다리면 그 한 프레임 동안 <see cref="Died"/>가 다시 걸릴 여지가 남기 때문이다.
+        /// </summary>
+        public void Revive()
+        {
+            Health.Modify(Health.Max);
+            Oxygen.Modify(Oxygen.Max);
+            _deathReported = false;
+        }
+
         public float CurrentOxygenRate()
         {
             float baseRate = oxygenDefinition != null ? oxygenDefinition.passiveRatePerSecond : -1f;

@@ -57,6 +57,16 @@ namespace Survive.Building
         public bool IsBurning => _fuel > 0f;
         public float FuelNormalized => maxFuel <= 0f ? 0f : Mathf.Clamp01(_fuel / maxFuel);
 
+        /// <summary>
+        /// 마지막으로 <b>불이 붙은</b> 시각(<see cref="Time.time"/>).
+        ///
+        /// 세운 시각이 아니다 — 꺼졌다가 다시 지핀 불은 그때가 마지막이다.
+        /// 부활 지점을 고르는 <see cref="Survive.World.RespawnRule"/>이 "마지막 화톳불"을
+        /// 이 값으로 가린다. 사람이 마지막으로 머문 자리는 마지막으로 세운 곳이 아니라
+        /// 마지막으로 불을 살린 곳이다.
+        /// </summary>
+        public float KindledAt { get; private set; }
+
         // ── ILitZoneSource ───────────────────────────────────────
         // 다른 시스템(P4의 습격 AI 등)이 "여기가 밝은가"를 물을 수 있도록
         // LitZoneRegistry에 자신을 내놓는다. 반경은 실제 빛이 닿는 fullRange를
@@ -106,6 +116,11 @@ namespace Survive.Building
 
         void ApplyLight()
         {
+            // 불이 붙은 순간을 여기서 적는다. ApplyLight는 처음 세울 때, 연료가 다 탔을 때,
+            // 다시 지필 때 — 불의 상태가 바뀌는 모든 지점에서 불린다. 한 곳에 두면
+            // 나중에 점화 경로가 하나 더 생겨도 저절로 따라온다.
+            if (IsBurning) KindledAt = Time.time;
+
             if (flame == null) return;
 
             flame.enabled = IsBurning;
