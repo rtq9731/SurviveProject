@@ -42,6 +42,14 @@ namespace Survive.UI
 
         public bool IsOpen => _isOpen;
 
+        /// <summary>
+        /// 같은 컴포넌트지만 규칙에서는 둘로 나뉜다. 손 제작 목록은 소지품에
+        /// 딸려 다니고 보관함에 밀려 닫히지만, 제작대에서 연 목록은 그렇지 않다.
+        /// </summary>
+        public UIPanelKind PanelKind => _station == StationType.None
+            ? UIPanelKind.HandCrafting
+            : UIPanelKind.StationCrafting;
+
         void Awake()
         {
             // 여기서 gameObject.SetActive(false)를 하면 안 된다.
@@ -61,7 +69,13 @@ namespace Survive.UI
         {
             // ESC 처리는 UIStateService가 전담한다. 여기서 따로 듣지 않는다 —
             // 패널마다 각자 들으면 닫히는 것과 안 닫히는 것이 생긴다.
+            if (GameServices.TryGet<UIStateService>(out var ui)) ui.RegisterPanel(this);
             StartCoroutine(BindWhenReady());
+        }
+
+        void OnDisable()
+        {
+            if (GameServices.TryGet<UIStateService>(out var ui)) ui.UnregisterPanel(this);
         }
 
         IEnumerator BindWhenReady()
