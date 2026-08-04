@@ -128,9 +128,9 @@ Mesh MakeIsland(string name, float radius, float topY, float bellyDepth, float s
 var specs = new[]
 {
     new { name = "Island1_Landing", pos = new Vector3(0f,   0f, 0f),  radius = 50f, topY = 52.0f, belly = 7f, spike = 78f, seed = 11 },
-    new { name = "Island2_Shoal",   pos = new Vector3(116f, 0f, 0f),  radius = 44f, topY = 51.4f, belly = 6f, spike = 64f, seed = 22 },
-    new { name = "Island3_Far",     pos = new Vector3(211f, 0f, 37f), radius = 40f, topY = 58.0f, belly = 8f, spike = 88f, seed = 33 },
-    new { name = "Island4_Surface", pos = new Vector3(309f, 0f, 77f), radius = 36f, topY = 51.0f, belly = 5f, spike = 56f, seed = 44 },
+    new { name = "Island2_Shoal",   pos = new Vector3(137.2f, 0f, 0f),  radius = 44f, topY = 51.4f, belly = 6f, spike = 64f, seed = 22 },
+    new { name = "Island3_Far",     pos = new Vector3(249.9f, 0f, 43.9f), radius = 40f, topY = 58.0f, belly = 8f, spike = 88f, seed = 33 },
+    new { name = "Island4_Surface", pos = new Vector3(363.9f, 0f, 90.4f), radius = 36f, topY = 51.0f, belly = 5f, spike = 56f, seed = 44 },
 };
 
 // 섬 전용 머티리얼. Cross_Plains는 다른 목적으로 어둡게 맞춰둔 것이라 쓰지 않는다.
