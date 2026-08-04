@@ -22,6 +22,12 @@ namespace Survive.Combat
         public void TakeDamage(in DamageInfo info)
         {
             if (vitals == null || IsDead) return;
+
+            // 자기가 낸 피해는 자기에게 돌아오지 않는다.
+            // 때리는 쪽에서 이미 거르지만, 피해가 들어오는 문이 여기 하나뿐이라
+            // 문 앞에서 한 번 더 본다. 생물이 때린 것은 가해자가 다르므로 그대로 들어온다.
+            if (MeleeTargeting.IsSelfInflicted(transform, info.Source)) return;
+
             vitals.Health.Modify(-info.Amount);
             hurtFeedback?.PlayFeedbacks();
         }
