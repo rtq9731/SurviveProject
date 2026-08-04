@@ -14,7 +14,7 @@ namespace Survive.Building
     /// 어긋난 1도가 나중에 벽 한 줄을 어긋나게 만든다.
     /// </summary>
     [DisallowMultipleComponent]
-    public class BuildSnapPoint : MonoBehaviour
+    public class BuildSnapPoint : MonoBehaviour, ISnapPoint
     {
         [Tooltip("이 자리가 받아 주는 조각 종류")]
         [SerializeField] BuildPieceKind accepts = BuildPieceKind.None;
@@ -24,6 +24,12 @@ namespace Survive.Building
         public bool Takes(BuildPieceKind kind) => kind != BuildPieceKind.None && (accepts & kind) != 0;
 
         public void Setup(BuildPieceKind kinds) => accepts = kinds;
+
+        // 그래프에 내놓는 얼굴. 명시적 구현으로 둬서 이 컴포넌트의 공개 API는
+        // 그대로 두고, 파괴 판정만 UnityEngine.Object의 == 오버로드에 맡긴다.
+        bool ISnapPoint.IsAlive => this != null;
+        Vector3 ISnapPoint.SnapPosition => transform.position;
+        Quaternion ISnapPoint.SnapRotation => transform.rotation;
 
         void OnEnable() => SnapGraph.Register(this);
         void OnDisable() => SnapGraph.Unregister(this);
