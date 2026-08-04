@@ -53,7 +53,7 @@ Material:
     m_Floats:
     - _DepthFadeDistance: 3
     - _DepthFadeInfluence: 0
-    - _EdgePower: 2
+    - _EdgePower: 1
     - _GradientPower: 1.2
     - _Height: 40
     - _Intensity: 1.3
