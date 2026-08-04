@@ -39,7 +39,15 @@ namespace Survive.EditorTools
             return n;
         }
 
-        public static string Run()
+        public static string Run() => Run(out _);
+
+        /// <summary>
+        /// 같은 점검이되 위반 건수도 함께 준다(머티리얼 + 라이트).
+        /// <see cref="ViolationCount"/>와 달리 씬을 한 번만 열고 끝낸다 —
+        /// 자동 게이트(<see cref="AutonomousGate"/>)가 보고서와 숫자를 같이 쓰는데,
+        /// 둘을 따로 부르면 씬을 두 번 열게 된다.
+        /// </summary>
+        public static string Run(out int violationCount)
         {
             var facts = Collect();
             var sb = new StringBuilder();
@@ -79,6 +87,8 @@ namespace Survive.EditorTools
             sb.AppendLine(lightViolations == 0
                 ? "라이트 위반 없음."
                 : $"라이트 위반 {lightViolations}건.");
+
+            violationCount = violations + lightViolations;
 
             // Directional은 LightRule이 판정하지 않는다(태양·전역 조명이므로). 하지만
             // 지하 씬에 Directional이 존재하는 것 자체는 원칙 1("지하에 태양이 없다")과

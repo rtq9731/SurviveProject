@@ -101,7 +101,15 @@ namespace Survive.EditorTools
         public static void RunFromMenu() => Debug.Log(Run());
 
         /// <summary>전수 점검하고 사람이 읽을 보고서를 돌려준다.</summary>
-        public static string Run()
+        public static string Run() => Run(out _);
+
+        /// <summary>
+        /// 같은 점검이되 발견 건수도 함께 준다.
+        /// 자동 게이트(<see cref="AutonomousGate"/>)가 보고서를 사람 눈으로 읽지 않고
+        /// 통과/실패를 판정하려면 숫자가 필요하다. 보고서 문자열을 다시 파싱하게
+        /// 두면 문구를 손볼 때마다 게이트가 조용히 망가진다.
+        /// </summary>
+        public static string Run(out int findingCount)
         {
             var report = new StringBuilder();
             var findings = new List<string>();
@@ -145,6 +153,8 @@ namespace Survive.EditorTools
                 foreach (var kv in _allowed.OrderByDescending(k => k.Value))
                     report.AppendLine($"    {kv.Value,4}  {kv.Key}");
             }
+
+            findingCount = findings.Count;
 
             if (findings.Count == 0)
             {
