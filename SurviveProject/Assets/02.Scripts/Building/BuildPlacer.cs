@@ -209,6 +209,12 @@ namespace Survive.Building
         {
             var kind = _selected.pieceKind;
 
+            // 실패로 끝나더라도 고스트는 조준점에 떠 있어야 한다.
+            // 붙일 자리를 찾으면 아래에서 이 값을 덮어쓴다 — 여기서는 그저
+            // 호출부가 넘긴 기본값(원점)이 새어 나가지 않게 막는다.
+            position = aim;
+            rotation = Quaternion.Euler(0f, _yaw, 0f);
+
             if (SnapGraph.TryFindNearest(aim, kind, _selected.snapRadius, out var snapPos, out var snapRot))
             {
                 position = snapPos;

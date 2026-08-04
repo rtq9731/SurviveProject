@@ -203,4 +203,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 014cea47bcae0694099de283cb1ea57d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Survive.Building.BuildSnapPoint
-  accepts: 0
+  accepts: 3

@@ -82135,6 +82135,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5437813138190112394, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     - target: {fileID: 5569052317820675109, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
       propertyPath: m_TextStyleHashCode
       value: -1183493901
