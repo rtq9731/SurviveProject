@@ -53,6 +53,20 @@ namespace Survive.Building
 
         static readonly Collider[] _overlapBuffer = new Collider[16];
 
+        // ── 겹침 판정 반경 ───────────────────────────────────────
+        //
+        // 겹침 검사는 조준점 그 자리가 아니라 살짝 띄운 높이에서 본다.
+        // 지면에 딱 붙은 콜라이더가 항상 걸려서, 바닥에 놓는 것이 전부 막혔다.
+        const float ClearanceProbeLift = 0.4f;
+
+        // 아래 둘은 한 쌍이다. 먼저 넓은 구로 후보를 긁어모으고(SlotQueryRadius),
+        // 그중 조각의 원점이 실제로 같은 자리인지를 좁은 기준으로 가른다(SlotSameSpotDistance).
+        // 조각의 콜라이더는 원점보다 바깥으로 뻗으므로 그물이 판정 거리보다 넉넉해야 한다 —
+        // SlotQueryRadius < SlotSameSpotDistance가 되면 같은 자리의 조각을 놓치고
+        // 벽이 벽 위에 겹쳐 선다. 둘 중 하나만 만지지 말 것.
+        const float SlotQueryRadius = 1.0f;
+        const float SlotSameSpotDistance = 0.6f;
+
         void Awake()
         {
             if (rayOrigin == null && Camera.main != null) rayOrigin = Camera.main.transform;
@@ -179,7 +193,7 @@ namespace Survive.Building
             if (_selected.clearanceRadius > 0f)
             {
                 int n = Physics.OverlapSphereNonAlloc(
-                    position + Vector3.up * 0.4f, _selected.clearanceRadius,
+                    position + Vector3.up * ClearanceProbeLift, _selected.clearanceRadius,
                     _overlapBuffer, ~0, QueryTriggerInteraction.Ignore);
 
                 for (int i = 0; i < n; i++)
@@ -265,7 +279,7 @@ namespace Survive.Building
         {
             var group = SlotGroup(kind);
 
-            int n = Physics.OverlapSphereNonAlloc(at, 1.0f, _overlapBuffer, ~0,
+            int n = Physics.OverlapSphereNonAlloc(at, SlotQueryRadius, _overlapBuffer, ~0,
                                                   QueryTriggerInteraction.Ignore);
             for (int i = 0; i < n; i++)
             {
@@ -276,7 +290,7 @@ namespace Survive.Building
                 var piece = c.GetComponentInParent<ModularPiece>();
                 if (piece == null) continue;
                 if ((piece.Kind & group) == 0) continue;
-                if (Vector3.Distance(piece.transform.position, at) > 0.6f) continue;
+                if (Vector3.Distance(piece.transform.position, at) > SlotSameSpotDistance) continue;
 
                 return true;
             }
