@@ -21,7 +21,7 @@ namespace Survive.Building
     /// 거점이 아니라 배경이 된다.
     /// </summary>
     [DisallowMultipleComponent]
-    public class Campfire : MonoBehaviour, IInteractable
+    public class Campfire : MonoBehaviour, IInteractable, ILitZoneSource
     {
         [SerializeField] Light flame;
 
@@ -57,6 +57,15 @@ namespace Survive.Building
         public bool IsBurning => _fuel > 0f;
         public float FuelNormalized => maxFuel <= 0f ? 0f : Mathf.Clamp01(_fuel / maxFuel);
 
+        // ── ILitZoneSource ───────────────────────────────────────
+        // 다른 시스템(P4의 습격 AI 등)이 "여기가 밝은가"를 물을 수 있도록
+        // LitZoneRegistry에 자신을 내놓는다. 반경은 실제 빛이 닿는 fullRange를
+        // 그대로 쓴다 — 게임플레이상 "밝다"와 눈에 보이는 빛이 따로 놀면
+        // 플레이어가 판단할 수 없다.
+        public Vector3 LitZoneCenter => flame != null ? flame.transform.position : transform.position;
+        public float LitZoneRadius => fullRange;
+        bool ILitZoneSource.IsLit => IsBurning;
+
         void Awake()
         {
             if (flame == null) flame = GetComponentInChildren<Light>(true);
@@ -66,6 +75,12 @@ namespace Survive.Building
             _fuel = maxFuel * 0.5f;
             ApplyLight();
         }
+
+        void OnEnable() => LitZoneRegistry.Register(this);
+
+        // 비활성화·철거(Destroy)·씬 언로드 모두 OnDisable을 거친다 —
+        // 등록 해제를 여기 한 곳에만 두면 셋 다 저절로 해결된다.
+        void OnDisable() => LitZoneRegistry.Unregister(this);
 
         void Update()
         {
