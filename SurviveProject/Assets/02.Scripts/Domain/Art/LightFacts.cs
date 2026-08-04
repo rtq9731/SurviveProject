@@ -18,14 +18,22 @@ namespace Survive.Domain.Art
         public LightType Type { get; }
         public float Intensity { get; }
 
+        /// <summary>
+        /// 실제로 빛을 내고 있는가(컴포넌트가 켜져 있고 계층도 활성인가).
+        /// 꺼둔 라이트까지 사람에게 보고하면 매번 같은 것을 다시 판정하게 된다 —
+        /// 실제로 꺼둔 Directional을 "태양이 있다"고 계속 보고한 적이 있다.
+        /// </summary>
+        public bool Active { get; }
+
         public LightFacts(string assetPath, string gameObjectName, Color color,
-                          LightType type, float intensity)
+                          LightType type, float intensity, bool active = true)
         {
             AssetPath = assetPath;
             GameObjectName = gameObjectName;
             Color = color;
             Type = type;
             Intensity = intensity;
+            Active = active;
         }
     }
 }

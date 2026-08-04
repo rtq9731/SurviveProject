@@ -83,17 +83,26 @@ namespace Survive.EditorTools
             // Directional은 LightRule이 판정하지 않는다(태양·전역 조명이므로). 하지만
             // 지하 씬에 Directional이 존재하는 것 자체는 원칙 1("지하에 태양이 없다")과
             // 맞는지 사람이 볼 일이다. 프롤로그(StartScene)의 태양은 정당하다(§5).
+            // 꺼둔 것은 보고하지 않는다. 실제로 꺼져 있는 Directional을 계속 보고하는 바람에
+            // 사람이 "왜 자꾸 켜져 있냐"고 되묻는 일이 있었다 — 켜져 있지 않았다.
             var directional = lights.Where(f => f.Type == LightType.Directional)
                                      .OrderBy(f => f.AssetPath).ToList();
-            if (directional.Count > 0)
+            var liveSuns = directional.Where(f => f.Active).ToList();
+            if (liveSuns.Count > 0)
             {
                 sb.AppendLine();
-                sb.AppendLine($"[사람 확인] Directional 라이트 {directional.Count}개 — " +
+                sb.AppendLine($"[사람 확인] 켜져 있는 Directional 라이트 {liveSuns.Count}개 — " +
                               "색은 판정 대상이 아니다(전역/태양광). 지하 씬에 있다면 " +
                               "'지하에 태양 없음' 원칙에 맞는지 사람이 본다");
-                foreach (var f in directional)
+                foreach (var f in liveSuns)
                     sb.AppendLine($"  {f.AssetPath} :: {f.GameObjectName} " +
                                   $"({ColorUtility.ToHtmlStringRGB(f.Color)}, intensity {f.Intensity:0.##})");
+            }
+            int sleeping = directional.Count - liveSuns.Count;
+            if (sleeping > 0)
+            {
+                sb.AppendLine();
+                sb.AppendLine($"[참고] 꺼둔 Directional 라이트 {sleeping}개 — 빛을 내지 않으므로 판정하지 않는다");
             }
 
             // Metallic은 자동 판정하지 않는다. 사람이 볼 목록만 낸다.
@@ -215,6 +224,7 @@ namespace Survive.EditorTools
         }
 
         static LightFacts ToFacts(Light light, string assetPath)
-            => new LightFacts(assetPath, light.gameObject.name, light.color, light.type, light.intensity);
+            => new LightFacts(assetPath, light.gameObject.name, light.color, light.type, light.intensity,
+                              light.enabled && light.gameObject.activeInHierarchy);
     }
 }
