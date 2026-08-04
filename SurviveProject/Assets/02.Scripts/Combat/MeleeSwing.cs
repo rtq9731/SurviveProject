@@ -86,17 +86,24 @@ namespace Survive.Combat
             var candidates = Physics.OverlapSphere(swingOrigin.position, tool.attackRange,
                                              targetMask, QueryTriggerInteraction.Collide);
 
-            float cosLimit = Mathf.Cos(coneAngle * 0.5f * Mathf.Deg2Rad);
+            float cosLimit = MeleeTargeting.ConeCosLimit(coneAngle);
+            Transform self = transform;
 
             foreach (var col in candidates)
             {
                 var target = col.GetComponentInParent<IDamageable>();
                 if (target == null || target.IsDead) continue;
+
+                // 판정 구의 중심이 카메라라 자기 몸은 언제나 후보로 잡힌다.
+                // 고개를 숙였다고 자기 곡괭이에 맞을 이유는 없다.
+                if (MeleeTargeting.IsSelfTarget(self, target)) continue;
+
                 if (_hitThisSwing.Contains(target)) continue;        // 콜라이더 여러 개인 대상 중복 방지
 
-                Vector3 dir = (col.bounds.center - swingOrigin.position).normalized;
-                if (Vector3.Dot(swingOrigin.forward, dir) < cosLimit) continue;
+                Vector3 toTarget = col.bounds.center - swingOrigin.position;
+                if (!MeleeTargeting.IsWithinCone(swingOrigin.forward, toTarget, cosLimit)) continue;
 
+                Vector3 dir = toTarget.normalized;
                 _hitThisSwing.Add(target);
                 target.TakeDamage(new DamageInfo(tool.damage, gameObject,
                                               col.ClosestPoint(swingOrigin.position), -dir));
