@@ -57,15 +57,17 @@ namespace Survive.Testing
             Mark();
 
             // ── 목표 1·2: 걸어서 지대에 들어간다 ────────────────
+            // 트리거는 44m 폭의 판이다. 중심에 설 이유는 없고 — 그 자리는 포탈 장치
+            // 너머 바위 위다 — 게임이 요구하는 것은 판을 밟는 것뿐이다.
             var trigger = GameObject.Find("Trigger_Surveyed");
             E2EHarness.Assert(trigger != null, "탐색 트리거가 있다");
-            yield return E2EHarness.WalkTo(trigger.transform.position, 3f, 45f);
+            yield return E2EHarness.WalkInto(trigger, 60f);
             yield return E2EHarness.WaitUntil(() => dir.CurrentIndex >= 1, "목표1 완료", 6f);
             Lap("목표1 착지 이탈");
 
             var grove = GameObject.Find("LightZone_1");
             E2EHarness.Assert(grove != null, "버섯 군락 지대가 있다");
-            yield return E2EHarness.WalkTo(grove.transform.position, 3f, 60f);
+            yield return E2EHarness.WalkInto(grove, 60f);
             yield return E2EHarness.WaitUntil(() => dir.CurrentIndex >= 2, "목표2 완료", 6f);
             Lap("목표2 군락 발견");
 

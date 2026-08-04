@@ -67,8 +67,10 @@ namespace Survive.Testing
             var trigger = GameObject.Find("Trigger_Surveyed");
             E2EHarness.Assert(trigger != null, "탐색 트리거가 있다");
 
-            E2EHarness.Log("목표1: 트리거까지 걸어간다");
-            yield return E2EHarness.WalkTo(trigger.transform.position, 3f, 30f);
+            // 중심이 아니라 판 안으로 들어간다. 중심은 포탈 장치 너머 바위 위이고,
+            // 목표가 요구하는 것은 착지 지점을 벗어나 판을 밟는 것뿐이다.
+            E2EHarness.Log("목표1: 트리거 안으로 걸어 들어간다");
+            yield return E2EHarness.WalkInto(trigger, 60f);
 
             yield return E2EHarness.WaitUntil(
                 () => dir.CurrentIndex >= 1, "목표1 완료 (착지 이탈)", 5f);
@@ -82,8 +84,8 @@ namespace Survive.Testing
             var zone = GameObject.Find("LightZone_1");
             E2EHarness.Assert(zone != null, "버섯 군락 지대가 있다");
 
-            E2EHarness.Log("목표2: 군락까지 걸어간다");
-            yield return E2EHarness.WalkTo(zone.transform.position, 3f, 40f);
+            E2EHarness.Log("목표2: 군락 안으로 걸어 들어간다");
+            yield return E2EHarness.WalkInto(zone, 60f);
 
             yield return E2EHarness.WaitUntil(
                 () => dir.CurrentIndex >= 2, "목표2 완료 (군락 발견)", 5f);

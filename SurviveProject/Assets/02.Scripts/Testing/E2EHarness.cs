@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using UnityEngine.AI;
@@ -278,10 +279,13 @@ namespace Survive.Testing
         }
 
         public static IEnumerator WalkTo(Vector3 destination, float arriveRadius = 2.0f,
-                                         float timeout = 30f, bool throwOnTimeout = true)
+                                         float timeout = 30f, bool throwOnTimeout = true,
+                                         Func<bool> arrived = null)
         {
-            var corners = PathCorners(Player.transform.position, destination);
             float deadline = Time.time + timeout;
+
+            Vector3[] corners = null;
+            yield return ResolvePath(Player.transform.position, destination, r => corners = r);
 
             if (corners.Length > 1)
                 Log($"  경로 {corners.Length - 1}구간");
@@ -289,12 +293,16 @@ namespace Survive.Testing
             // 마지막 코너를 뺀 중간 코너들은 통과만 하면 되므로 넉넉히 잡는다
             for (int i = 1; i < corners.Length; i++)
             {
+                if (arrived != null && arrived()) yield break;
+
                 bool isLast = i == corners.Length - 1;
                 Vector3 leg = isLast ? destination : corners[i];
                 float radius = isLast ? arriveRadius : 1.2f;
 
-                yield return WalkLeg(leg, radius, deadline);
+                yield return WalkLeg(leg, radius, deadline, arrived);
             }
+
+            if (arrived != null && arrived()) yield break;
 
             var remain = destination - Player.transform.position;
             remain.y = 0f;
@@ -307,26 +315,123 @@ namespace Survive.Testing
             Log($"  [도달 실패] {timeout}초 안에 도착하지 못함 (남은 거리 {remain.magnitude:F1}m)");
         }
 
+        /// <summary>물리로 길을 다시 뚫어 볼 최대 거리. 이보다 멀면 비용이 이득을 넘는다.</summary>
+        const float TerrainPathMaxDistance = 60f;
+
         /// <summary>
-        /// NavMesh 경로의 꼭짓점들. 못 뽑으면 시작점과 목표점만 돌려준다.
-        /// 굽는 NavMesh가 없거나 목표가 메시 밖일 수 있으므로 실패해도 진행한다.
+        /// 걸어갈 길의 꼭짓점들.
+        ///
+        /// NavMesh를 먼저 묻고, <b>온전한 경로일 때만</b> 쓴다. 부분 경로(PathPartial)는
+        /// "여기까지는 갈 수 있다"가 아니라 "이 방향으로 최선을 다했다"에 가깝다 —
+        /// 굽고 난 뒤에 놓인 소품(챕터 1 첫 목표 앞의 포탈 장치) 때문에 벽 한가운데를
+        /// 가리키는 경우가 있고, 믿고 걸으면 그 벽에 코를 박는다.
+        ///
+        /// 그럴 때는 지형을 직접 두드려 길을 찾는다. 그것도 실패하면 직선이다 —
+        /// 못 가는 것과 안 가 본 것은 다르므로, 일단 걸어 보고 실패는 실패로 남긴다.
         /// </summary>
-        static Vector3[] PathCorners(Vector3 from, Vector3 to)
+        static IEnumerator ResolvePath(Vector3 from, Vector3 to, Action<Vector3[]> result)
         {
-            var fallback = new[] { from, to };
+            var straight = new[] { from, to };
 
-            if (!NavMesh.SamplePosition(from, out var a, 6f, NavMesh.AllAreas)) return fallback;
-            if (!NavMesh.SamplePosition(to, out var b, 6f, NavMesh.AllAreas)) return fallback;
+            var flat = to - from;
+            flat.y = 0f;
+            bool canProbe = flat.magnitude <= TerrainPathMaxDistance;
 
-            var path = new NavMeshPath();
-            if (!NavMesh.CalculatePath(a.position, b.position, NavMesh.AllAreas, path)) return fallback;
-            if (path.corners == null || path.corners.Length < 2) return fallback;
+            if (NavMesh.SamplePosition(from, out var a, 6f, NavMesh.AllAreas) &&
+                NavMesh.SamplePosition(to, out var b, 6f, NavMesh.AllAreas))
+            {
+                var path = new NavMeshPath();
+                if (NavMesh.CalculatePath(a.position, b.position, NavMesh.AllAreas, path) &&
+                    path.status == NavMeshPathStatus.PathComplete &&
+                    path.corners != null && path.corners.Length >= 2)
+                {
+                    // 온전한 경로라도 그대로 믿지 않는다. NavMesh는 굽고 난 뒤에 놓인
+                    // 소품을 모르므로, "온전한 길"이 소품 한가운데를 지날 수 있다.
+                    // 사람 몸통이 실제로 들어가는지 구간마다 찍어 본다.
+                    if (!canProbe || LegsFitAPerson(path.corners))
+                    {
+                        result(path.corners);
+                        yield break;
+                    }
+                    Log("  [경로] NavMesh 경로가 소품을 관통한다 — 지형을 직접 두드린다");
+                }
+            }
 
-            return path.corners;
+            if (!canProbe)
+            {
+                Log($"  [경로] NavMesh가 온전한 길을 못 냈다. {flat.magnitude:F0}m는 " +
+                    "직접 두드리기엔 멀어 직선으로 간다");
+                result(straight);
+                yield break;
+            }
+
+            List<Vector3> terrain = null;
+            yield return E2ETerrainPath.Find(from, to, r => terrain = r);
+
+            if (terrain == null || terrain.Count < 2)
+            {
+                Log("  [경로] 지형을 두드려도 길이 없다. 직선으로 간다");
+                result(straight);
+                yield break;
+            }
+
+            Log($"  [경로] NavMesh 대신 지형에서 {terrain.Count - 1}구간을 찾았다 " +
+                $"(셀 {E2ETerrainPath.LastExpandedCells}개, " +
+                (E2ETerrainPath.LastPathComplete ? "목표까지" : "갈 수 있는 데까지") + ")");
+            result(terrain.ToArray());
         }
 
-        /// <summary>한 구간을 걷는다. 끼면 옆걸음과 점프로 빼낸다.</summary>
-        static IEnumerator WalkLeg(Vector3 leg, float arriveRadius, float deadline)
+        /// <summary>
+        /// 경로 위 어디에서나 사람이 서 있을 수 있는가.
+        ///
+        /// 1m 간격으로 지면을 찾고 그 자리에 몸통이 들어가는지 본다.
+        /// 경사는 통과시키고 벽·소품은 걸러 낸다 — 직선 캡슐 캐스트로 검사하면
+        /// 오르막마다 걸려 멀쩡한 경로까지 버리게 된다.
+        /// </summary>
+        static bool LegsFitAPerson(Vector3[] corners)
+        {
+            var cc = Player.GetComponent<CharacterController>();
+            float radius = cc != null ? cc.radius : 0.5f;
+            float height = cc != null ? cc.height : 1.8f;
+            var mine = new HashSet<Collider>(Player.GetComponentsInChildren<Collider>(true));
+
+            for (int i = 1; i < corners.Length; i++)
+            {
+                Vector3 from = corners[i - 1], to = corners[i];
+                float len = Vector3.Distance(from, to);
+                int steps = Mathf.CeilToInt(len);
+
+                // 시작점은 지금 서 있는 자리이므로 건너뛴다
+                for (int s = 1; s <= steps; s++)
+                {
+                    var p = Vector3.Lerp(from, to, s / (float)steps);
+
+                    var hits = Physics.RaycastAll(p + Vector3.up * 6f, Vector3.down, 14f,
+                                                  ~0, QueryTriggerInteraction.Ignore);
+                    float groundY = float.NaN, nearest = float.MaxValue;
+                    for (int h = 0; h < hits.Length; h++)
+                    {
+                        if (mine.Contains(hits[h].collider) || hits[h].distance >= nearest) continue;
+                        nearest = hits[h].distance;
+                        groundY = hits[h].point.y;
+                    }
+                    if (float.IsNaN(groundY)) continue;   // 지면을 못 찾으면 판단을 보류한다
+
+                    var overlap = Physics.OverlapCapsule(
+                        new Vector3(p.x, groundY + radius + 0.06f, p.z),
+                        new Vector3(p.x, groundY + height - radius + 0.06f, p.z),
+                        radius * 0.85f, ~0, QueryTriggerInteraction.Ignore);
+
+                    for (int o = 0; o < overlap.Length; o++)
+                        if (!mine.Contains(overlap[o])) return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>한 구간을 걷는다. 끼면 열린 쪽으로 밀어붙여 빼낸다.</summary>
+        static IEnumerator WalkLeg(Vector3 leg, float arriveRadius, float deadline,
+                                   Func<bool> arrived = null)
         {
             var rig = Player.CameraRig;
 
@@ -335,11 +440,18 @@ namespace Survive.Testing
             Vector3 lastReported = Player.transform.position;
             Vector3 lastStuckPos = lastReported;
             int sidestep = 0;
+            _detourSign = 0;
 
             yield return PressKey(Key.W);
 
             while (Time.time < deadline)
             {
+                if (arrived != null && arrived())
+                {
+                    yield return ReleaseKey(Key.W);
+                    yield break;
+                }
+
                 var current = Player.transform.position;
                 Vector3 d = leg - current;
                 d.y = 0f;
@@ -373,8 +485,8 @@ namespace Survive.Testing
                     if (stuck)
                     {
                         sidestep++;
-                        Log($"    막힘 — 옆걸음 {sidestep}회");
-                        yield return Unstick(sidestep);
+                        Log($"    막힘 — 우회 {sidestep}회");
+                        yield return Unstick(leg, sidestep);
                         lastStuckPos = Player.transform.position;
                         nextStuckCheck = Time.time + 0.5f;
                         continue;
@@ -387,29 +499,218 @@ namespace Survive.Testing
             yield return ReleaseKey(Key.W);
         }
 
-        /// <summary>
-        /// 낀 상태에서 빠져나온다. 좌우를 번갈아 시도하고 점프도 섞는다 —
-        /// 낮은 턱이면 점프로, 옆이 막힌 바위면 옆걸음으로 풀린다.
-        /// </summary>
-        static IEnumerator Unstick(int attempt)
-        {
-            Key side = attempt % 2 == 1 ? Key.A : Key.D;
+        /// <summary>이번 구간에서 고른 우회 방향. 0이면 아직 안 골랐다.</summary>
+        static int _detourSign;
 
-            _keys.Set(side, true);
-            QueueKeys();
+        /// <summary>
+        /// 낀 상태에서 빠져나온다.
+        ///
+        /// 전에는 A/D를 번갈아 눌렀다. 그러면 같은 벽 앞을 좌우로 왕복만 한다 —
+        /// 챕터 1 첫 목표 앞의 포탈 장치에서 옆걸음 24회를 그렇게 소진하고
+        /// 제자리에서 시간이 끝났다. 왕복은 시도 횟수만 늘리고 아무것도 바꾸지 않는다.
+        ///
+        /// 이제는 실제로 <b>뚫려 있는 방향을 찾아</b> 그쪽으로 밀어붙인다.
+        /// 한 번 고른 쪽은 계속 유지하고, 시도가 거듭될수록 더 멀리 간다 —
+        /// 장애물을 돌아 나가려면 결국 한쪽으로 충분히 가야 한다.
+        /// 낮은 턱은 점프로 넘어가므로 점프도 섞는다.
+        /// </summary>
+        static IEnumerator Unstick(Vector3 goal, int attempt)
+        {
+            var rig = Player.CameraRig;
+            Vector3 toGoal = goal - Player.transform.position;
+            toGoal.y = 0f;
+            if (toGoal.sqrMagnitude < 1e-4f) toGoal = Player.transform.forward;
+            toGoal.Normalize();
+
+            if (_detourSign == 0) _detourSign = 1;
+            // 같은 쪽으로 세 번 밀어도 안 되면 반대쪽이 정답이다
+            else if (attempt % 3 == 1) _detourSign = -_detourSign;
+
+            Vector3 detour = PickOpenDirection(toGoal, _detourSign);
+
+            // 뒤로 물러설 곳조차 없으면 점프로라도 턱을 넘어 본다
+            if (detour == Vector3.zero)
+            {
+                yield return TapKey(Key.Space);
+                float w = 0f;
+                while (w < 0.4f) { QueueKeys(); w += Time.deltaTime; yield return null; }
+                yield break;
+            }
+
+            rig.SetLook(Mathf.Atan2(detour.x, detour.z) * Mathf.Rad2Deg, 0f);
+            yield return PressKey(Key.W);
 
             if (attempt % 3 == 0) yield return TapKey(Key.Space);
 
+            // 시도가 거듭될수록 더 멀리 — 큰 소품은 몇 미터로는 돌아 나가지지 않는다
+            float hold = Mathf.Min(0.9f + 0.5f * attempt, 3.0f);
             float t = 0f;
-            while (t < 0.7f)
+            while (t < hold)
             {
+                rig.SetLook(Mathf.Atan2(detour.x, detour.z) * Mathf.Rad2Deg, 0f);
                 QueueKeys();
                 t += Time.deltaTime;
                 yield return null;
             }
 
-            _keys.Set(side, false);
-            yield return SendKeyState();
+            yield return ReleaseKey(Key.W);
+        }
+
+        /// <summary>
+        /// 목표 쪽을 향하면서도 실제로 뚫려 있는 방향.
+        /// 목표에 가까운 각도부터 훑어 첫 번째로 뚫린 것을 고른다.
+        /// 아무 데도 안 뚫렸으면 Vector3.zero.
+        /// </summary>
+        static Vector3 PickOpenDirection(Vector3 toGoal, int sign)
+        {
+            var cc = Player.GetComponent<CharacterController>();
+            float radius = cc != null ? cc.radius : 0.5f;
+            float height = cc != null ? cc.height : 1.8f;
+
+            Vector3 feet = Player.transform.position - Vector3.up * (height * 0.5f - radius);
+            Vector3 head = feet + Vector3.up * (height - 2f * radius);
+
+            foreach (float degrees in new[] { 55f, 90f, 125f, 160f })
+            {
+                var dir = Quaternion.Euler(0f, degrees * sign, 0f) * toGoal;
+                float need = Mathf.Lerp(2.5f, 1.2f, degrees / 160f);
+
+                if (!Physics.CapsuleCast(feet, head, radius * 0.9f, dir, out _, need,
+                                         ~0, QueryTriggerInteraction.Ignore))
+                    return dir;
+            }
+            return Vector3.zero;
+        }
+
+        // ── 볼륨 안으로 들어가기 ─────────────────────────────────
+
+        /// <summary>
+        /// 트리거 볼륨 <b>안으로</b> 걸어 들어간다.
+        ///
+        /// 왜 중심으로 걸어가면 안 되는가: 챕터 1의 탐색 트리거는 44m 폭의 판인데
+        /// 그 중심은 포탈 장치 너머 바위 위다. 게임이 요구하는 것은 "판을 밟는 것"이고
+        /// 중심에 설 이유는 어디에도 없다. 중심을 목표로 잡으면 밟을 필요도 없는
+        /// 바위를 기어오르다 실패하고, 그건 게임의 결함이 아니라 검사의 결함이다.
+        ///
+        /// 그래서 볼륨 안에서 <b>실제로 설 수 있는 가장 가까운 자리</b>를 골라 걸어가고,
+        /// 걷는 도중 볼륨에 들어간 순간 멈춘다.
+        /// </summary>
+        public static IEnumerator WalkInto(GameObject volume, float timeout = 45f,
+                                           bool throwOnTimeout = true)
+        {
+            if (volume == null) throw new InvalidOperationException("들어갈 볼륨이 없습니다");
+
+            var col = volume.GetComponent<Collider>() ?? volume.GetComponentInChildren<Collider>();
+            if (col == null)
+            {
+                Log($"  {volume.name}에 콜라이더가 없다 — 중심으로 걸어간다");
+                yield return WalkTo(volume.transform.position, 3f, timeout, throwOnTimeout);
+                yield break;
+            }
+
+            var box = col.bounds;
+            bool Inside() => box.Contains(Player.transform.position);
+
+            if (Inside())
+            {
+                Log($"  이미 {volume.name} 안에 있다");
+                yield break;
+            }
+
+            var spots = StandableSpotsInside(box);
+            if (spots.Count == 0)
+            {
+                Log($"  [배치 문제] {volume.name} 안에 설 수 있는 자리가 없다 — 중심으로 시도한다");
+                spots.Add(volume.transform.position);
+            }
+
+            Log($"  {volume.name}: 설 수 있는 자리 {spots.Count}곳, " +
+                $"가장 가까운 곳 {spots[0].ToString("F1")}");
+
+            float deadline = Time.time + timeout;
+            int tried = 0;
+
+            foreach (var spot in spots)
+            {
+                if (tried++ >= 3 || Time.time >= deadline) break;
+
+                yield return WalkTo(spot, 1.5f, Mathf.Max(4f, deadline - Time.time),
+                                    throwOnTimeout: false, arrived: Inside);
+                if (Inside()) break;
+
+                Log($"  {spot.ToString("F1")}에 닿지 못했다 — 다음 자리를 본다");
+            }
+
+            if (Inside())
+            {
+                Log($"  {volume.name} 안으로 들어갔다 ({Player.transform.position.ToString("F1")})");
+                yield break;
+            }
+
+            var d = volume.transform.position - Player.transform.position;
+            d.y = 0f;
+            string reason = $"볼륨 진입 실패: {volume.name} 안으로 들어가지 못함 " +
+                            $"(중심까지 {d.magnitude:F1}m)";
+            if (throwOnTimeout) throw new TimeoutException(reason);
+            Log("  [도달 실패] " + reason);
+        }
+
+        /// <summary>
+        /// 볼륨 안에서 사람이 실제로 설 수 있는 자리들. 가까운 순.
+        /// 지면을 찾고 몸통이 들어가는지까지 확인한다 — 바위 속은 자리가 아니다.
+        /// </summary>
+        static List<Vector3> StandableSpotsInside(Bounds box)
+        {
+            var cc = Player.GetComponent<CharacterController>();
+            float radius = cc != null ? cc.radius : 0.5f;
+            float height = cc != null ? cc.height : 1.8f;
+
+            var mine = new HashSet<Collider>(Player.GetComponentsInChildren<Collider>(true));
+            var from = Player.transform.position;
+            var found = new List<Vector3>();
+
+            // 넓은 판은 전부 훑을 이유가 없다. 플레이어 쪽 가장자리부터 촘촘히 본다.
+            float step = Mathf.Max(1f, Mathf.Min(box.size.x, box.size.z) / 12f);
+
+            for (float x = box.min.x + step * 0.5f; x <= box.max.x; x += step)
+            for (float z = box.min.z + step * 0.5f; z <= box.max.z; z += step)
+            {
+                var top = new Vector3(x, box.max.y + 1f, z);
+                var hits = Physics.RaycastAll(top, Vector3.down, box.size.y + 3f,
+                                              ~0, QueryTriggerInteraction.Ignore);
+                float groundY = float.NaN, nearest = float.MaxValue;
+                for (int i = 0; i < hits.Length; i++)
+                {
+                    if (mine.Contains(hits[i].collider) || hits[i].distance >= nearest) continue;
+                    nearest = hits[i].distance;
+                    groundY = hits[i].point.y;
+                }
+                if (float.IsNaN(groundY)) continue;
+
+                var stand = new Vector3(x, groundY + height * 0.5f, z);
+                if (!box.Contains(stand)) continue;
+
+                var overlap = Physics.OverlapCapsule(
+                    new Vector3(x, groundY + radius + 0.06f, z),
+                    new Vector3(x, groundY + height - radius + 0.06f, z),
+                    radius * 0.9f, ~0, QueryTriggerInteraction.Ignore);
+
+                bool blocked = false;
+                for (int i = 0; i < overlap.Length; i++)
+                    if (!mine.Contains(overlap[i])) { blocked = true; break; }
+                if (blocked) continue;
+
+                found.Add(stand);
+            }
+
+            // 높이 차이에 벌점을 준다. 몇 미터 옆의 평지를 두고 바로 앞의 바위 위를
+            // 고르면, 오를 수 있을지도 모르는 턱을 기어오르느라 시간을 다 쓴다.
+            float Cost(Vector3 p) =>
+                Vector2.Distance(new Vector2(p.x, p.z), new Vector2(from.x, from.z))
+                + Mathf.Abs(p.y - from.y) * 3f;
+
+            found.Sort((a, b) => Cost(a).CompareTo(Cost(b)));
+            return found;
         }
 
         // ── 대기와 단언 ──────────────────────────────────────────

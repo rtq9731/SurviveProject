@@ -327,7 +327,7 @@ namespace Survive.Testing
             while (_frozen) yield return null;
         }
 
-        /// <summary>목표 1의 트리거까지 실제로 걸어가는 것만 따로 본다.</summary>
+        /// <summary>목표 1의 트리거 안까지 실제로 걸어 들어가는 것만 따로 본다.</summary>
         public static IEnumerator WalkToTrigger()
         {
             var trigger = GameObject.Find("Trigger_Surveyed");
@@ -337,7 +337,9 @@ namespace Survive.Testing
             E2EHarness.Log($"  {from.ToString("F1")} -> {trigger.transform.position.ToString("F1")} " +
                            $"({Vector3.Distance(from, trigger.transform.position):F1}m)");
 
-            yield return E2EHarness.WalkTo(trigger.transform.position, 3f, 30f);
+            // 판의 중심은 포탈 장치 너머 바위 위다. 목표가 요구하는 것은 판을 밟는 것뿐이고,
+            // 중심을 목표로 잡으면 게임이 아니라 검사가 실패한다.
+            yield return E2EHarness.WalkInto(trigger, 60f);
         }
 
         /// <summary>탭으로는 채집이 되지 않아야 한다. 홀드형이라는 계약의 확인.</summary>
