@@ -77,6 +77,12 @@ namespace Survive.Vitals
                 deathFeedback?.PlayFeedbacks();
                 Died?.Invoke();
             }
+            // 체력이 돌아오면 다음 사망을 다시 보고한다. 걸쇠를 풀지 않으면
+            // 한 판에 한 번만 죽을 수 있고, 사망 드롭도 첫 죽음에서만 걸린다.
+            else if (!Health.IsEmpty && _deathReported)
+            {
+                _deathReported = false;
+            }
         }
 
         void RefreshOxygenWarning()
