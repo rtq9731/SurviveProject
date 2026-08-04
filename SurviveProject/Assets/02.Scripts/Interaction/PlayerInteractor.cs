@@ -70,6 +70,13 @@ namespace Survive.Interaction
             IInteractable found = null;
             float nearest = float.MaxValue;
 
+            // 시작 지점에서 이미 겹쳐 있는 콜라이더는 거리 0으로 돌아온다.
+            // 그대로 거리로 쓰면 "몸이 그 안에 들어가 있는 것"이 언제나 1등이 되어,
+            // 코앞의 통을 보고 있어도 발밑 고사리가 잡힌다 — 채집 편의를 위해 붙인
+            // 넓은 InteractBounds(약 3m) 안에 서면 다른 것은 아무것도 조준되지 않았다.
+            // 겹친 것은 <b>겨눈 것이 하나도 없을 때만</b> 쓰는 차선책으로 내린다.
+            IInteractable enclosing = null;
+
             foreach (var hit in hits)
             {
                 if (IsOwnBody(hit.collider)) continue;
@@ -77,12 +84,20 @@ namespace Survive.Interaction
                 var candidates = hit.collider.GetComponentInParent<IInteractable>();
                 if (candidates == null) continue;
 
+                if (hit.distance <= 0f)
+                {
+                    if (enclosing == null) enclosing = candidates;
+                    continue;
+                }
+
                 if (hit.distance < nearest)
                 {
                     nearest = hit.distance;
                     found = candidates;
                 }
             }
+
+            if (found == null) found = enclosing;
 
             if (!ReferenceEquals(found, Current))
             {
