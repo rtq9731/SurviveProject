@@ -59,6 +59,11 @@ namespace Survive.Creatures
 
             if (agent != null && definition != null) agent.speed = definition.moveSpeed;
             if (flyer != null && definition != null) flyer.Speed = definition.moveSpeed;
+
+            // NavMeshAgent도 FlyerMotor도 물리를 보지 않는다. 벽 앞에서 멈추는 일은
+            // 이동이 끝난 뒤에 따로 처리한다. 씬·프리팹을 고치지 않으려고 여기서 붙인다.
+            if (GetComponent<CreatureCollisionGuard>() == null)
+                gameObject.AddComponent<CreatureCollisionGuard>();
         }
 
         void OnEnable()
