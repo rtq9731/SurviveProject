@@ -46,11 +46,53 @@ namespace Survive.Testing
         public static IEnumerator Find(Vector3 from, Vector3 to, Action<List<Vector3>> result,
                                        float searchRadius = 45f, int budget = 9000)
         {
-            LastPathComplete = false;
-            LastExpandedCells = 0;
-
             var probe = new Probe(from, searchRadius);
             var goalCell = probe.ToCell(to);
+
+            yield return Search(probe, from,
+                                c => probe.Heuristic(c, goalCell),
+                                c => c == goalCell || probe.Heuristic(c, goalCell) <= CellSize * 1.5f,
+                                result, budget);
+        }
+
+        /// <summary>
+        /// 볼륨 <b>안까지</b>의 길.
+        ///
+        /// 한 점을 목표로 잡고 안 되면 다른 점을 잡는 식으로는 오래 걸리고
+        /// 자주 실패한다 — 볼륨 안에서 설 수 있는 자리가 수백 곳인데 그중
+        /// 걸어서 닿는 곳이 어디인지는 걸어 봐야 알기 때문이다.
+        /// 목표를 "이 볼륨 안 아무 데나"로 두면 탐색 한 번으로 끝난다.
+        /// </summary>
+        public static IEnumerator FindInto(Vector3 from, Bounds volume, Action<List<Vector3>> result,
+                                           float searchRadius = 60f, int budget = 12000)
+        {
+            var probe = new Probe(from, searchRadius);
+
+            // 가장자리 칸을 목표로 삼으면, 도착 판정 반경만큼 못 미친 자리가
+            // 그대로 볼륨 밖이 된다 — "도착했는데 안 들어갔다"가 된다.
+            // 목표를 안쪽으로 물려 잡아 도착하면 확실히 안이 되게 한다.
+            var inner = volume;
+            float inset = Mathf.Min(1.5f, Mathf.Min(volume.size.x, volume.size.z) * 0.25f);
+            inner.size = new Vector3(Mathf.Max(0.2f, volume.size.x - inset * 2f), volume.size.y,
+                                     Mathf.Max(0.2f, volume.size.z - inset * 2f));
+
+            float ToVolume(Vector2Int c)
+            {
+                var w = probe.ToWorld(c);
+                var near = inner.ClosestPoint(w);
+                return Vector2.Distance(new Vector2(w.x, w.z), new Vector2(near.x, near.z));
+            }
+
+            yield return Search(probe, from, ToVolume, c => inner.Contains(probe.ToWorld(c)),
+                                result, budget);
+        }
+
+        static IEnumerator Search(Probe probe, Vector3 from, Func<Vector2Int, float> heuristic,
+                                  Func<Vector2Int, bool> isGoal, Action<List<Vector3>> result,
+                                  int budget)
+        {
+            LastPathComplete = false;
+            LastExpandedCells = 0;
 
             var startCell = probe.ToCell(from);
             if (float.IsNaN(probe.GroundAt(startCell)))
@@ -63,10 +105,10 @@ namespace Survive.Testing
             var came = new Dictionary<Vector2Int, Vector2Int>();
             var cost = new Dictionary<Vector2Int, float> { [startCell] = 0f };
             var open = new SimpleHeap();
-            open.Push(startCell, probe.Heuristic(startCell, goalCell));
+            open.Push(startCell, heuristic(startCell));
 
             var best = startCell;
-            float bestH = probe.Heuristic(startCell, goalCell);
+            float bestH = heuristic(startCell);
             int expanded = 0, sinceYield = 0;
             bool reached = false;
 
@@ -75,10 +117,10 @@ namespace Survive.Testing
                 var cur = open.Pop();
                 expanded++;
 
-                float h = probe.Heuristic(cur, goalCell);
+                float h = heuristic(cur);
                 if (h < bestH) { bestH = h; best = cur; }
 
-                if (cur == goalCell || h <= CellSize * 1.5f)
+                if (isGoal(cur))
                 {
                     best = cur;
                     reached = true;
@@ -92,7 +134,7 @@ namespace Survive.Testing
 
                     cost[next] = step;
                     came[next] = cur;
-                    open.Push(next, step + probe.Heuristic(next, goalCell));
+                    open.Push(next, step + heuristic(next));
                 }
 
                 if (++sinceYield >= NodesPerFrame) { sinceYield = 0; yield return null; }

@@ -238,11 +238,16 @@ namespace Survive.Testing
             float wait = 0f;
             while (wait < 0.8f) { wait += Time.deltaTime; yield return null; }
 
+            // 포기한 것을 기억한다. Destroy는 프레임 끝에야 실제로 지워지므로
+            // 바로 다음 순회에서 같은 것이 또 잡히고, 그 다음엔 이미 지워진 것을
+            // 만지다 터진다 — 실제로 그렇게 시나리오가 죽었다.
+            var 포기한것 = new HashSet<ItemPickup>();
+
             for (int n = 0; n < 8; n++)
             {
                 var from = E2EHarness.Player.transform.position;
                 var drop = Object.FindObjectsByType<ItemPickup>(FindObjectsSortMode.None)
-                    .Where(p => p.name.StartsWith("Drop_") &&
+                    .Where(p => p != null && !포기한것.Contains(p) && p.name.StartsWith("Drop_") &&
                                 Vector3.Distance(p.transform.position, from) < 14f)
                     .OrderBy(p => Vector3.Distance(p.transform.position, from))
                     .FirstOrDefault();
@@ -252,7 +257,9 @@ namespace Survive.Testing
                 if (!E2EHarness.LastWalkArrived)
                 {
                     E2EHarness.Log("  [배치 문제] 떨어진 것에 닿지 못한다: " + drop.name);
+                    포기한것.Add(drop);
                     Object.Destroy(drop.gameObject);
+                    yield return null;
                     continue;
                 }
                 E2EHarness.LookAt(drop.transform.position);
@@ -264,7 +271,9 @@ namespace Survive.Testing
                 if (it.Current == null)
                 {
                     E2EHarness.Log("  [배치 문제] 떨어진 것을 주울 수 없다: " + drop.name);
+                    포기한것.Add(drop);
                     Object.Destroy(drop.gameObject);   // 무한 루프를 막는다
+                    yield return null;
                     continue;
                 }
 

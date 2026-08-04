@@ -439,7 +439,8 @@ namespace Survive.Testing
             float nextStuckCheck = Time.time + 0.5f;
             Vector3 lastReported = Player.transform.position;
             Vector3 lastStuckPos = lastReported;
-            int sidestep = 0;
+            Vector3 lastFree = lastReported;
+            int sidestep = 0, frozen = 0;
             _detourSign = 0;
 
             yield return PressKey(Key.W);
@@ -464,6 +465,10 @@ namespace Survive.Testing
                 }
 
                 rig.SetLook(Mathf.Atan2(d.x, d.z) * Mathf.Rad2Deg, 0f);
+
+                // 매 프레임 W를 다시 세운다. 우회 처리가 키를 떼고 돌아오면
+                // 이후로는 영원히 제자리다 — 실제로 그렇게 49번을 헛돌았다.
+                _keys.Set(Key.W, true);
                 QueueKeys();
 
                 // 왜 매 초 기록하는가: 실패했을 때 "안 움직였다 / 막혔다 / 엉뚱한 데로 갔다"를
@@ -479,6 +484,7 @@ namespace Survive.Testing
                 if (Time.time >= nextStuckCheck)
                 {
                     bool stuck = Vector3.Distance(current, lastStuckPos) < 0.15f;
+                    if (!stuck) lastFree = current;   // 마지막으로 실제로 걷던 자리
                     lastStuckPos = current;
                     nextStuckCheck = Time.time + 0.5f;
 
@@ -486,7 +492,25 @@ namespace Survive.Testing
                     {
                         sidestep++;
                         Log($"    막힘 — 우회 {sidestep}회");
+
+                        var beforeDetour = Player.transform.position;
                         yield return Unstick(leg, sidestep);
+
+                        // 우회해도 한 발짝도 못 움직이면 낀 게 아니라 박힌 것이다.
+                        // 남은 시간을 다 태워도 결과는 같으니 여기서 접고 알린다.
+                        frozen = Vector3.Distance(beforeDetour, Player.transform.position) < 0.2f
+                               ? frozen + 1 : 0;
+                        if (frozen >= 6)
+                        {
+                            yield return ReleaseKey(Key.W);
+                            Log($"    [끼임] {current.ToString("F1")}에서 우회 6회 연속 무효 — " +
+                                $"마지막으로 걷던 자리 {lastFree.ToString("F1")}로 되돌린다");
+                            // 박힌 자리에 그대로 두면 이후 모든 걸음이 여기서 죽는다.
+                            // 되돌리되 반드시 남긴다 — 여기서 낀다는 사실이 곧 지형 정보다.
+                            Teleport(lastFree);
+                            yield break;
+                        }
+
                         lastStuckPos = Player.transform.position;
                         nextStuckCheck = Time.time + 0.5f;
                         continue;
@@ -542,8 +566,9 @@ namespace Survive.Testing
 
             if (attempt % 3 == 0) yield return TapKey(Key.Space);
 
-            // 시도가 거듭될수록 더 멀리 — 큰 소품은 몇 미터로는 돌아 나가지지 않는다
-            float hold = Mathf.Min(0.9f + 0.5f * attempt, 3.0f);
+            // 시도가 거듭될수록 조금씩 더 멀리 — 큰 소품은 몇 미터로는 돌아 나가지지
+            // 않는다. 다만 너무 멀리 가면 목표를 잃고 헤매게 되므로 상한을 둔다.
+            float hold = Mathf.Min(0.9f + 0.35f * attempt, 1.8f);
             float t = 0f;
             while (t < hold)
             {
@@ -553,7 +578,7 @@ namespace Survive.Testing
                 yield return null;
             }
 
-            yield return ReleaseKey(Key.W);
+            // W는 떼지 않는다. 부르는 쪽(WalkLeg)이 계속 누른 상태를 전제로 돈다.
         }
 
         /// <summary>
@@ -617,28 +642,45 @@ namespace Survive.Testing
                 yield break;
             }
 
-            var spots = StandableSpotsInside(box);
-            if (spots.Count == 0)
+            float deadline = Time.time + timeout;
+
+            // 먼저 "이 볼륨 안 아무 데나"를 목표로 길을 찾는다. 점 하나를 정해 놓고
+            // 안 되면 다른 점을 잡는 식은, 볼륨 안 수백 곳 중 어디가 걸어서 닿는
+            // 곳인지 걸어 봐야 알기 때문에 시간만 쓰고 자주 실패한다.
+            List<Vector3> route = null;
+            yield return E2ETerrainPath.FindInto(Player.transform.position, box, r => route = r);
+
+            if (route != null && route.Count > 1)
             {
-                Log($"  [배치 문제] {volume.name} 안에 설 수 있는 자리가 없다 — 중심으로 시도한다");
-                spots.Add(volume.transform.position);
+                Log($"  {volume.name}까지 지형에서 {route.Count - 1}구간 " +
+                    $"(셀 {E2ETerrainPath.LastExpandedCells}개, " +
+                    (E2ETerrainPath.LastPathComplete ? "볼륨 안까지" : "갈 수 있는 데까지") + ")");
+
+                for (int i = 1; i < route.Count && !Inside() && Time.time < deadline; i++)
+                    yield return WalkLeg(route[i], 1.0f, deadline, Inside);
             }
 
-            Log($"  {volume.name}: 설 수 있는 자리 {spots.Count}곳, " +
-                $"가장 가까운 곳 {spots[0].ToString("F1")}");
-
-            float deadline = Time.time + timeout;
-            int tried = 0;
-
-            foreach (var spot in spots)
+            // 길을 못 찾았거나 도중에 막혔으면, 설 수 있는 자리들을 차례로 노려 본다.
+            if (!Inside())
             {
-                if (tried++ >= 3 || Time.time >= deadline) break;
+                var spots = StandableSpotsInside(box);
+                if (spots.Count == 0)
+                {
+                    Log($"  [배치 문제] {volume.name} 안에 설 수 있는 자리가 없다 — 중심으로 시도한다");
+                    spots.Add(volume.transform.position);
+                }
+                Log($"  {volume.name}: 설 수 있는 자리 {spots.Count}곳, " +
+                    $"가장 가까운 곳 {spots[0].ToString("F1")}");
 
-                yield return WalkTo(spot, 1.5f, Mathf.Max(4f, deadline - Time.time),
-                                    throwOnTimeout: false, arrived: Inside);
-                if (Inside()) break;
-
-                Log($"  {spot.ToString("F1")}에 닿지 못했다 — 다음 자리를 본다");
+                // 남은 시간을 셋으로 나눈다. 첫 자리가 시간을 다 쓰면
+                // 나머지는 이름만 시도가 된다.
+                for (int i = 0; i < 3 && i < spots.Count && !Inside(); i++)
+                {
+                    float share = Mathf.Max(6f, (deadline - Time.time) / (3 - i));
+                    yield return WalkTo(spots[i], 1.0f, share,
+                                        throwOnTimeout: false, arrived: Inside);
+                    if (!Inside()) Log($"  {spots[i].ToString("F1")}에 닿지 못했다 — 다음 자리를 본다");
+                }
             }
 
             if (Inside())
@@ -672,8 +714,12 @@ namespace Survive.Testing
             // 넓은 판은 전부 훑을 이유가 없다. 플레이어 쪽 가장자리부터 촘촘히 본다.
             float step = Mathf.Max(1f, Mathf.Min(box.size.x, box.size.z) / 12f);
 
-            for (float x = box.min.x + step * 0.5f; x <= box.max.x; x += step)
-            for (float z = box.min.z + step * 0.5f; z <= box.max.z; z += step)
+            // 가장자리는 뺀다. 도착 판정 반경만큼 못 미치면 그대로 볼륨 밖이라
+            // "도착했는데 안 들어갔다"가 된다.
+            float inset = Mathf.Min(1.5f, Mathf.Min(box.size.x, box.size.z) * 0.25f);
+
+            for (float x = box.min.x + inset; x <= box.max.x - inset; x += step)
+            for (float z = box.min.z + inset; z <= box.max.z - inset; z += step)
             {
                 var top = new Vector3(x, box.max.y + 1f, z);
                 var hits = Physics.RaycastAll(top, Vector3.down, box.size.y + 3f,
