@@ -21,9 +21,10 @@ namespace Survive.Building
     /// 연료를 계속 넣어야 꺼지지 않는다. 켜 두면 알아서 되는 것이면
     /// 거점이 아니라 배경이 된다.
     ///
-    /// 그리고 이 불은 <b>가공로</b>이기도 하다 — 스크랩을 넣어 두고 떠났다가
-    /// 배터리 셀을 받아 간다. 불이 꺼지면 가공도 멈춘다. 연료를 챙기는 일이
-    /// 곧 생산을 지키는 일이 된다.
+    /// 그리고 이 불은 <b>에너지 추출기</b>이기도 하다. 스크랩은 타는 물건이 아니라
+    /// 에너지를 <b>담고 있는</b> 매체다 — 불의 열은 그 안에 갇힌 것을 끌어내어
+    /// 배터리 셀로 옮기는 손이다. 넣어 두고 떠났다가 셀을 받아 간다.
+    /// 불이 꺼지면 추출도 멈춘다. 불을 지키는 일이 곧 생산을 지키는 일이 된다.
     /// </summary>
     [DisallowMultipleComponent]
     public class Campfire : MonoBehaviour, IInteractable, ILitZoneSource, ICraftStation
@@ -109,8 +110,8 @@ namespace Survive.Building
 
             if (IsBurning) WarmNearbyLantern();
 
-            // 가공은 불이 살아 있는 동안에만 흐른다. 꺼지면 진행도를 그대로 둔 채
-            // 멈춘다 — 되살리면 이어서 굽는다.
+            // 추출은 불이 살아 있는 동안에만 흐른다. 꺼지면 진행도를 그대로 둔 채
+            // 멈춘다 — 되살리면 이어서 뽑아낸다.
             if (!_work.Queue.IsEmpty) _work.Tick(Time.deltaTime, IsBurning);
         }
 
@@ -151,21 +152,21 @@ namespace Survive.Building
 
         void OnDestroy() => _flicker?.Kill();
 
-        // ── 가공 스테이션 ────────────────────────────────────────
+        // ── 에너지 추출 스테이션 ─────────────────────────────────
 
         public StationType StationType => StationType.Campfire;
         public string StationName => "화톳불";
         public StationCraftQueue Work => _work;
         public bool IsPowered => IsBurning;
 
-        public string PausedReason => IsBurning ? null : "불이 꺼져 가공이 멈췄다";
+        public string PausedReason => IsBurning ? null : "불이 꺼져 에너지 추출이 멈췄다";
 
         /// <summary>
-        /// 가공 화면에서 바로 연료를 넣는다.
+        /// 추출 화면에서 바로 불을 살린다.
         ///
         /// 연료 보급은 제작이 아니라서 레시피로 적을 수 없지만(만들어지는 물건이 없다),
         /// 불 앞에 선 사람이 가장 자주 하는 일이다. 화면을 닫았다 다시 열게 하면
-        /// 가공을 걸어 놓고 연료를 채우는 한 동작이 두 동작이 된다.
+        /// 추출을 걸어 놓고 불을 살리는 한 동작이 두 동작이 된다.
         /// </summary>
         public StationSideAction SideAction => _sideAction ?? (_sideAction = new StationSideAction(
             () =>
@@ -187,7 +188,10 @@ namespace Survive.Building
             return bag != null ? bag.CountOf(PlayerInventory.ScrapId) : 0;
         }
 
-        /// <summary>스크랩을 태워 연료로 바꾼다. 꺼져 있던 불은 이때 살아난다.</summary>
+        /// <summary>
+        /// 불을 살린다. 지금 그 자리를 스크랩이 대신하고 있을 뿐,
+        /// 스크랩은 본래 태우는 물건이 아니다 — 연료 물질은 아직 세계에 없다.
+        /// </summary>
         public bool Refuel(Inventory inv)
         {
             if (inv == null) return false;
@@ -209,9 +213,9 @@ namespace Survive.Building
 
         /// <summary>
         /// E 하나가 세 가지 일을 나눠 맡는다. 순서는 급한 것부터다 —
-        /// 다 구워진 것을 가져가고, 꺼진 불을 살리고, 그 다음이 가공 화면이다.
+        /// 다 뽑아낸 것을 가져가고, 꺼진 불을 살리고, 그 다음이 추출 화면이다.
         ///
-        /// 불을 살리는 것을 화면 안으로 밀어 넣지 않은 이유: 어두운 데서 불이 꺼지면
+        /// 불을 살리는 것을 화면 안에만 두지 않은 이유: 어두운 데서 불이 꺼지면
         /// 창을 열어 버튼을 찾을 겨를이 없다. 그 순간의 E는 무조건 불이어야 한다.
         /// </summary>
         public string InteractionPrompt
@@ -225,7 +229,7 @@ namespace Survive.Building
                 if (!_work.Queue.IsEmpty)
                 {
                     float left = CraftQueueService.TotalSecondsLeft(_work.Queue);
-                    return $"[E] 화톳불 (가공 중 {CraftTimeText.Short(left)}, 연료 {pct}%)";
+                    return $"[E] 화톳불 (에너지 추출 중 {CraftTimeText.Short(left)}, 연료 {pct}%)";
                 }
                 return $"[E] 화톳불 (연료 {pct}%)";
             }
@@ -233,7 +237,7 @@ namespace Survive.Building
 
         /// <summary>
         /// 스크랩이 없어도 다가설 수 있어야 한다 — 구워 놓은 것을 가지러 오거나
-        /// 가공을 걸러 오는 사람도 있다. 불을 지필 때만 스크랩이 필요하다.
+        /// 추출을 걸러 오는 사람도 있다. 불을 지필 때만 스크랩이 필요하다.
         /// </summary>
         public bool CanInteract(PlayerContext player)
         {

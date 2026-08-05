@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: battery_cell
   m_EditorClassIdentifier: Survive.Domain::Survive.Crafting.RecipeSO
   id: battery_cell
-  displayName: "\uBC30\uD130\uB9AC \uC140 \uAD7D\uAE30"
+  displayName: "\uC2A4\uD06C\uB7A9 \uC5D0\uB108\uC9C0 \uCD94\uCD9C"
   ingredients:
   - item: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}
     count: 5

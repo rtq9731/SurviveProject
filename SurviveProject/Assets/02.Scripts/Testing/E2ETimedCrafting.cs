@@ -108,6 +108,7 @@ namespace Survive.Testing
             var r = 손레시피();
             E2EHarness.Assert(r != null, "손으로 만들 수 있는 레시피가 있다");
             if (r == null) yield break;
+            비운다(r);
 
             var queue = HandCraftingService.Instance.Queue;
             int 결과전 = Inv.CountOf(r.result.item.id);
@@ -143,6 +144,7 @@ namespace Survive.Testing
 
             var r = 손레시피();
             if (r == null) yield break;
+            비운다(r);
 
             var queue = HandCraftingService.Instance.Queue;
             int 결과전 = Inv.CountOf(r.result.item.id);
@@ -172,6 +174,7 @@ namespace Survive.Testing
 
             var r = 손레시피();
             if (r == null) yield break;
+            비운다(r);
 
             int 재료전 = 재료수(r);
             yield return 행을_누른다(StationType.None, r, 2);
@@ -214,6 +217,7 @@ namespace Survive.Testing
 
             var r = 손레시피();
             if (r == null) yield break;
+            비운다(r);
 
             int 결과전 = Inv.CountOf(r.result.item.id);
             yield return 행을_누른다(StationType.None, r, 1);
@@ -243,11 +247,13 @@ namespace Survive.Testing
 
             var r = 손레시피();
             if (r == null) { Object.Destroy(bench.gameObject); yield break; }
+            비운다(r);
 
             int 결과전 = Inv.CountOf(r.result.item.id);
             yield return 행을_누른다(bench, r, 2);
 
             E2EHarness.AssertEqual(bench.Work.Queue.Count, 1, "작업이 제작대에 걸렸다");
+            E2EHarness.Log("  손 제작 줄: " + 줄설명(HandCraftingService.Instance.Queue));
             E2EHarness.Assert(HandCraftingService.Instance.Queue.IsEmpty,
                               "손 제작 줄에는 아무것도 없다 — 작업은 제작대의 것이다");
 
@@ -290,7 +296,7 @@ namespace Survive.Testing
 
         static IEnumerator 화톳불은_불이_꺼지면_멈춘다()
         {
-            E2EHarness.Log("— 불이 꺼지면 가공도 멈춘다 —");
+            E2EHarness.Log("— 불이 꺼지면 에너지 추출도 멈춘다 —");
             채운다();
 
             var fire = 세운다<Campfire>("campfire");
@@ -312,13 +318,13 @@ namespace Survive.Testing
             int 스크랩전 = Inv.CountOf("scrap");
 
             yield return 행을_누른다(fire, recipe, 1);
-            E2EHarness.AssertEqual(fire.Work.Queue.Count, 1, "가공이 불에 걸렸다");
+            E2EHarness.AssertEqual(fire.Work.Queue.Count, 1, "에너지 추출이 불에 걸렸다");
             E2EHarness.Assert(Inv.CountOf("scrap") < 스크랩전, "스크랩이 들어갔다");
 
             UI.Close();
             yield return null;
 
-            // 조금 굽다가 불을 끈다.
+            // 조금 뽑아내다가 불을 끈다.
             yield return 기다린다(1.5f);
             float 멈추기전 = fire.Work.Queue.Active.Elapsed;
             E2EHarness.Assert(멈추기전 > 0.5f, $"불이 타는 동안 진행했다 ({멈추기전:F1}초)");
@@ -332,7 +338,7 @@ namespace Survive.Testing
             E2EHarness.AssertEqual(fire.Work.Queue.Active.Elapsed, 꺼진직후,
                                    "불이 꺼진 동안에는 진행이 멈춘다");
 
-            // 다시 지피면 이어서 굽는다. 처음부터가 아니다.
+            // 다시 지피면 이어서 뽑아낸다. 처음부터가 아니다.
             fire.Refuel(Inv);
             yield return null;
             E2EHarness.Assert(fire.IsBurning, "다시 지폈다");
@@ -344,11 +350,11 @@ namespace Survive.Testing
             // 시간을 접어 완성까지 본다. 30초를 실시간으로 기다릴 이유가 없다.
             yield return 시간을_접고_기다린다(
                 () => fire.Work.HasOutput,
-                "불 곁에서 배터리 셀이 구워졌다",
+                "불 곁에서 스크랩의 에너지가 셀로 옮겨졌다",
                 recipe.craftSeconds + 6f);
 
             E2EHarness.AssertEqual(Inv.CountOf(recipe.result.item.id), 셀전,
-                                   "구워진 것은 아직 불 속에 있다");
+                                   "뽑아낸 것은 아직 불 곁에 있다");
 
             fire.Interact(E2EHarness.Player);
             yield return null;
@@ -362,7 +368,7 @@ namespace Survive.Testing
         /// <summary>
         /// 연료를 한 프레임분만 남긴다. 90초를 실시간으로 태울 수는 없고,
         /// 불을 끄는 공개 창구는 게임에 필요 없는 것이라 만들지 않았다.
-        /// 남은 한 방울은 Campfire의 Update가 정상 경로로 태워 없앤다 —
+        /// 남은 한 방울은 Campfire의 Update가 정상 경로로 소진시킨다 —
         /// 값을 0으로 밀어 넣고 끝내면 소등 처리(ApplyLight)를 건너뛴다.
         /// </summary>
         static void 연료를_바닥낸다(Campfire fire)
@@ -374,6 +380,22 @@ namespace Survive.Testing
         }
 
         // ── 공통 동작 ───────────────────────────────────────────
+
+        /// <summary>앞선 검사가 만들어 둔 결과물을 치운다. 도구는 한 칸에 하나라
+        /// 그냥 두면 소지품이 차서 대기열이 "완성 대기"로 멈춰 버린다.</summary>
+        static void 비운다(RecipeSO r)
+        {
+            var id = r?.result?.item?.id;
+            if (string.IsNullOrEmpty(id)) return;
+            int n = Inv.CountOf(id);
+            if (n > 0) Inv.TryRemove(id, n);
+        }
+
+        static string 줄설명(CraftQueue q) =>
+            q.Count == 0
+                ? "(비어 있다)"
+                : string.Join(", ", q.Jobs.Select(
+                    j => $"{j.Recipe.id}x{j.Remaining}@{j.Elapsed:F1}{(j.Stalled ? "(막힘)" : "")}"));
 
         static int 재료수(RecipeSO r) =>
             r.ingredients.Sum(i => i?.item != null ? Inv.CountOf(i.item.id) : 0);
@@ -388,7 +410,7 @@ namespace Survive.Testing
         }
 
         /// <summary>
-        /// 시간을 8배로 접어 기다린다. 가공은 분 단위로 설계된 것이라
+        /// 시간을 8배로 접어 기다린다. 에너지 추출은 분 단위로 설계된 것이라
         /// 실시간으로 기다리면 검사 하나가 시나리오 전체보다 길어진다.
         /// </summary>
         static IEnumerator 시간을_접고_기다린다(System.Func<bool> 조건, string what, float 실시간상한)
@@ -436,10 +458,20 @@ namespace Survive.Testing
             E2EHarness.Assert(row != null, $"레시피 행이 있다: {r.id}");
             if (row == null) yield break;
 
-            // 수량은 + 버튼을 눌러 올린다. 값을 코드로 밀어 넣으면
-            // 버튼이 죽어 있어도 검사가 지나간다.
-            var plus = row.GetComponentsInChildren<Button>(true)
-                          .FirstOrDefault(b => b.gameObject.name == "Plus");
+            // 수량은 버튼으로 맞춘다. 값을 코드로 밀어 넣으면 버튼이 죽어 있어도
+            // 검사가 지나간다. 화면은 레시피마다 마지막 수량을 기억하므로
+            // 먼저 −로 1까지 내린 다음 +로 올린다.
+            var minus = 자식버튼(row, "Minus");
+            var plus = 자식버튼(row, "Plus");
+            E2EHarness.Assert(minus != null && plus != null, "수량 버튼이 있다");
+
+            for (int i = 0; i < CraftQueueService.MaxBatch && minus != null && minus.interactable; i++)
+            {
+                누른다(minus);
+                yield return null;
+            }
+            E2EHarness.Assert(minus == null || !minus.interactable, "수량이 1까지 내려왔다");
+
             for (int i = 1; i < count; i++)
             {
                 E2EHarness.Assert(plus != null && plus.interactable,
@@ -454,6 +486,10 @@ namespace Survive.Testing
             yield return null;
             yield return null;
         }
+
+        static Button 자식버튼(Button row, string name) =>
+            row.GetComponentsInChildren<Button>(true)
+               .FirstOrDefault(b => b.gameObject.name == name);
 
         static void 누른다(Button b) =>
             ExecuteEvents.Execute(b.gameObject, new PointerEventData(EventSystem.current),
