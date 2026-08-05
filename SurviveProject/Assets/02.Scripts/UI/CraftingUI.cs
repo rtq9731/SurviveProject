@@ -34,8 +34,14 @@ namespace Survive.UI
         [SerializeField] MMF_Player craftFeedback;
         [SerializeField] float tweenSeconds = 0.18f;
 
-        /// <summary>수량 고르는 칸이 차지하는 오른쪽 폭.</summary>
-        const float QuantityBlockWidth = 196f;
+        /// <summary>
+        /// 수량 고르는 칸이 차지하는 오른쪽 폭. 오른쪽 끝에서부터 안쪽으로
+        /// [− ][x N][ +][최대]를 8px 여백 안에 세운다.
+        /// </summary>
+        const float QuantityBlockWidth = 188f;
+
+        const float RowWidth = 520f;
+        const float RowHeight = 52f;
 
         class Row
         {
@@ -169,29 +175,29 @@ namespace Survive.UI
             var go = new GameObject("Row_" + r.id, typeof(RectTransform));
             go.transform.SetParent(rowParent, false);
             var rt = (RectTransform)go.transform;
-            rt.sizeDelta = new Vector2(520f, 44f);
+            rt.sizeDelta = new Vector2(RowWidth, RowHeight);
 
             var img = go.AddComponent<Image>();
             UISkin.ApplyPanel(img, new Color(0.12f, 0.14f, 0.18f, 0.9f));
 
             var btn = go.AddComponent<Button>();
 
-            var txt = MakeLabel(go.transform, "Label", 12f, -(QuantityBlockWidth + 8f));
+            var txt = MakeLabel(go.transform, "Label", 12f, -(QuantityBlockWidth + 10f));
             txt.alignment = TextAlignmentOptions.Left;
             // 재료가 많은 레시피는 한 줄을 넘긴다. 줄이 늘면 행이 밀리므로 줄인다.
             txt.enableAutoSizing = true;
-            txt.fontSizeMin = 13f;
-            txt.fontSizeMax = 20f;
+            txt.fontSizeMin = 12f;
+            txt.fontSizeMax = 19f;
 
-            // ── 수량 칸: [−] [x N] [+] [최대] ──
-            var minus = MakeMiniButton(go.transform, "Minus", "−", -(QuantityBlockWidth - 6f), 34f);
-            var amount = MakeLabel(go.transform, "Amount",
-                                   520f - QuantityBlockWidth + 44f, -(QuantityBlockWidth - 92f));
-            amount.alignment = TextAlignmentOptions.Center;
-            amount.fontSize = 17f;
-
-            var plus = MakeMiniButton(go.transform, "Plus", "+", -(QuantityBlockWidth - 132f), 34f);
-            var max = MakeMiniButton(go.transform, "Max", "최대", -(QuantityBlockWidth - 174f), 52f);
+            // ── 수량 칸: [−][x N][+][최대] ──
+            // 자리는 오른쪽 끝에서부터 잰다. 왼쪽에서 재면 행 폭을 바꿀 때마다
+            // 네 군데를 같이 고쳐야 하고, 한 군데를 빠뜨리면 판때기 밖으로 흘러나간다.
+            // 빼기 기호는 ASCII 하이픈을 쓴다 — U+2212는 이 프로젝트 폰트 아틀라스에
+            // 없어서 네모(□)로 찍힌다.
+            var minus  = MakeMiniButton(go.transform, "Minus", "-",   188f, 34f);
+            var amount = MakeMiniLabel(go.transform, "Amount",        150f, 44f);
+            var plus   = MakeMiniButton(go.transform, "Plus",  "+",   102f, 34f);
+            var max    = MakeMiniButton(go.transform, "Max",   "최대",  60f, 52f);
 
             var row = new Row
             {
@@ -214,7 +220,7 @@ namespace Survive.UI
             var go = new GameObject("Row_StationAction", typeof(RectTransform));
             go.transform.SetParent(rowParent, false);
             var rt = (RectTransform)go.transform;
-            rt.sizeDelta = new Vector2(520f, 44f);
+            rt.sizeDelta = new Vector2(RowWidth, RowHeight);
 
             var img = go.AddComponent<Image>();
             UISkin.ApplyPanel(img, new Color(0.20f, 0.14f, 0.10f, 0.92f));
@@ -245,8 +251,11 @@ namespace Survive.UI
             return txt;
         }
 
-        /// <summary>행 오른쪽에 붙는 작은 버튼. offsetMax 기준으로 오른쪽에서 센다.</summary>
-        Button MakeMiniButton(Transform parent, string name, string caption, float rightOffset, float width)
+        /// <summary>
+        /// 행 오른쪽에 붙는 칸 하나를 만든다.
+        /// <paramref name="fromRight"/>는 행 오른쪽 끝에서 이 칸의 <b>왼쪽 변</b>까지의 거리다.
+        /// </summary>
+        RectTransform MakeMiniSlot(Transform parent, string name, float fromRight, float width)
         {
             var go = new GameObject(name, typeof(RectTransform));
             go.transform.SetParent(parent, false);
@@ -256,30 +265,47 @@ namespace Survive.UI
             rt.anchorMax = new Vector2(1f, 0.5f);
             rt.pivot = new Vector2(0f, 0.5f);
             rt.sizeDelta = new Vector2(width, 30f);
-            rt.anchoredPosition = new Vector2(rightOffset, 0f);
+            rt.anchoredPosition = new Vector2(-fromRight, 0f);
+            return rt;
+        }
+
+        Button MakeMiniButton(Transform parent, string name, string caption,
+                              float fromRight, float width)
+        {
+            var rt = MakeMiniSlot(parent, name, fromRight, width);
+            var go = rt.gameObject;
 
             var img = go.AddComponent<Image>();
             UISkin.ApplyPanel(img, new Color(0.20f, 0.23f, 0.30f, 0.95f));
 
             var btn = go.AddComponent<Button>();
+            MakeFilledText(go.transform, "Label", 17f).text = caption;
+            return btn;
+        }
 
-            var labelGo = new GameObject("Label", typeof(RectTransform));
-            labelGo.transform.SetParent(go.transform, false);
-            var lrt = (RectTransform)labelGo.transform;
+        TMP_Text MakeMiniLabel(Transform parent, string name, float fromRight, float width)
+        {
+            var rt = MakeMiniSlot(parent, name, fromRight, width);
+            return MakeFilledText(rt, name + "Text", 17f);
+        }
+
+        TMP_Text MakeFilledText(Transform parent, string name, float size)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            var lrt = (RectTransform)go.transform;
             lrt.anchorMin = Vector2.zero;
             lrt.anchorMax = Vector2.one;
             lrt.offsetMin = Vector2.zero;
             lrt.offsetMax = Vector2.zero;
 
-            var txt = labelGo.AddComponent<TextMeshProUGUI>();
+            var txt = go.AddComponent<TextMeshProUGUI>();
             if (font != null) txt.font = font;
-            txt.text = caption;
-            txt.fontSize = 17f;
+            txt.fontSize = size;
             txt.alignment = TextAlignmentOptions.Center;
             txt.color = Color.white;
             txt.raycastTarget = false;
-
-            return btn;
+            return txt;
         }
 
         void RefreshList()
@@ -372,7 +398,7 @@ namespace Survive.UI
             if (panel == null || rowsRect == null || _rows.Count == 0) return;
 
             var first = _rows[0].button != null ? (RectTransform)_rows[0].button.transform : null;
-            float rowHeight = first != null ? first.sizeDelta.y : 44f;
+            float rowHeight = first != null ? first.sizeDelta.y : RowHeight;
 
             var layout = rowsRect.GetComponent<VerticalLayoutGroup>();
             float spacing = layout != null ? layout.spacing : 8f;
