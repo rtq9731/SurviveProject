@@ -16,10 +16,12 @@ namespace Survive.Progression
     /// HandCraftingService·DeathDropService와 같은 방식이다 — 씬 파일을 건드리지
     /// 않는다는 실질적 이점도 같다.
     ///
-    /// 하는 일은 셋뿐이다.
+    /// 하는 일은 넷뿐이다.
     /// 1) 원장을 들고 GameServices에 내놓는다 (규칙 함수들이 여기서 집어 간다)
     /// 2) 플레이어 소지품의 첫 습득을 듣고 청사진을 연다
     /// 3) 그때 우주복 AI가 한 줄 말하게 한다 (기존 자막판을 그대로 쓴다)
+    /// 4) <b>무엇을 한 번이라도 손에 쥐어 봤는지</b>를 적는다(<see cref="HeldRecord"/>) —
+    ///    연구 목록의 자물쇠가 이 기록이고, 대사가 붙지 않은 아이템에도 남아야 한다
     /// </summary>
     [DisallowMultipleComponent]
     public class UnlockService : MonoBehaviour, ISaveable
@@ -92,6 +94,7 @@ namespace Survive.Progression
                 Publish();
 
             RebindInventory();
+            RecordHeld();
         }
 
         void Publish()
@@ -116,7 +119,73 @@ namespace Survive.Progression
 
             Unbind();
             _bound = inv;
-            if (_bound != null) _bound.ItemAdded += OnItemAdded;
+            if (_bound == null) return;
+
+            _bound.ItemAdded += OnItemAdded;
+
+            // 소지품 객체가 갈렸다는 것은 방금 저장본을 불러왔다는 뜻이다. 그 안에 든
+            // 것들은 TryAdd를 지나지 않았으므로(슬롯에 직접 앉는다) 습득 신호가 울린
+            // 적이 없다. 세계에 놓인 그릇들도 같은 순간에 복원되므로 함께 훑는다.
+            _worldSweepUntil = Time.unscaledTime + WorldSweepSeconds;
+        }
+
+        // ── 무엇을 가져 봤는가 ───────────────────────────────────
+
+        /// <summary>
+        /// 불러온 뒤 세계의 그릇을 훑어 보는 기간(초).
+        ///
+        /// 한 번만 훑지 않는 이유: 거점의 보관함은 저장본에서 되세워지는 물건이라
+        /// 불러오기가 끝난 <b>그 프레임</b>에 전부 서 있다는 보장이 없다. 그렇다고
+        /// 계속 훑을 수는 없어(<c>FindObjectsByType</c>다) 짧은 기간만 되풀이한다.
+        /// </summary>
+        const float WorldSweepSeconds = 5f;
+        const float WorldSweepInterval = 0.25f;
+
+        float _worldSweepUntil;
+        float _nextWorldSweep;
+
+        /// <summary>
+        /// 지금 손에 있는 것을 <b>가져 본 것</b>으로 적는다.
+        ///
+        /// 첫 습득은 <see cref="OnItemAdded"/>가 그 자리에서 적는다. 여기서 매 프레임
+        /// 다시 훑는 이유는 <c>TryAdd</c>를 지나지 않는 길이 하나 있기 때문이다 —
+        /// <see cref="PlayerInventory.RestoreState"/>는 슬롯에 값을 직접 앉힌다.
+        /// 소지품은 열다섯 칸이라 훑는 값이 사실상 없고, 그 대가로 "손에 있는데
+        /// 기록에는 없다"는 상태가 한 프레임 이상 존재할 수 없게 된다.
+        /// </summary>
+        void RecordHeld()
+        {
+            HeldRecord.RecordAll(Ledger, _bound);
+
+            if (Time.unscaledTime > _worldSweepUntil) return;
+            if (Time.unscaledTime < _nextWorldSweep) return;
+            _nextWorldSweep = Time.unscaledTime + WorldSweepInterval;
+
+            RecordHeldFromWorld();
+        }
+
+        /// <summary>
+        /// 세계에 놓인 그릇들 — 보관함과 죽은 자리의 가방 — 을 훑는다.
+        ///
+        /// 넣어 둔 것도 <b>가져 본 것</b>이다. 이 기록이 생기기 전에 만든 저장본에는
+        /// 열쇠가 하나도 없으므로, 낫의 핵을 보관함에 넣어 둔 사람의 연구 항목이
+        /// 불러온 뒤에 사라지는 일을 여기서 막는다.
+        ///
+        /// <b>이미 써 버린 것까지는 되살릴 수 없다.</b> 남아 있는 것으로만 찍는다.
+        /// 바깥에 열어 두는 것은 검증 하네스가 부를 자리가 필요해서다.
+        /// </summary>
+        public int RecordHeldFromWorld()
+        {
+            int n = 0;
+
+            foreach (var box in Object.FindObjectsByType<Survive.Interaction.StorageContainer>(
+                         FindObjectsInactive.Include))
+                if (box != null) n += HeldRecord.RecordAll(Ledger, box.Contents);
+
+            foreach (var bag in DeathDropBag.Active)
+                if (bag != null) n += HeldRecord.RecordAll(Ledger, bag.Contents);
+
+            return n;
         }
 
         void Unbind()
@@ -129,6 +198,12 @@ namespace Survive.Progression
         void OnItemAdded(ItemDataSO item, int count)
         {
             if (item == null) return;
+
+            // 무엇을 겪었는지가 먼저다. 발견 대사가 붙지 않은 아이템에도 남아야 하고
+            // (생물 부위 일곱 종에는 DiscoverySO가 없다), 화면이 이 프레임 안에
+            // 목록을 다시 그리므로 여기서 적어야 창을 닫지 않고도 줄이 자란다.
+            HeldRecord.Record(Ledger, item.id);
+
             if (!FieldDiscovery.TryDiscover(_book, Ledger, item.id, out var discovery)) return;
 
             Announce(discovery.line);
