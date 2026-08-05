@@ -121,7 +121,7 @@ namespace Survive.Creatures
 
             if (_player == null)
             {
-                var ctx = UnityEngine.Object.FindFirstObjectByType<PlayerContext>(FindObjectsInactive.Exclude);
+                var ctx = UnityEngine.Object.FindAnyObjectByType<PlayerContext>(FindObjectsInactive.Exclude);
                 if (ctx != null) _player = ctx.transform;
             }
 

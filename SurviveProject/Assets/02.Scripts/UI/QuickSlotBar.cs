@@ -71,9 +71,9 @@ namespace Survive.UI
 
         void Awake()
         {
-            if (inventory == null) inventory = Object.FindFirstObjectByType<PlayerInventory>(FindObjectsInactive.Exclude);
-            if (toolUser == null) toolUser = Object.FindFirstObjectByType<PlayerToolUser>(FindObjectsInactive.Exclude);
-            if (holder == null) holder = Object.FindFirstObjectByType<PlayerToolHolder>(FindObjectsInactive.Exclude);
+            if (inventory == null) inventory = Object.FindAnyObjectByType<PlayerInventory>(FindObjectsInactive.Exclude);
+            if (toolUser == null) toolUser = Object.FindAnyObjectByType<PlayerToolUser>(FindObjectsInactive.Exclude);
+            if (holder == null) holder = Object.FindAnyObjectByType<PlayerToolHolder>(FindObjectsInactive.Exclude);
             if (slotParent == null) slotParent = transform as RectTransform;
         }
 
@@ -82,9 +82,9 @@ namespace Survive.UI
             // 플레이어가 준비될 때까지 기다린다
             for (int i = 0; i < 180; i++)
             {
-                if (inventory == null) inventory = Object.FindFirstObjectByType<PlayerInventory>(FindObjectsInactive.Exclude);
-                if (toolUser == null) toolUser = Object.FindFirstObjectByType<PlayerToolUser>(FindObjectsInactive.Exclude);
-                if (holder == null) holder = Object.FindFirstObjectByType<PlayerToolHolder>(FindObjectsInactive.Exclude);
+                if (inventory == null) inventory = Object.FindAnyObjectByType<PlayerInventory>(FindObjectsInactive.Exclude);
+                if (toolUser == null) toolUser = Object.FindAnyObjectByType<PlayerToolUser>(FindObjectsInactive.Exclude);
+                if (holder == null) holder = Object.FindAnyObjectByType<PlayerToolHolder>(FindObjectsInactive.Exclude);
                 if (inventory?.Inventory != null && holder != null) break;
                 yield return null;
             }
@@ -160,7 +160,7 @@ namespace Survive.UI
         {
             var src = styleSource != null
                 ? styleSource
-                : Object.FindFirstObjectByType<InventorySlotView>(FindObjectsInactive.Include);
+                : Object.FindAnyObjectByType<InventorySlotView>(FindObjectsInactive.Include);
 
             var img = src != null ? src.GetComponent<Image>() : null;
             if (img != null && img.sprite != null) return img.sprite;

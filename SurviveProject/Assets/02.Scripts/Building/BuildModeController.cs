@@ -42,7 +42,7 @@ namespace Survive.Building
             if (rayOrigin == null && Camera.main != null) rayOrigin = Camera.main.transform;
             if (placer == null) placer = GetComponentInParent<BuildPlacer>();
             if (melee == null) melee = GetComponentInParent<Survive.Combat.MeleeSwing>();
-            if (menu == null) menu = Object.FindFirstObjectByType<Survive.UI.BuildMenuUI>(FindObjectsInactive.Include);
+            if (menu == null) menu = Object.FindAnyObjectByType<Survive.UI.BuildMenuUI>(FindObjectsInactive.Include);
         }
 
         void Update()

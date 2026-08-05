@@ -94,7 +94,7 @@ namespace Survive.UI
             if (!wired)
             {
                 foreach (var mb in FindObjectsByType<MonoBehaviour>(
-                             FindObjectsInactive.Include, FindObjectsSortMode.None))
+                             FindObjectsInactive.Include))
                 {
                     if (mb is IClosablePanel p) AddPanel(p);
                 }

@@ -63,7 +63,7 @@ namespace Survive.Crafting
                 _work.CollectInto(player.Inventory.Inventory) > 0)
                 return;
 
-            var ui = UnityEngine.Object.FindFirstObjectByType<Survive.UI.CraftingUI>(FindObjectsInactive.Include);
+            var ui = UnityEngine.Object.FindAnyObjectByType<Survive.UI.CraftingUI>(FindObjectsInactive.Include);
             if (ui != null) ui.Open(this);
             else Debug.LogWarning("[CraftingBench] CraftingUI를 찾지 못했습니다.", this);
         }

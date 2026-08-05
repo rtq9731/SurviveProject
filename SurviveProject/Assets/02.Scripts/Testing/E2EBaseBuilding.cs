@@ -36,7 +36,7 @@ namespace Survive.Testing
         const float drainPerSecondGuess = 6f;
 
         static BuildPlacer Placer =>
-            Object.FindFirstObjectByType<BuildPlacer>(FindObjectsInactive.Exclude);
+            Object.FindAnyObjectByType<BuildPlacer>(FindObjectsInactive.Exclude);
 
         public static IEnumerator FullRun()
         {
@@ -96,7 +96,7 @@ namespace Survive.Testing
         /// </summary>
         static IEnumerator Prepare()
         {
-            var dir = Object.FindFirstObjectByType<Survive.Progression.ChapterDirector>(
+            var dir = Object.FindAnyObjectByType<Survive.Progression.ChapterDirector>(
                 FindObjectsInactive.Exclude);
             yield return E2EHarness.WaitUntil(() => dir != null && dir.Current != null,
                                               "챕터가 시작된다", 5f);
@@ -140,7 +140,7 @@ namespace Survive.Testing
             // 랜턴을 지금 켜 둔다. 뒤의 화톳불 검사는 배터리가 <b>줄어 있어야</b>
             // 차오르는 것을 볼 수 있는데, Recharge는 음수를 받지 않는다.
             // 시나리오를 도는 동안 자연히 닳게 두는 것이 실제 플레이와도 같다.
-            var lantern = Object.FindFirstObjectByType<LanternController>(FindObjectsInactive.Include);
+            var lantern = Object.FindAnyObjectByType<LanternController>(FindObjectsInactive.Include);
             if (lantern != null) lantern.SetOn(true);
 
             yield return null;
@@ -155,7 +155,7 @@ namespace Survive.Testing
         /// </summary>
         static IEnumerator HandCrafting()
         {
-            var ui = Object.FindFirstObjectByType<CraftingUI>(FindObjectsInactive.Include);
+            var ui = Object.FindAnyObjectByType<CraftingUI>(FindObjectsInactive.Include);
             E2EHarness.Assert(ui != null, "CraftingUI가 있다");
 
             ui.Open(StationType.None);
@@ -187,7 +187,7 @@ namespace Survive.Testing
         /// <summary>B 키가 실제로 건설 목록을 여닫는지 본다.</summary>
         static IEnumerator BuildMenuKey()
         {
-            var menu = Object.FindFirstObjectByType<BuildMenuUI>(FindObjectsInactive.Include);
+            var menu = Object.FindAnyObjectByType<BuildMenuUI>(FindObjectsInactive.Include);
             E2EHarness.Assert(menu != null, "건설 메뉴가 있다");
 
             yield return E2EHarness.TapKey(Key.B);
@@ -237,18 +237,18 @@ namespace Survive.Testing
             }
 
             // 실제 조작대로 좌클릭으로 세운다
-            int before = Object.FindObjectsByType<BuiltStructure>(FindObjectsSortMode.None).Length;
+            int before = Object.FindObjectsByType<BuiltStructure>().Length;
             yield return E2EHarness.ClickAttack();
             yield return null;
             yield return null;
 
-            var built = Object.FindObjectsByType<BuiltStructure>(FindObjectsSortMode.None)
+            var built = Object.FindObjectsByType<BuiltStructure>()
                               .OrderByDescending(b => b.GetEntityId())
                               .FirstOrDefault(b => b.Definition != null && b.Definition.id == id);
 
             E2EHarness.Assert(built != null, $"좌클릭으로 세웠다: {id}");
             E2EHarness.Assert(
-                Object.FindObjectsByType<BuiltStructure>(FindObjectsSortMode.None).Length == before + 1,
+                Object.FindObjectsByType<BuiltStructure>().Length == before + 1,
                 "세운 것이 정확히 하나 늘었다");
 
             placer.Cancel();
@@ -363,7 +363,7 @@ namespace Survive.Testing
             yield return null;
             yield return null;
 
-            var ui = Object.FindFirstObjectByType<CraftingUI>(FindObjectsInactive.Include);
+            var ui = Object.FindAnyObjectByType<CraftingUI>(FindObjectsInactive.Include);
             E2EHarness.Assert(ui.IsOpen, "E로 제작 화면이 열린다");
             E2EHarness.AssertEqual(ui.CurrentStation, StationType.Bench, "제작대 목록이 뜬다");
 
@@ -435,7 +435,7 @@ namespace Survive.Testing
             yield return E2EHarness.TapKey(Key.E);
             yield return null;
 
-            var ui = Object.FindFirstObjectByType<StorageUI>(FindObjectsInactive.Include);
+            var ui = Object.FindAnyObjectByType<StorageUI>(FindObjectsInactive.Include);
             E2EHarness.Assert(ui != null && ui.IsOpen, "E로 보관함이 열린다");
 
             // 넣고 뺀다. 넣기만 확인하면 물건이 갇히는 버그를 못 본다.
@@ -488,7 +488,7 @@ namespace Survive.Testing
             float wait = 0f;
             while (wait < 1.0f) { wait += Time.deltaTime; yield return null; }
 
-            bool spilled = Object.FindObjectsByType<ItemPickup>(FindObjectsSortMode.None)
+            bool spilled = Object.FindObjectsByType<ItemPickup>()
                                  .Any(p => p.name.StartsWith("Drop_"));
             E2EHarness.Assert(spilled, "부순 보관함의 내용물이 바닥에 쏟아졌다");
         }
@@ -583,7 +583,7 @@ namespace Survive.Testing
             E2EHarness.Assert(camp != null, "세운 것에 화톳불 기능이 있다");
             E2EHarness.Assert(camp == null || camp.IsBurning, "세우자마자 타고 있다");
 
-            var lantern = Object.FindFirstObjectByType<LanternController>(FindObjectsInactive.Include);
+            var lantern = Object.FindAnyObjectByType<LanternController>(FindObjectsInactive.Include);
             if (lantern == null)
             {
                 E2EHarness.Log("  랜턴이 아직 없어 충전 확인을 건너뛴다");
@@ -640,7 +640,7 @@ namespace Survive.Testing
         /// </summary>
         static IEnumerator SwimAndSee()
         {
-            var swim = Object.FindFirstObjectByType<PlayerSwimming>(FindObjectsInactive.Exclude);
+            var swim = Object.FindAnyObjectByType<PlayerSwimming>(FindObjectsInactive.Exclude);
             if (swim == null) { E2EHarness.Log("  PlayerSwimming이 없어 건너뛴다"); yield break; }
 
             // P0에서 씬 안개가 항상 켜져 있게 바뀌어 RenderSettings.fog만으로는
@@ -652,7 +652,7 @@ namespace Survive.Testing
                                   .FirstOrDefault(g => g.name.Contains("Water"));
             if (water == null)
             {
-                var rends = Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None)
+                var rends = Object.FindObjectsByType<Renderer>()
                                   .Where(r => r.gameObject.name.Contains("Water"))
                                   .ToList();
                 water = rends.Count > 0 ? rends[0].gameObject : null;
@@ -711,7 +711,7 @@ namespace Survive.Testing
                 yield break;
             }
 
-            var view = Object.FindFirstObjectByType<UnderwaterView>(FindObjectsInactive.Exclude);
+            var view = Object.FindAnyObjectByType<UnderwaterView>(FindObjectsInactive.Exclude);
             E2EHarness.Assert(view != null, "수중 시야 처리가 있다");
             // 씬 안개가 상시 켜진 뒤로는 RenderSettings.fog가 항상 true라 이 자체로는
             // 아무것도 증명하지 못한다. 물속 색으로 실제로 바뀌었는지를 본다.
@@ -834,7 +834,7 @@ namespace Survive.Testing
             E2EHarness.Assert(tool != null, "곡괭이를 들었다");
             if (tool == null) yield break;
 
-            var melee = Object.FindFirstObjectByType<Survive.Combat.MeleeSwing>(
+            var melee = Object.FindAnyObjectByType<Survive.Combat.MeleeSwing>(
                 FindObjectsInactive.Exclude);
             E2EHarness.Assert(melee != null, "근접 공격 컴포넌트가 있다");
             if (melee == null) yield break;
@@ -860,7 +860,7 @@ namespace Survive.Testing
         /// </summary>
         static IEnumerator CanSurface(PlayerSwimming swim, Vector3 deepest, float depth, float surface)
         {
-            var vitals = Object.FindFirstObjectByType<Survive.Vitals.PlayerVitals>(
+            var vitals = Object.FindAnyObjectByType<Survive.Vitals.PlayerVitals>(
                 FindObjectsInactive.Exclude);
             if (vitals == null) yield break;
 

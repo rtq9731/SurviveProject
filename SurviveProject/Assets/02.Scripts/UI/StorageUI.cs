@@ -82,7 +82,7 @@ namespace Survive.UI
             }
 
             // 소지품도 같이 연다. 옮길 대상이 양쪽에 보여야 옮길 수 있다.
-            var inv = Object.FindFirstObjectByType<InventoryUI>(FindObjectsInactive.Include);
+            var inv = Object.FindAnyObjectByType<InventoryUI>(FindObjectsInactive.Include);
             if (inv != null && !inv.IsOpen) inv.Open();
 
             // 손 제작 목록은 보관함과 같은 자리를 쓴다. 겹치면 둘 다 못 읽는다.

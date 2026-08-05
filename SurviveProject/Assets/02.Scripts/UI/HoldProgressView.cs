@@ -63,7 +63,7 @@ namespace Survive.UI
             // 플레이어가 준비될 때까지 기다린다
             for (int i = 0; i < 120 && _interactor == null; i++)
             {
-                _interactor = Object.FindFirstObjectByType<PlayerInteractor>(FindObjectsInactive.Exclude);
+                _interactor = Object.FindAnyObjectByType<PlayerInteractor>(FindObjectsInactive.Exclude);
                 if (_interactor != null) break;
                 yield return null;
             }

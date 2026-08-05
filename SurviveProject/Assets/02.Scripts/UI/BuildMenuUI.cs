@@ -48,8 +48,8 @@ namespace Survive.UI
 
         void Awake()
         {
-            if (placer == null) placer = Object.FindFirstObjectByType<BuildPlacer>(FindObjectsInactive.Include);
-            if (inventory == null) inventory = Object.FindFirstObjectByType<PlayerInventory>(FindObjectsInactive.Include);
+            if (placer == null) placer = Object.FindAnyObjectByType<BuildPlacer>(FindObjectsInactive.Include);
+            if (inventory == null) inventory = Object.FindAnyObjectByType<PlayerInventory>(FindObjectsInactive.Include);
             if (rowParent == null) rowParent = transform;
 
             // 여기서 gameObject.SetActive(false)를 하면 안 된다.
@@ -261,7 +261,7 @@ namespace Survive.UI
         void LockControls(bool locked)
         {
             if (_player == null)
-                _player = Object.FindFirstObjectByType<Survive.Player.PlayerContext>(
+                _player = Object.FindAnyObjectByType<Survive.Player.PlayerContext>(
                     FindObjectsInactive.Exclude);
 
             _player?.Locomotion?.SetMovementLocked(locked);

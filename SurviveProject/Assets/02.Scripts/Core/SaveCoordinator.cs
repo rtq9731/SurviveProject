@@ -51,7 +51,7 @@ namespace Survive.Core
             yield return null;
             Collect();
 
-            _chapter = Object.FindFirstObjectByType<ChapterDirector>(FindObjectsInactive.Exclude);
+            _chapter = Object.FindAnyObjectByType<ChapterDirector>(FindObjectsInactive.Exclude);
             if (_chapter != null && autoSaveOnObjective)
                 _chapter.ObjectiveChanged += OnObjectiveChanged;
 
@@ -67,7 +67,7 @@ namespace Survive.Core
         {
             int n = 0;
             foreach (var mb in Object.FindObjectsByType<MonoBehaviour>(
-                         FindObjectsInactive.Include, FindObjectsSortMode.None))
+                         FindObjectsInactive.Include))
             {
                 if (mb is not ISaveable s) continue;
                 _service.Register(s);
