@@ -106,13 +106,19 @@ namespace Survive.Testing
                     "잠항구는 매크로늄을 요구한다 — 마지막 섬의 자원이 출구가 된다");
             }
 
-            // 잠항 설계는 이제 연구대의 산출물이다(백로그 38). 그 연구의 소재인 유물은
-            // 낫이 떨구는데 그 배선은 작업 39라, 지금 세계에는 유물이 하나도 없다 —
-            // 여기서 볼 것은 종막이지 연구가 아니고, 연구 절차 자체는
-            // E2EResearchStation이 실제 조작으로 처음부터 끝까지 본다.
-            // 39가 붙으면 이 줄 대신 실제로 유물을 주워 연구하도록 고친다.
-            E2EHarness.Assert(E2EResearchStation.원장에_적는다("bp_submersible", "bp_surface_walker"),
-                              "[연구 대행] 잠항·보행 설계를 원장에 적는다 (유물 공급은 작업 39)");
+            // 잠항 설계는 연구대의 산출물이고(백로그 38), 그 연구의 소재인 유물은
+            // 낫이 순찰하다 흘린다(백로그 39). 38 시점에는 유물이 세계에 없어 원장에
+            // 직접 적는 우회로를 지나갔지만, 이제 실제로 떨구므로 그럴 이유가 없다.
+            //
+            // 종막에 이른 사람이 거쳐 온 길을 그대로 밟는다 — 낫의 영역에서 기다려
+            // 유물 둘을 줍고, 거점에 연구대를 세우고, 스크랩을 태워 밝혀낸다.
+            // 그 절차 하나하나는 E2ERelicSupply가 본다. 여기서는 그 산출물이
+            // 실제로 종막의 열쇠가 되는지만 확인한다.
+            yield return E2ERelicSupply.유물로_진행_설계를_얻는다();
+            E2EHarness.Assert(BlueprintGate.Active != null &&
+                              BlueprintGate.Active.IsUnlocked("bp_submersible") &&
+                              BlueprintGate.Active.IsUnlocked("bp_surface_walker"),
+                              "낫에게서 주워 온 것으로 잠항·보행 설계를 밝혀냈다");
 
             DescentZone.ResetCounters();
             _chapterEndedFired = false;

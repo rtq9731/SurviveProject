@@ -51,6 +51,28 @@ namespace Survive.Progression
             energy != null && !string.IsNullOrEmpty(energy.id) ? energy.id : DefaultEnergyItemId;
 
         /// <summary>
+        /// 이 항목이 여는 것이 하나라도 있는가.
+        ///
+        /// 산출물은 두 갈래다 — 청사진(<see cref="ResearchEntrySO.unlocks"/>)과
+        /// 청사진을 거치지 않는 원장 열쇠(<see cref="ResearchEntrySO.unlockKeys"/>).
+        /// 둘 다 비어 있으면 걸어 봐야 아무 일도 일어나지 않는 헛 항목이다.
+        /// </summary>
+        public static bool HasAnyUnlock(ResearchEntrySO entry)
+        {
+            if (entry == null) return false;
+
+            if (entry.unlocks != null)
+                foreach (var bp in entry.unlocks)
+                    if (bp != null && !string.IsNullOrWhiteSpace(bp.id)) return true;
+
+            if (entry.unlockKeys != null)
+                foreach (var key in entry.unlockKeys)
+                    if (!string.IsNullOrWhiteSpace(key)) return true;
+
+            return false;
+        }
+
+        /// <summary>
         /// 이 항목이 여는 것을 전부 이미 알고 있는가.
         ///
         /// "연구했다"는 사실을 따로 세어 두지 않는다. 알아낸 결과가 곧 원장에 있고,
@@ -59,14 +81,27 @@ namespace Survive.Progression
         /// </summary>
         public static bool IsKnown(ResearchEntrySO entry, UnlockLedger ledger)
         {
-            if (entry?.unlocks == null || entry.unlocks.Length == 0) return false;
+            if (!HasAnyUnlock(entry)) return false;
             if (ledger == null) return false;
 
-            foreach (var bp in entry.unlocks)
+            if (entry.unlocks != null)
             {
-                if (bp == null || string.IsNullOrWhiteSpace(bp.id)) continue;
-                if (!ledger.IsUnlocked(bp.id)) return false;
+                foreach (var bp in entry.unlocks)
+                {
+                    if (bp == null || string.IsNullOrWhiteSpace(bp.id)) continue;
+                    if (!ledger.IsUnlocked(bp.id)) return false;
+                }
             }
+
+            if (entry.unlockKeys != null)
+            {
+                foreach (var key in entry.unlockKeys)
+                {
+                    if (string.IsNullOrWhiteSpace(key)) continue;
+                    if (!ledger.IsUnlocked(key)) return false;
+                }
+            }
+
             return true;
         }
 
@@ -76,7 +111,7 @@ namespace Survive.Progression
                                                  ItemDataSO energy)
         {
             if (entry == null || inventory == null) return ResearchReadiness.Invalid;
-            if (entry.unlocks == null || entry.unlocks.Length == 0) return ResearchReadiness.Invalid;
+            if (!HasAnyUnlock(entry)) return ResearchReadiness.Invalid;
             if (entry.energyCost > 0 && energy == null) return ResearchReadiness.Invalid;
 
             if (IsKnown(entry, ledger)) return ResearchReadiness.AlreadyKnown;
@@ -170,12 +205,24 @@ namespace Survive.Progression
         /// <summary>항목이 여는 것을 원장에 적는다.</summary>
         public static void Apply(ResearchEntrySO entry, UnlockLedger ledger)
         {
-            if (entry?.unlocks == null || ledger == null) return;
+            if (entry == null || ledger == null) return;
 
-            foreach (var bp in entry.unlocks)
+            if (entry.unlocks != null)
             {
-                if (bp == null) continue;
-                ledger.Unlock(bp.id);
+                foreach (var bp in entry.unlocks)
+                {
+                    if (bp == null) continue;
+                    ledger.Unlock(bp.id);
+                }
+            }
+
+            if (entry.unlockKeys != null)
+            {
+                foreach (var key in entry.unlockKeys)
+                {
+                    if (string.IsNullOrWhiteSpace(key)) continue;
+                    ledger.Unlock(key);
+                }
             }
         }
 

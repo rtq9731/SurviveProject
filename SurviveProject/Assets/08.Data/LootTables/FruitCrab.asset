@@ -21,3 +21,7 @@ MonoBehaviour:
     minCount: 1
     maxCount: 1
     chance: 0.6
+  - item: {fileID: 11400000, guid: ceb9538d15df87148aeb66a3a1f9f7d5, type: 2}
+    minCount: 1
+    maxCount: 1
+    chance: 1

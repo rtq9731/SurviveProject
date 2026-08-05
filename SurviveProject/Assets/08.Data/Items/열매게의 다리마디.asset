@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e7f1797e5edde543978bb8369b71e2a, type: 3}
+  m_Name: "\uC5F4\uB9E4\uAC8C\uC758 \uB2E4\uB9AC\uB9C8\uB514"
+  m_EditorClassIdentifier: Survive.Domain::Survive.Items.ItemDataSO
+  id: part_fruit_crab
+  displayName: "\uC5F4\uB9E4\uAC8C\uC758 \uB2E4\uB9AC\uB9C8\uB514"
+  description: "\uB124 \uB2E4\uB9AC \uC911 \uD558\uB098\uC5D0\uC11C \uBE60\uC9C4
+    \uAD00\uC808 \uB9C8\uB514. \uB9C8\uB514 \uC548\uCABD\uC774 \uC544\uC9C1 \uB9E4\uB044\uB7FD\uAC8C
+    \uB3CC\uC544\uAC04\uB2E4. \uB05D\uC5D0 \uB9C8\uB978 \uC5F4\uB9E4 \uAECD\uC9C8\uC774
+    \uB20C\uC5B4\uBD99\uC5B4 \uC788\uB2E4."
+  icon: {fileID: 21300000, guid: 216f7174fb78556479eab600c2c48af3, type: 3}
+  maxStack: 20
+  category: 0
+  worldPrefab: {fileID: 0}

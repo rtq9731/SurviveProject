@@ -78,6 +78,12 @@ namespace Survive.Creatures
             // 이동이 끝난 뒤에 따로 처리한다. 씬·프리팹을 고치지 않으려고 여기서 붙인다.
             if (GetComponent<CreatureCollisionGuard>() == null)
                 gameObject.AddComponent<CreatureCollisionGuard>();
+
+            // 유물을 흘리는 종만 부품을 하나 더 단다. 같은 이유로 여기서 붙인다 —
+            // 낫 프리팹을 고치지 않고도 순찰 드롭이 성립해야 한다.
+            if (definition != null && definition.relicShed != null &&
+                GetComponent<RelicShedder>() == null)
+                gameObject.AddComponent<RelicShedder>();
         }
 
         void OnEnable()

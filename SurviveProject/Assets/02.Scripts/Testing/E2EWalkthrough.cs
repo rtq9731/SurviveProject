@@ -110,11 +110,12 @@ namespace Survive.Testing
             E2EHarness.Assert(잠항구레시피 != null, "잠항구 레시피가 있다");
             if (잠항구레시피 == null) yield break;
 
-            // 잠항 설계는 이제 연구대의 산출물이다(백로그 38). 소재인 유물은 낫이
-            // 떨구는데 그 배선은 작업 39라 지금 세계에는 유물이 없다 — 매크로늄과
-            // 같은 사정이므로 같은 방식으로 넘어간다. 연구 절차 자체는
-            // E2EResearchStation이 실제 조작으로 본다.
-            E2EHarness.Log("  [미배치] 잠항·보행 설계를 원장에 적는다 — 유물 드롭은 작업 39");
+            // 잠항 설계는 연구대의 산출물이고(백로그 38) 소재인 유물은 낫이 순찰하다
+            // 흘린다(백로그 39). 배선은 다 있지만 낫의 서식지가 아직 씬에 없어
+            // 걸어서 닿을 곳이 없다 — 매크로늄 광맥과 똑같은 사정(§8-4)이므로 같은
+            // 방식으로 넘어간다. 실제로 주워 연구하는 전 과정은 E2ERelicSupply가,
+            // 종막 직전 구간의 실제 경로는 E2EDescent가 본다.
+            E2EHarness.Log("  [미배치] 잠항·보행 설계를 원장에 적는다 — 낫의 서식지 배치는 §8-4");
             E2EResearchStation.원장에_적는다("bp_submersible", "bp_surface_walker");
 
             foreach (var need in 잠항구레시피.ingredients)

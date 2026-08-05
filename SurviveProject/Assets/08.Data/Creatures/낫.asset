@@ -26,6 +26,7 @@ MonoBehaviour:
   aggroSeconds: 6
   avoidsLight: 1
   drops: {fileID: 11400000, guid: 507ce3678609f3540964b9395b54fcf7, type: 2}
+  relicShed: {fileID: 11400000, guid: dc3845319879945459181397c16c881b, type: 2}
   codexDescription: "\uC774\uC871\uBCF4\uD589\uC758 \uBE60\uB978 \uAE30\uACC4. \uB4F1\uACFC
     \uC5B4\uAE68\uC5D0\uC11C \uBED7\uC5B4 \uB098\uC628 \uB0A0\uBD99\uC774\uAC00 \uC2E4\uB8E8\uC5E3\uC744
     \uBFB0\uC871\uD558\uAC8C \uB9CC\uB4E0\uB2E4. \uC5B4\uB460 \uC18D\uC5D0\uC11C

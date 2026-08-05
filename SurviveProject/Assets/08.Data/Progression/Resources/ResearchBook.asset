@@ -15,4 +15,9 @@ MonoBehaviour:
   entries:
   - {fileID: 11400000, guid: 5ebdf8c5f690af04197d7e87e5197324, type: 2}
   - {fileID: 11400000, guid: bc47b1f014548f749a07b59a98354cbc, type: 2}
+  - {fileID: 11400000, guid: 0d078de22b6d1cb4cae9c06097a83d4c, type: 2}
+  - {fileID: 11400000, guid: cb8d669c3be7ef44bb735c8dfbb4842b, type: 2}
+  - {fileID: 11400000, guid: 90d375be35aec00438f770b0f36117a5, type: 2}
+  - {fileID: 11400000, guid: ae544774a37a7d64bbcc14f322e57dc2, type: 2}
+  - {fileID: 11400000, guid: 7ab45342e8c1b08409a30df2c46a5fbe, type: 2}
   energyItem: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}
