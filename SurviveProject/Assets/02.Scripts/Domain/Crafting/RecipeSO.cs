@@ -11,7 +11,14 @@ namespace Survive.Crafting
     {
         None = 0,       // 휴대 제작 — 손에서 만든다
         Bench = 1,      // 제작대
-        Campfire = 2    // 화톳불 — 불이 타는 동안만 가공이 진행된다
+        Campfire = 2,   // 화톳불 — 불이 타는 동안만 가공이 진행된다
+
+        /// <summary>
+        /// 연구대. 여기서 나오는 것은 아이템이 아니라 <b>아는 것</b>이라 이 값을
+        /// 요구하는 레시피는 없다 — 화면이 "지금 어느 자리에 서 있는가"를 구별하는
+        /// 데만 쓴다(<see cref="Survive.Progression.ResearchStation"/>).
+        /// </summary>
+        Research = 3
     }
 
     [CreateAssetMenu(menuName = "Survive/Crafting/Recipe")]
