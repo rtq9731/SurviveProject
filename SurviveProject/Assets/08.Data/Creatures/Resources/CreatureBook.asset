@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f55f0d7fe3711042a3f5752b75a935b, type: 3}
+  m_Name: CreatureBook
+  m_EditorClassIdentifier: Survive.Domain::Survive.Creatures.CreatureBookSO
+  creatures:
+  - {fileID: 11400000, guid: 4350542341a84bc4a97543c54359b8c0, type: 2}
+  - {fileID: 11400000, guid: ad67b0b425a2c3e4c8ee1867cf40fb63, type: 2}
+  - {fileID: 11400000, guid: 0e03e4cf3d28bdd49ab2f7e64f7e9e53, type: 2}
+  - {fileID: 11400000, guid: ca66b80396e3519499bcd25e8efe3f74, type: 2}
+  - {fileID: 11400000, guid: 26dd84512b955a04aa8850467051059c, type: 2}

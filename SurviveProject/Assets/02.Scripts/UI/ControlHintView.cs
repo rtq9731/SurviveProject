@@ -56,7 +56,7 @@ namespace Survive.UI
 
             _chapter = Object.FindAnyObjectByType<ChapterDirector>(FindObjectsInactive.Exclude);
 
-            Show("basics", "[WASD] 이동   [E] 상호작용   [Tab] 소지품");
+            Show("basics", "[WASD] 이동   [E] 상호작용   [Tab] 소지품   [J] 분석 기록");
 
             if (_inventory?.Inventory != null)
                 _inventory.Inventory.Changed += OnInventoryChanged;
