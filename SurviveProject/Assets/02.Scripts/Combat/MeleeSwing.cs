@@ -88,6 +88,7 @@ namespace Survive.Combat
 
             float cosLimit = MeleeTargeting.ConeCosLimit(coneAngle);
             Transform self = transform;
+            Vector3 origin = swingOrigin.position;
 
             foreach (var col in candidates)
             {
@@ -100,15 +101,16 @@ namespace Survive.Combat
 
                 if (_hitThisSwing.Contains(target)) continue;        // 콜라이더 여러 개인 대상 중복 방지
 
-                Vector3 toTarget = col.bounds.center - swingOrigin.position;
-                if (!MeleeTargeting.IsWithinCone(swingOrigin.forward, toTarget, cosLimit)) continue;
+                // 겨냥은 한가운데가 아니라 가장 가까운 자리로 한다 — 이유는 TrySelectAim에.
+                if (!MeleeTargeting.TrySelectAim(swingOrigin.forward, cosLimit, origin,
+                                                 NearestPoint(col, origin), col.bounds.center,
+                                                 out Vector3 aim)) continue;
 
                 if (IsBlocked(col)) continue;       // 벽 너머는 때리지 않는다
 
-                Vector3 dir = toTarget.normalized;
+                Vector3 dir = (aim - origin).normalized;
                 _hitThisSwing.Add(target);
-                target.TakeDamage(new DamageInfo(tool.damage, gameObject,
-                                              col.ClosestPoint(swingOrigin.position), -dir));
+                target.TakeDamage(new DamageInfo(tool.damage, gameObject, aim, -dir));
             }
 
             if (_hitThisSwing.Count > 0)
@@ -117,6 +119,23 @@ namespace Survive.Combat
                 hitFeedback?.PlayFeedbacks();
             }
         }
+
+        /// <summary>
+        /// 시전 지점에서 이 콜라이더로 가장 가까운 점.
+        ///
+        /// <see cref="Collider.ClosestPoint"/>는 상자·구·캡슐과 볼록한 메시에서만 표면을
+        /// 돌려준다. 오목한 메시(광맥 대부분, 거대 버섯 통짜 메시)에 물으면 넣은 점을
+        /// 그대로 돌려주면서 콘솔에 경고까지 남긴다. 그래서 그런 콜라이더에는 아예 묻지 않고
+        /// 경계 상자의 가장 가까운 점으로 대신한다 — 실제 표면보다 넉넉하지만 판정이
+        /// 후해지는 쪽이라, 눈앞의 것을 놓치는 것보다는 낫다.
+        ///
+        /// 시전 지점이 대상 안에 들어가 있으면 두 방법 모두 넣은 점을 그대로 돌려준다.
+        /// 그때는 방향이 서지 않으므로 부르는 쪽에서 다른 겨냥점으로 넘어간다.
+        /// </summary>
+        static Vector3 NearestPoint(Collider col, Vector3 origin) =>
+            col is MeshCollider mesh && !mesh.convex
+                ? col.bounds.ClosestPoint(origin)
+                : col.ClosestPoint(origin);
 
         /// <summary>
         /// 시전 지점과 이 콜라이더 사이를 세워 올린 벽이 가로막고 있는가.
@@ -137,7 +156,7 @@ namespace Survive.Combat
 
             // 겨냥할 점은 둘이다. 하나만 뚫려 있어도 닿은 것으로 본다 —
             // 광맥 한쪽이 흙에 묻혀 있다고 드러난 쪽까지 못 캘 이유는 없다.
-            Vector3 surface = target.ClosestPoint(origin);
+            Vector3 surface = NearestPoint(target, origin);
             if ((surface - origin).sqrMagnitude > AimEpsilon * AimEpsilon &&
                 HasClearLine(origin, target, surface))
                 return false;
@@ -148,9 +167,9 @@ namespace Survive.Combat
         /// <summary>
         /// 시전 지점에서 이 점까지 가로막은 것 없이 닿는가.
         ///
-        /// <see cref="Collider.ClosestPoint"/>는 볼록한 콜라이더에서만 표면을 돌려주고
-        /// 오목한 메시(광맥 대부분)에서는 넣은 점을 그대로 돌려준다. 그래서 겨냥점은
-        /// 대상 <b>속</b>일 수도 있는데, 대상 표면에 먼저 닿으면 거기서 선을 끊는다 —
+        /// 겨냥점은 대상 <b>속</b>일 수도 있다 — <see cref="NearestPoint"/>가 오목한 메시에
+        /// 대해 돌려주는 경계 상자 위의 점은 실제 표면보다 안쪽일 수 있고, 한가운데는 말할
+        /// 것도 없다. 그래서 대상 표면에 먼저 닿으면 거기서 선을 끊는다 —
         /// 그 너머는 이미 대상 안이라 무엇이 있든 가로막은 것이 아니다.
         /// </summary>
         bool HasClearLine(Vector3 origin, Collider target, Vector3 aim)

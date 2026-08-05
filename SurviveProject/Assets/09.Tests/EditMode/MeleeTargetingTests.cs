@@ -106,6 +106,144 @@ public class MeleeTargetingTests
                       "원뿔만으로는 자기 몸을 걸러내지 못한다 — 그래서 루트 비교가 필요하다");
     }
 
+    // ── 겨냥점 고르기: 한가운데가 아니라 가장 가까운 자리 ───────────────
+    //
+    // 대상을 점 하나로 줄이면 어디를 고르든 억울한 일이 생긴다. 예전에는 콜라이더
+    // 경계 상자의 한가운데만 봤는데, 거대 버섯처럼 큰 통짜 메시는 그 중심이 머리 위
+    // 빈 공간이라 밑동 앞에 서서 휘둘러도 원뿔 밖이었다. 지형에 반쯤 파묻힌 광맥도
+    // 중심이 흙 속으로 내려가 드러난 부분을 똑바로 보고 빗나갔다.
+    //
+    // 여기 규칙: 구할 수 있는 겨냥점 중 하나라도 원뿔 안에 들면 닿은 것으로 본다.
+    // 한가운데는 후보로 남겨 두므로 판정은 후해지기만 하고 짜지지 않는다.
+
+    [Test]
+    public void 한가운데가_원뿔_안이면_예전처럼_닿는다()
+    {
+        float 한계 = MeleeTargeting.ConeCosLimit(90f);
+        Vector3 원점 = Vector3.zero;
+        Vector3 최근접 = 원점;                    // 구하지 못한 셈 치고 원점을 그대로
+        Vector3 한가운데 = new Vector3(0f, 0f, 5f);
+
+        Assert.IsTrue(MeleeTargeting.TrySelectAim(Vector3.forward, 한계, 원점,
+                                                  최근접, 한가운데, out Vector3 겨냥));
+        Assert.AreEqual(한가운데, 겨냥);
+    }
+
+    [Test]
+    public void 한가운데는_머리_위여도_밑동이_원뿔_안이면_닿는다()
+    {
+        // 거대 버섯의 재현: 밑동은 눈앞이지만 통짜 메시의 중심은 6m 위다.
+        float 한계 = MeleeTargeting.ConeCosLimit(90f);
+        Vector3 원점 = Vector3.zero;
+        Vector3 밑동 = new Vector3(0f, -0.3f, 2f);
+        Vector3 머리위 = new Vector3(0f, 6f, 2f);
+
+        Assert.IsFalse(MeleeTargeting.IsWithinCone(Vector3.forward, 머리위 - 원점, 한계),
+                       "한가운데만 보던 예전 판정은 여기서 빗나갔다");
+        Assert.IsTrue(MeleeTargeting.TrySelectAim(Vector3.forward, 한계, 원점,
+                                                  밑동, 머리위, out Vector3 겨냥));
+        Assert.AreEqual(밑동, 겨냥);
+    }
+
+    [Test]
+    public void 파묻힌_대상은_드러난_쪽으로_겨냥한다()
+    {
+        // 광맥의 재현: 중심은 흙 속이라 시선에서 벗어나 있고, 드러난 윗면은 눈앞이다.
+        float 한계 = MeleeTargeting.ConeCosLimit(60f);
+        Vector3 원점 = new Vector3(0f, 1.6f, 0f);
+        Vector3 시선 = Vector3.forward;
+        Vector3 윗면 = new Vector3(0f, 1.0f, 1.5f);
+        Vector3 중심 = new Vector3(0f, -0.5f, 1.5f);
+
+        Assert.IsFalse(MeleeTargeting.IsWithinCone(시선, 중심 - 원점, 한계));
+        Assert.IsTrue(MeleeTargeting.TrySelectAim(시선, 한계, 원점, 윗면, 중심, out Vector3 겨냥));
+        Assert.AreEqual(윗면, 겨냥);
+    }
+
+    [Test]
+    public void 최근접점이_먼저다()
+    {
+        // 둘 다 원뿔 안이면 더 정확한 쪽을 고른다 — 타격 지점이 표면에 찍혀야 한다.
+        float 한계 = MeleeTargeting.ConeCosLimit(90f);
+        Vector3 원점 = Vector3.zero;
+        Vector3 최근접 = new Vector3(0f, 0f, 1f);
+        Vector3 한가운데 = new Vector3(0f, 0f, 3f);
+
+        Assert.IsTrue(MeleeTargeting.TrySelectAim(Vector3.forward, 한계, 원점,
+                                                  최근접, 한가운데, out Vector3 겨냥));
+        Assert.AreEqual(최근접, 겨냥);
+    }
+
+    [Test]
+    public void 둘_다_원뿔_밖이면_닿지_않는다()
+    {
+        float 한계 = MeleeTargeting.ConeCosLimit(90f);
+        Vector3 원점 = Vector3.zero;
+
+        Assert.IsFalse(MeleeTargeting.TrySelectAim(Vector3.forward, 한계, 원점,
+                                                   방향(120f) * 2f, 방향(150f) * 3f, out _));
+    }
+
+    [Test]
+    public void 뒤쪽은_최근접점으로도_닿지_않는다()
+    {
+        // 판정이 후해졌다고 등 뒤가 열리면 안 된다. 최근접점은 언제나 등 뒤 대상의
+        // 앞면이라 원점에 더 가깝지만, 그래도 원뿔 밖이다.
+        float 한계 = MeleeTargeting.ConeCosLimit(90f);
+        Vector3 원점 = Vector3.zero;
+        Vector3 앞면 = new Vector3(0f, 0f, -1f);
+        Vector3 중심 = new Vector3(0f, 0f, -3f);
+
+        Assert.IsFalse(MeleeTargeting.TrySelectAim(Vector3.forward, 한계, 원점,
+                                                   앞면, 중심, out _));
+    }
+
+    [Test]
+    public void 겨냥점을_못_구하면_한가운데로_돌아간다()
+    {
+        // 오목한 메시나 원점이 대상 안에 든 경우 — 최근접점은 원점 그대로 돌아온다.
+        // 방향이 서지 않으므로 예전 겨냥점만 남는다.
+        float 한계 = MeleeTargeting.ConeCosLimit(90f);
+        Vector3 원점 = new Vector3(3f, 1.6f, -2f);
+
+        Assert.IsFalse(MeleeTargeting.TrySelectAim(Vector3.forward, 한계, 원점,
+                                                   원점, 원점 + Vector3.back * 4f, out _));
+        Assert.IsTrue(MeleeTargeting.TrySelectAim(Vector3.forward, 한계, 원점,
+                                                  원점, 원점 + Vector3.forward * 4f, out Vector3 겨냥));
+        Assert.AreEqual(원점 + Vector3.forward * 4f, 겨냥);
+    }
+
+    [Test]
+    public void 못_골랐어도_겨냥점은_한가운데로_채워_둔다()
+    {
+        // 부르는 쪽이 실수로 써도 원점이 튀어나오지 않게.
+        float 한계 = MeleeTargeting.ConeCosLimit(90f);
+        Vector3 한가운데 = new Vector3(0f, 0f, -5f);
+
+        MeleeTargeting.TrySelectAim(Vector3.forward, 한계, Vector3.zero,
+                                    Vector3.zero, 한가운데, out Vector3 겨냥);
+        Assert.AreEqual(한가운데, 겨냥);
+    }
+
+    [Test]
+    public void 예전에_맞던_것은_전부_그대로_맞는다()
+    {
+        // 불변식을 각도로 훑는다. 한가운데가 원뿔 안이면 최근접점이 무엇이든 닿는다.
+        float 한계 = MeleeTargeting.ConeCosLimit(90f);
+        Vector3 원점 = Vector3.zero;
+
+        for (float 각 = -44f; 각 <= 44f; 각 += 4f)
+        {
+            Vector3 한가운데 = 방향(각) * 3f;
+            foreach (var 최근접 in new[] { 원점, 방향(각 + 90f) * 1f, 방향(180f) * 0.5f })
+            {
+                Assert.IsTrue(MeleeTargeting.TrySelectAim(Vector3.forward, 한계, 원점,
+                                                          최근접, 한가운데, out _),
+                              $"{각}도의 한가운데는 예전에도 닿았다");
+            }
+        }
+    }
+
     // ── 자기 몸 판정 ────────────────────────────────────────────────────
 
     [Test]

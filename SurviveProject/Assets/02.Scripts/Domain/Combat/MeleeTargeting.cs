@@ -33,6 +33,41 @@ namespace Survive.Combat
         }
 
         /// <summary>
+        /// 겨냥점 후보 가운데 전방 원뿔 안에 든 첫 번째를 고른다.
+        ///
+        /// 대상을 점 하나로 줄이면 어디를 고르든 억울한 일이 생긴다. 콜라이더 한가운데는
+        /// 거대 버섯처럼 큰 통짜 메시에서 머리 위 빈 공간이라, 밑동 앞에 서서 휘둘러도
+        /// 원뿔 밖이었다. 지형에 반쯤 파묻힌 광맥도 중심이 흙 속으로 내려가 있어
+        /// 드러난 부분을 똑바로 보고도 빗나갔다.
+        ///
+        /// 그래서 대상에서 구할 수 있는 점을 모두 보고 <b>하나라도</b> 원뿔 안에 들면
+        /// 닿은 것으로 본다. 순서가 곧 정확도라 앞의 것부터 보는데, 마지막에 두는
+        /// <paramref name="center"/>는 예전부터 쓰던 점이다 — 그래서 이 판정이
+        /// 이전보다 짜지는 일은 없고, 후해지기만 한다.
+        /// </summary>
+        /// <param name="forward">휘두르는 쪽이 보고 있는 방향</param>
+        /// <param name="cosLimit"><see cref="ConeCosLimit"/>가 낸 코사인 한계</param>
+        /// <param name="origin">판정 원점(보통 카메라)</param>
+        /// <param name="nearest">
+        /// 대상에서 원점에 가장 가까운 점. 구할 수 없으면 원점을 그대로 넣는다 —
+        /// 방향이 서지 않으므로 <see cref="IsWithinCone"/>가 알아서 걸러낸다.
+        /// </param>
+        /// <param name="center">대상 경계 상자의 한가운데. 예전부터 쓰던 겨냥점</param>
+        /// <param name="aim">고른 겨냥점. 아무것도 못 골랐으면 <paramref name="center"/></param>
+        public static bool TrySelectAim(Vector3 forward, float cosLimit, Vector3 origin,
+                                        Vector3 nearest, Vector3 center, out Vector3 aim)
+        {
+            if (IsWithinCone(forward, nearest - origin, cosLimit))
+            {
+                aim = nearest;
+                return true;
+            }
+
+            aim = center;
+            return IsWithinCone(forward, center - origin, cosLimit);
+        }
+
+        /// <summary>
         /// 이 물건이 휘두른 본인의 몸에 속하는가. 계층의 루트가 같으면 같은 몸으로 본다.
         ///
         /// 판정 구의 중심이 카메라 — 곧 플레이어의 머릿속 — 이라
