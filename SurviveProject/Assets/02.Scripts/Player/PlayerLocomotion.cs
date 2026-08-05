@@ -1,5 +1,7 @@
 using UnityEngine;
+using Survive.Combat;
 using Survive.Input;
+using Survive.World;
 
 namespace Survive.Player
 {
@@ -46,21 +48,44 @@ namespace Survive.Player
         // 오를 수 없는 턱을 오를 수 있다고 판정한다.
         const float ClimbOutProbeDistance = 0.7f;
 
+        // 몸이 옮겨졌는지 가리는 여유. CharacterController는 부탁한 것보다 멀리 가지 않는다 —
+        // 계단을 밟고 오르거나 경사에 붙는 만큼만 더 움직인다. 그 여유를 넘어서는 이동은
+        // 우리가 시킨 것이 아니라 누군가 좌표를 바꾼 것이다(부활·검증 하네스).
+        const float TeleportSlack = 1f;
+
         CharacterController _cc;
+        PlayerDamageReceiver _damage;
         Vector2 _moveInput = Vector2.zero;
         float _verticalSpeed;
         float _nextJumpTime;
         bool _locked;
 
+        // ── 낙하 추적 ──
+        Vector3 _lastPosition;
+        Vector3 _lastRequestedMove;
+        bool _hasLastPosition;
+        bool _wasGrounded = true;
+
+        // 이번 체공이 낙하로 셈해지지 않는 상태. 몸이 옮겨졌거나 물에 닿으면 선다.
+        // 발이 다시 땅에 닿는 순간 풀린다 — 다음 낙하는 정상으로 센다.
+        bool _fallDisarmed;
+
         public bool IsGrounded => _cc != null && _cc.isGrounded;
         public float CurrentSpeed { get; private set; }
         public Vector3 PlanarVelocity { get; private set; }
+
+        /// <summary>마지막으로 땅에 닿을 때의 하강 속도(m/s). 무해했어도 적는다 — 실측용이다.</summary>
+        public float LastLandingSpeed { get; private set; }
+
+        /// <summary>그 착지로 실제로 입은 피해. 무해했으면 0.</summary>
+        public float LastFallDamage { get; private set; }
 
         void Awake()
         {
             _cc = GetComponent<CharacterController>();
             if (swimming == null) swimming = GetComponent<PlayerSwimming>();
             if (cameraRig == null) cameraRig = GetComponent<PlayerCameraRig>();
+            _damage = GetComponentInChildren<PlayerDamageReceiver>(true);
         }
 
         void OnEnable()
@@ -107,11 +132,82 @@ namespace Survive.Player
             float dt = Time.deltaTime;
             bool isSwimming = swimming != null && swimming.IsSwimming;
 
+            TrackFall();
+
             Vector3 dir = _locked ? Vector3.zero : new Vector3(_moveInput.x, 0f, _moveInput.y);
             if (dir.sqrMagnitude > 1f) dir.Normalize();
 
             if (isSwimming) SwimMove(dir, dt);
             else GroundMove(dir, dt);
+
+            _lastPosition = transform.position;
+            _hasLastPosition = true;
+        }
+
+        // ── 낙하 대가 ────────────────────────────────────────────
+
+        /// <summary>
+        /// 떨어졌다가 굳은 땅에 부딪히면 대가를 치른다.
+        ///
+        /// 여기서 하는 일은 셋뿐이다 — 낙하가 아닌 것을 걸러 내고(순간이동·입수),
+        /// 착지 순간을 잡고, 그때의 하강 속도를 <see cref="FallImpact"/>에 묻는다.
+        /// 얼마나 아픈가는 Unity 없이 시험되는 그쪽에 있다.
+        ///
+        /// 이동 자체는 건드리지 않는다. 낙하 판정을 위해 <c>_verticalSpeed</c>를
+        /// 손보기 시작하면 점프·부력·물가 기어오르기가 전부 같이 흔들린다.
+        /// </summary>
+        void TrackFall()
+        {
+            // 몸이 옮겨졌는가. CharacterController는 부탁한 것보다 멀리 가지 않으므로,
+            // 그보다 멀리 갔다면 부활이나 검증 하네스가 좌표를 바꾼 것이다.
+            // 옮겨진 뒤의 첫 착지는 낙하가 아니다.
+            if (_hasLastPosition)
+            {
+                float moved = (transform.position - _lastPosition).magnitude;
+                if (moved > _lastRequestedMove.magnitude + TeleportSlack) _fallDisarmed = true;
+            }
+
+            // 물에 닿았으면 아무 높이에서 떨어졌어도 없던 일이 된다.
+            if (InWater()) _fallDisarmed = true;
+
+            bool grounded = _cc.isGrounded;
+
+            // 발이 닿은 첫 프레임에는 하강 속도가 아직 그대로 남아 있다 —
+            // GroundMove가 -1로 눌러 버리기 전인 지금이 부딪힌 속도를 읽을 유일한 때다.
+            if (grounded && !_wasGrounded) Land(Mathf.Max(0f, -_verticalSpeed));
+
+            if (grounded) _fallDisarmed = false;
+            _wasGrounded = grounded;
+        }
+
+        void Land(float impactSpeed)
+        {
+            LastLandingSpeed = impactSpeed;
+
+            float damage = _fallDisarmed ? 0f : FallImpact.DamageFor(impactSpeed);
+            LastFallDamage = damage;
+            if (damage <= 0f) return;
+
+            if (_damage == null) _damage = GetComponentInChildren<PlayerDamageReceiver>(true);
+            if (_damage == null) return;
+
+            // 가해자가 없는 피해다. 때린 것은 땅이므로 자기 타격 걸름막에 걸리지 않는다.
+            _damage.TakeDamage(new DamageInfo(damage, null, transform.position, Vector3.up));
+        }
+
+        /// <summary>
+        /// 발이 물에 잠겼는가.
+        ///
+        /// <see cref="PlayerSwimming"/>의 상태를 빌리지 않고 직접 보는 이유는 같은 프레임
+        /// 안의 실행 순서에 기대지 않기 위해서다 — 빠르게 떨어질 때는 한 프레임이 몇 미터라,
+        /// 상태가 한 박자만 늦어도 물에 빠진 사람이 바닥에 부딪힌 것으로 셈해진다.
+        /// </summary>
+        bool InWater()
+        {
+            if (!WaterBody.TryGetSurfaceAt(transform.position, out float surfaceY)) return false;
+
+            float feetY = transform.position.y - _cc.height * 0.5f + _cc.center.y;
+            return feetY < surfaceY;
         }
 
         void GroundMove(Vector3 dir, float dt)
@@ -127,7 +223,8 @@ namespace Survive.Player
             if (_cc.isGrounded && _verticalSpeed < 0f) _verticalSpeed = -1f;
             _verticalSpeed += -9.81f * gravityScale * dt;
 
-            _cc.Move((planar + Vector3.up * _verticalSpeed) * dt);
+            _lastRequestedMove = (planar + Vector3.up * _verticalSpeed) * dt;
+            _cc.Move(_lastRequestedMove);
 
             PlanarVelocity = planar;
             CurrentSpeed = planar.magnitude;
@@ -171,7 +268,8 @@ namespace Survive.Player
             if (dir.sqrMagnitude > 0.01f && CanClimbOut(MoveTo))
                 _verticalSpeed = Mathf.Max(_verticalSpeed, climbOutBoost);
 
-            _cc.Move((MoveTo + Vector3.up * _verticalSpeed) * dt);
+            _lastRequestedMove = (MoveTo + Vector3.up * _verticalSpeed) * dt;
+            _cc.Move(_lastRequestedMove);
 
             PlanarVelocity = new Vector3(MoveTo.x, 0f, MoveTo.z);
             CurrentSpeed = PlanarVelocity.magnitude;
