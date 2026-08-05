@@ -17,6 +17,65 @@ namespace Survive.Narrative
         [SerializeField] TMP_Text label;
         [SerializeField] float fadeSeconds = 0.25f;
 
+        /// <summary>
+        /// 캔버스에 자막 한 줄을 세운다. 이미 있으면 그것을 쓴다.
+        ///
+        /// 프롤로그 씬에는 자막판이 놓여 있지만 본 게임 씬에는 없다. 씬 파일을
+        /// 고치는 대신 런타임에 붙인다 — CraftQueueView가 대기열 띠를 붙이는
+        /// 것과 같은 방식이고, 여러 갈래로 나뉜 작업이 같은 씬 파일에서
+        /// 부딪히는 일도 없앤다.
+        /// </summary>
+        public static SubtitleView Ensure(Transform canvasParent, TMP_FontAsset font)
+        {
+            if (canvasParent == null) return null;
+
+            var existing = canvasParent.GetComponentInChildren<SubtitleView>(true);
+            if (existing != null) return existing;
+
+            var go = new GameObject("SubtitleLine", typeof(RectTransform));
+            go.transform.SetParent(canvasParent, false);
+
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = new Vector2(0.5f, 0f);
+            rt.anchorMax = new Vector2(0.5f, 0f);
+            rt.pivot = new Vector2(0.5f, 0f);
+            // 대기열 띠(y 100)와 퀵슬롯 위. 그보다 위에 앉힌다.
+            rt.anchoredPosition = new Vector2(0f, 180f);
+            rt.sizeDelta = new Vector2(920f, 84f);
+
+            var plate = go.AddComponent<Image>();
+            plate.color = new Color(0f, 0f, 0f, 0.55f);
+            plate.raycastTarget = false;
+
+            var cg = go.AddComponent<CanvasGroup>();
+            cg.alpha = 0f;
+            cg.blocksRaycasts = false;
+            cg.interactable = false;
+
+            var textGo = new GameObject("Text", typeof(RectTransform));
+            textGo.transform.SetParent(go.transform, false);
+            var trt = (RectTransform)textGo.transform;
+            trt.anchorMin = Vector2.zero;
+            trt.anchorMax = Vector2.one;
+            trt.offsetMin = new Vector2(18f, 8f);
+            trt.offsetMax = new Vector2(-18f, -8f);
+
+            var txt = textGo.AddComponent<TextMeshProUGUI>();
+            if (font != null) txt.font = font;
+            txt.fontSize = 22f;
+            txt.enableAutoSizing = true;
+            txt.fontSizeMin = 15f;
+            txt.fontSizeMax = 22f;
+            txt.alignment = TextAlignmentOptions.Center;
+            txt.color = new Color(0.92f, 0.95f, 1f, 1f);
+            txt.raycastTarget = false;
+
+            var view = go.AddComponent<SubtitleView>();
+            view.group = cg;
+            view.label = txt;
+            return view;
+        }
+
         void Awake()
         {
             if (group == null) group = GetComponent<CanvasGroup>();

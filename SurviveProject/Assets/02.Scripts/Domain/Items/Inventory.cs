@@ -24,6 +24,17 @@ namespace Survive.Items
         public event Action Changed;
 
         /// <summary>
+        /// 방금 <b>실제로 들어간</b> 아이템과 개수. 자리가 없어 하나도 못 들어가면
+        /// 울리지 않는다.
+        ///
+        /// <see cref="Changed"/>가 있는데 하나 더 두는 이유: 저쪽은 "무언가 바뀌었다"만
+        /// 말한다. 현장 발견(첫 습득)은 <b>무엇이</b> 들어왔는지를 알아야 한다.
+        /// 여기가 게임의 모든 획득 경로가 지나는 유일한 길목이라, 줍기·채집·제작
+        /// 완성·보관함 인출을 한 자리에서 듣는다.
+        /// </summary>
+        public event Action<ItemDataSO, int> ItemAdded;
+
+        /// <summary>
         /// 기존 스택을 먼저 채우고, 남으면 빈 슬롯을 쓴다.
         /// </summary>
         /// <returns>넣지 못하고 남은 개수. 0이면 전부 들어갔다.</returns>
@@ -56,7 +67,13 @@ namespace Survive.Items
                 remaining -= toAdd;
             }
 
-            if (remaining != count) Changed?.Invoke();
+            if (remaining != count)
+            {
+                // ItemAdded가 먼저다. 첫 습득으로 청사진이 열리는 일이 여기서
+                // 일어나므로, 그다음에 Changed를 듣는 화면들은 이미 열린 원장을 본다.
+                ItemAdded?.Invoke(item, count - remaining);
+                Changed?.Invoke();
+            }
             return remaining;
         }
 

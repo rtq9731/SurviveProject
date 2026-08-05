@@ -24,3 +24,4 @@ MonoBehaviour:
     count: 1
   craftSeconds: 3
   requiredStation: 0
+  requiredBlueprint: {fileID: 11400000, guid: 3300a05c4eba7e246a961d6a0f7f99d4, type: 2}

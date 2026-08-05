@@ -19,8 +19,12 @@ MonoBehaviour:
   cost:
   - item: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}
     count: 4
+  requiredBlueprint: {fileID: 11400000, guid: 8400403fa0bae07429af970910117dfe, type: 2}
   placement: 0
   maxSlopeDegrees: 35
   clearanceRadius: 0.8
   gridSnap: 0
   rotationStep: 15
+  pieceKind: 0
+  snapRadius: 3.5
+  requiresSnap: 0
