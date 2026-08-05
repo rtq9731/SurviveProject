@@ -48,7 +48,7 @@ namespace Survive.UI
         {
             public RecipeSO recipe;
             public Button button;      // 행 전체 = 걸기
-            public Image frame;        // 잠긴 줄은 판때기까지 가라앉힌다
+            public Image frame;
             public TMP_Text label;
             public Button minus;
             public Button plus;
@@ -90,6 +90,14 @@ namespace Survive.UI
         /// <summary>연료 넣기처럼 스테이션마다 붙는 한 줄. 없는 스테이션에서는 꺼진다.</summary>
         Button _sideButton;
         TMP_Text _sideLabel;
+
+        /// <summary>
+        /// 실린 줄이 하나도 없을 때 대신 서는 한 줄. 판때기가 여백만 남은 띠로
+        /// 찌그러지지 않게 하는 것이 첫째 이유이고, 창이 고장 난 것이 아니라는
+        /// 것을 말해 주는 것이 둘째다.
+        /// </summary>
+        GameObject _emptyRow;
+        TMP_Text _emptyLabel;
 
         /// <summary>지금 열려 있는 목록이 어느 작업대 기준인지. 소지품 UI가 구분에 쓴다.</summary>
         public StationType CurrentStation => _station;
@@ -193,6 +201,7 @@ namespace Survive.UI
 
             BuildSideRow();
             BuildResearchHeader();
+            BuildEmptyRow();
             RefreshList();
         }
 
@@ -305,12 +314,10 @@ namespace Survive.UI
 
             // 줄에는 이름과 재료 수치만 적힌다. 만들어 봐야 무엇에 쓰는 물건인지
             // 모르는 채로 목록을 훑게 되므로, 커서를 올리면 결과물의 설명문을 읽어 준다.
-            // 잠긴 줄은 아무것도 알려 주지 않는다 — 재료조차 감추는 DescribeLocked와 같은 규율이다.
+            // 모르는 레시피를 걱정할 필요는 없다 — 그런 줄은 켜지지도 않는다.
             ItemTooltipTrigger.Attach(go).Bind(
-                () => BlueprintGate.IsUnlocked(captured.requiredBlueprint, BlueprintGate.Active)
-                          ? captured.result?.item
-                          : null,
-                () => IngredientLine(captured));
+                () => captured.result?.item,
+                () => MenuListing.IngredientLine(captured));
 
             btn.onClick.AddListener(() => Enqueue(captured));
             minus.onClick.AddListener(() => Nudge(captured, -1));
@@ -336,6 +343,32 @@ namespace Survive.UI
             _sideLabel.alignment = TextAlignmentOptions.Center;
 
             _sideButton.onClick.AddListener(RunSideAction);
+            go.SetActive(false);
+        }
+
+        /// <summary>
+        /// "아직 아는 제작법이 없다" 한 줄. 누르는 자리가 아니라 Button을 달지 않는다 —
+        /// 이름이 Row_로 시작하지 않는 것도 일부러다. 검증 하네스가 목록에 실린 줄을
+        /// 셀 때 이 자리가 한 개로 세어지면 "비어 있다"를 증명할 수 없다.
+        /// </summary>
+        void BuildEmptyRow()
+        {
+            if (_emptyRow != null) return;
+
+            var go = new GameObject("EmptyNotice", typeof(RectTransform));
+            go.transform.SetParent(rowParent, false);
+            var rt = (RectTransform)go.transform;
+            rt.sizeDelta = new Vector2(RowWidth, RowHeight);
+
+            var img = go.AddComponent<Image>();
+            UISkin.ApplyPanel(img, new Color(0.10f, 0.11f, 0.14f, 0.85f));
+            img.raycastTarget = false;
+
+            _emptyLabel = MakeLabel(go.transform, "Label", 12f, -12f);
+            _emptyLabel.alignment = TextAlignmentOptions.Center;
+            _emptyLabel.color = new Color(0.62f, 0.64f, 0.70f, 1f);
+
+            _emptyRow = go;
             go.SetActive(false);
         }
 
@@ -414,7 +447,11 @@ namespace Survive.UI
             return txt;
         }
 
-        /// <summary>잠긴 줄의 판때기·글자색. 실루엣만 남기고 가라앉힌다.</summary>
+        /// <summary>
+        /// 이미 아는 연구 항목의 판때기·글자색. 실루엣만 남기고 가라앉힌다.
+        /// 제작 줄에는 더 이상 쓰이지 않는다 — 모르는 제작법은 가라앉히는 것이
+        /// 아니라 아예 실리지 않는다.
+        /// </summary>
         static readonly Color LockedFrame = new Color(0.09f, 0.10f, 0.13f, 0.75f);
         static readonly Color LockedLabel = new Color(0.46f, 0.48f, 0.56f, 1f);
         static readonly Color NormalFrame = new Color(0.12f, 0.14f, 0.18f, 0.9f);
@@ -431,67 +468,61 @@ namespace Survive.UI
 
             foreach (var row in _rows)
             {
-                if (researching)
-                {
-                    if (row.button != null && row.button.gameObject.activeSelf)
-                        row.button.gameObject.SetActive(false);
-                    continue;
-                }
+                // 실리는 조건은 두 가지다. 이 자리에서 만드는 것이어야 하고,
+                // <b>만들 줄 알아야</b> 한다. 모르는 것은 회색으로 남기지 않고
+                // 줄 자체를 끈다 — 남겨 두면 이름도, 여는 방법도, 그 뒤에 무엇이
+                // 기다리는지도 통째로 새어 나간다(MenuListing 참조).
+                bool visible = !researching &&
+                               MenuListing.ShouldList(row.recipe, _station, ledger);
 
-                // 손 제작 목록에서는 스테이션 전용을 아예 숨긴다.
-                // 회색으로 남겨두면 "왜 안 되지"를 매번 확인하게 된다.
-                // 스테이션에서는 손으로 되는 것까지 보인다 — 제작대 앞에서
-                // 곡괭이를 만들려고 창을 두 번 여는 일은 없어야 한다.
-                // 다만 <b>다른</b> 스테이션 전용은 여기서도 숨긴다.
-                bool visible = row.recipe.requiredStation == StationType.None ||
-                               row.recipe.requiredStation == _station;
                 if (row.button != null && row.button.gameObject.activeSelf != visible)
                     row.button.gameObject.SetActive(visible);
                 if (!visible) continue;
                 shown++;
 
-                // 모르는 것은 목록에서 지우지 않는다. 무엇이 있는지는 보여야
-                // 찾아 나설 수 있다 — 대신 실루엣으로 가라앉히고, 왜 잠겼는지와
-                // 무엇을 하면 열리는지를 그 자리에 적는다.
-                bool known = BlueprintGate.IsUnlocked(row.recipe.requiredBlueprint, ledger);
-
-                int max = known ? MaxFor(row.recipe) : 0;
+                int max = MaxFor(row.recipe);
                 int want = Mathf.Clamp(Wanted(row.recipe), 1, Mathf.Max(1, max));
                 _wanted[row.recipe.id] = want;
 
                 var queue = ActiveQueue;
                 bool queueRoom = queue != null && !queue.IsFull;
-                bool canMake = known && max >= want && queueRoom;
+                bool canMake = max >= want && queueRoom;
 
                 if (row.button != null) row.button.interactable = canMake;
-                if (row.frame != null) row.frame.color = known ? NormalFrame : LockedFrame;
-                if (row.minus != null) row.minus.interactable = known && want > 1;
-                if (row.plus != null) row.plus.interactable = known && want < max;
-                if (row.max != null) row.max.interactable = known && max >= 1 && want != max;
+                if (row.frame != null) row.frame.color = NormalFrame;
+                if (row.minus != null) row.minus.interactable = want > 1;
+                if (row.plus != null) row.plus.interactable = want < max;
+                if (row.max != null) row.max.interactable = max >= 1 && want != max;
                 if (row.amount != null)
                 {
-                    // 잠긴 줄의 수량 자리는 붙임표로 비운다. 줄표(—)를 쓰던 시절이
-                    // 있었는데 본문 글꼴(ChosunGu)에 없어 화면에 두부(□)로 떴다.
-                    row.amount.text = known ? "x" + want : "-";
-                    row.amount.color = canMake ? Color.white
-                                     : known ? new Color(0.6f, 0.6f, 0.66f)
-                                             : LockedLabel;
+                    row.amount.text = "x" + want;
+                    row.amount.color = canMake ? Color.white : new Color(0.6f, 0.6f, 0.66f);
                 }
 
                 if (row.label != null)
                 {
-                    row.label.text = known
-                        ? Describe(row.recipe, inv, want, queueRoom)
-                        : DescribeLocked(row.recipe);
-                    row.label.color = canMake ? Color.white
-                                    : known ? new Color(0.65f, 0.65f, 0.7f, 1f)
-                                            : LockedLabel;
+                    row.label.text = MenuListing.RecipeLine(row.recipe, inv, want, queueRoom);
+                    row.label.color = canMake ? Color.white : new Color(0.65f, 0.65f, 0.7f, 1f);
                 }
             }
 
             shown += RefreshSideRow() ? 1 : 0;
             shown += RefreshResearchRows(inv, ledger);
-            FitPanel(shown);
+            RefreshEmptyRow(shown);
+            FitPanel(MenuListing.PanelRows(shown));
+        }
+
+        /// <summary>
+        /// 목록이 통째로 비었을 때만 안내 한 줄을 세운다.
+        /// 몇 개가 잠겼는지는 적지 않는다 — 그 숫자도 앞으로 무엇이 있는지를 말한다.
+        /// </summary>
+        void RefreshEmptyRow(int shown)
+        {
+            if (_emptyRow == null) return;
+
+            bool empty = shown <= 0;
+            if (_emptyRow.activeSelf != empty) _emptyRow.SetActive(empty);
+            if (empty && _emptyLabel != null) _emptyLabel.text = MenuListing.NothingKnownToCraft;
         }
 
         // ── 연구 목록 ────────────────────────────────────────────
@@ -674,73 +705,18 @@ namespace Survive.UI
         void FitPanel(int visibleRows)
         {
             var rowsRect = rowParent as RectTransform;
-            if (panel == null || rowsRect == null || _rows.Count == 0) return;
+            if (panel == null || rowsRect == null) return;
 
-            var first = _rows[0].button != null ? (RectTransform)_rows[0].button.transform : null;
+            // 줄이 하나도 만들어지지 않았어도 높이는 재야 한다 — 안내 한 줄이 서 있다.
+            var first = _rows.Count > 0 && _rows[0].button != null
+                ? (RectTransform)_rows[0].button.transform
+                : null;
             float rowHeight = first != null ? first.sizeDelta.y : RowHeight;
 
             var layout = rowsRect.GetComponent<VerticalLayoutGroup>();
             float spacing = layout != null ? layout.spacing : 8f;
 
             UISkin.FitPanelHeight(panel, rowsRect, visibleRows, rowHeight, spacing);
-        }
-
-        string Describe(RecipeSO r, Inventory inv, int want, bool queueRoom)
-        {
-            var sb = new StringBuilder();
-            sb.Append(string.IsNullOrEmpty(r.displayName) ? r.result?.item?.displayName ?? r.id : r.displayName);
-            sb.Append("  ·  ");
-
-            if (r.ingredients == null || r.ingredients.Length == 0) sb.Append("재료 없음");
-            else
-            {
-                bool first = true;
-                foreach (var need in r.ingredients)
-                {
-                    if (need?.item == null) continue;
-                    if (!first) sb.Append(", ");
-                    int held = inv != null ? inv.CountOf(need.item.id) : 0;
-                    sb.Append($"{need.item.displayName} {held}/{need.count * want}");
-                    first = false;
-                }
-            }
-
-            sb.Append($"  ·  {CraftTimeText.Short(r.craftSeconds * want)}");
-            if (!queueRoom) sb.Append("  (대기열이 가득 찼다)");
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// 쪽지에 덧붙일 재료 한 줄. 줄에 적힌 것과 달리 가진 수량은 넣지 않는다 —
-        /// 그 숫자는 이미 줄에 있고, 쪽지가 알려 줄 것은 "무엇이 드는가"다.
-        /// </summary>
-        static string IngredientLine(RecipeSO r)
-        {
-            if (r?.ingredients == null || r.ingredients.Length == 0) return "재료 없음";
-
-            var sb = new StringBuilder("재료  ·  ");
-            bool first = true;
-            foreach (var need in r.ingredients)
-            {
-                if (need?.item == null || need.count <= 0) continue;
-                if (!first) sb.Append(", ");
-                sb.Append(need.item.displayName).Append(' ').Append(need.count);
-                first = false;
-            }
-            return first ? "재료 없음" : sb.ToString();
-        }
-
-        /// <summary>
-        /// 잠긴 줄. 재료 목록은 적지 않는다 — 무엇이 드는지도 아직 모르는 것이
-        /// 잠겼다는 뜻이다. 이름과 여는 방법만 남긴다.
-        /// </summary>
-        static string DescribeLocked(RecipeSO r)
-        {
-            string name = string.IsNullOrEmpty(r.displayName)
-                ? r.result?.item?.displayName ?? r.id
-                : r.displayName;
-
-            return $"{name}  ·  {BlueprintGate.LockText(r.requiredBlueprint)}";
         }
 
         // ── 수량과 걸기 ──────────────────────────────────────────

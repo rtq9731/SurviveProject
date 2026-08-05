@@ -194,14 +194,13 @@ public class UnlockLedgerTests
     }
 
     [Test]
-    public void 잠금_문구는_이름과_여는_방법을_담는다()
+    public void 잠금_문구를_만드는_함수는_더_이상_없다()
     {
-        var bp = 청사진("bp_scrapworks", "스크랩 재활용", "스크랩을 손에 넣어라");
-        var text = BlueprintGate.LockText(bp);
-
-        StringAssert.Contains("잠김", text);
-        StringAssert.Contains("스크랩 재활용", text);
-        StringAssert.Contains("스크랩을 손에 넣어라", text);
+        // LockText는 청사진 이름과 hint를 화면으로 옮기는 유일한 통로였다.
+        // 모르는 것은 목록에 실리지 않기로 했으므로 그 통로를 막았다.
+        // 함수가 살아 있으면 언젠가 누군가 다시 부른다.
+        Assert.IsNull(typeof(BlueprintGate).GetMethod("LockText"),
+            "BlueprintGate.LockText가 되살아났다 — 잠긴 항목의 힌트가 화면으로 새는 길이다");
     }
 
     static BlueprintSO 청사진(string id, string name = null, string hint = null)

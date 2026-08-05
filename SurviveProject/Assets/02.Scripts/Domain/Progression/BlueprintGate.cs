@@ -32,24 +32,10 @@ namespace Survive.Progression
             return ledger.IsUnlocked(required.id);
         }
 
-        /// <summary>
-        /// 잠긴 줄에 그대로 띄울 한 줄.
-        ///
-        /// 이름과 힌트를 가르는 것은 <b>쌍점</b>이다. 줄표(em dash)를 쓰던 시절이
-        /// 있었는데 본문 글꼴(ChosunGu)에 그 글자가 없어 화면에는 두부(□)가 떴다.
-        /// 화면에 나가는 문자는 글꼴이 아는 것만 쓴다.
-        /// </summary>
-        public static string LockText(BlueprintSO required)
-        {
-            if (required == null) return "[잠김]";
-
-            string name = string.IsNullOrWhiteSpace(required.displayName)
-                ? required.id
-                : required.displayName;
-
-            return string.IsNullOrWhiteSpace(required.hint)
-                ? $"[잠김] {name} 청사진이 필요하다"
-                : $"[잠김] {name} 청사진이 필요하다: {required.hint}";
-        }
+        // 잠긴 줄에 띄울 문구를 만드는 LockText가 여기 있었다. 지웠다 —
+        // 모르는 것은 이제 목록에 실리지 않으므로 띄울 자리 자체가 없고,
+        // 그 문구가 청사진 이름과 hint("낫의 핵을 연구대에서 분석하면 알게 된다")를
+        // 화면으로 옮기는 유일한 통로였다. 함수를 남겨 두면 언젠가 다시 쓰인다.
+        // 도감(CodexCatalog)은 여기를 거치지 않고 자기 규칙으로 hint를 다룬다.
     }
 }
