@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f82d56965140cd24697a5e38a6adb2f7, type: 3}
-  m_Name: ch1_06_portal
+  m_Name: ch1_06_descent
   m_EditorClassIdentifier: Survive.Domain::Survive.Progression.FlagObjective
-  id: ch1_06_portal
-  displayText: "\uD3EC\uD0C8\uC744 \uAE30\uB3D9\uD55C\uB2E4"
-  flagKey: ch1_portal_activated
+  id: ch1_06_descent
+  displayText: "\uC7A0\uD56D\uAD6C\uB97C \uB9CC\uB4E4\uC5B4 \uB0B4\uB824\uAC04\uB2E4"
+  flagKey: ch1_descended
   requiredCount: 1

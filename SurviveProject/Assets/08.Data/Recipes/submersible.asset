@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1b123bdcba02194dba421f19571e2a5, type: 3}
+  m_Name: submersible
+  m_EditorClassIdentifier: Survive.Domain::Survive.Crafting.RecipeSO
+  id: submersible
+  displayName: "\uC7A0\uD56D\uAD6C"
+  ingredients:
+  - item: {fileID: 11400000, guid: 9c9021f4dd0e48c9a7856658569769fa, type: 2}
+    count: 6
+  - item: {fileID: 11400000, guid: 4e8d21caad266464d96dec179244ae88, type: 2}
+    count: 4
+  - item: {fileID: 11400000, guid: 920a6043919ea1043985803e52162d69, type: 2}
+    count: 4
+  - item: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}
+    count: 20
+  result:
+    item: {fileID: 11400000, guid: 3ced56657f1d4b19903c266e657e8de8, type: 2}
+    count: 1
+  craftSeconds: 20
+  requiredStation: 1

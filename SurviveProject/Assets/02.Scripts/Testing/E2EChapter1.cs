@@ -53,7 +53,7 @@ namespace Survive.Testing
             yield return Objective3Scrap(dir);
             yield return Objective4Pickaxe(dir);
             yield return Objective5Lantern(dir);
-            yield return Objective6Portal(dir);
+            yield return Objective6Descent(dir);
 
             yield return E2EHarness.WaitUntil(
                 () => dir.Current == null, "챕터 1이 완주된다", 5f);
@@ -141,40 +141,52 @@ namespace Survive.Testing
             E2EHarness.Log("목표[5] " + dir.Current.displayText);
         }
 
-        // ── 목표 6: 포탈 기동 ────────────────────────────────────
+        // ── 목표 6: 잠항구를 만들어 내려간다 ─────────────────────
 
-        static IEnumerator Objective6Portal(ChapterDirector dir)
+        /// <summary>
+        /// 종막 (백로그 36). 예전에는 포탈을 기동했다 — 남이 놔둔 장치를 켜고 떠나는
+        /// 이야기였고, 4번 섬에서 캔 매크로늄은 쓸 데가 없었다. 지금은 그 매크로늄으로
+        /// 잠항구를 만들어 여태 닿으면 죽던 층으로 걸어 들어간다 (기획서 §6.2).
+        ///
+        /// <b>매크로늄과 짙은 층은 아직 씬에 없다.</b> 4번 섬의 광맥도 액면도 배치는
+        /// §8-4의 일이라 이번 작업에서 씬을 건드리지 않았다. 그래서 재료는 주입하고
+        /// 층은 런타임에 세운다 — 여기서 볼 것은 배치가 아니라 종막의 흐름
+        /// ("만들었는가 → 걸쳤는가 → 스스로 내려갔는가")이다.
+        /// </summary>
+        static IEnumerator Objective6Descent(ChapterDirector dir)
         {
-            E2EHarness.Log("목표6: 합금과 스크랩을 모아 포탈을 기동한다");
+            E2EHarness.Log("목표6: 매크로늄으로 잠항구를 만들어 짙은 층을 뚫고 내려간다");
 
             // 곡괭이가 있어야 광맥을 캘 수 있다
             var user = E2EHarness.Player.GetComponent<Survive.Player.PlayerToolUser>();
             user?.EquipFirst("pickaxe");
             yield return null;
 
-            yield return GatherMaterial("alien_alloy", 2, ToolType.Pickaxe);
-            yield return GatherMaterial("scrap", 15, ToolType.None);
+            var recipe = Resources.FindObjectsOfTypeAll<RecipeSO>()
+                                  .FirstOrDefault(r => r != null && r.id == "submersible");
+            E2EHarness.Assert(recipe != null, "잠항구 레시피가 있다");
+            if (recipe == null) yield break;
 
-            var portal = Object.FindFirstObjectByType<PortalDevice>(FindObjectsInactive.Exclude);
-            E2EHarness.Assert(portal != null, "포탈이 씬에 있다");
+            foreach (var need in recipe.ingredients)
+            {
+                if (need?.item == null) continue;
 
-            var cam = E2EHarness.Eye;
-            portal.transform.position = cam.transform.position + cam.transform.forward * 3f;
-            yield return null;
-            E2EHarness.LookAt(portal.transform.position);
-            yield return null;
-            yield return null;
+                // 매크로늄만은 캘 곳이 아직 없다 — 4번 섬의 광맥은 §8-4에서 놓인다.
+                var tool = need.item.id == "alien_alloy" ? ToolType.Pickaxe : ToolType.None;
+                if (need.item.id == "macronium") GrantItem("macronium", need.count - Inv.CountOf("macronium"));
+                else yield return GatherMaterial(need.item.id, need.count, tool);
+            }
 
-            var it = E2EHarness.Player.Interactor;
-            yield return E2EHarness.WaitUntil(() => it.Current != null, "포탈이 탐지된다", 3f);
-            E2EHarness.Log("  프롬프트: " + it.Current.InteractionPrompt);
-            E2EHarness.Assert(it.Current.CanInteract(E2EHarness.Player), "포탈 요구물을 충족했다");
+            yield return CraftRecipe("submersible");
+            E2EHarness.Assert(Inv.CountOf("submersible") > 0, "잠항구를 손에 넣었다");
 
-            yield return E2EHarness.TapKey(Key.E);
-            yield return null;
+            // 4번 섬에 닿으려면 이미 있었어야 하는 물건이다(§5.4의 사슬).
+            if (Inv.CountOf("surface_walker") == 0) GrantItem("surface_walker", 1);
+
+            yield return E2EDescent.여기서_내려간다();
 
             yield return E2EHarness.WaitUntil(
-                () => dir.CurrentIndex >= 6, "목표6 완료 (포탈 기동)", 6f);
+                () => dir.CurrentIndex >= 6, "목표6 완료 (잠항구 제작·하강)", 6f);
         }
 
         // ── 공통 동작 ────────────────────────────────────────────
@@ -366,9 +378,17 @@ namespace Survive.Testing
             var ui = Object.FindFirstObjectByType<CraftingUI>(FindObjectsInactive.Include);
             E2EHarness.Assert(ui != null, "CraftingUI가 있다");
 
-            // 제작대에서 열어야 스테이션 요건이 맞는다
+            var recipe = Resources.FindObjectsOfTypeAll<RecipeSO>()
+                                  .FirstOrDefault(r => r != null && r.id == recipeId);
             var bench = Object.FindFirstObjectByType<CraftingBench>(FindObjectsInactive.Exclude);
-            if (bench != null) ui.Open(bench.StationType);
+
+            // 스테이션을 요구하는 레시피는 제작대 <b>자신</b>에게 걸어야 한다.
+            // 종류만 넘기면 작업이 손 제작 줄로 가고, 그러면 제작대에 걸어 두고
+            // 떠날 수 있다는 규칙(§5.4)이 검증에서 통째로 빠진다.
+            bool atBench = recipe != null && recipe.requiredStation != StationType.None && bench != null;
+
+            if (atBench) ui.Open(bench);
+            else if (bench != null) ui.Open(bench.StationType);
             else ui.Open(StationType.None);
 
             yield return null;
@@ -379,8 +399,6 @@ namespace Survive.Testing
             E2EHarness.Assert(row != null, $"레시피 행이 있다: {recipeId}");
             E2EHarness.Assert(row.interactable, $"{recipeId} 제작 조건을 충족했다");
 
-            var recipe = Resources.FindObjectsOfTypeAll<RecipeSO>()
-                                  .FirstOrDefault(r => r != null && r.id == recipeId);
             int before = recipe?.result?.item != null ? Inv.CountOf(recipe.result.item.id) : 0;
 
             // 실제 UI 클릭 이벤트를 보낸다
@@ -392,11 +410,24 @@ namespace Survive.Testing
             ui.Close();
             yield return null;
 
-            if (recipe?.result?.item != null)
+            if (recipe?.result?.item == null) yield break;
+
+            if (atBench)
+            {
                 yield return E2EHarness.WaitUntil(
-                    () => Inv.CountOf(recipe.result.item.id) > before,
-                    $"{recipeId} 제작이 끝났다 ({recipe.craftSeconds:F0}초)",
-                    recipe.craftSeconds + 6f);
+                    () => bench.Work.Queue.IsEmpty,
+                    $"제작대가 {recipeId}를 다 만들었다 ({recipe.craftSeconds:F0}초)",
+                    recipe.craftSeconds + 10f);
+
+                // 만들어진 것은 저절로 손에 들어오지 않는다. 돌아와서 가져가야 한다.
+                if (bench.Work.HasOutput) bench.Interact(E2EHarness.Player);
+                yield return null;
+            }
+
+            yield return E2EHarness.WaitUntil(
+                () => Inv.CountOf(recipe.result.item.id) > before,
+                $"{recipeId} 제작이 끝났다 ({recipe.craftSeconds:F0}초)",
+                recipe.craftSeconds + 6f);
         }
     }
 }
