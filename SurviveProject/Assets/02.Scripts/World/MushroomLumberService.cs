@@ -30,6 +30,7 @@ namespace Survive.World
         public static int InstalledTrees { get; private set; }
 
         static HarvestNodeSO _definition;
+        static Retrier _retrier;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Install()
@@ -38,10 +39,48 @@ namespace Survive.World
             // static 구독이 살아남아 같은 씬에 두 번 붙을 수 있다.
             SceneManager.sceneLoaded -= OnSceneLoaded;
             SceneManager.sceneLoaded += OnSceneLoaded;
-            Build();
+            BuildOrRetry();
         }
 
-        static void OnSceneLoaded(Scene scene, LoadSceneMode mode) => Build();
+        static void OnSceneLoaded(Scene scene, LoadSceneMode mode) => BuildOrRetry();
+
+        /// <summary>
+        /// 세우고, 한 번에 안 됐으면 잠깐 더 본다.
+        ///
+        /// 씬이 다 올라온 뒤에도 아이템 목록을 들고 있는 플레이어가 아직
+        /// 서 있지 않은 순간이 있다(재생을 걸자마자 컴파일이 끼어들 때 실제로 그랬다).
+        /// 그때 한 번 실패했다고 포기하면 그 판 내내 벌 나무가 하나도 없다.
+        /// </summary>
+        static void BuildOrRetry()
+        {
+            if (Build() > 0) return;
+
+            if (_retrier == null)
+            {
+                var go = new GameObject("MushroomLumberService");
+                Object.DontDestroyOnLoad(go);
+                _retrier = go.AddComponent<Retrier>();
+            }
+            _retrier.Begin();
+        }
+
+        /// <summary>붙을 때까지 몇 초만 더 두드려 보는 일꾼.</summary>
+        class Retrier : MonoBehaviour
+        {
+            const float GiveUpAfter = 6f;
+            float _deadline;
+
+            public void Begin()
+            {
+                _deadline = Time.unscaledTime + GiveUpAfter;
+                enabled = true;
+            }
+
+            void Update()
+            {
+                if (Build() > 0 || Time.unscaledTime >= _deadline) enabled = false;
+            }
+        }
 
         /// <summary>
         /// 지금 열려 있는 씬을 훑어 벌목 노드를 세운다.
@@ -50,11 +89,10 @@ namespace Survive.World
         /// <returns>세운(또는 이미 서 있던) 그루 수.</returns>
         public static int Build()
         {
-            InstalledTrees = 0;
-
             var definition = Definition();
-            if (definition == null) return 0;
+            if (definition == null) { InstalledTrees = 0; return 0; }
 
+            int count = 0;
             var all = Object.FindObjectsByType<Transform>(FindObjectsInactive.Include);
             foreach (var t in all)
             {
@@ -71,12 +109,68 @@ namespace Survive.World
                 }
 
                 node.Bind(definition);
-                InstalledTrees++;
+                EnsureTrunkHit(t);
+                count++;
             }
 
-            if (InstalledTrees > 0)
-                Debug.Log($"[MushroomLumberService] 거대 버섯 {InstalledTrees}그루를 벌목 대상으로 세웠습니다.");
-            return InstalledTrees;
+            if (count > 0 && count != InstalledTrees)
+                Debug.Log($"[MushroomLumberService] 거대 버섯 {count}그루를 벌목 대상으로 세웠습니다.");
+
+            InstalledTrees = count;
+            return count;
+        }
+
+        /// <summary>때릴 자리. 밑동을 감싸는 이 이름의 트리거를 하나 붙인다.</summary>
+        public const string TrunkHitName = "TrunkHit";
+
+        /// <summary>
+        /// 밑동에 <b>때릴 자리</b>를 하나 세운다.
+        ///
+        /// <b>왜 필요한가.</b> <see cref="Survive.Combat.MeleeSwing"/>은 콜라이더의
+        /// <c>bounds.center</c>가 전방 원뿔(90도) 안에 있어야 때린 것으로 본다.
+        /// 거대 버섯의 통짜 메시는 높이가 10m를 넘어 그 한가운데가 <b>사람 머리 위</b>다 —
+        /// 밑동 앞에 서서 도끼를 휘두르면 원뿔을 벗어나 한 대도 들어가지 않는다.
+        /// 게다가 그 한가운데는 대에서 갓 사이의 <b>빈 공간</b>이라 판정 구와 겹치지도 않는다.
+        ///
+        /// 나무를 벨 때 사람이 겨누는 곳은 밑동이다. 그 자리에 실제로 몸을 하나 세워 준다.
+        /// 트리거로 두는 이유: 걸어 다니는 데 새 벽을 만들지 않으면서
+        /// 조준(레이)과 타격(구 겹침)에는 잡히게 하려는 것이다.
+        /// </summary>
+        static void EnsureTrunkHit(Transform t)
+        {
+            for (int i = 0; i < t.childCount; i++)
+                if (t.GetChild(i).name == TrunkHitName) return;
+
+            var renderer = t.GetComponentInChildren<Renderer>(true);
+            if (renderer == null) return;
+
+            var b = renderer.bounds;
+            float 높이 = Mathf.Min(2.4f, Mathf.Max(1f, b.size.y * 0.35f));
+            float 반지름 = Mathf.Clamp(Mathf.Min(b.size.x, b.size.z) * 0.22f, 0.35f, 1.4f);
+
+            var go = new GameObject(TrunkHitName);
+            go.transform.SetParent(t, false);
+            go.transform.position = new Vector3(b.center.x, b.min.y + 높이 * 0.5f, b.center.z);
+            go.transform.rotation = Quaternion.identity;
+            go.transform.localScale = Vector3.one;   // 부모 스케일을 물려받지 않게 세계 기준으로 잰다
+
+            var cap = go.AddComponent<CapsuleCollider>();
+            cap.isTrigger = true;
+            cap.direction = 1;                       // Y축
+            cap.height = 높이 / Mathf.Max(0.01f, go.transform.lossyScale.y);
+            cap.radius = 반지름 / Mathf.Max(0.01f, go.transform.lossyScale.x);
+        }
+
+        /// <summary>
+        /// 그루터기 재생 시간을 바꾼다. 검증에서만 쓴다 —
+        /// 300초를 실시간으로 기다리는 검사는 아무도 돌리지 않게 된다.
+        /// 규칙(<see cref="MushroomLumberRule.RegrowSeconds"/>)은 건드리지 않고
+        /// 지금 세워 둔 정의만 바꾼다.
+        /// </summary>
+        public static void OverrideRegrowSeconds(float seconds)
+        {
+            var def = Definition();
+            if (def != null) def.respawnSeconds = Mathf.Max(0f, seconds);
         }
 
         /// <summary>
@@ -91,10 +185,17 @@ namespace Survive.World
             var wood = FindWoodItem();
             if (wood == null)
             {
-                Debug.LogWarning($"[MushroomLumberService] '{MushroomLumberRule.WoodItemId}' " +
-                                 "아이템 정의를 찾지 못해 벌목 노드를 세우지 않았습니다.");
+                // 매 프레임 짖지 않는다. Retrier가 몇 초 동안 다시 물어보므로
+                // 여기서 소리를 내면 콘솔이 같은 줄로 덮인다.
+                if (!_warned)
+                {
+                    _warned = true;
+                    Debug.LogWarning($"[MushroomLumberService] '{MushroomLumberRule.WoodItemId}' " +
+                                     "아이템 정의를 아직 찾지 못했습니다. 잠시 뒤 다시 시도합니다.");
+                }
                 return null;
             }
+            _warned = false;
 
             var loot = ScriptableObject.CreateInstance<LootTableSO>();
             loot.name = "MushroomTreeLoot(runtime)";
@@ -112,8 +213,8 @@ namespace Survive.World
             var def = ScriptableObject.CreateInstance<HarvestNodeSO>();
             def.name = "MushroomTree(runtime)";
             def.displayName = MushroomLumberRule.DisplayName;
-            def.requiredTool = ToolType.Pickaxe;      // 광맥과 같은 관례 — 때려서 부순다
-            def.requiredTier = 1;
+            def.requiredTool = MushroomLumberRule.RequiredTool;   // 나무는 도끼로 벤다
+            def.requiredTier = MushroomLumberRule.RequiredTier;
             def.baseDuration = 1.4f;                  // 부수는 노드는 홀드하지 않지만 값은 채워 둔다
             def.durability = MushroomLumberRule.Durability;
             def.drops = loot;
@@ -123,15 +224,28 @@ namespace Survive.World
             return _definition;
         }
 
+        static bool _warned;
+
         /// <summary>
-        /// 목재 아이템 정의를 씬의 아이템 데이터베이스에서 꺼낸다.
-        /// 플레이어가 들고 있는 것이 게임이 실제로 읽는 목록이다.
+        /// 목재 아이템 정의를 아이템 데이터베이스에서 꺼낸다.
+        ///
+        /// 플레이어가 들고 있는 것이 게임이 실제로 읽는 목록이라 그쪽을 먼저 본다.
+        /// 플레이어가 아직 씬에 서지 않았을 수 있어, 이미 메모리에 올라와 있는
+        /// 데이터베이스 에셋으로 한 번 더 물어본다.
         /// </summary>
         static ItemDataSO FindWoodItem()
         {
             var inv = Object.FindAnyObjectByType<PlayerInventory>(FindObjectsInactive.Include);
             var db = inv != null ? inv.Database : null;
-            return db != null ? db.GetById(MushroomLumberRule.WoodItemId) : null;
+            var wood = db != null ? db.GetById(MushroomLumberRule.WoodItemId) : null;
+            if (wood != null) return wood;
+
+            foreach (var loaded in Resources.FindObjectsOfTypeAll<ItemDatabaseSO>())
+            {
+                wood = loaded != null ? loaded.GetById(MushroomLumberRule.WoodItemId) : null;
+                if (wood != null) return wood;
+            }
+            return null;
         }
     }
 }

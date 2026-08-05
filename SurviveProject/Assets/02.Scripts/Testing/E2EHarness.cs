@@ -197,6 +197,74 @@ namespace Survive.Testing
             _mouseState = new MouseState();
         }
 
+        // ── 진짜 입력 장치 떼어 놓기 ─────────────────────────────
+
+        static readonly List<InputDevice> _muted = new List<InputDevice>();
+        static bool _isolated;
+
+        /// <summary>
+        /// 검사가 도는 동안 <b>진짜</b> 키보드·마우스를 떼어 놓는다.
+        ///
+        /// <b>이것이 없으면 무슨 일이 벌어졌는가.</b> 에디터 창이 앞에 없을 때
+        /// 진짜 장치의 상태는 <b>마지막으로 알던 값에 얼어붙는다</b>. 실제로 이 리포에서는
+        /// 키보드의 W와 마우스 왼쪽 버튼이 눌린 채로 굳어 있었다. 그러면
+        /// <list type="bullet">
+        /// <item>마우스 델타가 매 프레임 시선을 돌려 <see cref="LookAt"/>로 겨눈 것이
+        ///   다음 프레임에 빗나가고,</item>
+        /// <item>공격 버튼이 이미 "눌림"이라 가상 클릭이 새 입력으로 읽히지 않으며,</item>
+        /// <item>걷기는 아무 데로나 밀린다.</item>
+        /// </list>
+        /// 오래 "지형 결함"으로 적혀 있던 E2E 실패들(E2EChapter1·E2EWalkthrough의
+        /// 첫 구간 끼임)이 실은 이것이었다 — 플레이어는 끼어 있던 것이 아니라
+        /// 애초에 입력을 받지 못했다.
+        ///
+        /// <b>왜 포커스 설정만으로는 부족한가.</b> 포커스를 무시하게 만들면
+        /// 가상 장치의 입력은 통하지만, 같은 설정이 얼어붙은 진짜 장치의 상태까지
+        /// 함께 통하게 한다. 그래서 둘 다 해야 한다 — 포커스를 무시하고,
+        /// 진짜 장치는 재우고.
+        /// </summary>
+        public static void IsolateInput()
+        {
+            if (_isolated) return;
+            _isolated = true;
+
+            // 포커스 설정은 여기서 건드리지 않는다. 재생 중에 InputSettings 에셋을 쓰면
+            // Unity가 에셋 변경으로 보고 도메인을 다시 올리면서 <b>재생 모드가 꺼진다</b>
+            // (실측 확인). 그 설정은 재생에 들어가기 전에 편집 모드에서 맞춰 두어야 하고,
+            // 그 일은 Tools/Survive/E2E 입력 포커스 우회가 맡는다.
+            if (!FocusBypassed)
+                Debug.LogWarning("[E2EHarness] 게임 뷰가 앞에 없으면 입력이 전달되지 않습니다. " +
+                                 "재생 전에 Survive.EditorTools.E2EPlayModeInput.Enable()을 " +
+                                 "부르거나 메뉴 Tools/Survive/E2E 입력 포커스 우회를 켜십시오.");
+
+            _muted.Clear();
+            foreach (var d in InputSystem.devices)
+            {
+                if (!(d is Keyboard || d is Mouse)) continue;
+                if (d.name != null && d.name.StartsWith("E2E")) continue;   // 우리 것은 남긴다
+                if (!d.enabled) continue;
+
+                InputSystem.ResetDevice(d);     // 굳어 있던 상태를 먼저 푼다
+                InputSystem.DisableDevice(d);
+                _muted.Add(d);
+            }
+        }
+
+        /// <summary>포커스 우회가 켜져 있는가.</summary>
+        public static bool FocusBypassed =>
+            InputSystem.settings.backgroundBehavior == InputSettings.BackgroundBehavior.IgnoreFocus;
+
+        /// <summary>떼어 놓았던 진짜 장치를 돌려준다. 사람이 다시 만질 수 있어야 한다.</summary>
+        public static void RestoreInput()
+        {
+            if (!_isolated) return;
+            _isolated = false;
+
+            foreach (var d in _muted)
+                if (d != null && d.added) InputSystem.EnableDevice(d);
+            _muted.Clear();
+        }
+
         static IEnumerator SendKeyState()
         {
             QueueKeys();

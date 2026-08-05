@@ -73,7 +73,10 @@ namespace Survive.Testing
             var db = E2EHarness.Player.Inventory.Database;
             if (db == null) return;
 
-            foreach (var id in new[] { "scrap", "alien_alloy", "fern_fiber", "machine_part" })
+            // 목재가 빠지면 6번 시나리오에서 불을 되살리지 못한다 —
+            // 화톳불에 들어가는 것은 이제 목재뿐이다(백로그 35).
+            foreach (var id in new[] { "scrap", "alien_alloy", "fern_fiber", "machine_part",
+                                       Survive.Harvesting.MushroomLumberRule.WoodItemId })
             {
                 var item = db.GetById(id);
                 if (item != null && Inv.CountOf(id) < 40) Inv.TryAdd(item, 40);
@@ -339,7 +342,8 @@ namespace Survive.Testing
                                    "불이 꺼진 동안에는 진행이 멈춘다");
 
             // 다시 지피면 이어서 뽑아낸다. 처음부터가 아니다.
-            fire.Refuel(Inv);
+            // 넣는 것은 목재다 — 스크랩은 이 불에서 타는 쪽이 아니라 짜이는 쪽이다.
+            E2EHarness.Assert(fire.Refuel(Inv), "목재를 넣어 불을 되살렸다");
             yield return null;
             E2EHarness.Assert(fire.IsBurning, "다시 지폈다");
 

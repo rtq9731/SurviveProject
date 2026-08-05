@@ -1,3 +1,5 @@
+using Survive.Items;
+
 namespace Survive.Harvesting
 {
     /// <summary>
@@ -34,12 +36,25 @@ namespace Survive.Harvesting
         public const int MaxYield = 6;
 
         /// <summary>
-        /// 내구도. 곡괭이(damage 12) 두 번이면 넘어간다.
-        /// 매크로늄 광맥 34(세 번)보다 무르고 기계 잔해 16보다 단단하다 —
+        /// 내구도. 도끼(damage 12) 두 번이면 넘어간다.
+        /// 매크로늄 광맥 34(곡괭이 세 번)보다 무르고 기계 잔해 16보다 단단하다 —
         /// 살아 있는 것이 돌보다 무른 것은 당연하고,
         /// 그래도 한 방에 쓰러지면 도구를 만든 보람이 없다.
         /// </summary>
         public const float Durability = 20f;
+
+        /// <summary>
+        /// 벨 수 있는 도구. <b>도끼뿐이다.</b>
+        ///
+        /// 곡괭이로도 되게 하면 도끼를 만들 이유가 사라지고, 도구 이름이
+        /// 그 도구가 하는 일을 말해 주지 않게 된다(<see cref="ToolMatch"/>).
+        /// 잠기는 것이 걱정될 일은 없다 — 도끼는 스크랩과 기계 부품만으로
+        /// 손에서 만들 수 있고, 죽어도 도구는 떨어지지 않는다.
+        /// </summary>
+        public const ToolType RequiredTool = ToolType.Axe;
+
+        /// <summary>요구 등급. 지금 세계에 있는 도끼는 1등급 하나뿐이다.</summary>
+        public const int RequiredTier = 1;
 
         /// <summary>
         /// 이 이름의 오브젝트를 거대 버섯으로 본다.

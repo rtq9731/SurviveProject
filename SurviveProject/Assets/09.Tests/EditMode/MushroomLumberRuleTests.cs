@@ -89,12 +89,12 @@ public class MushroomLumberRuleTests
     }
 
     [Test]
-    public void 곡괭이_두_번이면_넘어간다()
+    public void 도끼_두_번이면_넘어간다()
     {
-        // 곡괭이(Pickaxe.asset)의 damage는 12다. 광맥 34는 세 번,
-        // 거대 버섯 20은 두 번 — 살아 있는 것이 돌보다 무르다.
-        const float 곡괭이damage = 12f;
-        Assert.Greater(MushroomLumberRule.Durability, 곡괭이damage);
-        Assert.LessOrEqual(MushroomLumberRule.Durability, 곡괭이damage * 2f);
+        // 도끼(Axe.asset)의 damage는 12다. 광맥 34는 곡괭이 세 번,
+        // 거대 버섯 20은 도끼 두 번 — 살아 있는 것이 돌보다 무르다.
+        const float 도끼damage = 12f;
+        Assert.Greater(MushroomLumberRule.Durability, 도끼damage);
+        Assert.LessOrEqual(MushroomLumberRule.Durability, 도끼damage * 2f);
     }
 }

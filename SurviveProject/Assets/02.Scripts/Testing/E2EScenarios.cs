@@ -291,10 +291,16 @@ namespace Survive.Testing
                              .FirstOrDefault(h => !h.IsDepleted && h.IsBreakable);
             E2EHarness.Assert(node != null, "부술 수 있는 노드가 있다");
 
+            // 원점이 아니라 콜라이더 한가운데를 눈앞에 둔다. 부술 수 있는 것이
+            // 광맥뿐이던 시절은 끝났고(백로그 35의 거대 버섯), 원점이 발밑에 있는
+            // 것은 원점을 겨누면 몸통이 전방 원뿔 위로 벗어난다.
             var cam = E2EHarness.Eye;
-            node.transform.position = cam.transform.position + cam.transform.forward * 2.2f;
+            var body = node.GetComponentInChildren<Collider>(true);
+            Vector3 aim = cam.transform.position + cam.transform.forward * 2.2f;
+            if (body != null) node.transform.position += aim - body.bounds.center;
+            else node.transform.position = aim;
             yield return null;
-            E2EHarness.LookAt(node.transform.position);
+            E2EHarness.LookAt(body != null ? body.bounds.center : node.transform.position);
             yield return null;
             yield return null;
 

@@ -134,20 +134,16 @@ namespace Survive.Harvesting
             return ToolSatisfied(equipped);
         }
 
-        bool ToolSatisfied(ToolItemSO tool)
-        {
-            if (definition.requiredTool == ToolType.None) return true;
-            if (tool == null) return false;
-            return tool.toolType == definition.requiredTool && tool.tier >= definition.requiredTier;
-        }
+        /// <summary>
+        /// 규칙 자체는 <see cref="ToolMatch"/>에 있다 — 도구가 전용이라는 것은
+        /// 이 컴포넌트의 사정이 아니라 게임의 규칙이라 Unity 없이 검증되어야 한다.
+        /// </summary>
+        bool ToolSatisfied(ToolItemSO tool) => ToolMatch.Satisfies(
+            definition.requiredTool, definition.requiredTier,
+            tool != null ? tool.toolType : ToolType.None,
+            tool != null ? tool.tier : 0);
 
-        static string ToolName(ToolType t) => t switch
-        {
-            ToolType.Pickaxe => "곡괭이",
-            ToolType.Hammer => "망치",
-            ToolType.Axe => "도끼",
-            _ => "도구"
-        };
+        static string ToolName(ToolType t) => ToolMatch.Name(t);
 
         public void OnHoldProgress(float normalized)
         {
@@ -183,6 +179,8 @@ namespace Survive.Harvesting
             {
                 // 튕겨나가는 반응. 아무 일도 안 일어나면 버그로 오해한다.
                 Recoil(0.06f);
+                WrongToolHits++;
+                Announce();
                 return;
             }
 
@@ -197,6 +195,34 @@ namespace Survive.Harvesting
 
             Break(info.HitPoint);
         }
+
+        /// <summary>
+        /// 맞지 않는 도구로 때린 횟수. 검증에서 "정말 안 먹혔는가"를 집는다.
+        /// </summary>
+        public static int WrongToolHits { get; private set; }
+
+        /// <summary>
+        /// 안 먹힌다고 한 줄 알려 준다.
+        ///
+        /// 흔들리기만 하면 "때리는 중"으로 읽힌다. 특히 곡괭이로 광맥을 부수던
+        /// 사람이 같은 손으로 버섯을 때릴 때, 왜 안 부서지는지 화면 어디에도
+        /// 적혀 있지 않으면 고장으로 읽는다.
+        ///
+        /// 안내 창구는 새로 만들지 않는다 — 조작키를 알려 주던
+        /// <see cref="Survive.UI.ControlHintView"/>가 이미 "필요한 순간에 한 번만"
+        /// 이라는 규칙을 들고 있으므로 그것을 그대로 쓴다.
+        /// </summary>
+        void Announce()
+        {
+            if (_hint == null)
+                _hint = FindAnyObjectByType<Survive.UI.ControlHintView>(FindObjectsInactive.Include);
+
+            _hint?.Show("wrongtool_" + definition.requiredTool,
+                        $"{definition.displayName}에는 흠집도 나지 않는다 · " +
+                        $"{ToolName(definition.requiredTool)}가 필요하다");
+        }
+
+        Survive.UI.ControlHintView _hint;
 
         /// <summary>맞은 티가 나게 흔든다. 남은 내구도가 적을수록 크게 흔들린다.</summary>
         void Recoil(float strength)

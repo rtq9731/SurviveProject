@@ -29,6 +29,10 @@ namespace Survive.Testing
             DontDestroyOnLoad(gameObject);
         }
 
+        // 재생이 끝나는 순간에도 진짜 장치를 돌려준다. 시나리오 도중에 재생을 멈추면
+        // RunGuarded의 끝을 지나지 못하는데, 그대로 두면 사람의 키보드가 잠긴 채 남는다.
+        void OnDestroy() => E2EHarness.RestoreInput();
+
         /// <summary>씬에 러너가 없으면 만든다.</summary>
         public static E2ERunner EnsureExists()
         {
@@ -51,6 +55,10 @@ namespace Survive.Testing
             FailReason = "";
             Status = RunStatus.Running;
             ElapsedSeconds = 0f;
+
+            // 진짜 키보드·마우스를 떼어 놓는다. 창이 앞에 없으면 그 상태가 얼어붙어
+            // 가상 입력을 덮어쓴다 — E2EHarness.IsolateInput에 자세히 적어 두었다.
+            E2EHarness.IsolateInput();
 
             var sw = Stopwatch.StartNew();
             E2EHarness.Log("=== " + name + " 시작 ===");
@@ -80,6 +88,7 @@ namespace Survive.Testing
                     E2EHarness.Log("실패: " + e.Message);
                     E2EHarness.Log($"=== {name} 실패 ({ElapsedSeconds:F1}초) ===");
                     E2EHarness.RemoveDevice();
+                    E2EHarness.RestoreInput();
             // 시나리오가 시간을 멈춘 채 끝나면 다음 실행이 얼어붙는다. 되돌린다.
             Time.timeScale = 1f;
                     yield break;
@@ -96,6 +105,7 @@ namespace Survive.Testing
             Status = RunStatus.Passed;
             E2EHarness.Log($"=== {name} 통과 ({ElapsedSeconds:F1}초) ===");
             E2EHarness.RemoveDevice();
+            E2EHarness.RestoreInput();
             // 시나리오가 시간을 멈춘 채 끝나면 다음 실행이 얼어붙는다. 되돌린다.
             Time.timeScale = 1f;
         }

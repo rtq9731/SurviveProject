@@ -119,15 +119,64 @@ public class MushroomWoodDataTests
     }
 
     [Test]
+    public void 도끼_레시피가_있고_목재를_요구하지_않는다()
+    {
+        // 순환 의존 방지. 목재를 얻으려면 도끼가 있어야 하는데
+        // 도끼에 목재가 들어가면 아무도 첫 도끼를 만들 수 없다.
+        var axe = Book.recipes.FirstOrDefault(r => r != null && r.id == "axe");
+        Assert.IsNotNull(axe, "도끼 레시피가 없으면 벌목이 영영 잠긴다");
+        Assert.AreEqual(StationType.None, axe.requiredStation,
+                        "도끼는 손에서 만들 수 있어야 한다 — 잃어도 언제든 다시 만든다");
+        Assert.IsFalse(
+            axe.ingredients.Any(i => i.item != null && i.item.id == MushroomLumberRule.WoodItemId),
+            "도끼에 목재가 들어가면 벌목과 순환 의존이 된다");
+        Assert.IsTrue(axe.ingredients.All(i => i.item != null && i.item.id != "axe"));
+    }
+
+    [Test]
+    public void 도끼는_곡괭이와_같은_자릿수로_만든다()
+    {
+        var axe = Book.recipes.First(r => r != null && r.id == "axe");
+        var pickaxe = Book.recipes.First(r => r != null && r.id == "pickaxe");
+
+        int a = axe.ingredients.Sum(i => i.count);
+        int p = pickaxe.ingredients.Sum(i => i.count);
+        Assert.LessOrEqual(a, p * 2, $"도끼 {a}개 vs 곡괭이 {p}개 — 자릿수가 벌어졌다");
+        Assert.GreaterOrEqual(a * 2, p, $"도끼 {a}개 vs 곡괭이 {p}개 — 자릿수가 벌어졌다");
+    }
+
+    [Test]
+    public void 도끼가_아이템_데이터베이스에_있다()
+    {
+        var axe = Database.GetById("axe") as ToolItemSO;
+        Assert.IsNotNull(axe, "도끼가 목록에 없으면 만들어도 손에 들어오지 않는다");
+        Assert.AreEqual(Survive.Items.ToolType.Axe, axe.toolType);
+        Assert.GreaterOrEqual(axe.tier, MushroomLumberRule.RequiredTier,
+                              "세계에 있는 유일한 도끼가 거대 버섯을 못 베면 안 된다");
+        Assert.IsNotEmpty(axe.socketChildName, "손에 들었을 때 보일 것이 있어야 한다");
+    }
+
+    [Test]
     public void 곡괭이는_목재를_요구하지_않는다()
     {
-        // 순환 의존 방지. 목재를 얻으려면 곡괭이가 있어야 하는데
-        // 곡괭이에 목재가 들어가면 챕터 1이 시작하자마자 막힌다.
         var pickaxe = Book.recipes.FirstOrDefault(r => r != null && r.id == "pickaxe");
         Assert.IsNotNull(pickaxe);
         Assert.IsFalse(
             pickaxe.ingredients.Any(i => i.item != null && i.item.id == MushroomLumberRule.WoodItemId),
             "곡괭이에 목재가 들어가면 벌목과 순환 의존이 된다");
+    }
+
+    [Test]
+    public void 벌목이_하드락되지_않는다()
+    {
+        // 도끼를 잃어도 막히지 않는다는 논리를 데이터로 확인한다:
+        // ① 도끼는 손 제작이고 ② 그 재료는 전부 맨손 채집물(스크랩·기계 부품)이다.
+        var axe = Book.recipes.First(r => r != null && r.id == "axe");
+        var 맨손자원 = new[] { "scrap", "machine_part", "mushroom_cap", "fern_fiber" };
+
+        foreach (var i in axe.ingredients)
+            Assert.Contains(i.item.id, 맨손자원,
+                            $"{i.item.id}는 맨손으로 얻을 수 없다 — 도끼를 잃으면 다시 못 만든다");
     }
 
     // ── 화톳불 ───────────────────────────────────────────────
