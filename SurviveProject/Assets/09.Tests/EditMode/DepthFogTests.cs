@@ -122,6 +122,51 @@ namespace Survive.Tests.EditMode
                 "섬 위에서 건너편 빛기둥이 안개에 먹힌다");
         }
 
+        [Test]
+        public void 모든_밴드에서_유도등을_둘_자리가_남는다()
+        {
+            // 유도등 원칙의 나머지 절반 — 원거리 평면이 자르지 않아도 안개가
+            // 삼키면 결과는 같다. 가장 짙은 밴드에서도 사람이 걸어서 닿을 만한
+            // 거리 안에는 광원을 둘 수 있어야 한다.
+            foreach (var band in DepthFog.Bands)
+            {
+                float range = DepthFog.GuideLightRange(band.Density);
+                Assert.Greater(range, 40f,
+                    $"y={band.Y}의 안개가 40m 앞의 유도등도 삼킨다 (밀도 {band.Density})");
+            }
+        }
+
+        [Test]
+        public void 원거리_평면은_안개가_아직_보여_주는_광원을_자르지_않는다()
+        {
+            // 두 방어선이 어긋나면 안 된다. 안개는 아직 보여 주는데 컬링이
+            // 잘라 버리면 유도등은 그냥 사라진다.
+            foreach (var band in DepthFog.Bands)
+            {
+                float range = DepthFog.GuideLightRange(band.Density);
+                float far = DepthFog.FarClipFor(band.Density, 3000f);
+                Assert.GreaterOrEqual(far, range,
+                    $"y={band.Y}에서 원거리 평면({far:F0}m)이 안개 가시거리({range:F0}m) 안쪽이다");
+            }
+        }
+
+        [Test]
+        public void 투과율은_거리가_멀수록_떨어진다()
+        {
+            float near = DepthFog.Transmittance(0.026f, 20f);
+            float far = DepthFog.Transmittance(0.026f, 80f);
+            Assert.Greater(near, far);
+            Assert.AreEqual(1f, DepthFog.Transmittance(0.026f, 0f), 1e-4f);
+        }
+
+        [Test]
+        public void 가시거리에서의_투과율이_정확히_바닥값이다()
+        {
+            float range = DepthFog.GuideLightRange(0.045f);
+            Assert.AreEqual(DepthFog.GuideLightFloor,
+                            DepthFog.Transmittance(0.045f, range), 1e-4f);
+        }
+
         static void AssertColor(Color expected, Color actual, float tolerance = Tolerance)
         {
             Assert.AreEqual(expected.r, actual.r, tolerance, "R");

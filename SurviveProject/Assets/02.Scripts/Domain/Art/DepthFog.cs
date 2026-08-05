@@ -103,6 +103,34 @@ namespace Survive.Domain.Art
             => density <= 0f ? float.MaxValue : Mathf.Sqrt(Mathf.Log(100f)) / density;
 
         /// <summary>
+        /// 유도등이 안개를 뚫고 읽히는 최소 투과율. 배경이 거의 검정이고 유도등은
+        /// HDR 광원(블룸 threshold 1.1 위)이라, 2%만 남아도 화면에서 점으로 잡힌다.
+        /// 이보다 낮으면 안개색과 구별되지 않는다.
+        /// </summary>
+        public const float GuideLightFloor = 0.02f;
+
+        /// <summary>
+        /// 이 거리의 광원이 얼마나 남아 도착하는가. ExponentialSquared의 정의 그대로다.
+        /// </summary>
+        public static float Transmittance(float density, float distance)
+            => density <= 0f ? 1f : Mathf.Exp(-(density * distance) * (density * distance));
+
+        /// <summary>
+        /// 유도등을 이 밴드에서 얼마나 멀리 둘 수 있는가 (§8-4 배치 예산).
+        ///
+        /// <b>유도등 원칙의 코드 측 절반이다.</b> 원거리 평면이 광원을 자르지 않는 것은
+        /// <see cref="FarClipFor"/>가 보장하지만, 잘리지 않아도 안개가 삼켜 버리면
+        /// 결과는 같다. 밀도에서 "아직 읽히는 최대 거리"를 내어, 배치가 그 안에
+        /// 들어오는지 판정할 수 있게 한다.
+        /// </summary>
+        public static float GuideLightRange(float density, float floor = GuideLightFloor)
+        {
+            if (density <= 0f) return float.MaxValue;
+            floor = Mathf.Clamp(floor, 1e-6f, 0.999999f);
+            return Mathf.Sqrt(-Mathf.Log(floor)) / density;
+        }
+
+        /// <summary>
         /// 안개가 짙으면 멀리 그릴 이유가 없다 — 밴드 밀도에서 카메라 원거리 평면을 낸다.
         ///
         /// <b>바닥(<paramref name="minFar"/>)을 두는 이유.</b> 완전 어둠 구간의 탈출
