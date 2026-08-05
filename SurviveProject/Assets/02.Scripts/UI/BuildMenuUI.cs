@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -62,12 +63,52 @@ namespace Survive.UI
         {
             if (inventory?.Inventory != null) inventory.Inventory.Changed += Refresh;
             if (Survive.Core.GameServices.TryGet<UIStateService>(out var ui)) ui.RegisterPanel(this);
+            StartCoroutine(BindLedger());
         }
 
         void OnDisable()
         {
             if (inventory?.Inventory != null) inventory.Inventory.Changed -= Refresh;
             if (Survive.Core.GameServices.TryGet<UIStateService>(out var ui)) ui.UnregisterPanel(this);
+            Unbind();
+        }
+
+        UnlockLedger _ledger;
+
+        /// <summary>
+        /// 원장이 열리는 것을 듣는다.
+        ///
+        /// 소지품이 바뀔 때만 다시 그리면 되던 시절이 끝났다. 연구대는 <b>아이템을
+        /// 하나도 건드리지 않고</b> 청사진을 연다(백로그 38) — 목록을 띄워 놓고
+        /// 분석이 끝나기를 기다리는 사람에게는 아무 일도 일어나지 않은 것처럼 보이고,
+        /// 창을 닫았다 다시 열어야만 잠금이 풀린다.
+        ///
+        /// 원장은 씬이 아니라 판에 붙어 있어(<see cref="UnlockService"/>) 이 화면보다
+        /// 늦게 설 수 있다. 그래서 한 번 물어보고 마는 것이 아니라 설 때까지 기다린다.
+        /// </summary>
+        IEnumerator BindLedger()
+        {
+            while (_ledger == null)
+            {
+                var ledger = BlueprintGate.Active;
+                if (ledger != null)
+                {
+                    _ledger = ledger;
+                    _ledger.KeyUnlocked += OnKeyUnlocked;
+                    Refresh();
+                    yield break;
+                }
+                yield return null;
+            }
+        }
+
+        void OnKeyUnlocked(string key) => Refresh();
+
+        void Unbind()
+        {
+            if (_ledger == null) return;
+            _ledger.KeyUnlocked -= OnKeyUnlocked;
+            _ledger = null;
         }
 
         void BuildRows()

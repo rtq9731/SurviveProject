@@ -58,6 +58,25 @@ namespace Survive.UI
 
         readonly List<Row> _rows = new List<Row>();
 
+        /// <summary>
+        /// 연구대의 줄. 제작 행과 나란히 만들어 두고 서 있는 자리에 따라 한쪽만 켠다 —
+        /// 화면을 하나 더 만들면 같은 목록 코드가 두 벌이 되고, 앞으로 잠금 표시를
+        /// 고칠 때마다 두 군데를 고쳐야 한다.
+        /// </summary>
+        class ResearchRow
+        {
+            public ResearchEntrySO entry;
+            public Button button;
+            public Image frame;
+            public TMP_Text label;
+        }
+
+        readonly List<ResearchRow> _researchRows = new List<ResearchRow>();
+
+        /// <summary>연구대에 걸린 것이 몇이고 얼마나 남았는지 한 줄로 적는 자리.</summary>
+        Button _researchHeader;
+        TMP_Text _researchHeaderLabel;
+
         /// <summary>레시피마다 마지막으로 고른 수량. 창을 닫아도 기억한다.</summary>
         readonly Dictionary<string, int> _wanted = new Dictionary<string, int>();
 
@@ -65,6 +84,7 @@ namespace Survive.UI
         Survive.Player.PlayerContext _player;
         StationType _station = StationType.None;
         ICraftStation _stationHost;
+        IResearchStation _researchHost;
         CraftQueueView _queueView;
 
         /// <summary>연료 넣기처럼 스테이션마다 붙는 한 줄. 없는 스테이션에서는 꺼진다.</summary>
@@ -76,6 +96,9 @@ namespace Survive.UI
 
         /// <summary>제작대·화톳불에서 열었으면 그 물건. 손 제작이면 null.</summary>
         public ICraftStation CurrentStationHost => _stationHost;
+
+        /// <summary>연구대에서 열었으면 그 물건. 아니면 null.</summary>
+        public IResearchStation CurrentResearchHost => _researchHost;
 
         bool _isOpen;
 
@@ -169,7 +192,78 @@ namespace Survive.UI
             }
 
             BuildSideRow();
+            BuildResearchHeader();
             RefreshList();
+        }
+
+        /// <summary>
+        /// 연구 항목 줄을 만든다. 연구대를 처음 열 때 한 번, 그 자리의 목록으로.
+        /// 연구대마다 다른 목록을 물릴 이유는 없지만 그렇게 될 수도 있으므로
+        /// 들고 있는 책이 바뀌면 다시 만든다.
+        /// </summary>
+        void BuildResearchRows(ResearchBookSO book)
+        {
+            foreach (var row in _researchRows)
+                if (row.button != null) Destroy(row.button.gameObject);
+            _researchRows.Clear();
+            _researchBook = book;
+
+            if (rowParent == null || book?.entries == null) return;
+
+            foreach (var e in book.entries)
+            {
+                if (e == null) continue;
+                _researchRows.Add(BuildResearchRow(e));
+            }
+        }
+
+        ResearchBookSO _researchBook;
+
+        ResearchRow BuildResearchRow(ResearchEntrySO e)
+        {
+            var go = new GameObject("Row_" + e.id, typeof(RectTransform));
+            go.transform.SetParent(rowParent, false);
+            var rt = (RectTransform)go.transform;
+            rt.sizeDelta = new Vector2(RowWidth, RowHeight);
+
+            var img = go.AddComponent<Image>();
+            UISkin.ApplyPanel(img, NormalFrame);
+
+            var btn = go.AddComponent<Button>();
+
+            var txt = MakeLabel(go.transform, "Label", 12f, -12f);
+            txt.alignment = TextAlignmentOptions.Left;
+            txt.enableAutoSizing = true;
+            txt.fontSizeMin = 12f;
+            txt.fontSizeMax = 19f;
+
+            var captured = e;
+            btn.onClick.AddListener(() => ToggleResearch(captured));
+
+            go.SetActive(false);
+            return new ResearchRow { entry = e, button = btn, frame = img, label = txt };
+        }
+
+        /// <summary>연구대 목록 맨 위의 대기열 한 줄. 누르는 자리가 아니다.</summary>
+        void BuildResearchHeader()
+        {
+            if (_researchHeader != null) return;
+
+            var go = new GameObject("Row_ResearchQueue", typeof(RectTransform));
+            go.transform.SetParent(rowParent, false);
+            var rt = (RectTransform)go.transform;
+            rt.sizeDelta = new Vector2(RowWidth, RowHeight);
+
+            var img = go.AddComponent<Image>();
+            UISkin.ApplyPanel(img, new Color(0.10f, 0.16f, 0.20f, 0.92f));
+
+            _researchHeader = go.AddComponent<Button>();
+            _researchHeader.interactable = false;
+
+            _researchHeaderLabel = MakeLabel(go.transform, "Label", 12f, -12f);
+            _researchHeaderLabel.alignment = TextAlignmentOptions.Center;
+
+            go.SetActive(false);
         }
 
         Row BuildRow(RecipeSO r)
@@ -321,8 +415,19 @@ namespace Survive.UI
             var ledger = BlueprintGate.Active;
             int shown = 0;
 
+            // 연구대 앞에서는 제작 줄을 전부 접는다. 같은 판때기를 쓰되 목록은
+            // 하나만 뜬다 — 만드는 자리와 알아내는 자리는 다른 자리다.
+            bool researching = _researchHost != null;
+
             foreach (var row in _rows)
             {
+                if (researching)
+                {
+                    if (row.button != null && row.button.gameObject.activeSelf)
+                        row.button.gameObject.SetActive(false);
+                    continue;
+                }
+
                 // 손 제작 목록에서는 스테이션 전용을 아예 숨긴다.
                 // 회색으로 남겨두면 "왜 안 되지"를 매번 확인하게 된다.
                 // 스테이션에서는 손으로 되는 것까지 보인다 — 제작대 앞에서
@@ -373,7 +478,149 @@ namespace Survive.UI
             }
 
             shown += RefreshSideRow() ? 1 : 0;
+            shown += RefreshResearchRows(inv, ledger);
             FitPanel(shown);
+        }
+
+        // ── 연구 목록 ────────────────────────────────────────────
+
+        /// <summary>연구대 줄들을 그린다. 연구대가 아니면 전부 접고 0을 돌려준다.</summary>
+        int RefreshResearchRows(Inventory inv, UnlockLedger ledger)
+        {
+            bool researching = _researchHost != null;
+
+            if (_researchHeader != null && _researchHeader.gameObject.activeSelf != researching)
+                _researchHeader.gameObject.SetActive(researching);
+
+            if (!researching)
+            {
+                foreach (var row in _researchRows)
+                    if (row.button != null && row.button.gameObject.activeSelf)
+                        row.button.gameObject.SetActive(false);
+                return 0;
+            }
+
+            var queue = _researchHost.Work;
+            var energy = _researchHost.EnergyItem;
+
+            if (_researchHeaderLabel != null)
+            {
+                float left = ResearchService.TotalSecondsLeft(queue);
+                _researchHeaderLabel.text = queue == null || queue.IsEmpty
+                    ? $"{_researchHost.StationName}  ·  분석 대기열 비어 있음"
+                    : $"{_researchHost.StationName}  ·  분석 대기열 {queue.Count}/{queue.Capacity}" +
+                      $"  ·  남은 {CraftTimeText.Short(left)}";
+                _researchHeaderLabel.color = new Color(0.72f, 0.86f, 0.92f, 1f);
+            }
+
+            int shown = 1;
+            foreach (var row in _researchRows)
+            {
+                if (row.button != null && !row.button.gameObject.activeSelf)
+                    row.button.gameObject.SetActive(true);
+                shown++;
+
+                var state = ResearchService.Evaluate(row.entry, inv, ledger, queue, energy);
+                int at = queue != null ? queue.IndexOf(row.entry) : -1;
+
+                bool clickable = state == ResearchReadiness.Ready || at >= 0;
+
+                if (row.button != null) row.button.interactable = clickable;
+                if (row.frame != null)
+                    row.frame.color = state == ResearchReadiness.AlreadyKnown ? LockedFrame : NormalFrame;
+
+                if (row.label == null) continue;
+
+                row.label.text = at >= 0
+                    ? DescribeQueued(row.entry, queue, at)
+                    : DescribeResearch(row.entry, inv, energy, state);
+                row.label.color = at >= 0 ? new Color(0.72f, 0.86f, 0.92f, 1f)
+                                : state == ResearchReadiness.Ready ? Color.white
+                                : state == ResearchReadiness.AlreadyKnown ? LockedLabel
+                                                                          : new Color(0.65f, 0.65f, 0.7f, 1f);
+            }
+            return shown;
+        }
+
+        /// <summary>걸리지 않은 항목 — 무엇이 얼마나 드는가.</summary>
+        string DescribeResearch(ResearchEntrySO e, Inventory inv, ItemDataSO energy,
+                                ResearchReadiness state)
+        {
+            var sb = new StringBuilder();
+            sb.Append(string.IsNullOrEmpty(e.displayName) ? e.id : e.displayName);
+
+            if (state == ResearchReadiness.AlreadyKnown)
+            {
+                sb.Append("  ·  ").Append(ResearchService.Describe(state));
+                return sb.ToString();
+            }
+
+            sb.Append("  ·  ");
+            if (e.materials != null)
+            {
+                foreach (var need in e.materials)
+                {
+                    if (need?.item == null || need.count <= 0) continue;
+                    int held = inv != null ? inv.CountOf(need.item.id) : 0;
+                    sb.Append($"{need.item.displayName} {held}/{need.count}, ");
+                }
+            }
+
+            string energyName = energy != null ? energy.displayName : "스크랩";
+            int heldEnergy = inv != null ? inv.CountOf(ResearchService.EnergyIdOf(energy)) : 0;
+            sb.Append($"{energyName} {heldEnergy}/{e.energyCost}");
+
+            sb.Append($"  ·  {CraftTimeText.Short(e.researchSeconds)}");
+            if (state != ResearchReadiness.Ready)
+                sb.Append($"  ({ResearchService.Describe(state)})");
+            return sb.ToString();
+        }
+
+        /// <summary>줄에 서 있는 항목 — 몇 번째인지와 얼마나 남았는지.</summary>
+        static string DescribeQueued(ResearchEntrySO e, ResearchQueue queue, int index)
+        {
+            var job = queue.At(index);
+            string name = string.IsNullOrEmpty(e.displayName) ? e.id : e.displayName;
+
+            if (index == 0)
+                return $"{name}  ·  분석 중 {job.Progress:P0}  ·  남은 " +
+                       $"{CraftTimeText.Short(job.SecondsLeft)}  (누르면 물린다)";
+
+            return $"{name}  ·  대기 {index + 1}번째  ·  " +
+                   $"{CraftTimeText.Short(job.SecondsLeft)}  (누르면 물린다)";
+        }
+
+        /// <summary>
+        /// 연구 줄을 누른다. 안 걸린 것은 걸고, 걸린 것은 물린다 —
+        /// 대기열 띠를 눌러 물리는 제작 쪽과 같은 몸짓이다.
+        /// </summary>
+        void ToggleResearch(ResearchEntrySO e)
+        {
+            var inv = _inventory?.Inventory;
+            if (inv == null || e == null || _researchHost == null) return;
+
+            var queue = _researchHost.Work;
+            var energy = _researchHost.EnergyItem;
+
+            int at = queue != null ? queue.IndexOf(e) : -1;
+            bool ok = at >= 0
+                ? ResearchService.TryCancel(queue, at, inv, energy)
+                : ResearchService.TryEnqueue(queue, e, inv, BlueprintGate.Active, energy);
+
+            if (ok) craftFeedback?.PlayFeedbacks();
+            RefreshList();
+        }
+
+        /// <summary>
+        /// 연구를 거는 창구. 검증 하네스가 UI 클릭 없이 부를 수 있게 열어 둔다.
+        /// </summary>
+        public bool RequestResearch(ResearchEntrySO entry)
+        {
+            if (_researchHost == null) return false;
+
+            int before = _researchHost.Work?.Count ?? 0;
+            ToggleResearch(entry);
+            return (_researchHost.Work?.Count ?? 0) > before;
         }
 
         bool RefreshSideRow()
@@ -532,31 +779,47 @@ namespace Survive.UI
         // ── 열고 닫기 ────────────────────────────────────────────
 
         /// <summary>손 제작 또는 스테이션 없는 열기.</summary>
-        public void Open(StationType station) => OpenInternal(station, null);
+        public void Open(StationType station) => OpenInternal(station, null, null);
 
         /// <summary>제작대·화톳불에서 연다. 걸리는 작업은 그 물건에 귀속된다.</summary>
         public void Open(ICraftStation station)
         {
-            if (station == null) { OpenInternal(StationType.None, null); return; }
-            OpenInternal(station.StationType, station);
+            if (station == null) { OpenInternal(StationType.None, null, null); return; }
+            OpenInternal(station.StationType, station, null);
         }
 
-        void OpenInternal(StationType station, ICraftStation host)
+        /// <summary>
+        /// 연구대에서 연다. 같은 판때기에 제작 줄 대신 연구 줄이 뜬다 —
+        /// 새 패널을 만들지 않는 것이 이 화면의 규율이다(대기열 띠와 같은 이유).
+        /// </summary>
+        public void Open(IResearchStation station)
+        {
+            if (station == null) { OpenInternal(StationType.None, null, null); return; }
+            OpenInternal(StationType.Research, null, station);
+        }
+
+        void OpenInternal(StationType station, ICraftStation host, IResearchStation research)
         {
             _station = station;
             _stationHost = host;
+            _researchHost = research;
 
             EnsureQueueView();
             BindQueueView();
+
+            // 행이 아직 없으면 지금 만든다. 오브젝트가 꺼져 있어
+            // 연결대기 코루틴이 돌지 못했을 수 있다.
+            if (_rows.Count == 0) BuildRows();
+
+            // 연구 목록은 그 자리가 들고 온 책으로 만든다. 같은 책이면 다시 만들지 않는다.
+            if (research != null && (research.Book != _researchBook || _researchRows.Count == 0))
+                BuildResearchRows(research.Book);
 
             if (_isOpen) { RefreshList(); return; }
 
             _isOpen = true;
             if (_queueView != null) _queueView.SetExpanded(true);
 
-            // 행이 아직 없으면 지금 만든다. 오브젝트가 꺼져 있어
-            // 연결대기 코루틴이 돌지 못했을 수 있다.
-            if (_rows.Count == 0) BuildRows();
             RefreshList();
 
             if (group != null)
@@ -585,6 +848,7 @@ namespace Survive.UI
             // 화면은 닫히지만 줄은 계속 흐른다. 스테이션 줄은 그 자리에 두고
             // 화면에는 손 제작 줄만 남긴다 — 들고 다니는 것은 그쪽뿐이다.
             _stationHost = null;
+            _researchHost = null;
             _station = StationType.None;
             BindQueueView();
             if (_queueView != null) _queueView.SetExpanded(false);
