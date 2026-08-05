@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 using Survive.Core;
 using Survive.Domain.Art;
 using Survive.Player;
@@ -59,11 +60,24 @@ namespace Survive.Art
         Camera _eye;
         float _sceneFar;
 
+        // 원거리 평면은 LateUpdate에서 정할 수 없다 — CinemachineBrain이 매 프레임
+        // 가상 카메라의 렌즈로 카메라를 통째로 덮어쓰기 때문에 여기서 넣은 값이
+        // 그리기 전에 사라진다(실측: 250을 넣어도 3000으로 되돌아왔다).
+        // 그리기 직전, 컬링 파라미터를 뽑기 전에 넣는다.
+        void OnEnable() => RenderPipelineManager.beginCameraRendering += OnBeginCamera;
+
         void OnDisable()
         {
+            RenderPipelineManager.beginCameraRendering -= OnBeginCamera;
             if (_eye != null && _sceneFar > 0f) _eye.farClipPlane = _sceneFar;
             _body = null;
             _swim = null;
+        }
+
+        void OnBeginCamera(ScriptableRenderContext context, Camera camera)
+        {
+            if (camera != _eye || _eye == null || _sceneFar <= 0f) return;
+            _eye.farClipPlane = LastFarClip > 0f ? LastFarClip : _sceneFar;
         }
 
         // 안개를 LateUpdate에서 쓴다. UnderwaterView가 Update에서 물 밖으로
@@ -92,9 +106,7 @@ namespace Survive.Art
             // 잘라 낸 자리가 "안개 저편"으로 자연스럽게 읽힌다.
             if (_eye.clearFlags == CameraClearFlags.SolidColor) _eye.backgroundColor = color;
 
-            float far = TrimFarClip ? DepthFog.FarClipFor(density, _sceneFar) : _sceneFar;
-            _eye.farClipPlane = far;
-            LastFarClip = far;
+            LastFarClip = TrimFarClip ? DepthFog.FarClipFor(density, _sceneFar) : _sceneFar;
         }
 
         bool Acquire()
