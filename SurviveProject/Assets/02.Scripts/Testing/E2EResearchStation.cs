@@ -123,8 +123,9 @@ namespace Survive.Testing
             E2EHarness.Log("  재료 주입: " +
                 string.Join(", ", needed.Select(id => $"{id} {Inv.CountOf(id)}")));
 
-            // 유물은 아직 하나도 없다. 낫이 떨구는 것은 작업 39의 일이라,
-            // 이 시나리오는 유물을 직접 쥐여 주고 "쥔 다음"부터를 본다.
+            // 유물을 어떻게 손에 넣는가는 여기서 볼 것이 아니다(그쪽은
+            // E2ERelicSupply가 낫을 세워 놓고 기다려 실제로 줍는다). 이 시나리오는
+            // 연구대 자체를 보므로 유물을 직접 쥐여 주고 "쥔 다음"부터를 본다.
             E2EHarness.AssertEqual(Inv.CountOf(막), 0, "낫의 막을 아직 갖고 있지 않다");
             E2EHarness.AssertEqual(Inv.CountOf(핵), 0, "낫의 핵을 아직 갖고 있지 않다");
         }
@@ -454,15 +455,16 @@ namespace Survive.Testing
         /// <summary>
         /// 청사진을 원장에 직접 적는다.
         ///
-        /// <b>왜 이런 것이 필요한가.</b> 진행 장비(액면 보행 장비·잠항구)는 이제
-        /// 연구대의 산출물 뒤에 선다. 그런데 그 연구의 소재인 유물은 <b>낫이 떨군다</b>
-        /// — 그 배선은 작업 39의 일이라 아직 세계 어디에도 유물이 없다. 즉 39 이전에는
-        /// 동선을 아무리 성실히 걸어도 연구가 성립할 수 없다.
+        /// <b>왜 이런 것이 필요한가.</b> 진행 장비(액면 보행 장비·잠항구)는 연구대의
+        /// 산출물 뒤에 서고, 그 연구의 소재인 유물은 낫이 순찰하다 흘린다(백로그 39).
+        /// 배선은 이제 다 있다 — <c>E2EDescent</c>는 이 창구를 쓰지 않고
+        /// <c>E2ERelicSupply</c>를 통해 실제로 주워 연구한다.
         ///
-        /// 종막을 지나야 하는 시나리오(<c>E2EDescent</c>·<c>E2EChapter1</c>·
-        /// <c>E2EWalkthrough</c>)가 여기를 지나간다. 연구 절차 자체는 이 파일이
-        /// 처음부터 끝까지 실제 조작으로 보므로, 그쪽에서 또 볼 이유도 없다.
-        /// <b>39가 붙으면 이 창구 대신 실제 유물을 주워 연구하도록 고쳐야 한다.</b>
+        /// 남은 사용처는 <b>동선을 걷는</b> 두 시나리오(<c>E2EChapter1</c>·
+        /// <c>E2EWalkthrough</c>)뿐이다. 낫의 서식지는 아직 씬에 놓이지 않았고(§8-4는
+        /// 사람과 함께 한다), 걸어서 닿을 낫의 영역이 없는 채로 그 자리에 낫을 소환해
+        /// 세우면 그것은 이미 동선이 아니다. 매크로늄 광맥이 같은 이유로 같은 대접을
+        /// 받는다. <b>§8-4에서 서식지가 놓이면 그쪽도 실제로 걸어가 줍도록 고친다.</b>
         /// </summary>
         public static bool 원장에_적는다(params string[] blueprintIds)
         {
@@ -540,7 +542,7 @@ namespace Survive.Testing
         /// 실제 판정 함수에게 물어보고 통과하는 곳을 쓰면 지형이 바뀌어도 따라간다
         /// (<c>E2EBaseBuilding</c>이 확립한 방식).
         /// </summary>
-        static IEnumerator 세운다(string id, System.Action<GameObject> result)
+        public static IEnumerator 세운다(string id, System.Action<GameObject> result)
         {
             var placer = Placer;
             E2EHarness.Assert(placer != null, "BuildPlacer가 있다");
