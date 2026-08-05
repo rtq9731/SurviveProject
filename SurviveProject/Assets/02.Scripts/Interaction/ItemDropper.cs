@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 using DG.Tweening;
 using Survive.Items;
 
@@ -20,27 +22,31 @@ namespace Survive.Interaction
         /// <param name="prefab">
         /// 떨구는 쪽이 지정한 겉모습. 아이템 자신의 worldPrefab이 우선한다 —
         /// 한 번에 여러 종류를 떨구는 경우 떨구는 쪽의 프리팹 하나로는 맞출 수 없다.
-        /// 둘 다 없으면 임시 큐브를 쓴다.
+        /// 둘 다 없으면 아이템 아이콘을 세운다 (<see cref="DropVisualRule"/>).
         /// </param>
         public static GameObject Drop(ItemDataSO item, int count, Vector3 origin,
                                       GameObject prefab = null, float spread = 0.9f)
         {
             if (item == null || count <= 0) return null;
 
-            var visual = item.worldPrefab != null ? item.worldPrefab : prefab;
-
             GameObject go;
-            if (visual != null)
+            switch (DropVisualRule.Choose(item, prefab != null))
             {
-                go = Object.Instantiate(visual, origin, Random.rotation);
-            }
-            else
-            {
-                go = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                go.transform.localScale = Vector3.one * 0.28f;
-                go.transform.position = origin;
-                go.transform.rotation = Random.rotation;
-                MakeVisible(go, item);
+                case DropVisualKind.WorldPrefab:
+                    go = Object.Instantiate(item.worldPrefab, origin, Random.rotation);
+                    break;
+
+                case DropVisualKind.SpawnerPrefab:
+                    go = Object.Instantiate(prefab, origin, Random.rotation);
+                    break;
+
+                case DropVisualKind.IconBillboard:
+                    go = BuildIconBillboard(item, origin);
+                    break;
+
+                default:
+                    go = BuildFallbackBlock(origin);
+                    break;
             }
 
             go.name = "Drop_" + item.id;
@@ -58,39 +64,182 @@ namespace Survive.Interaction
             return go;
         }
 
+        // ── 겉모습 ───────────────────────────────────────────────
+
         /// <summary>
-        /// 임시 큐브를 아이템처럼 보이게 만든다.
+        /// 아이콘을 세운 판. 인벤토리에서 보던 그림이 바닥에도 그대로 있으면
+        /// 멀리서 한눈에 무엇인지 읽힌다 — 색만 다른 큐브로는 절대 안 되던 일이다.
         ///
-        /// 지하는 어둡다. 회색 큐브는 바닥에 묻혀서 떨어진 줄도 모른다 —
-        /// 스스로 빛나고 천천히 흔들려야 "저기 뭔가 떨어졌다"가 읽힌다.
-        /// 제대로 된 프리팹이 생기면 이 경로는 안 쓰인다.
+        /// 판은 자식으로 둔다. 뿌리는 <see cref="Scatter"/>·<see cref="Idle"/>의
+        /// 트윈이 돌리고, 판은 <see cref="DropBillboard"/>가 카메라로 되돌린다.
         /// </summary>
-        static void MakeVisible(GameObject go, ItemDataSO item)
+        static GameObject BuildIconBillboard(ItemDataSO item, Vector3 origin)
         {
-            var rend = go.GetComponent<Renderer>();
-            if (rend == null) return;
+            var root = new GameObject();
+            root.transform.position = origin;
 
-            var tint = TintFor(item);
-            var shader = Shader.Find("Universal Render Pipeline/Lit");
-            if (shader == null) shader = Shader.Find("Standard");
-            if (shader == null) return;
+            // 조준 판정은 뿌리가 맡는다. 판에 콜라이더를 두면 옆에서 겨눌 때 놓친다.
+            var sphere = root.AddComponent<SphereCollider>();
+            sphere.radius = 0.22f;
+            sphere.isTrigger = true;
 
-            // 발광을 세게 주면 흰 덩어리로 뭉개져 무엇인지 알 수 없다.
-            // 어두운 데서 눈에 띌 만큼만 올리고 색은 남긴다.
-            var mat = new Material(shader) { color = tint };
-            mat.EnableKeyword("_EMISSION");
-            mat.SetColor("_EmissionColor", tint * 0.5f);
-            rend.sharedMaterial = mat;
+            var plate = new GameObject("Icon");
+            plate.transform.SetParent(root.transform, false);
+            plate.transform.localScale = Vector3.one * DropVisualRule.IconSize;
+            plate.AddComponent<DropBillboard>();
+
+            plate.AddComponent<MeshFilter>().sharedMesh = PlateMesh();
+
+            var rend = plate.AddComponent<MeshRenderer>();
+            rend.sharedMaterial = IconMaterial(item.icon);
+            // 손톱만 한 판이 그림자까지 드리우면 어두운 바닥이 지저분해지기만 한다.
+            rend.shadowCastingMode = ShadowCastingMode.Off;
+            rend.receiveShadows = false;
+
+            return root;
         }
 
-        /// <summary>종류마다 색을 달리해 멀리서도 무엇인지 짐작할 수 있게 한다.</summary>
-        static Color TintFor(ItemDataSO item) => item.id switch
+        /// <summary>
+        /// 아이콘조차 없을 때. 무엇인지는 알 수 없어도 "뭔가 떨어졌다"는 보여야 한다.
+        /// 데이터가 온전하면 여기로 오는 아이템은 하나도 없다 (DropVisualTests).
+        /// </summary>
+        static GameObject BuildFallbackBlock(Vector3 origin)
         {
-            "scrap" => new Color(0.95f, 0.72f, 0.35f),
-            "machine_part" => new Color(0.60f, 0.80f, 0.95f),
-            "alien_alloy" => new Color(0.55f, 0.95f, 0.85f),
-            _ => new Color(0.85f, 0.85f, 0.70f),
-        };
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            go.transform.localScale = Vector3.one * 0.28f;
+            go.transform.position = origin;
+            go.transform.rotation = Random.rotation;
+
+            var rend = go.GetComponent<Renderer>();
+            if (rend != null) rend.sharedMaterial = FallbackMaterial();
+            return go;
+        }
+
+        // ── 머티리얼·메시 캐시 ───────────────────────────────────
+        //
+        // 예전에는 드롭마다 new Material을 만들어 어디서도 해제하지 않았다.
+        // 사망 드롭·채집·낫의 유물 드롭이 겹치는 긴 판에서는 그만큼 계속 쌓인다.
+        // 같은 아이콘은 같은 머티리얼을 쓰므로 아이콘 수(스물몇)로 상한이 잡힌다.
+
+        static readonly Dictionary<Sprite, Material> IconMaterials = new Dictionary<Sprite, Material>();
+        static Material _fallbackMaterial;
+        static Mesh _plateMesh;
+
+        /// <summary>
+        /// 플레이 세션이 바뀌면 캐시가 가리키던 것은 이미 파괴돼 있다.
+        /// 도메인 리로드를 꺼 둔 설정에서도 확실히 비우려고 진입점에서 초기화한다.
+        /// </summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetCache()
+        {
+            IconMaterials.Clear();
+            _fallbackMaterial = null;
+            _plateMesh = null;
+        }
+
+        static Shader DropShader()
+        {
+            var shader = Shader.Find("Universal Render Pipeline/Lit");
+            if (shader == null) shader = Shader.Find("Standard");
+            return shader;
+        }
+
+        static Material IconMaterial(Sprite icon)
+        {
+            if (icon == null) return FallbackMaterial();
+            if (IconMaterials.TryGetValue(icon, out var cached) && cached != null) return cached;
+
+            var shader = DropShader();
+            if (shader == null) return null;
+
+            var mat = new Material(shader) { name = "DropIcon_" + icon.name };
+            mat.color = Color.white;
+
+            var tex = icon.texture;
+            if (tex != null)
+            {
+                mat.mainTexture = tex;
+                // 아틀라스에 묶인 스프라이트는 텍스처 일부만 쓴다. 잘라 쓸 자리를 UV로 넘긴다.
+                var r = icon.textureRect;
+                mat.mainTextureScale = new Vector2(r.width / tex.width, r.height / tex.height);
+                mat.mainTextureOffset = new Vector2(r.x / tex.width, r.y / tex.height);
+            }
+
+            // 아이콘 배경은 투명하다. 잘라내지 않으면 검은 판이 뜬다.
+            mat.SetFloat("_Surface", 0f);          // Opaque
+            mat.SetFloat("_AlphaClip", 1f);
+            mat.SetFloat("_Cutoff", 0.5f);
+            mat.EnableKeyword("_ALPHATEST_ON");
+            mat.renderQueue = (int)RenderQueue.AlphaTest;
+
+            // 판이 뒤집혀도 사라지지 않게. 빌보드가 앞을 보게 하지만 한 프레임의 틈이 있다.
+            mat.SetFloat("_Cull", 0f);
+
+            mat.SetFloat("_Smoothness", 0.1f);
+            mat.SetFloat("_Metallic", 0f);
+
+            // 발광에도 같은 그림을 물린다. 이래야 어둠 속에서 흰 사각형이 아니라
+            // 아이콘의 형태와 색이 떠오른다.
+            mat.EnableKeyword("_EMISSION");
+            mat.SetTexture("_EmissionMap", tex);
+            mat.SetColor("_EmissionColor", Color.white * DropVisualRule.IconEmission);
+            mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.EmissiveIsBlack;
+
+            IconMaterials[icon] = mat;
+            return mat;
+        }
+
+        static Material FallbackMaterial()
+        {
+            if (_fallbackMaterial != null) return _fallbackMaterial;
+
+            var shader = DropShader();
+            if (shader == null) return null;
+
+            var tint = DropVisualRule.FallbackTint;
+            var mat = new Material(shader) { name = "DropFallback", color = tint };
+            mat.EnableKeyword("_EMISSION");
+            mat.SetColor("_EmissionColor", tint * DropVisualRule.IconEmission);
+            mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.EmissiveIsBlack;
+
+            _fallbackMaterial = mat;
+            return mat;
+        }
+
+        /// <summary>
+        /// 1×1 판. 내장 Quad 프리미티브를 쓰지 않는 이유는 딸려 오는 MeshCollider다 —
+        /// 볼록이 아닌 메시 콜라이더는 트리거로 쓸 수 없어 매번 떼어 내야 한다.
+        /// </summary>
+        static Mesh PlateMesh()
+        {
+            if (_plateMesh != null) return _plateMesh;
+
+            var m = new Mesh { name = "DropIconPlate" };
+            m.vertices = new[]
+            {
+                new Vector3(-0.5f, -0.5f, 0f),
+                new Vector3( 0.5f, -0.5f, 0f),
+                new Vector3(-0.5f,  0.5f, 0f),
+                new Vector3( 0.5f,  0.5f, 0f),
+            };
+            m.uv = new[]
+            {
+                new Vector2(0f, 0f), new Vector2(1f, 0f),
+                new Vector2(0f, 1f), new Vector2(1f, 1f),
+            };
+            // 앞면은 -Z. 빌보드가 카메라 회전을 그대로 받으므로 이쪽이 화면을 향한다.
+            m.normals = new[]
+            {
+                -Vector3.forward, -Vector3.forward, -Vector3.forward, -Vector3.forward,
+            };
+            m.triangles = new[] { 0, 2, 1, 2, 3, 1 };
+            m.RecalculateBounds();
+
+            _plateMesh = m;
+            return m;
+        }
+
+        // ── 궤적 ─────────────────────────────────────────────────
 
         /// <summary>
         /// 옆으로 튀어 바닥에 내려앉는 궤적. 물리를 붙이면 굴러가 버려서
