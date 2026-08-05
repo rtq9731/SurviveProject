@@ -26,6 +26,17 @@ namespace Survive.World
 
         /// <summary>매크로늄 액면 — 표면장력이 강해 뚫고 갈 수 없다.</summary>
         MacroniumSurface,
+
+        /// <summary>
+        /// 짙은 매크로늄 <b>층</b> — 액면 아래로 이만큼의 두께가 막고 있다.
+        ///
+        /// <see cref="MacroniumSurface"/>와 같은 물질이고 묻는 방향만 다르다.
+        /// 액면은 "가로로 얼마나 건너야 하는가"를 묻고, 층은 "세로로 얼마나 뚫어야 하는가"를 묻는다.
+        /// 기획서 §6.4 "구역 경계의 물리적 정체는 매크로늄 층이고, 통과 수단은 그 층을 뚫는 장비다".
+        ///
+        /// 챕터 1의 종막이 이것이다 — 뚫고 내려가면 부유섬이 끝난다 (§6.2).
+        /// </summary>
+        MacroniumLayer,
     }
 
     /// <summary>
@@ -40,6 +51,7 @@ namespace Survive.World
     /// <item><see cref="EnvironmentHazard.Depth"/> — 물속에 머물러야 하는 시간(초)</item>
     /// <item><see cref="EnvironmentHazard.Gap"/> — 건너야 하는 폭(m)</item>
     /// <item><see cref="EnvironmentHazard.MacroniumSurface"/> — 액면 위로 지나야 하는 폭(m)</item>
+    /// <item><see cref="EnvironmentHazard.MacroniumLayer"/> — 뚫고 내려가야 하는 층의 두께(m)</item>
     /// <item><see cref="EnvironmentHazard.None"/> — 쓰이지 않는다</item>
     /// </list>
     /// </summary>

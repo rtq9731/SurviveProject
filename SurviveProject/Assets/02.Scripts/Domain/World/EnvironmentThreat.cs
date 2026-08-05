@@ -23,6 +23,7 @@ namespace Survive.World
             EnvironmentHazard.Depth => TraversalGear.Swimming,
             EnvironmentHazard.Gap => TraversalGear.Bridge,
             EnvironmentHazard.MacroniumSurface => TraversalGear.SurfaceWalker,
+            EnvironmentHazard.MacroniumLayer => TraversalGear.Submersible,
             _ => TraversalGear.None,
         };
 
