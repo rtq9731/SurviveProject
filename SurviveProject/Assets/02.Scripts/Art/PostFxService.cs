@@ -102,18 +102,25 @@ namespace Survive.Art
         /// <summary>
         /// 상태 의존분만 담은 런타임 볼륨. 우선순위를 씬 볼륨보다 높게 두어
         /// 여기서 켠 것만 덮어쓰고, 손대지 않은 항목은 씬 볼륨의 값이 그대로 산다.
+        ///
+        /// <b><c>Add&lt;T&gt;(false)</c>여야 한다.</b> 인자를 true로 주면 그 컴포넌트의
+        /// <i>모든</i> 파라미터에 override가 켜진다. 우선순위가 높은 이 볼륨이
+        /// 손댈 생각도 없던 값까지 기본값으로 덮어써서, 씬 볼륨의 고정 그레이드가
+        /// 런타임에 지워진다. 실제로 그랬다 — 노출만 얹으려던 ColorAdjustments가
+        /// 대비 14와 채도 -8을 0으로 되돌려, 화면 평균 밝기가 0.079에서 0.097로
+        /// 들렸다(암부 검증에서 발각). 필요한 항목만 아래에서 하나씩 켠다.
         /// </summary>
         void BuildVolume()
         {
             _profile = ScriptableObject.CreateInstance<VolumeProfile>();
             _profile.name = "Volume_PostFxRuntime";
 
-            _vignette = _profile.Add<Vignette>(true);
+            _vignette = _profile.Add<Vignette>(false);
             _vignette.intensity.overrideState = true;
             _vignette.smoothness.overrideState = true;
             _vignette.smoothness.value = 0.4f;
 
-            _grain = _profile.Add<FilmGrain>(true);
+            _grain = _profile.Add<FilmGrain>(false);
             _grain.type.overrideState = true;
             _grain.type.value = FilmGrainLookup.Thin1;
             _grain.intensity.overrideState = true;
@@ -123,11 +130,11 @@ namespace Survive.Art
             // 실제로 밴딩이 생기는 곳이 어두운 계조 쪽이라 여기에 남겨야 한다.
             _grain.response.value = 0.8f;
 
-            _chromatic = _profile.Add<ChromaticAberration>(true);
+            _chromatic = _profile.Add<ChromaticAberration>(false);
             _chromatic.intensity.overrideState = true;
             _chromatic.intensity.value = 0f;
 
-            _grade = _profile.Add<ColorAdjustments>(true);
+            _grade = _profile.Add<ColorAdjustments>(false);
             _grade.postExposure.overrideState = true;
             _grade.colorFilter.overrideState = true;
 
