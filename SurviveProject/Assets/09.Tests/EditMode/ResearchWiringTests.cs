@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using Survive.Building;
 using Survive.Crafting;
+using Survive.Creatures;
 using Survive.Items;
 using Survive.Progression;
 
@@ -125,7 +126,9 @@ public class ResearchWiringTests
         {
             Assert.IsNotEmpty(e.displayName, $"{e.id}에 이름이 없으면 빈 줄이 뜬다");
             Assert.IsNotNull(e.unlocks, $"{e.id}의 unlocks가 null이다");
-            Assert.Greater(e.unlocks.Length, 0, $"{e.id}가 아무것도 열지 않는다");
+            Assert.IsNotNull(e.unlockKeys, $"{e.id}의 unlockKeys가 null이다");
+            Assert.IsTrue(ResearchService.HasAnyUnlock(e),
+                $"{e.id}가 아무것도 열지 않는다 — 걸어 봐야 아무 일도 일어나지 않는다");
 
             foreach (var bp in e.unlocks)
             {
@@ -133,6 +136,10 @@ public class ResearchWiringTests
                 Assert.IsFalse(string.IsNullOrWhiteSpace(bp.id),
                     $"{e.id}가 여는 청사진에 id가 없다 — 원장은 문자열로만 기억한다");
             }
+
+            foreach (var key in e.unlockKeys)
+                Assert.IsFalse(string.IsNullOrWhiteSpace(key),
+                    $"{e.id}의 unlockKeys에 빈 칸이 있다 — 원장에 빈 줄이 적힌다");
 
             Assert.Greater(e.researchSeconds, 0f, $"{e.id}가 즉시 끝나면 연구가 아니라 버튼이다");
             Assert.Greater(e.energyCost, 0, $"{e.id}가 공짜다 — 연구대의 대가가 사라진다");
@@ -146,6 +153,15 @@ public class ResearchWiringTests
             }
         }
     }
+
+    /// <summary>연구의 정형구 — 제작법을 얻은 항목이 닫는 말.</summary>
+    const string 제작법정형구 = "제작법을 확보했습니다.";
+
+    /// <summary>
+    /// 도감의 정형구 — 만드는 법이 아니라 <b>개체가 무엇인가</b>를 알게 된 항목이 닫는 말.
+    /// 백로그 43(도감 UI)이 이 문장을 항목 설명문으로 읽는다.
+    /// </summary>
+    const string 도감정형구 = "개체의 정보가 정리되었습니다.";
 
     [Test]
     public void AI_대사가_기계의_말투를_지킨다()
@@ -162,12 +178,29 @@ public class ResearchWiringTests
                 $"{e.id}: 첫 문장이 '분석...'으로 닫히지 않는다 — \"{line.text}\"");
             Assert.IsTrue(line.text.Contains("것으로 보입니다") || line.text.Contains("판단됩니다"),
                 $"{e.id}: 용도 판정이 단정이다(관찰투가 아니다) — \"{line.text}\"");
-            Assert.IsTrue(line.text.EndsWith("제작법을 확보했습니다."),
-                $"{e.id}: 연구의 정형구로 닫히지 않는다 — \"{line.text}\"");
+
+            // 정형구는 산출물의 종류를 따른다. 청사진을 얻은 것과 개체를 알게 된 것은
+            // 같은 문장으로 닫을 수 없다 — 주운 것과 밝혀낸 것을 가른 것과 같은 이유다.
+            string 정형구 = e.unlocks.Length > 0 ? 제작법정형구 : 도감정형구;
+            Assert.IsTrue(line.text.EndsWith(정형구),
+                $"{e.id}: 정형구로 닫히지 않는다(기대 \"{정형구}\") — \"{line.text}\"");
 
             foreach (var 금지 in new[] { "!", "?", "겠어", "네요", "흥미" })
                 Assert.IsFalse(line.text.Contains(금지),
                     $"{e.id}: 기계가 하지 않는 말이 섞였다({금지}) — \"{line.text}\"");
+        }
+    }
+
+    [Test]
+    public void 두_정형구가_서로_섞이지_않는다()
+    {
+        // 하나가 두 정형구를 다 달면 무엇을 얻었는지 문장으로는 구별할 수 없다.
+        foreach (var e in 연구목록().entries)
+        {
+            bool 제작 = e.line.text.Contains(제작법정형구);
+            bool 도감 = e.line.text.Contains(도감정형구);
+            Assert.IsFalse(제작 && 도감, $"{e.id}가 두 정형구를 다 달고 있다");
+            Assert.IsTrue(제작 || 도감, $"{e.id}가 어느 정형구로도 닫지 않는다");
         }
     }
 
@@ -350,5 +383,234 @@ public class ResearchWiringTests
         foreach (var c in 연구대().cost)
             Assert.IsFalse(c?.item != null && (c.item.id == Membrane || c.item.id == Core),
                 "연구대를 유물로 지으면 순환이라 영원히 못 짓는다");
+    }
+
+    // ══ 백로그 39 — 연구 소재 공급 ═══════════════════════════
+
+    /// <summary>
+    /// 다음 작업(백로그 43, 도감 UI)이 읽는 <b>계약</b>. 이 목록이 이름 그대로
+    /// 원장에 적히지 않으면 도감 화면이 영원히 빈 채로 뜬다.
+    /// </summary>
+    static readonly string[] 도감열쇠들 =
+    {
+        "codex_ball", "codex_eye", "codex_wing", "codex_fruit_crab", "codex_scythe",
+    };
+
+    static CreatureDefinitionSO[] 생물들()
+    {
+        var found = AssetDatabase.FindAssets("t:CreatureDefinitionSO", new[] { "Assets/08.Data/Creatures" })
+            .Select(g => AssetDatabase.LoadAssetAtPath<CreatureDefinitionSO>(AssetDatabase.GUIDToAssetPath(g)))
+            .Where(d => d != null)
+            .ToArray();
+
+        Assert.Greater(found.Length, 0, "생물 정의를 하나도 못 읽었다");
+        return found;
+    }
+
+    static string 부품id(CreatureDefinitionSO d) => "part_" + d.id;
+    static string 도감열쇠(CreatureDefinitionSO d) => "codex_" + d.id;
+    static string 도감항목id(CreatureDefinitionSO d) => "res_codex_" + d.id;
+
+    // ── 생물 부품 ────────────────────────────────────────────
+
+    [Test]
+    public void 모든_생물이_제_부품을_떨군다()
+    {
+        // 처치 드롭은 기존 LootTable 체계를 그대로 쓴다. 부품만 별도 경로로 떨구면
+        // 스크랩과 부품이 서로 다른 규칙으로 나와 어느 쪽이 맞는지 알 수 없게 된다.
+        foreach (var d in 생물들())
+        {
+            Assert.IsNotNull(d.drops, $"{d.id}에 전리품 표가 없다");
+
+            var 부품 = d.drops.entries.FirstOrDefault(e => e?.item != null && e.item.id == 부품id(d));
+            Assert.IsNotNull(부품, $"{d.id}의 전리품에 {부품id(d)}가 없다 — 잡아도 부품이 안 나온다");
+            Assert.AreEqual(1f, 부품.chance, 0.001f,
+                $"{부품id(d)}가 확률로 나오면 도감이 운에 걸린다 — 몸의 일부다");
+            Assert.Greater(부품.maxCount, 0, $"{부품id(d)}의 수량이 0이다");
+        }
+    }
+
+    [Test]
+    public void 부품이_아이템_DB에_등록돼_있다()
+    {
+        foreach (var d in 생물들())
+        {
+            Assert.IsTrue(아이템DB().TryGetById(부품id(d), out var item),
+                $"ItemDatabase에 {부품id(d)}가 없다 — 세이브를 다시 불러오면 조용히 사라진다");
+            Assert.IsNotEmpty(item.displayName, $"{부품id(d)}에 이름이 없다");
+            Assert.IsNotEmpty(item.description, $"{부품id(d)}에 설명이 없다");
+            Assert.AreEqual(ItemCategory.Resource, item.category);
+        }
+    }
+
+    [Test]
+    public void 부품은_그_생물에서만_나온다()
+    {
+        // 아무 생물이나 잡아서 아무 도감이나 열리면 종별 고유 해금이 무너진다.
+        var 전체 = 생물들();
+        foreach (var 주인 in 전체)
+        {
+            foreach (var 남 in 전체)
+            {
+                if (남 == 주인 || 남.drops == null) continue;
+                Assert.IsFalse(남.drops.entries.Any(e => e?.item != null && e.item.id == 부품id(주인)),
+                    $"{남.id}가 {부품id(주인)}를 떨군다");
+            }
+        }
+    }
+
+    // ── 부품 연구 → 도감 열쇠 ────────────────────────────────
+
+    [Test]
+    public void 생물마다_도감_연구가_하나씩_있다()
+    {
+        foreach (var d in 생물들())
+        {
+            var e = 연구목록().Find(도감항목id(d));
+            Assert.IsNotNull(e, $"연구 목록에 {도감항목id(d)}가 없다 — 부품을 모아도 쓸 데가 없다");
+
+            Assert.AreEqual(1, e.materials.Length, $"{e.id}는 제 부품 하나만 요구한다");
+            Assert.AreEqual(부품id(d), e.materials[0].item.id, $"{e.id}가 다른 것을 요구한다");
+            Assert.Greater(e.materials[0].count, 1,
+                $"{e.id}가 부품 하나로 끝난다 — 여러 마리를 겪어야 개체를 안다");
+        }
+    }
+
+    [Test]
+    public void 도감_연구가_여는_것은_청사진이_아니라_원장_열쇠다()
+    {
+        // 도감은 만드는 법이 아니다. 청사진으로 위장해 두면 잠긴 제작 줄에
+        // "codex_공 청사진이 필요하다"가 뜬다.
+        foreach (var d in 생물들())
+        {
+            var e = 연구목록().Find(도감항목id(d));
+            Assert.AreEqual(0, e.unlocks.Length, $"{e.id}가 청사진을 연다");
+            Assert.AreEqual(new[] { 도감열쇠(d) }, e.unlockKeys,
+                $"{e.id}가 여는 열쇠가 계약과 다르다");
+        }
+    }
+
+    [Test]
+    public void 도감_열쇠_목록이_계약대로다()
+    {
+        // 백로그 43(도감 UI)이 이 이름들로 원장을 읽는다. 하나라도 바뀌면
+        // 그쪽 화면이 조용히 빈 채로 뜬다.
+        var 실제 = 연구목록().entries
+            .SelectMany(e => e.unlockKeys)
+            .Where(k => k.StartsWith("codex_"))
+            .OrderBy(k => k)
+            .ToArray();
+
+        CollectionAssert.AreEqual(도감열쇠들.OrderBy(k => k).ToArray(), 실제);
+    }
+
+    [Test]
+    public void 도감_연구를_마치면_그_열쇠가_원장에_적힌다()
+    {
+        foreach (var d in 생물들())
+        {
+            var e = 연구목록().Find(도감항목id(d));
+            var ledger = new UnlockLedger();
+
+            Assert.IsFalse(ledger.IsUnlocked(도감열쇠(d)));
+            Assert.IsFalse(ResearchService.IsKnown(e, ledger));
+
+            ResearchService.Apply(e, ledger);
+
+            Assert.IsTrue(ledger.IsUnlocked(도감열쇠(d)), $"{e.id}를 마쳐도 {도감열쇠(d)}가 안 적힌다");
+            Assert.IsTrue(ResearchService.IsKnown(e, ledger), "끝난 연구가 목록에서 다시 걸린다");
+        }
+    }
+
+    [Test]
+    public void 도감_연구는_유물_연구보다_싸다()
+    {
+        // 부품은 걸어 다니는 것을 잡으면 나오고, 유물은 낫의 영역에 머물러야 나온다.
+        // 대가가 뒤집히면 위험을 감수할 이유가 사라진다.
+        int 유물최소 = new[] { "res_surface_walker", "res_submersible" }
+            .Select(id => 항목(id).energyCost).Min();
+
+        foreach (var d in 생물들())
+            Assert.Less(연구목록().Find(도감항목id(d)).energyCost, 유물최소,
+                $"{도감항목id(d)}가 유물 연구만큼 비싸다");
+    }
+
+    // ── 낫의 유물 순찰 드롭 ──────────────────────────────────
+
+    static Survive.Progression.RelicShedSO 흘림표()
+    {
+        var 낫 = 생물들().FirstOrDefault(d => d.id == "scythe");
+        Assert.IsNotNull(낫, "낫 정의를 못 찾았다");
+        Assert.IsNotNull(낫.relicShed, "낫이 유물을 흘리지 않는다 — 유물이 세계 어디에도 없게 된다");
+        return 낫.relicShed;
+    }
+
+    [Test]
+    public void 낫만_유물을_흘린다()
+    {
+        // 유물은 낫의 그림자에서 줍는 것이다(스펙 §1). 다른 종이 흘리면 그 픽션이 없어진다.
+        foreach (var d in 생물들())
+            if (d.id != "scythe")
+                Assert.IsNull(d.relicShed, $"{d.id}가 유물을 흘린다");
+    }
+
+    [Test]
+    public void 낫이_흘리는_유물이_각각_제_연구와_짝지어져_있다()
+    {
+        var 표 = 흘림표();
+        Assert.AreEqual(2, 표.relics.Length, "유물은 둘이다 — 막과 핵");
+
+        var 짝 = 표.relics.ToDictionary(r => r.item.id, r => r.researchUnlock.id);
+        Assert.AreEqual("bp_surface_walker", 짝[Membrane]);
+        Assert.AreEqual("bp_submersible", 짝[Core]);
+
+        // pity가 "이미 밝혀낸 것"을 가진 것으로 치려면, 짝지은 열쇠가 실제로 그 연구가
+        // 여는 것과 같아야 한다. 어긋나면 다 밝혀낸 유물이 영원히 다시 떨어진다.
+        foreach (var r in 표.relics)
+        {
+            var 연구 = 연구목록().entries.First(e => e.materials.Any(m => m.item == r.item));
+            Assert.IsTrue(연구.unlocks.Any(bp => bp == r.researchUnlock),
+                $"{r.item.id}가 짝지은 열쇠를 그 연구가 열지 않는다");
+        }
+    }
+
+    [Test]
+    public void 유물은_처치_전리품이_아니다()
+    {
+        // 낫은 이기라고 놓은 상대가 아니다. 시체에서만 나오면 진행의 열쇠가
+        // "낫을 죽여라"가 되고, 랜턴을 켜고 물러나는 것이 손해가 된다.
+        foreach (var d in 생물들())
+        {
+            if (d.drops == null) continue;
+            foreach (var e in d.drops.entries)
+                Assert.IsFalse(e?.item != null && (e.item.id == Membrane || e.item.id == Core),
+                    $"{d.id}의 전리품에 유물이 들어 있다");
+        }
+    }
+
+    [Test]
+    public void 유물을_한번_보려면_1분에서_2분쯤_걸린다()
+    {
+        // 스펙의 감각: "낫 영역에 1~2분 머물면 하나 볼 수 있다".
+        // 굴림 간격 T·확률 p의 기하분포이므로 중앙값은 T·ln2/(-ln(1-p)), 평균은 T/p다.
+        var 표 = 흘림표();
+        Assert.Greater(표.chance, 0f, "확률이 0이면 영영 안 나온다");
+        Assert.Less(표.chance, 1f, "확률이 1이면 시계처럼 나온다 — 가끔이 아니다");
+
+        double 중앙값 = 표.intervalSeconds * System.Math.Log(2.0) / -System.Math.Log(1.0 - 표.chance);
+        Assert.That(중앙값, Is.InRange(45.0, 120.0),
+            $"절반이 기다리는 시간 {중앙값:F0}초가 1~2분 감각을 벗어난다");
+        Assert.That(표.MeanSecondsToDrop, Is.InRange(60f, 180f),
+            $"평균 {표.MeanSecondsToDrop:F0}초");
+    }
+
+    [Test]
+    public void 사람이_곁에_있을_때만_굴린다()
+    {
+        // 아무도 없는 곳에 떨궈 봐야 아무도 못 본다. 반경이 낫의 감지 반경보다는
+        // 넓어야 "쫓기지 않는 거리에서 기다린다"가 성립한다.
+        var 낫 = 생물들().First(d => d.id == "scythe");
+        Assert.Greater(낫.relicShed.witnessRadius, 낫.detectRadius,
+            "관측 반경이 감지 반경보다 좁으면 반드시 쫓기면서만 유물이 나온다");
     }
 }

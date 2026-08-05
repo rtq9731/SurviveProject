@@ -52,6 +52,10 @@ namespace Survive.Creatures
 
         public LootTableSO drops;
 
+        [Tooltip("순찰 중 가끔 흘리고 가는 유물. 비우면 아무것도 흘리지 않는다 — " +
+                 "죽여야 나오는 drops와 달리 이쪽은 살아 있는 동안 시간에 붙는다")]
+        public Survive.Progression.RelicShedSO relicShed;
+
         [Header("도감 — 챕터 2에서 사용")]
         [TextArea(3, 8)] public string codexDescription;
         public Sprite codexSketch;

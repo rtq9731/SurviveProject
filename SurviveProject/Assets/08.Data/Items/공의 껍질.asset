@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e7f1797e5edde543978bb8369b71e2a, type: 3}
+  m_Name: "\uACF5\uC758 \uAECD\uC9C8"
+  m_EditorClassIdentifier: Survive.Domain::Survive.Items.ItemDataSO
+  id: part_ball
+  displayName: "\uACF5\uC758 \uAECD\uC9C8"
+  description: "\uAD6C\uB974\uB294 \uBAB8\uC744 \uAC10\uC2F8\uB358 \uAECD\uC9C8 \uC870\uAC01.
+    \uC548\uCABD\uC5D0 \uC794\uD574\uB97C \uBE68\uC544\uB4E4\uC774\uB358 \uD760\uC9D1\uC774
+    \uCD18\uCD18\uD558\uB2E4. \uB450\uB4DC\uB9AC\uBA74 \uC18D\uC774 \uBE48 \uC18C\uB9AC\uAC00
+    \uB09C\uB2E4."
+  icon: {fileID: 21300000, guid: e9afae8f9f44fa448b3a7f90256e76c4, type: 3}
+  maxStack: 20
+  category: 0
+  worldPrefab: {fileID: 0}

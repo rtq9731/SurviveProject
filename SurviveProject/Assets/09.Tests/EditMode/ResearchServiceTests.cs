@@ -118,6 +118,83 @@ public class ResearchServiceTests
         Assert.AreEqual(ResearchReadiness.Invalid, 판정());
     }
 
+    // ── 청사진을 거치지 않는 산출물 (도감 열쇠) ─────────────
+
+    /// <summary>
+    /// 연구의 산출물이 언제나 "만드는 법"인 것은 아니다. 생물 부품을 들여다보면
+    /// 제작법이 아니라 <b>그 개체가 무엇인가</b>를 알게 된다(백로그 39의 codex_ 열쇠).
+    /// 그 항목도 걸리고, 끝나고, 두 번 걸리지 않아야 한다.
+    /// </summary>
+    void 도감항목으로_바꾼다()
+    {
+        _entry.id = "res_codex_ball";
+        _entry.unlocks = new BlueprintSO[0];
+        _entry.unlockKeys = new[] { "codex_ball" };
+    }
+
+    [Test]
+    public void 청사진_없이_원장_열쇠만_여는_항목도_걸_수_있다()
+    {
+        도감항목으로_바꾼다();
+        채운다();
+        Assert.AreEqual(ResearchReadiness.Ready, 판정());
+    }
+
+    [Test]
+    public void 원장_열쇠도_다_보면_원장에_적힌다()
+    {
+        도감항목으로_바꾼다();
+        채운다();
+        건다();
+
+        Assert.AreSame(_entry, ResearchService.Tick(_queue, 45f, _ledger));
+        Assert.IsTrue(_ledger.IsUnlocked("codex_ball"));
+    }
+
+    [Test]
+    public void 이미_적힌_원장_열쇠는_다시_걸리지_않는다()
+    {
+        도감항목으로_바꾼다();
+        채운다();
+        _ledger.Unlock("codex_ball");
+
+        Assert.AreEqual(ResearchReadiness.AlreadyKnown, 판정());
+        Assert.IsFalse(건다());
+    }
+
+    [Test]
+    public void 청사진과_원장_열쇠를_함께_열_수도_있다()
+    {
+        _entry.unlockKeys = new[] { "codex_ball" };
+        채운다();
+        건다();
+        ResearchService.Tick(_queue, 45f, _ledger);
+
+        Assert.IsTrue(_ledger.IsUnlocked(_blueprint.id), "청사진이 적혔다");
+        Assert.IsTrue(_ledger.IsUnlocked("codex_ball"), "열쇠도 적혔다");
+    }
+
+    [Test]
+    public void 한쪽만_적혀_있으면_아직_다_안_것이_아니다()
+    {
+        _entry.unlockKeys = new[] { "codex_ball" };
+        _ledger.Unlock(_blueprint.id);
+
+        Assert.IsFalse(ResearchService.IsKnown(_entry, _ledger),
+            "청사진만 열려 있고 열쇠는 없다 — 아직 남았다");
+    }
+
+    [Test]
+    public void 빈_열쇠만_적힌_항목은_헛_항목이다()
+    {
+        채운다();
+        _entry.unlocks = new BlueprintSO[0];
+        _entry.unlockKeys = new[] { "  " };
+
+        Assert.IsFalse(ResearchService.HasAnyUnlock(_entry));
+        Assert.AreEqual(ResearchReadiness.Invalid, 판정());
+    }
+
     [Test]
     public void 태울_것을_지정하지_않으면_걸_수_없다()
     {

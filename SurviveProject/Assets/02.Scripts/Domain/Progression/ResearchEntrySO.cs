@@ -47,8 +47,22 @@ namespace Survive.Progression
         [Tooltip("들여다보는 데 걸리는 시간(초). 0이면 즉시 끝난다")]
         [Min(0f)] public float researchSeconds = 30f;
 
-        [Tooltip("다 보고 나면 열리는 청사진들. 비어 있으면 아무것도 열지 못하는 헛 항목이다")]
+        [Tooltip("다 보고 나면 열리는 청사진들. unlockKeys와 둘 다 비면 아무것도 열지 못하는 헛 항목이다")]
         public BlueprintSO[] unlocks = new BlueprintSO[0];
+
+        /// <summary>
+        /// 청사진이 아닌 원장 열쇠들.
+        ///
+        /// <b>왜 따로 두는가.</b> 연구의 산출물이 언제나 "만드는 법"인 것은 아니다.
+        /// 생물 부품을 들여다봐서 알게 되는 것은 제작법이 아니라 <b>그 개체가
+        /// 무엇인가</b>이고(도감 열쇠 <c>codex_&lt;생물id&gt;</c>), 그것을 청사진으로
+        /// 위장해 두면 잠긴 레시피 줄에 "codex_공 청사진이 필요하다"가 뜬다.
+        ///
+        /// 원장은 어차피 문자열만 기억한다(<see cref="UnlockLedger"/>). 청사진을
+        /// 거치지 않는 산출물은 그 문자열을 그대로 적는다.
+        /// </summary>
+        [Tooltip("청사진을 거치지 않는 원장 열쇠들. 도감 항목(codex_<생물id>) 같은 것")]
+        public string[] unlockKeys = new string[0];
 
         [Tooltip("다 봤을 때 우주복 AI가 하는 말. 비우면 조용히 열리기만 한다")]
         public SequenceSO.Line line = new SequenceSO.Line();
