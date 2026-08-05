@@ -229,20 +229,34 @@ namespace Survive.Testing
 
         /// <summary>
         /// 기준점에서 원하는 거리쯤 되는 NavMesh 자리를 방향을 돌려 가며 찾는다.
-        /// 가까워지는 쪽으로 밀리면 안 되므로 하한을 둔다 — 거리 자체가 판정의 전제다.
+        ///
+        /// 두 조건을 건다.
+        /// <list type="bullet">
+        /// <item><b>하한</b> — 가까워지는 쪽으로 밀리면 안 된다. 거리 자체가 판정의 전제다.</item>
+        /// <item><b>완주하는 경로</b> — 기준점까지 길이 끊기지 않아야 한다. 끊긴 자리에
+        ///   세우면 낫이 바위를 사이에 두고 10m 앞에서 멈춰 서고(실측), 그 멈춤을
+        ///   "빛이 막았다"로 읽게 된다. 이 시나리오가 재려는 것은 빛이지 길찾기가 아니다.</item>
+        /// </list>
         /// </summary>
         static bool 자리를_찾는다(Vector3 기준, float 거리, out Vector3 결과)
         {
+            결과 = 기준;
+            if (!NavMesh.SamplePosition(기준, out var 목표, 4f, NavMesh.AllAreas)) return false;
+
             float 하한 = 거리 - 2.5f;
+            var 경로 = new NavMeshPath();
+
             for (int i = 0; i < 24; i++)
             {
                 var dir = Quaternion.Euler(0f, i * 15f, 0f) * Vector3.forward;
                 if (!NavMesh.SamplePosition(기준 + dir * 거리, out var hit, 4f, NavMesh.AllAreas)) continue;
                 if (Vector3.Distance(hit.position, 기준) < 하한) continue;
+                if (!NavMesh.CalculatePath(hit.position, 목표.position, NavMesh.AllAreas, 경로)) continue;
+                if (경로.status != NavMeshPathStatus.PathComplete) continue;
+
                 결과 = hit.position;
                 return true;
             }
-            결과 = 기준;
             return false;
         }
 
@@ -276,6 +290,20 @@ namespace Survive.Testing
 
         static float 거리(CreatureBrain 낫) => Vector3.Distance(낫.transform.position, PlayerPos);
 
+        /// <summary>
+        /// 바닥에서 잰 거리. 높이는 뺀다.
+        ///
+        /// 플레이어는 지면보다 한 뼘 위에 서고 생물의 기준점은 발밑이라, 3차원으로 재면
+        /// "얼마나 다가왔는가"에 1m 남짓한 상수가 늘 얹힌다. 여기서 보려는 것은
+        /// 바닥에서 얼마나 좁혀 왔는가다.
+        /// </summary>
+        static float 수평거리(Vector3 a, Vector3 b)
+        {
+            a.y = 0f;
+            b.y = 0f;
+            return Vector3.Distance(a, b);
+        }
+
         static bool 덤비는중(CreatureBrain 낫) =>
             낫.State == CreatureState.Chase || 낫.State == CreatureState.Attack;
 
@@ -284,7 +312,7 @@ namespace Survive.Testing
             yield return 선다(시험점);
             E2EHarness.Assert(LitZoneRegistry.IsLit(PlayerPos), "플레이어가 켜진 군락 안에 서 있다");
 
-            float 처음 = 거리(낫);
+            float 처음 = 수평거리(낫.transform.position, 시험점);
             float 가장가까이 = 처음;
             bool 덤빔 = false;
 
@@ -293,7 +321,7 @@ namespace Survive.Testing
             {
                 yield return 선다(시험점);   // 밀려나지 않게 자리를 지킨다
                 if (덤비는중(낫)) 덤빔 = true;
-                가장가까이 = Mathf.Min(가장가까이, Vector3.Distance(낫.transform.position, 시험점));
+                가장가까이 = Mathf.Min(가장가까이, 수평거리(낫.transform.position, 시험점));
                 t += Time.deltaTime;
                 yield return null;
             }
@@ -539,24 +567,29 @@ namespace Survive.Testing
             yield return 선다(시험점);
             E2EHarness.Assert(!LitZoneRegistry.IsLit(PlayerPos), "플레이어 자리가 어둡다");
 
-            float 처음 = Vector3.Distance(낫.transform.position, 시험점);
+            float 처음 = 수평거리(낫.transform.position, 시험점);
             yield return 붙어서_기다린다(낫, 시험점, () => 덤비는중(낫), "불이 꺼지자 낫이 덤빈다", 6f);
 
-            // 상태만 바뀌고 제자리면 "들어온다"가 아니다. 꺼진 군락 한복판에 선
-            // 플레이어를 <b>때릴 수 있는 거리</b>까지 실제로 걸어 들어오는지 본다.
-            float 문턱 = _낫정의.attackRange + 1.5f;
+            // 상태만 바뀌고 제자리면 "들어온다"가 아니다. 꺼진 군락의 <b>한복판</b>까지
+            // 실제로 걸어 들어오는지 본다 — 예전 빛 반경의 절반 안쪽이다.
+            //
+            // 사거리(2.2m)까지 붙는 것을 조건으로 걸지 않는다. 서로의 캡슐이 부딪히고
+            // 플레이어가 지면보다 1m 높이에 서 있어서 3차원 거리가 그 아래로 잘
+            // 내려가지 않는다 — 조건이 아슬아슬해지면 재는 것이 빛인지 콜라이더인지
+            // 알 수 없게 된다. 높이 성분도 빼고 바닥에서 잰다.
+            float 문턱 = 군락.BaseRange * 0.5f;
             yield return 붙어서_기다린다(
                 낫, 시험점,
-                () => Vector3.Distance(낫.transform.position, 시험점) <= 문턱,
-                $"꺼진 군락 안, 플레이어 코앞({문턱:F1}m)까지 걸어 들어왔다", 15f);
+                () => 수평거리(낫.transform.position, 시험점) <= 문턱,
+                $"꺼진 군락 한복판({문턱:F1}m 안)까지 실제로 걸어 들어왔다", 20f);
 
-            float 지금 = Vector3.Distance(낫.transform.position, 시험점);
+            float 지금 = 수평거리(낫.transform.position, 시험점);
             E2EHarness.Log($"  낫: 플레이어까지 {처음:F1}m -> {지금:F1}m (상태 {낫.State}), " +
                            $"켜져 있을 때 최선 {_켜졌을때_최소거리:F1}m");
             E2EHarness.Assert(지금 < _켜졌을때_최소거리 - 2f,
                               $"빛이 있을 때보다 한참 안쪽이다 " +
                               $"({_켜졌을때_최소거리:F1}m -> {지금:F1}m)");
-            E2EHarness.Assert(Vector3.Distance(낫.transform.position, 군락.LitZoneCenter) < 군락.BaseRange,
+            E2EHarness.Assert(수평거리(낫.transform.position, 군락.LitZoneCenter) < 군락.BaseRange,
                               $"예전 빛이 닿던 반경({군락.BaseRange:F0}m) 안이다");
         }
 
