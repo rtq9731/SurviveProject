@@ -241,7 +241,7 @@ MonoBehaviour:
   inventory: {fileID: 1330457528169490069}
   maxBattery: 100
   drainPerSecond: 1.6
-  batteryPerScrap: 20
+  batteryPerCell: 100
   fullIntensity: 5.5
   fullRange: 26
   flickerThreshold: 0.2

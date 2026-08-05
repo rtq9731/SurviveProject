@@ -10,17 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f1b123bdcba02194dba421f19571e2a5, type: 3}
-  m_Name: pickaxe
+  m_Name: battery_cell
   m_EditorClassIdentifier: Survive.Domain::Survive.Crafting.RecipeSO
-  id: pickaxe
-  displayName: "\uACE1\uAD2D\uC774"
+  id: battery_cell
+  displayName: "\uBC30\uD130\uB9AC \uC140 \uAD7D\uAE30"
   ingredients:
   - item: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}
     count: 5
-  - item: {fileID: 11400000, guid: 920a6043919ea1043985803e52162d69, type: 2}
-    count: 2
   result:
-    item: {fileID: 11400000, guid: 9932d97a3f262864088addc8ca354005, type: 2}
+    item: {fileID: 11400000, guid: 027adbdd55aed034bb95da8c77f7ec88, type: 2}
     count: 1
-  craftSeconds: 3
-  requiredStation: 0
+  craftSeconds: 30
+  requiredStation: 2
