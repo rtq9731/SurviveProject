@@ -1,9 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 using DG.Tweening;
 using TMPro;
 using Survive.Building;
@@ -36,10 +34,15 @@ namespace Survive.UI
         readonly List<(BuildableSO item, Button button, TMP_Text label, Image frame)> _rows =
             new List<(BuildableSO, Button, TMP_Text, Image)>();
 
-        /// <summary>제작 목록과 같은 색을 쓴다. 잠긴 줄은 실루엣만 남는다.</summary>
-        static readonly Color LockedFrame = new Color(0.09f, 0.10f, 0.13f, 0.75f);
-        static readonly Color LockedLabel = new Color(0.46f, 0.48f, 0.56f, 1f);
+        /// <summary>제작 목록과 같은 색을 쓴다.</summary>
         static readonly Color NormalFrame = new Color(0.12f, 0.14f, 0.18f, 0.9f);
+
+        /// <summary>
+        /// 아는 건축물이 하나도 없을 때 대신 서는 한 줄. 제작 목록과 같은 이유다 —
+        /// 판때기가 여백만 남은 띠로 찌그러지지 않게 한다.
+        /// </summary>
+        GameObject _emptyRow;
+        TMP_Text _emptyLabel;
 
         bool _isOpen;
         Survive.Player.PlayerContext _player;
@@ -160,23 +163,64 @@ namespace Survive.UI
                 _rows.Add((e, btn, txt, img));
             }
 
-            FitPanel();
+            BuildEmptyRow();
             Refresh();
         }
 
-        /// <summary>목록이 길어진 만큼 판때기도 길어져야 한다.</summary>
-        void FitPanel()
+        /// <summary>
+        /// "아직 아는 건축물이 없다" 한 줄. 누르는 자리가 아니므로 Button을 달지 않고,
+        /// 이름도 Row_로 시작하지 않게 둔다 — 검증이 실린 줄을 셀 때 섞이면 안 된다.
+        /// </summary>
+        void BuildEmptyRow()
+        {
+            if (_emptyRow != null || rowParent == null) return;
+
+            var go = new GameObject("EmptyNotice", typeof(RectTransform));
+            go.transform.SetParent(rowParent, false);
+            var rt = (RectTransform)go.transform;
+            rt.sizeDelta = new Vector2(520f, 44f);
+
+            var img = go.AddComponent<Image>();
+            img.sprite = UISkin.Panel;
+            img.type = Image.Type.Sliced;
+            img.color = new Color(0.10f, 0.11f, 0.14f, 0.85f);
+            img.raycastTarget = false;
+
+            var labelGo = new GameObject("Label", typeof(RectTransform));
+            labelGo.transform.SetParent(go.transform, false);
+            var lrt = (RectTransform)labelGo.transform;
+            lrt.anchorMin = Vector2.zero;
+            lrt.anchorMax = Vector2.one;
+            lrt.offsetMin = new Vector2(12f, 0f);
+            lrt.offsetMax = new Vector2(-12f, 0f);
+
+            _emptyLabel = labelGo.AddComponent<TextMeshProUGUI>();
+            if (font != null) _emptyLabel.font = font;
+            _emptyLabel.fontSize = 20f;
+            _emptyLabel.alignment = TextAlignmentOptions.Center;
+            _emptyLabel.color = new Color(0.62f, 0.64f, 0.70f, 1f);
+            _emptyLabel.raycastTarget = false;
+            _emptyLabel.text = MenuListing.NothingKnownToBuild;
+
+            _emptyRow = go;
+            go.SetActive(false);
+        }
+
+        /// <summary>실제로 켜진 줄만큼 판때기를 늘린다.</summary>
+        void FitPanel(int visibleRows)
         {
             var rowsRect = rowParent as RectTransform;
-            if (panel == null || rowsRect == null || _rows.Count == 0) return;
+            if (panel == null || rowsRect == null) return;
 
-            var first = _rows[0].button != null ? (RectTransform)_rows[0].button.transform : null;
+            var first = _rows.Count > 0 && _rows[0].button != null
+                ? (RectTransform)_rows[0].button.transform
+                : null;
             float rowHeight = first != null ? first.sizeDelta.y : 44f;
 
             var layout = rowsRect.GetComponent<VerticalLayoutGroup>();
             float spacing = layout != null ? layout.spacing : 6f;
 
-            UISkin.FitPanelHeight(panel, rowsRect, _rows.Count, rowHeight, spacing);
+            UISkin.FitPanelHeight(panel, rowsRect, visibleRows, rowHeight, spacing);
         }
 
         void Choose(BuildableSO b)
@@ -190,12 +234,19 @@ namespace Survive.UI
         {
             var inv = inventory?.Inventory;
             var ledger = BlueprintGate.Active;
+            int shown = 0;
 
             foreach (var (item, button, label, frame) in _rows)
             {
-                // 재료와 청사진은 독립된 두 잠금이다. 제작 목록과 같은 규칙으로,
-                // 모르는 것도 줄은 남기고 실루엣으로 가라앉힌다.
-                bool known = BlueprintGate.IsUnlocked(item.requiredBlueprint, ledger);
+                // 모르는 것은 줄 자체를 끈다. 회색으로 남겨 두던 시절에는 잠긴 줄이
+                // 이름과 여는 방법까지 적어 주었고, 그 한 줄로 후반 전개가 새어 나갔다.
+                // 재료 부족은 다른 잠금이다 — 그건 줄을 남기고 회색으로만 죽인다.
+                bool listed = MenuListing.ShouldList(item, ledger);
+
+                var go = button != null ? button.gameObject : null;
+                if (go != null && go.activeSelf != listed) go.SetActive(listed);
+                if (!listed) continue;
+                shown++;
 
                 bool affordable = true;
                 if (inv != null && item.cost != null)
@@ -207,43 +258,22 @@ namespace Survive.UI
                     }
                 }
 
-                if (button != null) button.interactable = known && affordable;
-                if (frame != null) frame.color = known ? NormalFrame : LockedFrame;
+                if (button != null) button.interactable = affordable;
+                if (frame != null) frame.color = NormalFrame;
                 if (label != null)
                 {
-                    label.text = known ? Describe(item, inv) : DescribeLocked(item);
-                    label.color = !known ? LockedLabel
-                                : affordable ? Color.white
-                                             : new Color(0.65f, 0.65f, 0.7f, 1f);
+                    label.text = MenuListing.BuildableLine(item, inv);
+                    label.color = affordable ? Color.white : new Color(0.65f, 0.65f, 0.7f, 1f);
                 }
             }
-        }
 
-        /// <summary>잠긴 줄 — 이름과 여는 방법만.</summary>
-        static string DescribeLocked(BuildableSO b)
-        {
-            string name = string.IsNullOrEmpty(b.displayName) ? b.id : b.displayName;
-            return $"{name}  ·  {BlueprintGate.LockText(b.requiredBlueprint)}";
-        }
-
-        string Describe(BuildableSO b, Inventory inv)
-        {
-            var sb = new StringBuilder();
-            sb.Append(string.IsNullOrEmpty(b.displayName) ? b.id : b.displayName);
-            sb.Append("  ·  ");
-
-            if (b.cost == null || b.cost.Length == 0) { sb.Append("재료 없음"); return sb.ToString(); }
-
-            bool first = true;
-            foreach (var c in b.cost)
+            if (_emptyRow != null)
             {
-                if (c?.item == null) continue;
-                if (!first) sb.Append(", ");
-                int held = inv != null ? inv.CountOf(c.item.id) : 0;
-                sb.Append($"{c.item.displayName} {held}/{c.count}");
-                first = false;
+                bool empty = shown <= 0;
+                if (_emptyRow.activeSelf != empty) _emptyRow.SetActive(empty);
             }
-            return sb.ToString();
+
+            FitPanel(MenuListing.PanelRows(shown));
         }
 
         // ── 열고 닫기 ────────────────────────────────────────────

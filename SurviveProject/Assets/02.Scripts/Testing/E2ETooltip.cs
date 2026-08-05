@@ -126,7 +126,7 @@ namespace Survive.Testing
             E2EHarness.Assert(crafting.IsOpen, "소지품과 함께 손 제작 목록이 열려 있다");
 
             // 열려 있는 줄 가운데 설명할 결과물이 붙은 것을 고른다.
-            // 잠긴 줄에는 쪽지가 붙지 않으므로 Resolve()가 null이다.
+            // 모르는 레시피는 줄 자체가 꺼져 있어 여기 잡히지 않는다.
             var row = Object.FindObjectsByType<ItemTooltipTrigger>(FindObjectsInactive.Exclude)
                             .FirstOrDefault(t => t.gameObject.name.StartsWith("Row_") &&
                                                  t.Resolve() != null);

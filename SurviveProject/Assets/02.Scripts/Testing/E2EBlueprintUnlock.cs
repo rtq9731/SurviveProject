@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -68,14 +69,22 @@ namespace Survive.Testing
             yield return null;
             yield return null;
 
+            // 모르는 것은 <b>목록에 실리지 않는다</b>. 회색으로 남겨 두던 시절에는
+            // 그 줄이 "부품 재조립 청사진이 필요하다: 기계 부품을 손에 넣으면 알게 된다"를
+            // 통째로 적어 주었다 — 아직 아무것도 못 본 사람에게 다음 수를 알려 준 셈이다.
             var row = Row(ui, PickaxeRecipe);
-            E2EHarness.Assert(row != null, "곡괭이 줄이 목록에 <b>남아</b> 있다 (숨기지 않는다)");
-            E2EHarness.Assert(!row.interactable, "몰라서 누를 수 없다");
+            E2EHarness.Assert(row == null || !row.gameObject.activeInHierarchy,
+                              "곡괭이 줄이 목록에 없다");
 
-            var label = Label(row);
-            E2EHarness.Assert(label.Contains("잠김"), $"자물쇠 표시가 있다 — \"{label}\"");
-            E2EHarness.Assert(label.Contains("기계 부품"),
-                              $"무엇을 하면 열리는지 적혀 있다 — \"{label}\"");
+            var shown = VisibleLabels(ui);
+            E2EHarness.Assert(shown.Count > 0, "목록이 통째로 사라지지는 않았다");
+            E2EHarness.Assert(!shown.Any(s => s.Contains("잠김")),
+                              "어느 줄에도 자물쇠 표시가 없다");
+            E2EHarness.Assert(!shown.Any(s => s.Contains("청사진")),
+                              "어느 줄도 청사진을 입에 올리지 않는다");
+            E2EHarness.Assert(!shown.Any(s => s.Contains("기계 부품") && s.Contains("알게 된다")),
+                              "무엇을 하면 열리는지도 새어 나가지 않는다");
+            E2EHarness.Log("  보이는 줄: " + string.Join(" | ", shown));
 
             ui.Close();
             yield return null;
@@ -128,9 +137,10 @@ namespace Survive.Testing
             yield return null;
 
             var row = Row(ui, PickaxeRecipe);
-            E2EHarness.Assert(!row.interactable, "재료가 가득해도 줄은 여전히 회색이다");
-            E2EHarness.Assert(Label(row).Contains("잠김"),
-                              $"이유를 '재료 부족'이 아니라 '잠김'으로 말한다 — \"{Label(row)}\"");
+            E2EHarness.Assert(row == null || !row.gameObject.activeInHierarchy,
+                              "재료가 가득해도 모르는 것은 목록에 뜨지 않는다");
+            E2EHarness.Assert(!VisibleLabels(ui).Any(s => s.Contains("곡괭이")),
+                              "이름조차 새어 나가지 않는다");
 
             ui.Close();
             yield return null;
@@ -194,9 +204,11 @@ namespace Survive.Testing
             yield return null;
 
             var row = Row(ui, PickaxeRecipe);
-            E2EHarness.Assert(row.interactable, "이제 줄이 살아났다");
+            E2EHarness.Assert(row != null && row.gameObject.activeInHierarchy,
+                              "없던 줄이 목록에 새로 생겼다 — 알게 되자 목록이 자랐다");
+            E2EHarness.Assert(row.interactable, "그 줄을 누를 수 있다");
             E2EHarness.Assert(!Label(row).Contains("잠김"),
-                              $"자물쇠가 사라지고 재료가 적힌다 — \"{Label(row)}\"");
+                              $"재료가 적힌다 — \"{Label(row)}\"");
 
             int before = Inv.CountOf("pickaxe");
             ExecuteEvents.Execute(row.gameObject, new PointerEventData(EventSystem.current),
@@ -245,18 +257,29 @@ namespace Survive.Testing
 
             var fenceRow = menu.GetComponentsInChildren<Button>(true)
                                .FirstOrDefault(b => b.gameObject.name == "Row_fence");
-            E2EHarness.Assert(fenceRow != null, "울타리 줄이 목록에 남아 있다");
-            E2EHarness.Assert(!fenceRow.interactable, "모르면 고를 수 없다");
-            E2EHarness.Assert(Label(fenceRow).Contains("잠김"),
-                              $"건설 목록도 자물쇠를 보여 준다 — \"{Label(fenceRow)}\"");
+            E2EHarness.Assert(fenceRow == null || !fenceRow.gameObject.activeInHierarchy,
+                              "건설 목록에서도 모르는 것은 지워진다");
 
             var campRow = menu.GetComponentsInChildren<Button>(true)
                               .FirstOrDefault(b => b.gameObject.name == "Row_campfire");
-            E2EHarness.Assert(campRow != null && !Label(campRow).Contains("잠김"),
-                              "요구가 없는 화톳불은 원장이 비어도 잠기지 않는다");
+            E2EHarness.Assert(campRow != null && campRow.gameObject.activeInHierarchy,
+                              "요구가 없는 화톳불은 원장이 비어도 그대로 있다");
+
+            var buildLabels = VisibleLabels(menu);
+            E2EHarness.Assert(buildLabels.Count > 0, "건설 목록이 통째로 비지는 않았다");
+            E2EHarness.Assert(!buildLabels.Any(s => s.Contains("잠김") || s.Contains("청사진")),
+                              "건설 목록도 자물쇠를 보여 주지 않는다");
+            E2EHarness.Log("  건설 목록: " + string.Join(" | ", buildLabels));
 
             menu.Close();
             yield return null;
+
+            // 스크랩을 쥐면 그 자리에서 줄이 <b>생겨야</b> 한다. 창을 다시 열어야
+            // 보이면 실패다 — BuildMenuUI가 원장의 KeyUnlocked를 듣는 이유다.
+            menu.Open();
+            yield return null;
+            yield return null;
+            int 열기전 = VisibleLabels(menu).Count;
 
             // 스크랩을 손에 넣으면 그 자리에서 열린다.
             var scrap = E2EHarness.Player.Inventory.Database.GetById("scrap");
@@ -265,6 +288,16 @@ namespace Survive.Testing
             E2EHarness.Assert(Ledger.IsUnlocked(ScrapworksKey), "스크랩을 쥐자 열렸다");
 
             yield return null;
+
+            // 창을 닫았다 다시 열지 않았는데도 목록이 자랐다.
+            var 열린뒤 = VisibleLabels(menu);
+            E2EHarness.Assert(열린뒤.Count > 열기전,
+                              $"열린 그 자리에서 목록이 자란다 ({열기전} -> {열린뒤.Count}줄)");
+            E2EHarness.Assert(열린뒤.Any(s => s.Contains("울타리")),
+                              "울타리 줄이 새로 생겼다");
+            menu.Close();
+            yield return null;
+
             var after = placer.Evaluate(out _, out _);
             E2EHarness.Assert(after != PlacementResult.NotResearched,
                               $"이제 청사진 때문에 막히지 않는다 (지금 판정: {after})");
@@ -344,6 +377,21 @@ namespace Survive.Testing
                        .FirstOrDefault(x => x.gameObject.name == "Label");
             return t != null ? t.text : "";
         }
+
+        /// <summary>
+        /// 지금 실제로 켜져 있는 줄들의 글자.
+        ///
+        /// 잠긴 줄을 <b>지우기로</b> 한 뒤로는 "그 줄이 어떻게 생겼는가"가 아니라
+        /// "화면에 무엇이 남았는가"를 봐야 한다. 꺼진 오브젝트에 남은 글자는
+        /// 아무도 못 읽으므로 세지 않는다.
+        /// </summary>
+        static List<string> VisibleLabels(Component root) =>
+            root.GetComponentsInChildren<TMP_Text>(true)
+                .Where(t => t.gameObject.name == "Label" && t.gameObject.activeInHierarchy &&
+                            t.transform.parent != null &&
+                            t.transform.parent.name.StartsWith("Row_"))
+                .Select(t => t.text)
+                .ToList();
 
         static RecipeSO Recipe(string id) =>
             Resources.FindObjectsOfTypeAll<RecipeSO>().FirstOrDefault(r => r != null && r.id == id);

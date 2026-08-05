@@ -188,16 +188,29 @@ namespace Survive.Testing
             yield return null;
             yield return null;
 
+            // 모르는 것은 회색으로 남기지 않고 <b>목록에서 지운다</b>.
+            // 잠긴 줄을 남겨 두던 시절에는 그 자리에 "잠항 설계 청사진이 필요하다:
+            // 낫의 핵을 연구대에서 분석하면 알게 된다"가 통째로 적혔다.
             var row = 줄(잠항구);
-            E2EHarness.Assert(row != null, "잠항구 줄이 제작대 목록에 <b>남아</b> 있다");
-            E2EHarness.Assert(row != null && !row.interactable,
-                              "재료가 가득해도 몰라서 누를 수 없다");
-            E2EHarness.Assert(글자(row).Contains("잠김"),
-                              $"자물쇠 표시가 있다 — \"{글자(row)}\"");
+            E2EHarness.Assert(row == null || !row.gameObject.activeInHierarchy,
+                              "잠항구 줄이 제작대 목록에 아예 없다");
+            E2EHarness.Assert(!보이는줄().Any(s => s.Contains("잠김") || s.Contains("청사진")),
+                              "목록 어디에도 자물쇠도 청사진 이야기도 없다");
+            E2EHarness.Assert(!CraftingService.CanCraft(레시피(잠항구), Inv, StationType.Bench, Ledger),
+                              "재료가 가득해도 몰라서 만들 수 없다");
 
             UI.Close();
             yield return null;
         }
+
+        /// <summary>지금 실제로 켜져 있는 줄들의 글자.</summary>
+        static List<string> 보이는줄() =>
+            UI.GetComponentsInChildren<TMP_Text>(true)
+              .Where(t => t.gameObject.name == "Label" && t.gameObject.activeInHierarchy &&
+                          t.transform.parent != null &&
+                          t.transform.parent.name.StartsWith("Row_"))
+              .Select(t => t.text)
+              .ToList();
 
         // ── 3. 소재 부족 ────────────────────────────────────────
 
@@ -428,9 +441,11 @@ namespace Survive.Testing
             yield return null;
 
             var row = 줄(잠항구);
-            E2EHarness.Assert(row != null && row.interactable, "잠겨 있던 줄이 살아났다");
+            E2EHarness.Assert(row != null && row.gameObject.activeInHierarchy,
+                              "없던 줄이 목록에 새로 생겼다 — 알게 되자 목록이 자랐다");
+            E2EHarness.Assert(row != null && row.interactable, "그 줄을 누를 수 있다");
             E2EHarness.Assert(!글자(row).Contains("잠김"),
-                              $"자물쇠가 사라지고 재료가 적힌다 — \"{글자(row)}\"");
+                              $"재료가 적힌다 — \"{글자(row)}\"");
 
             누른다(row);
             yield return null;

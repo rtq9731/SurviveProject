@@ -17,7 +17,8 @@ namespace Survive.Progression
 
         public string displayName;
 
-        [Tooltip("잠긴 항목 옆에 붙는 한 줄 — 어떻게 하면 열리는가")]
+        [Tooltip("어떻게 하면 열리는가. 도감(CodexCatalog)에서만 읽는다 — " +
+                 "제작·건축 목록은 모르는 항목을 아예 띄우지 않으므로 여기를 보지 않는다")]
         [TextArea(1, 3)] public string hint;
     }
 }
