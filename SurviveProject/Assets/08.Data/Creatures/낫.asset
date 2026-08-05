@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 521c64beec46b9849a8661634d5cc28b, type: 3}
+  m_Name: "\uB0AB"
+  m_EditorClassIdentifier: Survive.Domain::Survive.Creatures.CreatureDefinitionSO
+  id: scythe
+  displayName: "\uB0AB"
+  tier: 2
+  locomotion: 0
+  behavior: 3
+  maxHealth: 60
+  moveSpeed: 6.2
+  detectRadius: 14
+  attackDamage: 28
+  attackRange: 2.2
+  attackCooldown: 1.6
+  aggroSeconds: 6
+  avoidsLight: 1
+  drops: {fileID: 11400000, guid: 507ce3678609f3540964b9395b54fcf7, type: 2}
+  codexDescription: "\uC774\uC871\uBCF4\uD589\uC758 \uBE60\uB978 \uAE30\uACC4. \uB4F1\uACFC
+    \uC5B4\uAE68\uC5D0\uC11C \uBED7\uC5B4 \uB098\uC628 \uB0A0\uBD99\uC774\uAC00 \uC2E4\uB8E8\uC5E3\uC744
+    \uBFB0\uC871\uD558\uAC8C \uB9CC\uB4E0\uB2E4 \u2014 \uC5B4\uB460 \uC18D\uC5D0\uC11C
+    \uC774 \uC724\uACFD\uC744 \uBCF4\uBA74 \uB3C4\uB9DD\uCCD0\uC57C \uD55C\uB2E4.
+    \uB9E4\uD06C\uB85C\uB284\uC774 \uC9D9\uC740 \uC561\uBA74\uC12C\uC5D0\uC11C\uB9CC
+    \uAD00\uCE21\uB418\uBA70, \uC811\uD569\uBD80\uC758 \uC790\uD64D\uBE5B\uC740 \uADF8
+    \uC12C\uC758 \uC561\uCCB4\uCE35\uC5D0\uC11C \uC628 \uAC83\uC73C\uB85C \uBCF4\uC778\uB2E4.
+    \uBC1D\uC740 \uACF3\uC73C\uB85C\uB294 \uB4E4\uC5B4\uC624\uC9C0 \uC54A\uB294\uB2E4.
+    \uB79C\uD134\uC744 \uCF20 \uC0AC\uB78C\uC5D0\uAC8C \uB2E4\uAC00\uC628 \uAE30\uB85D\uC774
+    \uC5C6\uB2E4."
+  codexSketch: {fileID: 0}

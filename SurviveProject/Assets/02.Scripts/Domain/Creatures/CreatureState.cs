@@ -70,6 +70,21 @@ namespace Survive.Creatures
         AttackThreat,
     }
 
+    /// <summary>
+    /// 빛이 이번 판단을 가로막는 방식. 빛을 꺼리는 생물(소비자)에게만 의미가 있다.
+    /// </summary>
+    public enum LightVerdict
+    {
+        /// <summary>빛이 막지 않는다. 평소대로 판단한다.</summary>
+        Clear,
+
+        /// <summary>대상이 빛 안이라 다가가지 못한다. 추격을 끊는다.</summary>
+        Blocked,
+
+        /// <summary>내가 빛 안이다. 물러난다.</summary>
+        Retreat,
+    }
+
     /// <summary>맞았을 때의 반응. <see cref="BehaviorProfile"/>이 결정한다.</summary>
     public enum DamageReaction
     {
