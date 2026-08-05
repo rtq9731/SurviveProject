@@ -64,6 +64,9 @@ namespace Survive.Vitals
 
             Oxygen.Modify(CurrentOxygenRate() * dt);
 
+            // 질식은 환경 피해와 겹쳐서 들어간다. 매크로늄 바다에 잠긴 채 숨까지 다하면
+            // 살이 녹는 값(MacroniumSeaService)과 이 값이 함께 붙는다 — 둘 중 하나가
+            // 다른 하나를 대신하지 않는다. 숨을 참는 것과 살이 녹는 것은 다른 일이다.
             if (Oxygen.IsEmpty)
                 Health.Modify(-suffocationDamagePerSecond * dt);
             else if (healthDefinition != null && healthDefinition.passiveRatePerSecond != 0f)
