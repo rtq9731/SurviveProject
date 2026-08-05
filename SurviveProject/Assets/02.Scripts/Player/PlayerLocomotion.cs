@@ -80,6 +80,12 @@ namespace Survive.Player
         /// <summary>그 착지로 실제로 입은 피해. 무해했으면 0.</summary>
         public float LastFallDamage { get; private set; }
 
+        /// <summary>지금까지 낙하로 입은 피해의 합. 구간별로 빼서 보라고 둔 것이다.</summary>
+        public float TotalFallDamage { get; private set; }
+
+        /// <summary>땅에 닿은 횟수. "아프지 않았다"와 "아예 착지가 없었다"를 가른다.</summary>
+        public int LandingCount { get; private set; }
+
         void Awake()
         {
             _cc = GetComponent<CharacterController>();
@@ -161,10 +167,12 @@ namespace Survive.Player
             // 몸이 옮겨졌는가. CharacterController는 부탁한 것보다 멀리 가지 않으므로,
             // 그보다 멀리 갔다면 부활이나 검증 하네스가 좌표를 바꾼 것이다.
             // 옮겨진 뒤의 첫 착지는 낙하가 아니다.
+            bool teleported = false;
             if (_hasLastPosition)
             {
                 float moved = (transform.position - _lastPosition).magnitude;
-                if (moved > _lastRequestedMove.magnitude + TeleportSlack) _fallDisarmed = true;
+                teleported = moved > _lastRequestedMove.magnitude + TeleportSlack;
+                if (teleported) _fallDisarmed = true;
             }
 
             // 물에 닿았으면 아무 높이에서 떨어졌어도 없던 일이 된다.
@@ -176,17 +184,26 @@ namespace Survive.Player
             // GroundMove가 -1로 눌러 버리기 전인 지금이 부딪힌 속도를 읽을 유일한 때다.
             if (grounded && !_wasGrounded) Land(Mathf.Max(0f, -_verticalSpeed));
 
-            if (grounded) _fallDisarmed = false;
+            // 옮겨진 프레임에는 발판을 풀지 않는다.
+            //
+            // CharacterController의 isGrounded는 마지막 Move가 남긴 값이라, 땅에 서 있던
+            // 몸을 하늘로 옮긴 그 프레임에도 여전히 "닿아 있음"이다. 그 값을 믿고 걸쇠를
+            // 풀면 방금 세운 것이 같은 줄에서 바로 지워지고, 부활이 사람을 높은 데
+            // 세울 때마다 되살아나자마자 떨어져 죽는다. 실제로 그렇게 죽었다.
+            if (grounded && !teleported) _fallDisarmed = false;
             _wasGrounded = grounded;
         }
 
         void Land(float impactSpeed)
         {
             LastLandingSpeed = impactSpeed;
+            LandingCount++;
 
             float damage = _fallDisarmed ? 0f : FallImpact.DamageFor(impactSpeed);
             LastFallDamage = damage;
             if (damage <= 0f) return;
+
+            TotalFallDamage += damage;
 
             if (_damage == null) _damage = GetComponentInChildren<PlayerDamageReceiver>(true);
             if (_damage == null) return;
