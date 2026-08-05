@@ -32,7 +32,13 @@ namespace Survive.Progression
             return ledger.IsUnlocked(required.id);
         }
 
-        /// <summary>잠긴 줄에 그대로 띄울 한 줄.</summary>
+        /// <summary>
+        /// 잠긴 줄에 그대로 띄울 한 줄.
+        ///
+        /// 이름과 힌트를 가르는 것은 <b>쌍점</b>이다. 줄표(em dash)를 쓰던 시절이
+        /// 있었는데 본문 글꼴(ChosunGu)에 그 글자가 없어 화면에는 두부(□)가 떴다.
+        /// 화면에 나가는 문자는 글꼴이 아는 것만 쓴다.
+        /// </summary>
         public static string LockText(BlueprintSO required)
         {
             if (required == null) return "[잠김]";
@@ -43,7 +49,7 @@ namespace Survive.Progression
 
             return string.IsNullOrWhiteSpace(required.hint)
                 ? $"[잠김] {name} 청사진이 필요하다"
-                : $"[잠김] {name} 청사진이 필요하다 — {required.hint}";
+                : $"[잠김] {name} 청사진이 필요하다: {required.hint}";
         }
     }
 }

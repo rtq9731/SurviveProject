@@ -32,7 +32,12 @@ namespace Survive.Building
 
     public static class PlacementCheckText
     {
-        /// <summary>화면에 그대로 띄울 수 있는 한 줄.</summary>
+        /// <summary>
+        /// 화면에 그대로 띄울 수 있는 한 줄.
+        ///
+        /// 까닭을 덧붙일 때는 쌍점으로 잇는다. 줄표(em dash)는 본문 글꼴(ChosunGu)에
+        /// 없어 화면에 두부(□)로 떴다 — 화면에 나가는 문자는 글꼴이 아는 것만 쓴다.
+        /// </summary>
         public static string Describe(PlacementResult r) => r switch
         {
             PlacementResult.Ok => "",
@@ -41,9 +46,9 @@ namespace Survive.Building
             PlacementResult.Blocked => "다른 것과 겹친다",
             PlacementResult.NotEnoughResources => "재료가 모자라다",
             PlacementResult.WrongSurface => "여기엔 놓을 수 없다",
-            PlacementResult.NoAnchor => "붙일 곳이 없다 — 토대부터 놓아라",
+            PlacementResult.NoAnchor => "붙일 곳이 없다: 토대부터 놓아라",
             PlacementResult.SlotTaken => "그 자리엔 이미 있다",
-            PlacementResult.NotResearched => "지을 줄 모른다 — 청사진이 없다",
+            PlacementResult.NotResearched => "지을 줄 모른다: 청사진이 없다",
             _ => "",
         };
     }

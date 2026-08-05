@@ -355,7 +355,9 @@ namespace Survive.UI
                 if (row.max != null) row.max.interactable = known && max >= 1 && want != max;
                 if (row.amount != null)
                 {
-                    row.amount.text = known ? "x" + want : "—";
+                    // 잠긴 줄의 수량 자리는 붙임표로 비운다. 줄표(—)를 쓰던 시절이
+                    // 있었는데 본문 글꼴(ChosunGu)에 없어 화면에 두부(□)로 떴다.
+                    row.amount.text = known ? "x" + want : "-";
                     row.amount.color = canMake ? Color.white
                                      : known ? new Color(0.6f, 0.6f, 0.66f)
                                              : LockedLabel;

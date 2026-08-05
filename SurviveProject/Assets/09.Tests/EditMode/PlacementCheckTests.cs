@@ -83,6 +83,6 @@ public class PlacementCheckTests
         // 따로 못박아 둔다. 문구를 고칠 일이 생기면 여기가 먼저 걸린다.
         Assert.AreEqual("놓을 자리가 없다", PlacementCheckText.Describe(PlacementResult.NoSurface));
         Assert.AreEqual("재료가 모자라다", PlacementCheckText.Describe(PlacementResult.NotEnoughResources));
-        Assert.AreEqual("붙일 곳이 없다 — 토대부터 놓아라", PlacementCheckText.Describe(PlacementResult.NoAnchor));
+        Assert.AreEqual("붙일 곳이 없다: 토대부터 놓아라", PlacementCheckText.Describe(PlacementResult.NoAnchor));
     }
 }

@@ -40,7 +40,8 @@ namespace Survive.World
                     return $"[E] {displayName} 기동";
 
                 var sb = new StringBuilder();
-                sb.Append($"[E] {displayName} 기동 — ");
+                // 쌍점으로 잇는다. 줄표(—)는 본문 글꼴(ChosunGu)에 없어 두부(□)로 뜬다.
+                sb.Append($"[E] {displayName} 기동: ");
                 bool isFirst = true;
                 foreach (var need in requiredItems)
                 {
