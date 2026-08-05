@@ -349,13 +349,17 @@ namespace Survive.Testing
             ui.Close();
             yield return null;
 
-            E2EHarness.AssertEqual(Inv.CountOf(recipe.result.item.id),
-                                   resultBefore + recipe.result.count,
-                                   $"{recipe.id}가 만들어졌다");
-
+            // 누르는 순간 물건이 나오던 시절은 끝났다(백로그 34). 누르면 줄에 서고,
+            // 재료는 그때 빠지고, 시간이 지나야 손에 들어온다. 채집→제작→건축의
+            // 연결을 보는 것이 이 시나리오의 일이므로, 여기서는 그 시간을 기다린다.
             foreach (var i in recipe.ingredients)
                 E2EHarness.AssertEqual(Inv.CountOf(i.item.id), before[i.item.id] - i.count,
-                                       $"제작이 {i.item.id} {i.count}개를 실제로 먹었다");
+                                       $"거는 순간 {i.item.id} {i.count}개가 빠졌다");
+
+            E2EHarness.Log($"  {recipe.id} 제작 {recipe.craftSeconds:F0}초를 기다린다");
+            yield return E2EHarness.WaitUntil(
+                () => Inv.CountOf(recipe.result.item.id) >= resultBefore + recipe.result.count,
+                $"{recipe.id}가 만들어졌다", recipe.craftSeconds + 6f);
         }
 
         // ── 짓는다 ──────────────────────────────────────────────

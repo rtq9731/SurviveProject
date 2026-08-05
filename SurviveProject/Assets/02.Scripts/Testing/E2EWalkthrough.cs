@@ -301,12 +301,24 @@ namespace Survive.Testing
             E2EHarness.Assert(row != null, $"레시피 행이 있다: {recipeId}");
             E2EHarness.Assert(row.interactable, $"{recipeId} 제작 조건을 충족했다");
 
+            var recipe = Resources.FindObjectsOfTypeAll<RecipeSO>()
+                                  .FirstOrDefault(r => r != null && r.id == recipeId);
+            int before = recipe?.result?.item != null ? Inv.CountOf(recipe.result.item.id) : 0;
+
             ExecuteEvents.Execute(row.gameObject, new PointerEventData(EventSystem.current),
                                   ExecuteEvents.pointerClickHandler);
             yield return null;
             yield return null;
             ui.Close();
             yield return null;
+
+            // 제작에는 시간이 걸린다(백로그 34). 누르는 것과 손에 들어오는 것 사이가
+            // 벌어졌으므로, 목표가 넘어가기 전에 그 사이를 기다려 준다.
+            if (recipe?.result?.item != null)
+                yield return E2EHarness.WaitUntil(
+                    () => Inv.CountOf(recipe.result.item.id) > before,
+                    $"{recipeId} 제작이 끝났다 ({recipe.craftSeconds:F0}초)",
+                    recipe.craftSeconds + 6f);
         }
     }
 }

@@ -43,6 +43,13 @@ namespace Survive.UI
         bool _shown;
         Vector3 _baseScale;
 
+        // 게이지 하나를 세 곳이 쓴다. 값을 한 변수에 밀어 넣으면 마지막에 말한 쪽이
+        // 이겨서, 손 제작이 도는 중에 잔해를 캐면 막대가 두 값 사이를 떤다.
+        // 채널을 갈라 두고 <b>손이 지금 하고 있는 일</b>을 먼저 보여 준다.
+        float _holdProgress;      // 채집·상호작용
+        float _externalProgress;  // 철거 등
+        float _craftProgress;     // 손 제작 대기열 — 배경에서 도는 일
+
         void Awake()
         {
             _rect = transform as RectTransform;
@@ -62,12 +69,12 @@ namespace Survive.UI
             }
 
             if (_interactor == null) yield break;
-            _interactor.HoldProgressChanged += Refresh;
+            _interactor.HoldProgressChanged += OnHoldProgress;
         }
 
         void OnDestroy()
         {
-            if (_interactor != null) _interactor.HoldProgressChanged -= Refresh;
+            if (_interactor != null) _interactor.HoldProgressChanged -= OnHoldProgress;
             _fade?.Kill();
             _pop?.Kill();
         }
@@ -79,7 +86,34 @@ namespace Survive.UI
         /// 상호작용 말고 다른 경로(철거 등)에서 진행도를 밀어 넣는다.
         /// 게이지 하나를 여럿이 쓰는 편이 화면에 막대가 늘어나는 것보다 낫다.
         /// </summary>
-        public void SetExternalProgress(float p) => Refresh(p);
+        public void SetExternalProgress(float p)
+        {
+            _externalProgress = p;
+            Apply();
+        }
+
+        /// <summary>
+        /// 손 제작 대기열의 진행도. 걸어 두고 다른 일을 하는 동안에도 도는 값이라
+        /// 손이 지금 하는 일(채집·철거)에는 자리를 내준다.
+        /// </summary>
+        public void SetCraftProgress(float p)
+        {
+            _craftProgress = p;
+            Apply();
+        }
+
+        void OnHoldProgress(float p)
+        {
+            _holdProgress = p;
+            Apply();
+        }
+
+        void Apply()
+        {
+            if (_holdProgress > 0.001f) { Refresh(_holdProgress); return; }
+            if (_externalProgress > 0.001f) { Refresh(_externalProgress); return; }
+            Refresh(_craftProgress);
+        }
 
         void Refresh(float progress)
         {

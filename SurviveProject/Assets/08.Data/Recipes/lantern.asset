@@ -22,5 +22,5 @@ MonoBehaviour:
   result:
     item: {fileID: 11400000, guid: c35c0cf2a5733534ab5237f2ab043a78, type: 2}
     count: 1
-  craftSeconds: 1
+  craftSeconds: 3
   requiredStation: 0

@@ -23,8 +23,8 @@ namespace Survive.World
         [SerializeField] float maxBattery = 100f;
         [SerializeField] float drainPerSecond = 1.6f;
 
-        [Tooltip("스크랩 1개로 채워지는 배터리 양")]
-        [SerializeField] float batteryPerScrap = 20f;
+        [Tooltip("배터리 셀 1개로 채워지는 양. 화톳불 추출 레시피의 스크랩 수와 짝이다")]
+        [SerializeField] float batteryPerCell = 100f;
 
         [Header("빛")]
         [SerializeField] float fullIntensity = 5.5f;
@@ -109,6 +109,11 @@ namespace Survive.World
 
             if (_battery <= 0f)
             {
+                // 여분 셀을 챙겨 왔다면 여기서 갈아 끼운다. 어둠 속에서 창을 열어
+                // 버튼을 찾게 하는 대신, "몇 개를 들고 갈 것인가"를 출발 전의 결정으로
+                // 만든다 — 배터리가 시계라는 규칙은 그대로다.
+                if (TryInsertBatteryCell()) return;
+
                 SetOn(false);
                 return;
             }
@@ -160,15 +165,28 @@ namespace Survive.World
             if (!Mathf.Approximately(prev, _battery)) BatteryChanged?.Invoke(_battery, maxBattery);
         }
 
-        /// <summary>스크랩을 태워 현장에서 충전한다.</summary>
-        public bool RechargeWithScrap(int scrapCount = 1)
+        /// <summary>
+        /// 배터리 셀을 하나 끼운다.
+        ///
+        /// 예전에는 스크랩을 그 자리에서 배터리로 바꿔 넣었다(1개당 20). 스크랩은
+        /// 에너지를 <b>담고 있는</b> 매체이지 태우는 물건이 아니고, 담긴 것을 꺼내려면
+        /// 열이 든다 — 그래서 이제는 화톳불 앞에서 시간을 들여 셀로 옮긴다.
+        /// 현장에서 즉시 해결되던 것이 거점으로 돌아갈 이유가 되었다.
+        /// 셀 하나가 채우는 양(<see cref="batteryPerCell"/>)은 그 레시피가 먹는
+        /// 스크랩 수 × 20으로 맞춰 두었으므로 총량은 그대로다.
+        /// </summary>
+        public bool TryInsertBatteryCell(int cells = 1)
         {
-            if (inventory?.Inventory == null || scrapCount <= 0) return false;
-            if (!inventory.Inventory.TryRemove(PlayerInventory.ScrapId, scrapCount)) return false;
+            if (inventory?.Inventory == null || cells <= 0) return false;
+            if (_battery >= maxBattery) return false;
+            if (!inventory.Inventory.TryRemove(BatteryCellId, cells)) return false;
 
-            Recharge(batteryPerScrap * scrapCount);
+            Recharge(batteryPerCell * cells);
             rechargeFeedback?.PlayFeedbacks();
             return true;
         }
+
+        /// <summary>화톳불에서 뽑아내는 셀의 아이템 id.</summary>
+        public const string BatteryCellId = "battery_cell";
     }
 }
