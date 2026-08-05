@@ -17,5 +17,12 @@ namespace Survive.UI
         StationCrafting = 3,
         Storage = 4,
         BuildMenu = 5,
+
+        /// <summary>
+        /// 분석 기록(도감). 아무것도 밀어내지 않는다 — 읽기만 하는 화면이라
+        /// 소지품 위에 겹쳐 떠도 잃는 것이 없고, ESC 한 번에 이것만 걷히고
+        /// 아래 있던 화면이 그대로 남는 편이 보던 흐름을 덜 끊는다.
+        /// </summary>
+        Codex = 6,
     }
 }

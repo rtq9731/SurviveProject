@@ -1,0 +1,319 @@
+using System.Collections.Generic;
+using System.Globalization;
+using Survive.Creatures;
+
+namespace Survive.Progression
+{
+    /// <summary>도감의 갈래. 무엇을 알아낸 기록인가로 나눈다.</summary>
+    public enum CodexSection
+    {
+        /// <summary>손에 쥐고 그 자리에서 읽어낸 것 (해금 채널 1).</summary>
+        Discovery = 0,
+
+        /// <summary>알아낸 결과로 열린 만드는 법.</summary>
+        Blueprint = 1,
+
+        /// <summary>연구대에서 시간과 전력을 들여 밝혀낸 것 (해금 채널 2).</summary>
+        Research = 2,
+
+        /// <summary>마주친 것들.</summary>
+        Creature = 3,
+    }
+
+    /// <summary>도감 한 줄. 화면은 이것만 받아 그린다.</summary>
+    public sealed class CodexEntry
+    {
+        public CodexSection Section;
+
+        /// <summary>원장 열쇠(또는 항목 id). 줄 오브젝트 이름에도 쓰인다.</summary>
+        public string Key;
+
+        /// <summary>잠겨 있으면 <see cref="CodexCatalog.UnknownTitle"/>.</summary>
+        public string Title;
+
+        /// <summary>열려 있으면 AI가 그때 한 말, 잠겨 있으면 여는 방법 또는 미확인 안내.</summary>
+        public string Body;
+
+        public bool Unlocked;
+    }
+
+    /// <summary>
+    /// 도감 목록을 짓는 규칙 (백로그 43).
+    ///
+    /// <b>새 저장 항목을 만들지 않는다.</b> 무엇을 아는가는 이미 <see cref="UnlockLedger"/>
+    /// 하나에 전부 적혀 있다. 도감은 그 원장을 다르게 읽는 화면일 뿐이고, 여기 있는 것은
+    /// "원장 + 에셋 목록 → 화면에 뜰 줄들"이라는 순수 변환이다. 세는 자리가 둘이면
+    /// 언젠가 둘이 어긋난다는 <see cref="FieldDiscovery"/>·<see cref="ResearchService"/>의
+    /// 규율을 그대로 따른다.
+    ///
+    /// <b>모르는 것을 목록에서 지우지 않는다.</b> 제작 목록이 잠긴 줄을 실루엣으로
+    /// 남겨 두는 것과 같은 이유다 — 무엇이 있는지는 보여야 찾아 나설 수 있다.
+    /// 다만 도감은 이름조차 알려주지 않는다. 이름을 아는 것이 곧 아는 것이기 때문이다.
+    ///
+    /// Unity 실행 없이 테스트한다.
+    /// </summary>
+    public static class CodexCatalog
+    {
+        /// <summary>
+        /// 생물 관측 기록의 열쇠 접두. <c>codex_&lt;CreatureDefinition.id&gt;</c>가 계약이며,
+        /// 이 열쇠를 <b>여는</b> 쪽(관측·처치 경로)과 <b>읽는</b> 쪽(이 화면)이 서로를
+        /// 모른 채 같은 원장으로만 만난다.
+        /// </summary>
+        public const string CreatureKeyPrefix = "codex_";
+
+        /// <summary>잠긴 항목의 이름 자리. 실루엣만 남긴다.</summary>
+        public const string UnknownTitle = "???";
+
+        public const string UnknownDiscoveryBody = "미확인 · 해당 물질을 직접 확보해야 분석이 시작됩니다.";
+        public const string UnknownBlueprintBody = "미확보 · 확보 경로가 아직 확인되지 않았습니다.";
+        public const string UnknownResearchBody = "미분석 · 연구대에서 대상을 들여다봐야 합니다.";
+        public const string UnknownCreatureBody = "미관측 · 개체 기록이 없습니다.";
+
+        /// <summary>생물 하나의 관측 기록 열쇠. id가 없으면 null.</summary>
+        public static string CreatureKey(string creatureId) =>
+            string.IsNullOrWhiteSpace(creatureId) ? null : CreatureKeyPrefix + creatureId;
+
+        public static string CreatureKey(CreatureDefinitionSO definition) =>
+            definition == null ? null : CreatureKey(definition.id);
+
+        /// <summary>갈래 이름. 탭에 적힌다.</summary>
+        public static string SectionTitle(CodexSection section)
+        {
+            switch (section)
+            {
+                case CodexSection.Discovery: return "물질 분석";
+                case CodexSection.Blueprint: return "확보 제작법";
+                case CodexSection.Research:  return "정밀 분석";
+                case CodexSection.Creature:  return "개체 관측";
+                default:                     return "기록";
+            }
+        }
+
+        /// <summary>열린 줄의 수. 탭에 "3/5"로 적는다.</summary>
+        public static int CountUnlocked(IReadOnlyList<CodexEntry> entries)
+        {
+            if (entries == null) return 0;
+
+            int n = 0;
+            for (int i = 0; i < entries.Count; i++)
+                if (entries[i] != null && entries[i].Unlocked) n++;
+            return n;
+        }
+
+        // ── 물질 분석 ────────────────────────────────────────────────
+
+        /// <summary>
+        /// 현장에서 읽어낸 것들. 설명문은 <b>그때 AI가 한 말 그대로</b>다 —
+        /// 도감용 문장을 따로 쓰면 같은 물질을 두 목소리가 설명하게 된다.
+        /// </summary>
+        public static void BuildDiscoveries(DiscoveryBookSO book, UnlockLedger ledger,
+                                            List<CodexEntry> into)
+        {
+            if (into == null) return;
+            into.Clear();
+            if (book?.discoveries == null) return;
+
+            foreach (var d in book.discoveries)
+            {
+                var key = FieldDiscovery.KeyOf(d);
+                if (key == null) continue;
+
+                bool known = ledger != null && ledger.IsUnlocked(key);
+                into.Add(new CodexEntry
+                {
+                    Section = CodexSection.Discovery,
+                    Key = key,
+                    Unlocked = known,
+                    Title = known ? NameOf(d) : UnknownTitle,
+                    Body = known ? TextOf(d) : UnknownDiscoveryBody,
+                });
+            }
+        }
+
+        static string NameOf(DiscoverySO d) =>
+            d.item != null && !string.IsNullOrWhiteSpace(d.item.displayName)
+                ? d.item.displayName
+                : (d.item != null ? d.item.id : d.id);
+
+        static string TextOf(DiscoverySO d) =>
+            d.line != null && !string.IsNullOrWhiteSpace(d.line.text) ? d.line.text : "";
+
+        // ── 확보 제작법 ──────────────────────────────────────────────
+
+        /// <summary>
+        /// 청사진에는 목록 에셋이 없다. 있을 필요도 없다 — 청사진은 언제나 무언가가
+        /// <b>열어 주는</b> 것이라, 두 해금 채널을 훑으면 세상의 청사진이 전부 나온다.
+        /// 목록을 따로 두면 어느 채널도 열어 주지 않는 유령 청사진이 도감에만 뜰 수 있다.
+        ///
+        /// 열린 줄에는 <b>어느 경로로 알게 됐는지</b>를 적는다. 주운 것과 밝혀낸 것은
+        /// 같은 문장으로 말할 수 없다는 규칙(<see cref="ResearchEntrySO"/>)의 연장이다.
+        /// </summary>
+        public static void BuildBlueprints(DiscoveryBookSO discoveries, ResearchBookSO research,
+                                           UnlockLedger ledger, List<CodexEntry> into)
+        {
+            if (into == null) return;
+            into.Clear();
+
+            var seen = new HashSet<string>();
+
+            if (discoveries?.discoveries != null)
+            {
+                foreach (var d in discoveries.discoveries)
+                {
+                    if (d?.unlocks == null) continue;
+                    foreach (var bp in d.unlocks)
+                        Add(bp, "현장 분석: " + NameOf(d));
+                }
+            }
+
+            if (research?.entries != null)
+            {
+                foreach (var e in research.entries)
+                {
+                    if (e?.unlocks == null) continue;
+                    foreach (var bp in e.unlocks)
+                        Add(bp, "정밀 분석: " + NameOf(e));
+                }
+            }
+
+            void Add(BlueprintSO bp, string source)
+            {
+                if (bp == null || string.IsNullOrWhiteSpace(bp.id)) return;
+                if (!seen.Add(bp.id)) return;
+
+                bool known = ledger != null && ledger.IsUnlocked(bp.id);
+                into.Add(new CodexEntry
+                {
+                    Section = CodexSection.Blueprint,
+                    Key = bp.id,
+                    Unlocked = known,
+                    Title = known
+                        ? (string.IsNullOrWhiteSpace(bp.displayName) ? bp.id : bp.displayName)
+                        : UnknownTitle,
+                    Body = known
+                        ? "확보됨 · " + source
+                        : (string.IsNullOrWhiteSpace(bp.hint) ? UnknownBlueprintBody : bp.hint),
+                });
+            }
+        }
+
+        // ── 정밀 분석 ────────────────────────────────────────────────
+
+        /// <summary>
+        /// 연구 항목에는 자기 열쇠가 없다. 끝냈는지는 그것이 연 청사진이 원장에
+        /// 있는지로만 판단한다(<see cref="ResearchService.IsKnown"/>) — 도감이
+        /// 자기 기준을 새로 세우면 화면과 연구대가 서로 다른 답을 하게 된다.
+        /// </summary>
+        public static void BuildResearch(ResearchBookSO book, UnlockLedger ledger,
+                                         List<CodexEntry> into)
+        {
+            if (into == null) return;
+            into.Clear();
+            if (book?.entries == null) return;
+
+            foreach (var e in book.entries)
+            {
+                if (e == null || string.IsNullOrWhiteSpace(e.id)) continue;
+
+                bool known = ResearchService.IsKnown(e, ledger);
+                into.Add(new CodexEntry
+                {
+                    Section = CodexSection.Research,
+                    Key = e.id,
+                    Unlocked = known,
+                    Title = known ? NameOf(e) : UnknownTitle,
+                    Body = known ? TextOf(e) : UnknownResearchBody,
+                });
+            }
+        }
+
+        static string NameOf(ResearchEntrySO e) =>
+            string.IsNullOrWhiteSpace(e.displayName) ? e.id : e.displayName;
+
+        static string TextOf(ResearchEntrySO e) =>
+            e.line != null && !string.IsNullOrWhiteSpace(e.line.text) ? e.line.text : "";
+
+        // ── 개체 관측 ────────────────────────────────────────────────
+
+        /// <summary>
+        /// 마주친 것들. 설명문도 수치도 <see cref="CreatureDefinitionSO"/>가 이미
+        /// 들고 있던 것을 그대로 읽는다 — 도감을 위해 서사를 새로 쓰지 않는다.
+        /// </summary>
+        public static void BuildCreatures(CreatureBookSO book, UnlockLedger ledger,
+                                          List<CodexEntry> into)
+        {
+            if (into == null) return;
+            into.Clear();
+            if (book?.creatures == null) return;
+
+            foreach (var c in book.creatures)
+            {
+                var key = CreatureKey(c);
+                if (key == null) continue;
+
+                bool known = ledger != null && ledger.IsUnlocked(key);
+                into.Add(new CodexEntry
+                {
+                    Section = CodexSection.Creature,
+                    Key = key,
+                    Unlocked = known,
+                    Title = known
+                        ? (string.IsNullOrWhiteSpace(c.displayName) ? c.id : c.displayName)
+                        : UnknownTitle,
+                    Body = known ? DescribeCreature(c) : UnknownCreatureBody,
+                });
+            }
+        }
+
+        /// <summary>
+        /// 생물 한 마리를 관측 보고 한 편으로 적는다.
+        /// 관측된 성질(설명문)이 먼저 오고, 잰 값이 뒤따른다.
+        /// </summary>
+        public static string DescribeCreature(CreatureDefinitionSO c)
+        {
+            if (c == null) return "";
+
+            var culture = CultureInfo.InvariantCulture;
+            string stats =
+                $"{TierName(c.tier)} · {LocomotionName(c.locomotion)} · {BehaviorName(c.behavior)}" +
+                $"\n내구 {c.maxHealth.ToString("0.#", culture)}" +
+                $" · 이동 {c.moveSpeed.ToString("0.#", culture)}" +
+                $" · 탐지 {c.detectRadius.ToString("0.#", culture)}m" +
+                $" · 타격 {c.attackDamage.ToString("0.#", culture)}";
+
+            if (c.avoidsLight) stats += "\n광원 기피 확인 · 빛 안에서는 접근하지 않습니다.";
+
+            return string.IsNullOrWhiteSpace(c.codexDescription)
+                ? stats
+                : c.codexDescription.Trim() + "\n\n" + stats;
+        }
+
+        public static string TierName(TrophicTier tier)
+        {
+            switch (tier)
+            {
+                case TrophicTier.Decomposer: return "분해자";
+                case TrophicTier.Producer:   return "생산자";
+                case TrophicTier.Consumer1:  return "1차 소비자";
+                case TrophicTier.Consumer2:  return "2차 소비자";
+                case TrophicTier.Consumer3:  return "3차 소비자";
+                default:                     return "미분류";
+            }
+        }
+
+        public static string LocomotionName(LocomotionType type) =>
+            type == LocomotionType.Flying ? "비행" : "지상";
+
+        public static string BehaviorName(BehaviorProfile profile)
+        {
+            switch (profile)
+            {
+                case BehaviorProfile.Passive:   return "무반응";
+                case BehaviorProfile.Skittish:  return "회피";
+                case BehaviorProfile.Defensive: return "방어";
+                case BehaviorProfile.Aggressive: return "적대";
+                default:                        return "미상";
+            }
+        }
+    }
+}
