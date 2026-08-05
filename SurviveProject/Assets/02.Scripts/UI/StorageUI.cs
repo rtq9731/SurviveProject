@@ -180,8 +180,21 @@ namespace Survive.UI
                 int captured = i;
                 btn.onClick.AddListener(() => TakeOut(captured));
 
+                // 상자 안의 물건도 소지품과 같은 쪽지를 쓴다. 무엇을 꺼낼지 고르는
+                // 자리에서 그것이 무엇인지 모른다면 정리가 되지 않는다.
+                // 칸에 올라온 것은 넣고 빼는 사이에 바뀌므로 그때그때 다시 묻는다.
+                ItemTooltipTrigger.Attach(go).Bind(() => ItemAt(captured));
+
                 _slots.Add((btn, icon, cnt));
             }
+        }
+
+        /// <summary>그 칸에 지금 올라와 있는 물건. 비었으면 null.</summary>
+        ItemDataSO ItemAt(int index)
+        {
+            var slots = _open?.Contents?.Slots;
+            if (slots == null || index < 0 || index >= slots.Count) return null;
+            return slots[index].IsEmpty ? null : slots[index].item;
         }
 
         /// <summary>보관함 → 소지품.</summary>
