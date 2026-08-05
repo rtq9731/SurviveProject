@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using Survive.Combat;
 using Survive.Player;
+using Survive.World;
 
 namespace Survive.Creatures
 {
@@ -42,6 +43,19 @@ namespace Survive.Creatures
         // 매 프레임 델리게이트를 새로 만들지 않도록 Awake에서 한 번만 묶는다.
         TryGetDestination _feedProbe;
         TryGetDestination _scavengeProbe;
+
+        /// <summary>
+        /// 지금 무엇을 하고 있는가. 읽기 전용이다 — 상태를 바꾸는 것은 여전히
+        /// <see cref="CreatureDecision"/>의 답뿐이다.
+        ///
+        /// E2E가 "쫓고 있는가 / 물러났는가"를 눈이 아니라 값으로 확인해야 해서 연다.
+        /// 화면으로 보면 "가까워 보인다" 정도밖에 말할 수 없고, 빛에 막혀 멈춘 것과
+        /// 길이 막혀 멈춘 것을 구별하지 못한다.
+        /// </summary>
+        public CreatureState State => _state;
+
+        /// <summary>남은 어그로 시간. 추격을 언제 포기하는지 확인할 때 쓴다.</summary>
+        public float AggroLeft => _aggroLeft;
 
         void Awake()
         {
@@ -125,7 +139,14 @@ namespace Survive.Creatures
         void UpdateState(float distance)
         {
             var traits = CreatureTraits.From(definition);
-            var senses = new CreatureSenses(distance, _aggroLeft, _stateTimer);
+            var senses = new CreatureSenses(distance, _aggroLeft, _stateTimer,
+                                            Lit(transform.position),
+                                            _player != null && Lit(_player.position));
+
+            // 선공 성향은 위협을 보고 있는 동안 어그로를 계속 채운다. 그래야 놓친 뒤에
+            // 곧바로 흥미를 잃지 않고, 그 시간이 다하면 거처로 돌아간다.
+            if (CreatureDecision.ShouldRenewAggro(traits, senses))
+                _aggroLeft = definition.aggroSeconds;
 
             switch (CreatureDecision.NextIntent(traits, senses))
             {
@@ -152,6 +173,18 @@ namespace Survive.Creatures
                 // Hold — 하던 것을 계속한다.
             }
         }
+
+        /// <summary>
+        /// 이 자리가 밝은가. 빛을 꺼리지 않는 생물에게는 묻지도 않는다 —
+        /// 기존 4종까지 매 프레임 레지스트리를 두 번씩 훑을 이유가 없고,
+        /// 묻지 않으면 그들의 판단 입력이 예전과 글자 그대로 같다.
+        ///
+        /// 무엇이 광원인지는 여기서 정하지 않는다. <see cref="LitZoneRegistry"/>에
+        /// 등록된 것이 광원이다 — 화톳불(<see cref="Survive.Building.Campfire"/>)과
+        /// 켜진 랜턴(<see cref="LanternController"/>)이 스스로 등록한다.
+        /// </summary>
+        bool Lit(Vector3 position) =>
+            definition != null && definition.avoidsLight && LitZoneRegistry.IsLit(position);
 
         /// <summary>
         /// 위협이 없을 때 무엇을 할지. 우선순위 판단은 Domain에 있고,
@@ -196,7 +229,14 @@ namespace Survive.Creatures
                     break;
 
                 case CreatureState.Flee:
-                    if (_player != null)
+                    // 빛에 밀려 물러나는 것이면 빛에서 멀어져야 한다. 플레이어에게서
+                    // 멀어지는 것으로 대신하면 화톳불 건너편에 사람이 서 있을 때
+                    // 불 속으로 들어가는 방향이 답으로 나온다.
+                    if (definition != null && definition.avoidsLight &&
+                        LitZoneRegistry.TryGetLitCenter(transform.position, out var litCenter))
+                        _destination = CreatureNavigation.FleeDestination(
+                            transform.position, litCenter, fleeDistance, _homePosition.y);
+                    else if (_player != null)
                         _destination = CreatureNavigation.FleeDestination(
                             transform.position, _player.position, fleeDistance, _homePosition.y);
                     break;

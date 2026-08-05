@@ -14,7 +14,7 @@ namespace Survive.World
     /// 채우는 방법은 둘 — 발광 버섯 군락(무료, 거점)이나 스크랩 소모(현장, 대가).
     /// </summary>
     [DisallowMultipleComponent]
-    public class LanternController : MonoBehaviour
+    public class LanternController : MonoBehaviour, ILitZoneSource
     {
         [SerializeField] Light lampLight;
         [SerializeField] PlayerInventory inventory;
@@ -51,6 +51,24 @@ namespace Survive.World
 
         public event Action<float, float> BatteryChanged;   // (현재, 최대)
 
+        // ── ILitZoneSource ───────────────────────────────────────
+        // 화톳불(Survive.Building.Campfire)이 이미 같은 방식으로 자신을 내놓는다.
+        // 랜턴도 광원이므로 같은 창구로 조회되어야 한다 — 그래야 "여기가 밝은가"를
+        // 묻는 쪽이 화톳불인지 랜턴인지 알 필요가 없다. 지금 이것을 묻는 것은
+        // 빛을 꺼리는 소비자(Survive.Creatures.CreatureBrain)다.
+        //
+        // 반경은 fullRange를 그대로 쓴다. 배터리 경고 때 intensity가 트윈으로
+        // 흔들리지만 여기에는 반영하지 않는다 — 판정 반경까지 깜빡임에 맞춰
+        // 요동치면 포식자가 깜빡임 주기로 붙었다 떨어졌다 하고, 플레이어는
+        // 무엇이 자신을 지켜 주는지 읽을 수 없게 된다. 켜졌는가/꺼졌는가만 본다.
+        //
+        // 중심은 램프의 자리다. 실제 Light 컴포넌트는 프리팹에서 Spot이지만
+        // (Player.prefab의 lampLight, m_Type 0), 판정은 방향을 보지 않는 구(球)다 —
+        // 이 게임의 랜턴은 전방위 빛 웅덩이로 다루기로 확정됐다.
+        public Vector3 LitZoneCenter => lampLight != null ? lampLight.transform.position : transform.position;
+        public float LitZoneRadius => fullRange;
+        bool ILitZoneSource.IsLit => _on;
+
         void Awake()
         {
             _battery = maxBattery;
@@ -59,8 +77,18 @@ namespace Survive.World
             SetOn(false);
         }
 
-        void OnEnable() => GameServices.Register(this);
-        void OnDisable() => GameServices.Unregister<LanternController>();
+        void OnEnable()
+        {
+            GameServices.Register(this);
+            LitZoneRegistry.Register(this);
+        }
+
+        void OnDisable()
+        {
+            GameServices.Unregister<LanternController>();
+            LitZoneRegistry.Unregister(this);
+        }
+
         void OnDestroy() => _flicker?.Kill();
 
         public void SetOn(bool on)
