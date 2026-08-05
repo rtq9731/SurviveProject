@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using MoreMountains.Feedbacks;
+using Survive.Audio;
+using Survive.Domain.Audio;
 using Survive.Input;
 using Survive.Player;
 
@@ -31,6 +33,18 @@ namespace Survive.Combat
 
         [Tooltip("손에 든 도구를 휘두르는 연출. 비우면 자동으로 찾는다")]
         [SerializeField] ToolSwingAnimator swingAnimator;
+
+        [Header("소리")]
+        // 아래 셋은 전부 비워 두는 것이 기본이다. 비어 있으면 소리 표(AudioCueBook)의
+        // 값을 쓰고, 표도 없으면 아무 소리도 나지 않는다 — 지금이 그 상태다.
+        [Tooltip("휘두를 때마다. 비우면 소리 표의 swing")]
+        [SerializeField] AudioCueSO swingCue;
+
+        [Tooltip("무언가에 맞았을 때. 비우면 소리 표의 swingHit")]
+        [SerializeField] AudioCueSO swingHitCue;
+
+        [Tooltip("아무것도 맞지 않았을 때. 비우면 소리 표의 swingMiss")]
+        [SerializeField] AudioCueSO swingMissCue;
 
         float _nextSwingTime;
         readonly List<IDamageable> _hitThisSwing = new List<IDamageable>();
@@ -83,6 +97,10 @@ namespace Survive.Combat
             swingAnimator?.Play();
             swingFeedback?.PlayFeedbacks();
 
+            var book = AudioService.Book;
+            AudioService.Play(AudioCueBookSO.Or(swingCue, book != null ? book.swing : null),
+                              swingOrigin.position);
+
             var candidates = Physics.OverlapSphere(swingOrigin.position, tool.attackRange,
                                              targetMask, QueryTriggerInteraction.Collide);
 
@@ -117,6 +135,17 @@ namespace Survive.Combat
             {
                 swingAnimator?.PlayImpact();
                 hitFeedback?.PlayFeedbacks();
+
+                // 맞은 자리에서 난다. 여러 대상을 한 번에 맞혀도 소리는 하나다 —
+                // 대상마다 내면 같은 파형이 겹쳐 진폭만 치솟는다. 맞은 쪽의
+                // 비명은 CreatureHealth가 따로 낸다.
+                AudioService.Play(AudioCueBookSO.Or(swingHitCue, book != null ? book.swingHit : null),
+                                  swingOrigin.position + swingOrigin.forward * (tool.attackRange * 0.5f));
+            }
+            else
+            {
+                AudioService.Play(AudioCueBookSO.Or(swingMissCue, book != null ? book.swingMiss : null),
+                                  swingOrigin.position);
             }
         }
 

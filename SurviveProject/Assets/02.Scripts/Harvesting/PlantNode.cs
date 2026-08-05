@@ -1,6 +1,8 @@
 using System;
 using UnityEngine;
 using MoreMountains.Feedbacks;
+using Survive.Audio;
+using Survive.Domain.Audio;
 using Survive.Interaction;
 using Survive.Player;
 
@@ -22,6 +24,13 @@ namespace Survive.Harvesting
         [Header("피드백")]
         [SerializeField] MMF_Player harvestFeedback;
         [SerializeField] MMF_Player witherFeedback;
+
+        [Header("소리")]
+        [Tooltip("캘 때. 비우면 소리 표의 plantHarvest")]
+        [SerializeField] AudioCueSO harvestCue;
+
+        [Tooltip("시들어 사라질 때. 비우면 소리 표의 plantWither")]
+        [SerializeField] AudioCueSO witherCue;
 
         int _stage;
         float _growTimer;
@@ -79,6 +88,12 @@ namespace Survive.Harvesting
         {
             _gone = true;
             witherFeedback?.PlayFeedbacks();
+
+            // 다음 줄에서 이 오브젝트가 꺼진다. 자기 몸으로 냈다면 소리도 함께 꺼진다.
+            var book = AudioService.Book;
+            AudioService.Play(AudioCueBookSO.Or(witherCue, book != null ? book.plantWither : null),
+                              transform.position);
+
             gameObject.SetActive(false);
         }
 
@@ -125,6 +140,10 @@ namespace Survive.Harvesting
             _witherTimer = 0f;
             RefreshScale();
             harvestFeedback?.PlayFeedbacks();
+
+            var book = AudioService.Book;
+            AudioService.Play(AudioCueBookSO.Or(harvestCue, book != null ? book.plantHarvest : null),
+                              transform.position);
 
             if (definition.dropsPerStage != null)
             {

@@ -2,7 +2,7 @@ using NUnit.Framework;
 using Survive.Crafting;
 
 /// <summary>
-/// 대기열 칸에 적히는 남은 시간 표기.
+/// 대기열 칸에 적히는 남은 시간 표기(HH:MM:SS).
 ///
 /// 이 함수는 매 프레임 불리고 화면에서 사람이 계속 쳐다보는 유일한 숫자다.
 /// Domain으로 옮기기 전에는 Assembly-CSharp에 있어 테스트가 닿지 못했다.
@@ -10,89 +10,95 @@ using Survive.Crafting;
 public class CraftTimeTextTests
 {
     [Test]
-    public void 일_분_미만은_초만_적는다()
+    public void 초만_남아도_시_분_자리를_채운다()
     {
-        Assert.AreEqual("45초", CraftTimeText.Short(45f));
-        Assert.AreEqual("1초", CraftTimeText.Short(1f));
+        Assert.AreEqual("00:00:45", CraftTimeText.Short(45f));
+        Assert.AreEqual("00:00:01", CraftTimeText.Short(1f));
     }
 
     [Test]
     public void 남은_시간은_올림한다()
     {
-        // 0.4초 남았는데 "0초"라고 적으면 이미 끝난 것처럼 보인다.
-        Assert.AreEqual("1초", CraftTimeText.Short(0.4f));
-        Assert.AreEqual("46초", CraftTimeText.Short(45.1f));
+        // 0.4초 남았는데 00:00:00이라고 적으면 이미 끝난 것처럼 보인다.
+        Assert.AreEqual("00:00:01", CraftTimeText.Short(0.4f));
+        Assert.AreEqual("00:00:46", CraftTimeText.Short(45.1f));
     }
 
     [Test]
-    public void 다_끝났으면_영_초다()
+    public void 다_끝났으면_전부_영이다()
     {
-        Assert.AreEqual("0초", CraftTimeText.Short(0f));
+        Assert.AreEqual("00:00:00", CraftTimeText.Short(0f));
     }
 
     [Test]
-    public void 음수는_영_초로_접는다()
+    public void 음수는_영으로_접는다()
     {
-        // 프레임이 밀려 만료 시각을 지나쳐도 "-3초"가 뜨면 안 된다.
-        Assert.AreEqual("0초", CraftTimeText.Short(-3f));
+        // 프레임이 밀려 만료 시각을 지나쳐도 음수 시계가 뜨면 안 된다.
+        Assert.AreEqual("00:00:00", CraftTimeText.Short(-3f));
     }
 
     [Test]
-    public void 일_분_경계에서_분으로_넘어간다()
+    public void 일_분_경계에서_분_자리가_오른다()
     {
-        Assert.AreEqual("59초", CraftTimeText.Short(59f));
-        Assert.AreEqual("1분", CraftTimeText.Short(60f));
+        Assert.AreEqual("00:00:59", CraftTimeText.Short(59f));
+        Assert.AreEqual("00:01:00", CraftTimeText.Short(60f));
     }
 
     [Test]
-    public void 초가_남으면_분과_초를_붙여_적는다()
+    public void 분과_초를_함께_센다()
     {
-        Assert.AreEqual("2분30초", CraftTimeText.Short(150f));
-        Assert.AreEqual("1분1초", CraftTimeText.Short(61f));
+        Assert.AreEqual("00:02:30", CraftTimeText.Short(150f));
+        Assert.AreEqual("00:01:01", CraftTimeText.Short(61f));
     }
 
     [Test]
-    public void 정각이면_초를_적지_않는다()
+    public void 한_시간_경계에서_시_자리가_오른다()
     {
-        Assert.AreEqual("5분", CraftTimeText.Short(300f));
+        Assert.AreEqual("00:59:59", CraftTimeText.Short(3599f));
+        Assert.AreEqual("01:00:00", CraftTimeText.Short(3600f));
     }
 
     [Test]
-    public void 한_시간_경계에서_시간으로_넘어간다()
+    public void 시_단위에서도_초를_버리지_않는다()
     {
-        // 예전에는 여기서 "60m"이 나왔다.
-        Assert.AreEqual("59분59초", CraftTimeText.Short(3599f));
-        Assert.AreEqual("1시간", CraftTimeText.Short(3600f));
+        // 시계 꼴에서는 초 자리가 늘 있다. 비워 두면 멈춘 것처럼 읽힌다.
+        Assert.AreEqual("01:05:30", CraftTimeText.Short(3600f + 5 * 60f + 30f));
+        Assert.AreEqual("02:00:00", CraftTimeText.Short(7200f));
     }
 
     [Test]
-    public void 시간_단위에서는_초를_버린다()
+    public void 폭이_변하지_않는다()
     {
-        // 한 시간을 기다리는 사람에게 초 자리는 정보가 아니라 소음이다.
-        Assert.AreEqual("1시간5분", CraftTimeText.Short(3600f + 5 * 60f + 30f));
-        Assert.AreEqual("2시간", CraftTimeText.Short(7200f));
+        // 이 표기를 고른 이유 자체다. 길이가 흔들리면 칸 안에서 글자가 들썩인다.
+        for (float t = 0f; t < 8000f; t += 1f)
+            Assert.AreEqual(8, CraftTimeText.Short(t).Length, $"{t}초에서 폭이 달라졌다");
     }
 
     [Test]
-    public void 어떤_값이든_영문_단위가_섞이지_않는다()
+    public void 자리는_항상_콜론_둘로_나뉜다()
     {
-        // 한국어 UI에 s/m이 섞여 있던 것이 이 작업의 출발점이다.
         for (float t = 0f; t < 8000f; t += 7.3f)
         {
             var s = CraftTimeText.Short(t);
-            Assert.IsFalse(s.Contains("s") || s.Contains("m") || s.Contains("h"),
-                           $"{t}초에서 영문 단위가 나왔다: {s}");
+            var parts = s.Split(':');
+            Assert.AreEqual(3, parts.Length, $"{t}초에서 형식이 깨졌다: {s}");
+            foreach (var p in parts)
+                Assert.AreEqual(2, p.Length, $"{t}초에서 자릿수가 모자라거나 넘쳤다: {s}");
         }
     }
 
     [Test]
-    public void 칸에_들어갈_만큼_짧다()
+    public void 백_시간을_넘겨도_잘라_내지_않는다()
     {
-        // 대기열 슬롯은 좁다. 가장 긴 경우가 몇 글자인지 못 박아 둔다.
-        int longest = 0;
-        for (float t = 0f; t < 8000f; t += 1f)
-            longest = System.Math.Max(longest, CraftTimeText.Short(t).Length);
+        // 그런 제작은 없지만, 칸을 넘기는 것이 거짓말하는 것보다 낫다.
+        Assert.AreEqual("100:00:00", CraftTimeText.Short(100f * 3600f));
+    }
 
-        Assert.LessOrEqual(longest, 6, "표기가 여섯 글자를 넘으면 칸을 밀어낸다");
+    [Test]
+    public void 글자는_숫자와_콜론뿐이다()
+    {
+        for (float t = 0f; t < 8000f; t += 13f)
+            foreach (var c in CraftTimeText.Short(t))
+                Assert.IsTrue(char.IsDigit(c) || c == ':', $"{t}초에서 뜻밖의 글자: {c}");
     }
 }

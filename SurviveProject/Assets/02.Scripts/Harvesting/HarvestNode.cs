@@ -2,7 +2,9 @@ using System.Collections;
 using UnityEngine;
 using DG.Tweening;
 using MoreMountains.Feedbacks;
+using Survive.Audio;
 using Survive.Combat;
+using Survive.Domain.Audio;
 using Survive.Interaction;
 using Survive.Items;
 using Survive.Player;
@@ -38,6 +40,18 @@ namespace Survive.Harvesting
 
         [Tooltip("때렸는데 부서지지는 않았을 때. 파편·타격음")]
         [SerializeField] MMF_Player hitFeedback;
+
+        [Header("소리")]
+        // 광맥과 버섯이 같은 소리를 낼 이유는 없다. 다르게 하고 싶은 노드만
+        // 여기를 채우고, 나머지는 소리 표의 값을 쓴다.
+        [Tooltip("때렸을 때. 비우면 소리 표의 harvestHit")]
+        [SerializeField] AudioCueSO hitCue;
+
+        [Tooltip("부서질 때. 비우면 소리 표의 harvestBreak")]
+        [SerializeField] AudioCueSO breakCue;
+
+        [Tooltip("맞지 않는 도구로 때렸을 때. 비우면 소리 표의 harvestWrongTool")]
+        [SerializeField] AudioCueSO wrongToolCue;
 
         bool _depleted;
         float _health = -1f;
@@ -169,6 +183,8 @@ namespace Survive.Harvesting
         {
             if (_depleted || definition == null || !IsBreakable) return;
 
+            var book = AudioService.Book;
+
             // 맞는 순간의 도구를 본다. 곡괭이 없이 주먹으로는 광맥이 깨지지 않는다.
             var holder = info.Source != null
                 ? info.Source.GetComponentInParent<PlayerToolHolder>()
@@ -181,11 +197,18 @@ namespace Survive.Harvesting
                 Recoil(0.06f);
                 WrongToolHits++;
                 Announce();
+
+                AudioService.Play(
+                    AudioCueBookSO.Or(wrongToolCue, book != null ? book.harvestWrongTool : null),
+                    info.HitPoint);
                 return;
             }
 
             _health = CurrentHealth - Mathf.Max(0.01f, info.Amount);
             hitFeedback?.PlayFeedbacks();
+
+            AudioService.Play(AudioCueBookSO.Or(hitCue, book != null ? book.harvestHit : null),
+                              info.HitPoint);
 
             if (_health > 0f)
             {
@@ -277,6 +300,13 @@ namespace Survive.Harvesting
             }
 
             completeFeedback?.PlayFeedbacks();
+
+            // 맨손 채집이든 부숴서 얻은 것이든 여기 한 곳을 지난다.
+            // 소리도 여기 하나만 두면 새 채집 경로가 생겨도 저절로 따라온다.
+            var book = AudioService.Book;
+            AudioService.Play(AudioCueBookSO.Or(breakCue, book != null ? book.harvestBreak : null),
+                              dropAt ?? transform.position);
+
             SetVisible(false);
 
             if (definition.respawnSeconds > 0f) StartCoroutine(Respawn());

@@ -50,6 +50,15 @@ namespace Survive.Creatures
                  "기존 4종은 꺼져 있어 판단이 예전과 같다")]
         public bool avoidsLight = false;
 
+        [Header("소리")]
+        [Tooltip("가까워질 때 들리는 기척. 어둠 속에서 보이지 않는 것을 귀로 알아채는 " +
+                 "자리다. 비우면 아무 소리도 내지 않고, 재는 컴포넌트조차 붙지 않는다")]
+        public Survive.Domain.Audio.AudioCueSO approachCue;
+
+        [Tooltip("기척이 들리기 시작하는 거리(m). 감지 반경보다 넉넉해야 " +
+                 "쫓기기 전에 먼저 듣는 순간이 생긴다")]
+        public float audibleRange = 30f;
+
         public LootTableSO drops;
 
         [Tooltip("순찰 중 가끔 흘리고 가는 유물. 비우면 아무것도 흘리지 않는다 — " +
