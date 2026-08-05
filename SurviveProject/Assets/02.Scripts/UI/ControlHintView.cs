@@ -49,12 +49,12 @@ namespace Survive.UI
             // 플레이어와 챕터가 준비되기를 기다린다
             for (int i = 0; i < 180 && _inventory == null; i++)
             {
-                _inventory = Object.FindFirstObjectByType<PlayerInventory>(FindObjectsInactive.Exclude);
+                _inventory = Object.FindAnyObjectByType<PlayerInventory>(FindObjectsInactive.Exclude);
                 if (_inventory != null) break;
                 yield return null;
             }
 
-            _chapter = Object.FindFirstObjectByType<ChapterDirector>(FindObjectsInactive.Exclude);
+            _chapter = Object.FindAnyObjectByType<ChapterDirector>(FindObjectsInactive.Exclude);
 
             Show("basics", "[WASD] 이동   [E] 상호작용   [Tab] 소지품");
 

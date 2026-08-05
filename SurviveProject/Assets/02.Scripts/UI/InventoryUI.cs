@@ -68,7 +68,7 @@ namespace Survive.UI
                 _inventory.Inventory.Changed += Refresh;
                 Refresh();
             }
-            _player = UnityEngine.Object.FindFirstObjectByType<Survive.Player.PlayerContext>(FindObjectsInactive.Exclude);
+            _player = UnityEngine.Object.FindAnyObjectByType<Survive.Player.PlayerContext>(FindObjectsInactive.Exclude);
         }
 
         /// <summary>
@@ -106,7 +106,7 @@ namespace Survive.UI
             if (openHandCrafting)
             {
                 if (handCrafting == null)
-                    handCrafting = Object.FindFirstObjectByType<CraftingUI>(FindObjectsInactive.Include);
+                    handCrafting = Object.FindAnyObjectByType<CraftingUI>(FindObjectsInactive.Include);
                 handCrafting?.Open(Survive.Crafting.StationType.None);
             }
 

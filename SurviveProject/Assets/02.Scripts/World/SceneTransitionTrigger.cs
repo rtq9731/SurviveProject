@@ -50,7 +50,7 @@ namespace Survive.World
             }
 
             // 대사가 끝나기를 기다린다
-            var director = Object.FindFirstObjectByType<Survive.Narrative.SequenceDirector>(
+            var director = Object.FindAnyObjectByType<Survive.Narrative.SequenceDirector>(
                 FindObjectsInactive.Exclude);
             float waited = 0f;
             while (director != null && director.IsPlaying && waited < maxWaitForSubtitle)
@@ -59,7 +59,7 @@ namespace Survive.World
                 yield return null;
             }
 
-            var fader = Object.FindFirstObjectByType<ScreenFader>(FindObjectsInactive.Exclude);
+            var fader = Object.FindAnyObjectByType<ScreenFader>(FindObjectsInactive.Exclude);
             var flow = fader != null ? fader.BuildFlow() : new SceneFlowService();
 
             yield return flow.LoadScene(destination, fadeSeconds);

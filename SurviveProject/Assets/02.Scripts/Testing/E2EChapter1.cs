@@ -33,7 +33,7 @@ namespace Survive.Testing
             get
             {
                 GameServices.TryGet<ChapterDirector>(out var d);
-                if (d == null) d = Object.FindFirstObjectByType<ChapterDirector>(FindObjectsInactive.Exclude);
+                if (d == null) d = Object.FindAnyObjectByType<ChapterDirector>(FindObjectsInactive.Exclude);
                 return d;
             }
         }
@@ -223,7 +223,7 @@ namespace Survive.Testing
             {
                 if (IsDone()) yield break;
 
-                var node = Object.FindObjectsByType<HarvestNode>(FindObjectsSortMode.None)
+                var node = Object.FindObjectsByType<HarvestNode>()
                     .FirstOrDefault(h => !h.IsDepleted && h.Definition != null &&
                                          h.Definition.requiredTool == tool &&
                                          Drops(h, wantItem));
@@ -328,7 +328,7 @@ namespace Survive.Testing
 
             for (int n = 0; n < 12; n++)
             {
-                var drop = Object.FindObjectsByType<ItemPickup>(FindObjectsSortMode.None)
+                var drop = Object.FindObjectsByType<ItemPickup>()
                     .FirstOrDefault(p => p.name.StartsWith("Drop_") &&
                                          Vector3.Distance(p.transform.position,
                                                           E2EHarness.Player.transform.position) < 12f);
@@ -415,12 +415,12 @@ namespace Survive.Testing
         /// </summary>
         static IEnumerator CraftRecipe(string recipeId)
         {
-            var ui = Object.FindFirstObjectByType<CraftingUI>(FindObjectsInactive.Include);
+            var ui = Object.FindAnyObjectByType<CraftingUI>(FindObjectsInactive.Include);
             E2EHarness.Assert(ui != null, "CraftingUI가 있다");
 
             var recipe = Resources.FindObjectsOfTypeAll<RecipeSO>()
                                   .FirstOrDefault(r => r != null && r.id == recipeId);
-            var bench = Object.FindFirstObjectByType<CraftingBench>(FindObjectsInactive.Exclude);
+            var bench = Object.FindAnyObjectByType<CraftingBench>(FindObjectsInactive.Exclude);
 
             // 스테이션을 요구하는 레시피는 제작대 <b>자신</b>에게 걸어야 한다.
             // 종류만 넘기면 작업이 손 제작 줄로 가고, 그러면 제작대에 걸어 두고

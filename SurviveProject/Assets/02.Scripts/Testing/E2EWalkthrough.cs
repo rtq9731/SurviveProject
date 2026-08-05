@@ -50,7 +50,7 @@ namespace Survive.Testing
         {
             _timings.Clear();
 
-            var dir = Object.FindFirstObjectByType<ChapterDirector>(FindObjectsInactive.Exclude);
+            var dir = Object.FindAnyObjectByType<ChapterDirector>(FindObjectsInactive.Exclude);
             E2EHarness.Assert(dir != null, "ChapterDirector가 있다");
             yield return E2EHarness.WaitUntil(() => dir.Current != null, "챕터가 시작된다", 5f);
 
@@ -182,7 +182,7 @@ namespace Survive.Testing
                 if (IsDone()) yield break;
 
                 var from = E2EHarness.Player.transform.position;
-                var node = Object.FindObjectsByType<HarvestNode>(FindObjectsSortMode.None)
+                var node = Object.FindObjectsByType<HarvestNode>()
                     .Where(h => !h.IsDepleted && h.Definition != null &&
                                 h.Definition.requiredTool == tool && !tried.Contains(h) &&
                                 Drops(h, wantItem))
@@ -283,7 +283,7 @@ namespace Survive.Testing
             for (int n = 0; n < 8; n++)
             {
                 var from = E2EHarness.Player.transform.position;
-                var drop = Object.FindObjectsByType<ItemPickup>(FindObjectsSortMode.None)
+                var drop = Object.FindObjectsByType<ItemPickup>()
                     .Where(p => p != null && !포기한것.Contains(p) && p.name.StartsWith("Drop_") &&
                                 Vector3.Distance(p.transform.position, from) < 14f)
                     .OrderBy(p => Vector3.Distance(p.transform.position, from))
@@ -322,12 +322,12 @@ namespace Survive.Testing
         /// <summary>제작대까지 걸어가서 연다. 스테이션 요건을 실제로 통과해야 한다.</summary>
         static IEnumerator CraftAtBench(string recipeId)
         {
-            var bench = Object.FindFirstObjectByType<CraftingBench>(FindObjectsInactive.Exclude);
+            var bench = Object.FindAnyObjectByType<CraftingBench>(FindObjectsInactive.Exclude);
             E2EHarness.Assert(bench != null, "제작대가 씬에 있다");
 
             yield return E2EHarness.WalkTo(bench.transform.position, 2.5f, 60f);
 
-            var ui = Object.FindFirstObjectByType<CraftingUI>(FindObjectsInactive.Include);
+            var ui = Object.FindAnyObjectByType<CraftingUI>(FindObjectsInactive.Include);
             E2EHarness.Assert(ui != null, "CraftingUI가 있다");
 
             var recipe = Resources.FindObjectsOfTypeAll<RecipeSO>()

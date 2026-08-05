@@ -39,7 +39,7 @@ namespace Survive.Testing
         {
             get
             {
-                var p = UnityEngine.Object.FindFirstObjectByType<PlayerContext>(FindObjectsInactive.Exclude);
+                var p = UnityEngine.Object.FindAnyObjectByType<PlayerContext>(FindObjectsInactive.Exclude);
                 if (p == null) throw new InvalidOperationException("PlayerContext를 찾지 못했습니다");
                 return p;
             }

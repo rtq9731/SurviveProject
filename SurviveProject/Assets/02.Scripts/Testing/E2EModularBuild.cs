@@ -24,11 +24,11 @@ namespace Survive.Testing
         static Inventory Inv => E2EHarness.Player.Inventory.Inventory;
 
         static BuildPlacer Placer =>
-            Object.FindFirstObjectByType<BuildPlacer>(FindObjectsInactive.Exclude);
+            Object.FindAnyObjectByType<BuildPlacer>(FindObjectsInactive.Exclude);
 
         public static IEnumerator FullRun()
         {
-            var dir = Object.FindFirstObjectByType<Survive.Progression.ChapterDirector>(
+            var dir = Object.FindAnyObjectByType<Survive.Progression.ChapterDirector>(
                 FindObjectsInactive.Exclude);
             yield return E2EHarness.WaitUntil(() => dir != null && dir.Current != null,
                                               "챕터가 시작된다", 8f);
@@ -264,7 +264,7 @@ namespace Survive.Testing
         {
             yield return null;
 
-            var platforms = Object.FindObjectsByType<ModularPiece>(FindObjectsSortMode.None)
+            var platforms = Object.FindObjectsByType<ModularPiece>()
                 .Where(p => (p.Kind & BuildPieceKind.Platform) != 0)
                 .ToList();
 

@@ -20,14 +20,14 @@ namespace Survive.Testing
     {
         public static IEnumerator FullRun()
         {
-            var coordinator = Object.FindFirstObjectByType<SaveCoordinator>(FindObjectsInactive.Exclude);
+            var coordinator = Object.FindAnyObjectByType<SaveCoordinator>(FindObjectsInactive.Exclude);
             E2EHarness.Assert(coordinator != null, "SaveCoordinator가 있다");
 
             // 이전 실행의 저장본이 결과를 가리지 않게 한다
             coordinator.Delete();
             E2EHarness.Assert(!coordinator.HasSave(), "저장본 없는 상태에서 시작한다");
 
-            var chapter = Object.FindFirstObjectByType<ChapterDirector>(FindObjectsInactive.Exclude);
+            var chapter = Object.FindAnyObjectByType<ChapterDirector>(FindObjectsInactive.Exclude);
             E2EHarness.Assert(chapter != null, "ChapterDirector가 있다");
             yield return E2EHarness.WaitUntil(() => chapter.Current != null, "챕터가 시작된다", 5f);
 
@@ -66,10 +66,10 @@ namespace Survive.Testing
             yield return null;
             yield return null;
 
-            var fresh = Object.FindFirstObjectByType<SaveCoordinator>(FindObjectsInactive.Exclude);
+            var fresh = Object.FindAnyObjectByType<SaveCoordinator>(FindObjectsInactive.Exclude);
             E2EHarness.Assert(fresh != null, "새 씬에 SaveCoordinator가 있다");
 
-            var freshChapter = Object.FindFirstObjectByType<ChapterDirector>(FindObjectsInactive.Exclude);
+            var freshChapter = Object.FindAnyObjectByType<ChapterDirector>(FindObjectsInactive.Exclude);
             yield return E2EHarness.WaitUntil(() => freshChapter != null && freshChapter.Current != null,
                                               "새 씬의 챕터가 시작된다", 8f);
 

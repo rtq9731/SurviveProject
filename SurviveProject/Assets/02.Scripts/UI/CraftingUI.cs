@@ -149,7 +149,7 @@ namespace Survive.UI
         {
             yield return null;
             GameServices.TryGet<PlayerInventory>(out _inventory);
-            _player = UnityEngine.Object.FindFirstObjectByType<Survive.Player.PlayerContext>(FindObjectsInactive.Exclude);
+            _player = UnityEngine.Object.FindAnyObjectByType<Survive.Player.PlayerContext>(FindObjectsInactive.Exclude);
             EnsureQueueView();
             BuildRows();
         }

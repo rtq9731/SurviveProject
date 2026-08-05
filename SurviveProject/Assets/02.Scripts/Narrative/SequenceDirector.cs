@@ -33,7 +33,7 @@ namespace Survive.Narrative
         IEnumerator Start()
         {
             yield return null;
-            _player = UnityEngine.Object.FindFirstObjectByType<PlayerContext>(FindObjectsInactive.Exclude);
+            _player = UnityEngine.Object.FindAnyObjectByType<PlayerContext>(FindObjectsInactive.Exclude);
 
             if (playOnStart != null)
             {

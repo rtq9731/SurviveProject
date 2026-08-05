@@ -23,7 +23,7 @@ namespace Survive.Testing
                               "프롤로그 씬에서 시작한다");
 
             // ── 자막 ────────────────────────────────────────────
-            var director = Object.FindFirstObjectByType<SequenceDirector>(FindObjectsInactive.Exclude);
+            var director = Object.FindAnyObjectByType<SequenceDirector>(FindObjectsInactive.Exclude);
             E2EHarness.Assert(director != null, "SequenceDirector가 있다");
 
             yield return E2EHarness.WaitUntil(() => director.IsPlaying, "프롤로그 자막이 시작된다", 8f);
@@ -60,7 +60,7 @@ namespace Survive.Testing
             {
                 GameServices.TryGet<ChapterDirector>(out chapter);
                 if (chapter == null)
-                    chapter = Object.FindFirstObjectByType<ChapterDirector>(FindObjectsInactive.Exclude);
+                    chapter = Object.FindAnyObjectByType<ChapterDirector>(FindObjectsInactive.Exclude);
                 return chapter != null && chapter.Current != null;
             }, "챕터 1의 첫 목표가 뜬다", 15f);
 
@@ -68,7 +68,7 @@ namespace Survive.Testing
             E2EHarness.Log("  목표[0] " + chapter.Current.displayText);
 
             // 암전이 걷혔는지. 검은 화면 그대로면 넘어와도 아무것도 보이지 않는다.
-            var fader = Object.FindFirstObjectByType<Survive.UI.ScreenFader>(FindObjectsInactive.Exclude);
+            var fader = Object.FindAnyObjectByType<Survive.UI.ScreenFader>(FindObjectsInactive.Exclude);
             if (fader != null)
             {
                 var group = fader.GetComponent<CanvasGroup>();

@@ -75,7 +75,7 @@ namespace Survive.Testing
         {
             // 맨손으로 캘 수 있는 노드를 고른다.
             // 아무거나 잡으면 "곡괭이 필요"에 걸려 홀드가 시작조차 되지 않는다.
-            var node = Object.FindObjectsByType<HarvestNode>(FindObjectsSortMode.None)
+            var node = Object.FindObjectsByType<HarvestNode>()
                              .FirstOrDefault(h => h.Definition != null &&
                                                   h.Definition.requiredTool == ToolType.None);
             E2EHarness.Assert(node != null, "맨손 채집 가능한 노드가 씬에 있다");
@@ -163,12 +163,12 @@ namespace Survive.Testing
         /// </summary>
         public static IEnumerator HoldGauge()
         {
-            var node = Object.FindObjectsByType<HarvestNode>(FindObjectsSortMode.None)
+            var node = Object.FindObjectsByType<HarvestNode>()
                              .FirstOrDefault(h => !h.IsDepleted && h.Definition != null &&
                                                   h.Definition.requiredTool == ToolType.None);
             E2EHarness.Assert(node != null, "맨손 채집 노드가 있다");
 
-            var view = Object.FindFirstObjectByType<Survive.UI.HoldProgressView>(FindObjectsInactive.Include);
+            var view = Object.FindAnyObjectByType<Survive.UI.HoldProgressView>(FindObjectsInactive.Include);
             E2EHarness.Assert(view != null, "HoldProgressView가 씬에 있다");
 
             var group = view.GetComponent<CanvasGroup>();
@@ -221,7 +221,7 @@ namespace Survive.Testing
         /// </summary>
         public static IEnumerator HoldGaugeFreeze()
         {
-            var node = Object.FindObjectsByType<HarvestNode>(FindObjectsSortMode.None)
+            var node = Object.FindObjectsByType<HarvestNode>()
                              .FirstOrDefault(h => !h.IsDepleted && h.Definition != null &&
                                                   h.Definition.requiredTool == ToolType.None);
             E2EHarness.Assert(node != null, "맨손 채집 노드가 있다");
@@ -287,7 +287,7 @@ namespace Survive.Testing
             E2EHarness.Assert(user != null && user.EquipFirst("pickaxe"), "곡괭이를 장착했다");
             yield return null;
 
-            var node = Object.FindObjectsByType<HarvestNode>(FindObjectsSortMode.None)
+            var node = Object.FindObjectsByType<HarvestNode>()
                              .FirstOrDefault(h => !h.IsDepleted && h.IsBreakable);
             E2EHarness.Assert(node != null, "부술 수 있는 노드가 있다");
 
@@ -324,12 +324,12 @@ namespace Survive.Testing
             float w = 0f;
             while (w < 0.3f) { w += Time.deltaTime; yield return null; }
 
-            int drops = Object.FindObjectsByType<Survive.Interaction.ItemPickup>(FindObjectsSortMode.None)
+            int drops = Object.FindObjectsByType<Survive.Interaction.ItemPickup>()
                               .Count(p => p.name.StartsWith("Drop_"));
             E2EHarness.Assert(drops > 0, $"바닥에 떨어진 것이 있다 ({drops}개)");
 
             // 떨어진 것 하나를 바라본 채로 멈춘다
-            var one = Object.FindObjectsByType<Survive.Interaction.ItemPickup>(FindObjectsSortMode.None)
+            var one = Object.FindObjectsByType<Survive.Interaction.ItemPickup>()
                             .FirstOrDefault(p => p.name.StartsWith("Drop_"));
             if (one != null) E2EHarness.LookAt(one.transform.position);
             yield return null;
@@ -358,7 +358,7 @@ namespace Survive.Testing
         /// <summary>탭으로는 채집이 되지 않아야 한다. 홀드형이라는 계약의 확인.</summary>
         public static IEnumerator TapDoesNotHarvest()
         {
-            var node = Object.FindObjectsByType<HarvestNode>(FindObjectsSortMode.None)
+            var node = Object.FindObjectsByType<HarvestNode>()
                              .FirstOrDefault();
             E2EHarness.Assert(node != null, "채집 노드가 있다");
 
