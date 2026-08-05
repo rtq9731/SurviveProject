@@ -297,8 +297,15 @@ namespace Survive.Testing
             var cam = E2EHarness.Eye;
             var body = node.GetComponentInChildren<Collider>(true);
             Vector3 aim = cam.transform.position + cam.transform.forward * 2.2f;
-            if (body != null) node.transform.position += aim - body.bounds.center;
+            // autoSyncTransforms가 꺼져 있다. 재기 전과 옮긴 뒤에 물리와 맞추지 않으면
+            // 옛 중심으로 델타를 재고(이동 이중 적용), 옮긴 자리가 조준에 안 보인다.
+            if (body != null)
+            {
+                E2EHarness.SyncPhysics();
+                node.transform.position += aim - body.bounds.center;
+            }
             else node.transform.position = aim;
+            E2EHarness.SyncPhysics();
             yield return null;
             E2EHarness.LookAt(body != null ? body.bounds.center : node.transform.position);
             yield return null;

@@ -57,6 +57,21 @@ namespace Survive.Testing
 
         // ── 배치 ─────────────────────────────────────────────────
 
+        /// <summary>
+        /// 방금 옮긴 트랜스폼을 물리에 <b>즉시</b> 반영한다.
+        ///
+        /// 이 프로젝트는 <c>Physics.autoSyncTransforms = false</c>다(DynamicsManager).
+        /// 트랜스폼을 옮겨도 다음 물리 틱이 돌기 전까지 <c>Collider.bounds</c>도,
+        /// 조준에 쓰는 레이·스피어캐스트도 <b>옛 자리</b>를 본다. 검사는 대상을
+        /// 눈앞으로 옮기고 곧바로 겨누므로 그 한 틱이 통째로 어긋난다.
+        ///
+        /// 더 나쁜 것은 <c>position += 겨냥 - bounds.center</c> 꼴의 이동이다.
+        /// 옛 중심으로 델타를 재면 이미 한 번 적용한 이동이 두 번 들어가
+        /// 대상이 엉뚱한 곳으로 날아간다 — 챕터1 완주 검사가 세 번에 한 번만
+        /// 통과하던 이유가 이것이었다.
+        /// </summary>
+        public static void SyncPhysics() => Physics.SyncTransforms();
+
         /// <summary>플레이어를 순간이동시킨다. CharacterController를 잠깐 끄지 않으면 밀린다.</summary>
         public static void Teleport(Vector3 pos)
         {

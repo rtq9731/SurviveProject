@@ -228,23 +228,47 @@ namespace Survive.Testing
 
                 // 원점이 아니라 콜라이더 한가운데를 눈앞에 둔다. 거대 버섯처럼
                 // 원점이 발밑에 있는 것은 원점을 겨누면 몸통이 전방 원뿔 위로 벗어난다.
+                //
+                // 재는 것도 옮긴 것도 물리와 맞춰 둔다. autoSyncTransforms가 꺼져 있어
+                // 앞뒤로 한 번씩 맞춰 주지 않으면 옛 중심으로 델타를 재고(이동 이중 적용),
+                // 옮긴 자리는 다음 물리 틱까지 조준 캐스트에 보이지 않는다.
                 var cam = E2EHarness.Eye;
                 var body = node.GetComponentInChildren<Collider>(true);
                 Vector3 aim = cam.transform.position + cam.transform.forward * 2.2f;
-                if (body != null) node.transform.position += aim - body.bounds.center;
-                else node.transform.position = aim;
-                yield return null;
-                E2EHarness.LookAt(body != null ? body.bounds.center : node.transform.position);
-                yield return null;
-                yield return null;
-
-                // 옮긴 직후 한 프레임 만에 잡히지 않는 경우가 있다. 몇 프레임 준다.
-                var it = E2EHarness.Player.Interactor;
-                for (int f = 0; f < 10 && it.Current == null; f++) yield return null;
-
-                if (it.Current == null)
+                if (body != null)
                 {
-                    E2EHarness.Log("  노드를 조준하지 못했다: " + node.name);
+                    E2EHarness.SyncPhysics();
+                    node.transform.position += aim - body.bounds.center;
+                }
+                else node.transform.position = aim;
+                E2EHarness.SyncPhysics();
+                yield return null;
+
+                // 조준이 <b>그 노드</b>에 걸릴 때까지 기다린다. 프레임 수로 세면 판이
+                // 빠를 때 물리 틱 한 번도 못 채우고 포기했다. 그리고 아무것이나
+                // 잡힌 것을 통과로 치면 옆의 고사리를 캐고도 넘어간다.
+                var it = E2EHarness.Player.Interactor;
+                bool Aimed() => ReferenceEquals(it.Current, node);
+                Vector3 AimPoint() => body != null ? body.bounds.center : node.transform.position;
+
+                E2EHarness.LookAt(AimPoint());
+                yield return null;
+
+                float look = 0f;
+                while (look < 2.5f && !Aimed())
+                {
+                    // 서 있는 동안에도 시선은 밀린다. 매 프레임 다시 겨눈다.
+                    E2EHarness.LookAt(AimPoint());
+                    look += Time.deltaTime;
+                    yield return null;
+                }
+
+                if (!Aimed())
+                {
+                    E2EHarness.Log($"  노드를 조준하지 못했다: {node.name}" +
+                                   (it.Current != null
+                                        ? $" (대신 잡힌 것: {it.Current.GetType().Name})"
+                                        : " (아무것도 잡히지 않았다)"));
                     continue;
                 }
 
@@ -304,13 +328,21 @@ namespace Survive.Testing
 
                 // 조준 경로만 확인하면 되므로 눈앞으로 옮긴다. 줍는 동작은 그대로 한다.
                 drop.transform.position = cam.transform.position + cam.transform.forward * 1.8f;
-                yield return null;
+                E2EHarness.SyncPhysics();   // 옮긴 자리가 조준 캐스트에 바로 보이게 한다
                 E2EHarness.LookAt(drop.transform.position);
                 yield return null;
-                yield return null;
 
-                for (int f = 0; f < 10 && it.Current == null; f++) yield return null;
-                if (it.Current == null)
+                // 잡힌 것이 <b>그 드롭</b>인지까지 본다. 아무거나 잡힌 것을 통과로 치면
+                // 옆의 노드를 겨눈 채 E를 눌러 놓고 주웠다고 기록하게 된다.
+                float look = 0f;
+                while (look < 2.5f && !ReferenceEquals(it.Current, drop))
+                {
+                    E2EHarness.LookAt(drop.transform.position);
+                    look += Time.deltaTime;
+                    yield return null;
+                }
+
+                if (!ReferenceEquals(it.Current, drop))
                 {
                     E2EHarness.Log("  떨어진 것을 조준하지 못했다: " + drop.name);
                     yield break;

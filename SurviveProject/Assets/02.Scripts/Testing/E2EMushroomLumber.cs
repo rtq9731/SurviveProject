@@ -247,8 +247,16 @@ namespace Survive.Testing
             var 몸 = 때릴자리(node);
             Vector3 겨냥 = cam.transform.position + cam.transform.forward * 1.6f;
 
-            if (몸 != null) node.transform.position += 겨냥 - 몸.bounds.center;
+            // autoSyncTransforms가 꺼져 있어 재기 전과 옮긴 뒤에 한 번씩 물리와 맞춘다.
+            // 그러지 않으면 옛 중심으로 델타를 재 이동이 두 번 들어가고, 옮긴 자리는
+            // 다음 물리 틱까지 조준 캐스트에 보이지 않는다.
+            if (몸 != null)
+            {
+                E2EHarness.SyncPhysics();
+                node.transform.position += 겨냥 - 몸.bounds.center;
+            }
             else node.transform.position = 겨냥;
+            E2EHarness.SyncPhysics();
 
             yield return null;
             E2EHarness.LookAt(몸 != null ? 몸.bounds.center : node.transform.position);
@@ -437,6 +445,7 @@ namespace Survive.Testing
                 if (drop == null) yield break;
 
                 drop.transform.position = cam.transform.position + cam.transform.forward * 1.8f;
+                E2EHarness.SyncPhysics();   // 옮긴 자리가 조준 캐스트에 바로 보이게 한다
                 yield return null;
                 E2EHarness.LookAt(drop.transform.position);
                 yield return null;
