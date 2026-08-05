@@ -40,6 +40,7 @@ namespace Survive.Testing
             CreatureBrain 낫 = null;
 
             yield return 준비();
+            yield return 무대를_비운다();
             yield return 소환한다(r => 낫 = r);
             if (낫 == null) yield break;
 
@@ -51,6 +52,10 @@ namespace Survive.Testing
             yield return 랜턴을_끄면_다시_쫓는다(낫);
             yield return 도망치면_추격을_포기한다(낫);
             yield return 계속_때리면_죽고_떨군다(낫);
+
+            // 무대를 되돌리고 나서 마지막 항목을 본다. 기존 생물이 여전히 스스로
+            // 움직이는지가 그 항목의 내용이므로, 재워 둔 채로는 물을 수 없다.
+            yield return 무대를_되돌린다();
             yield return 기존_생물은_그대로다();
 
             E2EHarness.Log("=== 소비자 1종 완주 ===");
@@ -113,6 +118,53 @@ namespace Survive.Testing
             E2EHarness.Log($"  정의: 체력 {_def.maxHealth}, 속도 {_def.moveSpeed}, " +
                            $"감지 {_def.detectRadius}m, 공격 {_def.attackDamage}, " +
                            $"사거리 {_def.attackRange}m, 어그로 {_def.aggroSeconds}초");
+        }
+
+        // ── 무대 비우기 ─────────────────────────────────────────
+
+        /// <summary>
+        /// 이 시나리오가 재려는 것 둘(낫 하나, 랜턴 하나)만 남기고 무대를 비운다.
+        ///
+        /// <b>왜 필요한가 — 실측.</b> 이 검사는 기준선에서도 다섯 번에 한 번만 통과했다.
+        /// 실패한 자리를 그대로 떠 놓고 세계를 찍어 보니 이랬다.
+        /// <code>
+        /// player=(16.37, 53.66, 1.09)  playerLit=True
+        /// E2E_소비자 state=Wander dist=7.17
+        /// grove pos=(11.0, 53.3, 9.0) r=11.0 lit=True distToPlayer=9.6
+        /// </code>
+        /// 랜턴은 꺼져 있었는데도 플레이어가 서 있던 자리가 <b>밝았다</b> — 반경 11m짜리
+        /// 발광 버섯 군락 셋이 시작 지점 둘레를 거의 덮고 있고, 검사가 플레이어를
+        /// 감지 반경 안으로 옮긴 자리가 그중 하나의 안이었다. 낫에게 그 자리는
+        /// "빛에 막힌 자리"이므로(<c>LightVerdict.Blocked</c>) 7.2m 앞에서 배회만 했다.
+        /// 어디에 서게 되는지가 지형에 따라 갈리니 통과율도 갈렸다.
+        ///
+        /// 배회하던 야생 생물 일곱도 함께 재운다. 이쪽은 실패의 실원인으로 확인되지는
+        /// 않았지만, 곡괭이의 전방 원뿔을 가로채거나 죽어서 전리품 계수를 흔들 수 있는
+        /// 자리에 실제로 있었다(가장 가까운 개체가 5.5m). 재려는 것이 아닌 것은 치운다.
+        ///
+        /// 검사를 무르게 만드는 것이 아니다. 빛이 판정을 막는다는 것 자체는 이 시나리오의
+        /// <b>랜턴</b>으로 여전히 확인하고, 군락이 낫을 막는다는 것은 발광 버섯 시나리오
+        /// (<see cref="E2EGlowGrove"/>)가 따로 확인한다.
+        /// </summary>
+        static IEnumerator 무대를_비운다()
+        {
+            int 잠든생물 = E2EHarness.SleepWildCreatures();
+            int 끈광원 = E2EHarness.MuteAmbientLitZones();
+            E2EHarness.Log($"  무대 정리: 야생 생물 {잠든생물}마리를 재우고, " +
+                           $"주변 광원 {끈광원}곳을 밝은 구역에서 뺐다 (랜턴은 남긴다)");
+
+            E2EHarness.Assert(!LitZoneRegistry.IsLit(PlayerPos),
+                              "랜턴을 끈 지금, 플레이어 자리를 밝히는 것이 하나도 없다");
+            yield return null;
+        }
+
+        /// <summary>비웠던 무대를 되돌린다. 되돌린 것이 실제로 살아나는지까지 본다.</summary>
+        static IEnumerator 무대를_되돌린다()
+        {
+            E2EHarness.RestoreWorld();
+            yield return null;
+            yield return null;
+            E2EHarness.Log("  무대 복원: 재운 생물을 깨우고 주변 광원을 돌려놓았다");
         }
 
         /// <summary>F를 눌러 켜고 끈다. 실제 조작 경로를 쓴다.</summary>
@@ -193,6 +245,12 @@ namespace Survive.Testing
         /// 수평 목적지에 도착했다며 멈춰 선다(remaining=0, vel=0) — 실제로 겪었다.
         /// 그래서 NavMesh에 물어 실제 지면을 받아 온다. 사람이 이 생물을 마주칠 때는
         /// 언제나 같은 지면 위에 서 있다.
+        ///
+        /// <b>걸을 수 있는 자리인 것만으로는 모자란다.</b> 생물과 나 사이에 바위가
+        /// 통째로 끼어 있으면, 생물은 제대로 판단하고 제 속도로 달리는데도 속도는
+        /// 0.60 m/s로 찍히고 "다가온다"를 재는 창에서는 오히려 멀어진다(둘 다 실측).
+        /// 그래서 <see cref="E2EHarness.TryFindClearSpot"/>로 <b>곧게 이어지는</b>
+        /// 자리를 고른다 — 재려는 것은 판단과 속도이지 길찾기가 아니다.
         /// </summary>
         static IEnumerator 떨어져_선다(CreatureBrain c, float 거리m)
         {
@@ -201,9 +259,14 @@ namespace Survive.Testing
             dir.y = 0f;
             if (dir.sqrMagnitude < 0.01f) dir = c.transform.forward;
 
-            Vector3 목표 = 기준 + dir.normalized * 거리m;
-            if (NavMesh.SamplePosition(목표, out var hit, Mathf.Max(2.5f, 거리m * 0.35f), NavMesh.AllAreas))
-                목표 = hit.position;
+            if (!E2EHarness.TryFindClearSpot(기준, dir, 거리m, out var 목표))
+            {
+                목표 = 기준 + dir.normalized * 거리m;
+                if (NavMesh.SamplePosition(목표, out var hit, Mathf.Max(2.5f, 거리m * 0.35f),
+                                           NavMesh.AllAreas))
+                    목표 = hit.position;
+                E2EHarness.Log($"  [자리] {거리m:F1}m 거리에 곧게 이어지는 자리가 없다 — 직선으로 선다");
+            }
 
             목표.y += 0.1f;
             for (int i = 0; i < 5; i++)
@@ -319,6 +382,7 @@ namespace Survive.Testing
             float 속도 = 최고;
             E2EHarness.Log($"  실측 추격 속도 최고 {속도:F2} m/s " +
                            $"(평균 {총이동 / Mathf.Max(총시간, 0.001f):F2}, {총이동:F2}m / {총시간:F2}초)");
+            E2EHarness.Log($"  낫: {E2EHarness.Describe(낫)}, 플레이어 {PlayerPos.ToString("F1")}");
             E2EHarness.Assert(속도 > 5f, $"걷기(5 m/s)로는 못 뿌리친다 — 실측 {속도:F2}");
             E2EHarness.Assert(속도 < 7f, $"달리기(7 m/s)로는 뿌리칠 수 있다 — 실측 {속도:F2}");
         }
@@ -411,11 +475,22 @@ namespace Survive.Testing
                 "불을 끄자 같은 거리에서 다시 쫓는다", 4f);
 
             // 상태만 바뀌고 제자리면 "다시 쫓는다"가 아니다. 실제로 좁혀 오는지 본다.
+            //
+            // 한 순간을 찍어 재지 않는다. 불을 끄는 시점에 낫은 아직 <b>도망치던 속도로
+            // 반대쪽을 향해</b> 달리고 있어서, 돌아서는 데 드는 시간이 그대로
+            // "안 다가온다"로 읽힌다 — 실측 12.2m에서 1.5초 뒤 11.6m, 분명히 오고
+            // 있는데 문턱(1m)에 0.4m 모자랐다. 확인할 문장은 "몇 초 안에 좁혀 오는가"다.
+            float 좁힌뒤 = 끈뒤거리;
             float w = 0f;
-            while (w < 1.5f) { w += Time.deltaTime; yield return null; }
-            float 좁힌뒤 = 거리(낫);
+            while (w < 4f && 좁힌뒤 >= 끈뒤거리 - 1f)
+            {
+                좁힌뒤 = Mathf.Min(좁힌뒤, 거리(낫));
+                w += Time.deltaTime;
+                yield return null;
+            }
 
-            E2EHarness.Log($"  재추격: {낫.State} ({끈뒤거리:F1}m -> {좁힌뒤:F1}m)");
+            E2EHarness.Log($"  재추격: {낫.State} ({끈뒤거리:F1}m -> {좁힌뒤:F1}m, {w:F1}초)");
+            E2EHarness.Log($"  낫: {E2EHarness.Describe(낫)}, 플레이어 {PlayerPos.ToString("F1")}");
             E2EHarness.Assert(좁힌뒤 < 끈뒤거리 - 1f,
                               $"불을 끄자 실제로 다가온다 ({끈뒤거리:F1} -> {좁힌뒤:F1})");
         }

@@ -6,7 +6,9 @@ using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
+using Survive.Creatures;
 using Survive.Player;
+using Survive.World;
 
 namespace Survive.Testing
 {
@@ -278,6 +280,230 @@ namespace Survive.Testing
             foreach (var d in _muted)
                 if (d != null && d.added) InputSystem.EnableDevice(d);
             _muted.Clear();
+        }
+
+        // ── 세계 격리 ────────────────────────────────────────────
+        //
+        // 입력을 떼어 놓는 것만으로는 부족하다. 씬은 검사가 도는 동안에도 살아 있어서,
+        // <b>그 자리에 무엇이 있었는가</b>가 판정에 그대로 섞여 들어온다. 여기 있는 것들은
+        // 그 섞임을 시나리오가 명시적으로 걷어 낼 수 있게 하는 도구다.
+        //
+        // 전부 <b>되돌릴 수 있게</b> 만든다 — 사람이 재생을 이어서 만질 수 있어야 하고,
+        // 같은 시나리오 안에서 다시 켜고 확인하는 단계가 있을 수 있다.
+
+        static readonly List<CreatureBrain> _asleep = new List<CreatureBrain>();
+        static readonly List<MonoBehaviour> _mutedZones = new List<MonoBehaviour>();
+
+        /// <summary>
+        /// 씬에 원래 살고 있던 생물들을 <b>재운다</b>.
+        ///
+        /// <b>왜 필요한가.</b> 생물 시나리오는 대개 개체 하나를 불러 놓고 그 하나의
+        /// 상태·거리·속도를 잰다. 그런데 씬에는 이미 일곱 마리가 배회하고 있고,
+        /// 그들은 검사가 옮겨 놓은 플레이어 주위로 몰려와 몸을 밀고(콜라이더),
+        /// 근접 공격의 전방 원뿔을 가로채고, 죽으면 전리품을 떨궈 "떨어진 것" 계수를
+        /// 흔든다. 어느 것도 재려던 것이 아니다.
+        ///
+        /// 재우는 방식은 <b>두뇌를 끄고 이동을 멈추는 것</b>이다. 개체를 지우거나
+        /// 멀리 옮기지 않는다 — 지우면 되돌릴 수 없고, 옮기면 NavMesh 밖으로 떨어져
+        /// 깨워도 다시 걷지 못하는 개체가 생긴다(실제로 겪을 수 있는 함정이다).
+        /// 컴포넌트만 끄면 상태도 자리도 그대로 남고, <see cref="WakeWildCreatures"/>가
+        /// 켜는 순간 하던 대로 돌아간다.
+        /// </summary>
+        /// <param name="except">재우지 않을 개체들. 시나리오가 부른 주인공을 넘긴다.</param>
+        /// <returns>이번에 재운 개체 수.</returns>
+        public static int SleepWildCreatures(params GameObject[] except)
+        {
+            int slept = 0;
+            foreach (var brain in UnityEngine.Object.FindObjectsByType<CreatureBrain>())
+            {
+                if (brain == null || !brain.enabled) continue;
+                if (except != null && System.Array.IndexOf(except, brain.gameObject) >= 0) continue;
+                if (_asleep.Contains(brain)) continue;
+
+                brain.enabled = false;
+
+                // 두뇌만 꺼서는 멈추지 않는다. NavMeshAgent는 마지막으로 받은 목적지를
+                // 향해 계속 걷고, FlyerMotor도 마찬가지다. 몸에도 멈추라고 말한다.
+                var agent = brain.GetComponent<NavMeshAgent>();
+                if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
+                    agent.isStopped = true;
+
+                var flyer = brain.GetComponent<FlyerMotor>();
+                if (flyer != null) flyer.Stop();
+
+                _asleep.Add(brain);
+                slept++;
+            }
+            return slept;
+        }
+
+        /// <summary>재운 생물을 전부 깨운다. 재운 적이 없으면 아무 일도 하지 않는다.</summary>
+        public static void WakeWildCreatures()
+        {
+            for (int i = 0; i < _asleep.Count; i++)
+            {
+                var brain = _asleep[i];
+                if (brain == null) continue;
+
+                brain.enabled = true;
+                var agent = brain.GetComponent<NavMeshAgent>();
+                if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
+                    agent.isStopped = false;
+            }
+            _asleep.Clear();
+        }
+
+        /// <summary>
+        /// 세계에 깔려 있는 <b>주변 광원</b>을 밝은 구역 목록에서 잠시 뺀다.
+        ///
+        /// <b>이것이 없어서 무슨 일이 벌어졌는가.</b> 소비자 시나리오는 "랜턴을 켜면
+        /// 포식자가 물러난다"를 확인한다. 그런데 씬에는 반경 11m짜리 발광 버섯 군락이
+        /// 셋 있고 그 원들이 시작 지점 주변을 거의 덮는다. 검사가 플레이어를 감지 반경
+        /// 안으로 옮기면 그 자리가 <b>이미 밝은</b> 경우가 있고, 그러면 낫은 랜턴이
+        /// 꺼져 있는데도 다가오지 않는다(<c>LightVerdict.Blocked</c>). 실측된 실패가
+        /// 정확히 이것이었다 — 플레이어 (16.4, 53.7, 1.1), 군락 중심에서 9.6m,
+        /// <c>playerLit=True</c>, 낫은 7.2m 앞에서 Wander. 자리에 따라 갈리므로
+        /// 다섯 번에 한 번만 통과했다.
+        ///
+        /// 플레이어의 랜턴은 건드리지 않는다. 시나리오가 켜고 끄면서 재려는 것이
+        /// 바로 그 광원이고, 그것까지 빼면 확인할 것이 남지 않는다.
+        /// </summary>
+        /// <param name="except">그대로 둘 광원들. 랜턴은 넘기지 않아도 언제나 남는다.</param>
+        /// <returns>이번에 뺀 광원 수.</returns>
+        public static int MuteAmbientLitZones(params MonoBehaviour[] except)
+        {
+            int muted = 0;
+            foreach (var mb in UnityEngine.Object.FindObjectsByType<MonoBehaviour>(
+                                   FindObjectsInactive.Exclude))
+            {
+                if (mb == null || !mb.enabled) continue;
+                var source = mb as ILitZoneSource;
+                if (source == null) continue;
+                if (mb is LanternController) continue;
+                if (except != null && System.Array.IndexOf(except, mb) >= 0) continue;
+                if (_mutedZones.Contains(mb)) continue;
+
+                // 컴포넌트를 끄면 OnDisable이 스스로 등록을 뺀다(화톳불·군락 둘 다 그렇다).
+                // 그 규약에 기대지 않고 한 번 더 빼 둔다 — 등록만 하고 해제는 하지 않는
+                // 구현이 나중에 생겨도 격리는 성립해야 한다.
+                mb.enabled = false;
+                LitZoneRegistry.Unregister(source);
+
+                _mutedZones.Add(mb);
+                muted++;
+            }
+            return muted;
+        }
+
+        /// <summary>뺐던 주변 광원을 돌려놓는다. 켜지는 순간 스스로 다시 등록한다.</summary>
+        public static void RestoreAmbientLitZones()
+        {
+            for (int i = 0; i < _mutedZones.Count; i++)
+                if (_mutedZones[i] != null) _mutedZones[i].enabled = true;
+            _mutedZones.Clear();
+        }
+
+        /// <summary>
+        /// <paramref name="from"/>에서 <paramref name="distance"/>쯤 떨어진 자리 중,
+        /// <b>거기까지 막히지 않고 거의 곧게 걸어올 수 있는</b> 자리를 고른다.
+        ///
+        /// <b>왜 그냥 NavMesh에 묻고 끝내면 안 되는가.</b> 생물 시나리오는 대부분
+        /// "N미터 떨어져 서서 무엇이 일어나는지 본다"는 모양이다. 그런데 그 자리를
+        /// <see cref="NavMesh.SamplePosition"/>만으로 정하면, 걸을 수 있는 면 위이긴 해도
+        /// 생물과 그 사이에 바위가 통째로 끼어 있을 수 있다. 그러면 생물은 제대로
+        /// 판단하고 제 속도로 달리는데도
+        /// <list type="bullet">
+        /// <item>추격 속도가 0.60 m/s로 찍히고(바위에 몸이 눌린다),</item>
+        /// <item>"다가온다"를 재는 창에서 오히려 멀어진다(12.1m → 13.9m — 돌아가는 중이다).</item>
+        /// </list>
+        /// 둘 다 실측된 실패다. 재려던 것은 판단과 속도이지 길찾기가 아니므로,
+        /// 잴 수 있는 자리를 골라 서는 것이 옳다.
+        ///
+        /// 원하는 방향에 가까운 각도부터 훑어 <b>첫 번째로 통과하는</b> 자리를 쓴다.
+        /// 대개는 0도가 바로 통과하므로 경로 계산은 한 번뿐이다.
+        /// </summary>
+        /// <param name="from">기준점. 대개 생물의 자리다.</param>
+        /// <param name="preferredDirection">되도록 이쪽. 수평 성분만 쓴다.</param>
+        /// <param name="distance">기준점에서 떨어질 거리.</param>
+        /// <param name="spot">고른 자리.</param>
+        /// <param name="straightness">허용할 경로 길이 배수. 1.35면 35%까지 돌아가도 된다.</param>
+        public static bool TryFindClearSpot(Vector3 from, Vector3 preferredDirection, float distance,
+                                            out Vector3 spot, float straightness = 1.35f)
+        {
+            preferredDirection.y = 0f;
+            if (preferredDirection.sqrMagnitude < 1e-4f) preferredDirection = Vector3.forward;
+            preferredDirection.Normalize();
+
+            spot = from + preferredDirection * distance;
+
+            float sampleRadius = Mathf.Clamp(distance * 0.35f, 0.8f, 4f);
+            var path = new NavMeshPath();
+
+            for (int i = 0; i < 24; i++)
+            {
+                float degrees = (i % 2 == 0 ? 1f : -1f) * 15f * ((i + 1) / 2);
+                Vector3 dir = Quaternion.Euler(0f, degrees, 0f) * preferredDirection;
+
+                if (!NavMesh.SamplePosition(from + dir * distance, out var hit, sampleRadius,
+                                            NavMesh.AllAreas)) continue;
+
+                // 표본이 기준점 쪽으로 끌려오면 거리 자체가 판정의 전제인 검사가 무너진다.
+                float actual = Vector3.Distance(hit.position, from);
+                if (actual < distance * 0.8f || actual > distance * 1.25f) continue;
+
+                if (!NavMesh.CalculatePath(from, hit.position, NavMesh.AllAreas, path)) continue;
+                if (path.status != NavMeshPathStatus.PathComplete) continue;
+                if (PathLength(path) > actual * straightness) continue;
+
+                spot = hit.position;
+                return true;
+            }
+            return false;
+        }
+
+        static float PathLength(NavMeshPath path)
+        {
+            var corners = path.corners;
+            if (corners == null || corners.Length < 2) return 0f;
+
+            float total = 0f;
+            for (int i = 1; i < corners.Length; i++)
+                total += Vector3.Distance(corners[i - 1], corners[i]);
+            return total;
+        }
+
+        /// <summary>
+        /// 생물 하나가 <b>지금 왜 그러고 있는지</b>를 한 줄로 적는다.
+        ///
+        /// "쫓고 있는데 안 움직인다"는 그 자체로는 아무것도 알려 주지 않는다.
+        /// 길이 끊긴 것인지(<c>pathStatus</c>), 멈추라는 표시가 남은 것인지
+        /// (<c>isStopped</c>), 가려는 마음은 있는데 몸이 막힌 것인지
+        /// (<c>desired</c>는 큰데 <c>vel</c>이 0) — 셋은 고치는 자리가 전부 다르다.
+        /// </summary>
+        public static string Describe(CreatureBrain creature)
+        {
+            if (creature == null) return "(없음)";
+
+            var agent = creature.GetComponent<NavMeshAgent>();
+            string body = agent == null || !agent.isOnNavMesh
+                ? "NavMesh 밖"
+                : $"길 {agent.pathStatus}, 멈춤 {agent.isStopped}, 남은 {agent.remainingDistance:F1}m, " +
+                  $"속도 {agent.velocity.magnitude:F2}(원함 {agent.desiredVelocity.magnitude:F2})";
+
+            return $"{creature.State} @ {creature.transform.position.ToString("F1")} — {body}";
+        }
+
+        /// <summary>
+        /// 격리해 둔 것을 전부 되돌린다.
+        ///
+        /// 시나리오가 도중에 실패해도 세계는 원래대로 돌아와야 한다 —
+        /// 그래서 <see cref="E2ERunner"/>가 성공·실패 양쪽 끝에서 이것을 부른다.
+        /// 시나리오 쪽에서 먼저 되돌려 놓았으면 아무 일도 하지 않는다.
+        /// </summary>
+        public static void RestoreWorld()
+        {
+            WakeWildCreatures();
+            RestoreAmbientLitZones();
         }
 
         static IEnumerator SendKeyState()
