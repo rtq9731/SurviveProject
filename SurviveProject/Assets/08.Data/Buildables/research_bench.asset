@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89593161a02e39c48a02fec0f507d952, type: 3}
+  m_Name: research_bench
+  m_EditorClassIdentifier: Survive.Domain::Survive.Building.BuildableSO
+  id: research_bench
+  displayName: "\uC5F0\uAD6C\uB300"
+  prefab: {fileID: 7075302915248824169, guid: 5b761d83e17242e4681a8f6d4d36ba73, type: 3}
+  ghostPrefab: {fileID: 5647361462370908451, guid: 34eb0ef116f41e64caae0e00dac80d59, type: 3}
+  cost:
+  - item: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}
+    count: 20
+  - item: {fileID: 11400000, guid: 920a6043919ea1043985803e52162d69, type: 2}
+    count: 6
+  - item: {fileID: 11400000, guid: 507082b7e5574fb982fc0989ae305ded, type: 2}
+    count: 10
+  requiredBlueprint: {fileID: 11400000, guid: 3300a05c4eba7e246a961d6a0f7f99d4, type: 2}
+  placement: 0
+  maxSlopeDegrees: 25
+  clearanceRadius: 1.8
+  gridSnap: 0
+  rotationStep: 15
+  pieceKind: 0
+  snapRadius: 3.5
+  requiresSnap: 0

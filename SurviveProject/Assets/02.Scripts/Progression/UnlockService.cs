@@ -143,8 +143,12 @@ namespace Survive.Progression
         /// 재진입 방지도 없어서, 상자 하나를 열어 새 재료 셋이 한꺼번에 들어오면
         /// 세 대사가 서로를 덮어쓴다. 자막을 그리는 부품(<see cref="SubtitleView"/>)은
         /// 그대로 쓰고 순서만 여기서 잡는다.
+        ///
+        /// 바깥에 열어 두는 이유: 알아낸 것을 말하는 자리가 첫 습득 하나뿐이 아니게
+        /// 됐다. 연구대(<see cref="ResearchStation"/>)가 항목 하나를 다 보고 나서
+        /// 같은 목소리로 말한다 — 화자가 같으면 줄을 세우는 자리도 같아야 한다.
         /// </summary>
-        void Announce(SequenceSO.Line line)
+        public void Announce(SequenceSO.Line line)
         {
             if (line == null || string.IsNullOrWhiteSpace(line.text)) return;
 
