@@ -1,7 +1,9 @@
 using System;
 using UnityEngine;
 using MoreMountains.Feedbacks;
+using Survive.Audio;
 using Survive.Creatures;
+using Survive.Domain.Audio;
 using Survive.Interaction;
 using Survive.Items;
 
@@ -19,6 +21,15 @@ namespace Survive.Combat
 
         [Tooltip("사망 시. 파편·폭발음")]
         [SerializeField] MMF_Player deathFeedback;
+
+        [Header("소리")]
+        // 둘 다 비움이 기본이다. 개체별로 다르게 하고 싶을 때만 채운다 —
+        // 종별 소리는 CreatureDefinitionSO가 아니라 소리 표에 두는 편이 낫다.
+        [Tooltip("피격 시. 비우면 소리 표의 creatureHit")]
+        [SerializeField] AudioCueSO hitCue;
+
+        [Tooltip("사망 시. 비우면 소리 표의 creatureDeath")]
+        [SerializeField] AudioCueSO deathCue;
 
         [Tooltip("전리품을 떨굴 때 쓸 프리팹. 비우면 ItemPickup 오브젝트를 즉석에서 만든다")]
         [SerializeField] GameObject pickupPrefab;
@@ -41,6 +52,13 @@ namespace Survive.Combat
 
             _health -= info.Amount;
             hitFeedback?.PlayFeedbacks();
+
+            // 맞은 자리에서 난다. 몸통 한가운데가 아니라 도구가 닿은 점이라야
+            // 어느 쪽에서 때렸는지가 소리로 남는다.
+            var book = AudioService.Book;
+            AudioService.Play(AudioCueBookSO.Or(hitCue, book != null ? book.creatureHit : null),
+                              info.HitPoint);
+
             Damaged?.Invoke(this, info);
 
             if (_health <= 0f) Die();
@@ -50,6 +68,13 @@ namespace Survive.Combat
         {
             IsDead = true;
             deathFeedback?.PlayFeedbacks();
+
+            // 이 몸은 0.1초 뒤에 사라진다. 자기 몸에 붙은 AudioSource로 냈다면
+            // 소리가 잘려 나간다 — 창구를 따로 둔 이유가 바로 이런 자리다.
+            var book = AudioService.Book;
+            AudioService.Play(AudioCueBookSO.Or(deathCue, book != null ? book.creatureDeath : null),
+                              transform.position);
+
             DropLoot();
             Died?.Invoke(this);
             Destroy(gameObject, 0.1f);

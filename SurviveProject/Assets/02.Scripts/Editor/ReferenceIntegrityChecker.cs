@@ -64,6 +64,30 @@ namespace Survive.EditorTools
             ["*.witherFeedback"] = "C3에서 조립",
             ["*.refuelFeedback"] = "C3에서 조립",
 
+            // 소리 자리(AudioCueSO). 비어 있는 것이 기본이고 정상이다.
+            // 이 저장소에는 아직 소리 파일이 하나도 없다. 컴포넌트의 이 칸은
+            // "이 개체만 다른 소리를 내고 싶을 때" 쓰는 덮어쓰기이고, 기본값은
+            // 소리 표(Assets/08.Data/Audio/Resources/AudioCueBook.asset)에서 온다.
+            // 표도 비어 있으면 AudioService가 첫 줄에서 조용히 돌아간다.
+            ["*.swingCue"] = "비움이 기본. 소리 표의 swing을 쓴다",
+            ["*.swingHitCue"] = "비움이 기본. 소리 표의 swingHit을 쓴다",
+            ["*.swingMissCue"] = "비움이 기본. 소리 표의 swingMiss를 쓴다",
+            ["*.hitCue"] = "비움이 기본. 소리 표의 creatureHit / harvestHit을 쓴다",
+            ["*.deathCue"] = "비움이 기본. 소리 표의 creatureDeath를 쓴다",
+            ["*.hurtCue"] = "비움이 기본. 소리 표의 playerHurt를 쓴다",
+            ["*.pickupCue"] = "비움이 기본. 소리 표의 itemPickup을 쓴다",
+            ["*.breakCue"] = "비움이 기본. 소리 표의 harvestBreak을 쓴다",
+            ["*.wrongToolCue"] = "비움이 기본. 소리 표의 harvestWrongTool을 쓴다",
+            ["*.harvestCue"] = "비움이 기본. 소리 표의 plantHarvest를 쓴다",
+            ["*.witherCue"] = "비움이 기본. 소리 표의 plantWither를 쓴다",
+            ["*.igniteCue"] = "비움이 기본. 소리 표의 campfireIgnite를 쓴다",
+            ["*.burningCue"] = "비움이 기본. 소리 표의 campfireLoop을 쓴다",
+            ["*.walkCue"] = "비움이 기본. 소리 표의 footstepWalk을 쓴다",
+            ["*.runCue"] = "비움이 기본. 소리 표의 footstepRun을 쓴다",
+            ["*.landCue"] = "비움이 기본. 소리 표의 land를 쓴다",
+            ["*.jumpCue"] = "비움이 기본. 소리 표의 jump를 쓴다",
+            ["PlayerFootsteps.feet"] = "비우면 CharacterController로 발밑을 계산한다",
+
             // 아래는 코드에 대체 경로가 있다. 비어 있어도 동작이 정의된다.
             ["PlantNode.visual"] = "Awake에서 자기 transform으로 대체",
             ["HarvestNode.visual"] = "Awake에서 자기 transform으로 대체",

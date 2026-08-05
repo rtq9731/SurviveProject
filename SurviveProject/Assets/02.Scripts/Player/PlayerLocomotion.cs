@@ -55,6 +55,7 @@ namespace Survive.Player
 
         CharacterController _cc;
         PlayerDamageReceiver _damage;
+        PlayerFootsteps _footsteps;
         Vector2 _moveInput = Vector2.zero;
         float _verticalSpeed;
         float _nextJumpTime;
@@ -92,6 +93,12 @@ namespace Survive.Player
             if (swimming == null) swimming = GetComponent<PlayerSwimming>();
             if (cameraRig == null) cameraRig = GetComponent<PlayerCameraRig>();
             _damage = GetComponentInChildren<PlayerDamageReceiver>(true);
+
+            // 발소리는 이동 상태에서만 잴 수 있다. 플레이어 프리팹을 고치지 않으려고
+            // 여기서 붙인다 — CreatureBrain이 CreatureCollisionGuard를 붙이는 것과 같다.
+            // 소리가 하나도 없는 지금은 붙어 있어도 아무것도 재생하지 않는다.
+            _footsteps = GetComponent<PlayerFootsteps>();
+            if (_footsteps == null) _footsteps = gameObject.AddComponent<PlayerFootsteps>();
         }
 
         void OnEnable()
@@ -125,6 +132,10 @@ namespace Survive.Player
             if (!_cc.isGrounded) return;
             _verticalSpeed = jumpPower;
             _nextJumpTime = Time.time + jumpCooldown;
+
+            // 성사된 도약만 소리를 낸다. 쿨타임에 막힌 시도까지 소리가 나면
+            // 안 뛰었는데 뛴 것으로 들린다.
+            _footsteps?.Jump();
         }
 
         public void SetMovementLocked(bool locked)
