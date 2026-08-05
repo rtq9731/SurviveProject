@@ -326,7 +326,32 @@ namespace Survive.UI
             button.targetGraphic = frame;
             int captured = index;
             button.onClick.AddListener(() => Select(captured));
+
+            // 물질 분석 줄에는 그 물질의 아이템 정의가 붙어 있다. 오른쪽 설명 칸은
+            // <b>그때 AI가 한 말</b>을 그대로 싣는 자리라 손대지 않고(E2ECodex의 계약이다),
+            // 아이템 자신의 설명문은 커서를 올렸을 때 쪽지로 읽힌다.
+            // 잠긴 줄에는 붙이지 않는다 — 이름조차 주지 않는 화면이 쪽지로 흘리면 안 된다.
+            if (entry.Section == CodexSection.Discovery && entry.Unlocked)
+            {
+                var item = DiscoveredItem(entry.Key);
+                if (item != null) ItemTooltipTrigger.Attach(go).Bind(item);
+            }
             return go;
+        }
+
+        /// <summary>
+        /// 물질 분석 열쇠가 가리키는 아이템. 발견 목록을 되짚어 찾는다 —
+        /// 열쇠와 아이템을 잇는 표를 여기서 또 만들면 <see cref="FieldDiscovery.KeyOf"/>와
+        /// 어긋날 자리가 하나 늘어난다.
+        /// </summary>
+        Survive.Items.ItemDataSO DiscoveredItem(string key)
+        {
+            if (string.IsNullOrEmpty(key) || _discoveries?.discoveries == null) return null;
+
+            foreach (var d in _discoveries.discoveries)
+                if (d != null && FieldDiscovery.KeyOf(d) == key) return d.item;
+
+            return null;
         }
 
         /// <summary>줄 하나를 고른다. 잠긴 줄도 고를 수 있다 — 왜 잠겼는지가 오른쪽에 뜬다.</summary>

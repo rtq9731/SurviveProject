@@ -302,6 +302,16 @@ namespace Survive.UI
             };
 
             var captured = r;
+
+            // 줄에는 이름과 재료 수치만 적힌다. 만들어 봐야 무엇에 쓰는 물건인지
+            // 모르는 채로 목록을 훑게 되므로, 커서를 올리면 결과물의 설명문을 읽어 준다.
+            // 잠긴 줄은 아무것도 알려 주지 않는다 — 재료조차 감추는 DescribeLocked와 같은 규율이다.
+            ItemTooltipTrigger.Attach(go).Bind(
+                () => BlueprintGate.IsUnlocked(captured.requiredBlueprint, BlueprintGate.Active)
+                          ? captured.result?.item
+                          : null,
+                () => IngredientLine(captured));
+
             btn.onClick.AddListener(() => Enqueue(captured));
             minus.onClick.AddListener(() => Nudge(captured, -1));
             plus.onClick.AddListener(() => Nudge(captured, +1));
@@ -698,6 +708,26 @@ namespace Survive.UI
             sb.Append($"  ·  {CraftTimeText.Short(r.craftSeconds * want)}");
             if (!queueRoom) sb.Append("  (대기열이 가득 찼다)");
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// 쪽지에 덧붙일 재료 한 줄. 줄에 적힌 것과 달리 가진 수량은 넣지 않는다 —
+        /// 그 숫자는 이미 줄에 있고, 쪽지가 알려 줄 것은 "무엇이 드는가"다.
+        /// </summary>
+        static string IngredientLine(RecipeSO r)
+        {
+            if (r?.ingredients == null || r.ingredients.Length == 0) return "재료 없음";
+
+            var sb = new StringBuilder("재료  ·  ");
+            bool first = true;
+            foreach (var need in r.ingredients)
+            {
+                if (need?.item == null || need.count <= 0) continue;
+                if (!first) sb.Append(", ");
+                sb.Append(need.item.displayName).Append(' ').Append(need.count);
+                first = false;
+            }
+            return first ? "재료 없음" : sb.ToString();
         }
 
         /// <summary>
