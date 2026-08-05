@@ -14,7 +14,12 @@ namespace Survive.World
     /// <b>무슨 일이 벌어지는지는 여기서 정하지 않는다.</b> 그 규칙은
     /// <see cref="MacroniumContact"/>에 있고 Unity 없이 테스트된다. 이 컴포넌트가 하는 일은
     /// 발밑을 재서 규칙에 묻고, 나온 답을 세계에 반영하는 것뿐이다 —
-    /// 죽이거나, 받쳐 주거나.
+    /// 죽이거나, 받쳐 주거나, 가라앉게 두거나.
+    ///
+    /// <b>가라앉히는 데는 새 이동 상태가 필요 없다.</b> 받침을 걷어 주기만 하면
+    /// 그다음은 평소의 중력이 한다 — 받침을 까는 것으로 "액면 위를 걷는다"를 만든 것과
+    /// 정확히 뒤집힌 짝이다. 하강을 이동 쪽의 세 번째 상태로 만들면 수영·걷기와
+    /// 겹치는 경우를 전부 손으로 맞춰야 한다.
     ///
     /// <b>죽이는 방법은 새로 만들지 않는다.</b> 이미 있는 피해 창구
     /// (<see cref="PlayerDamageReceiver"/>)로 치명상을 넣고, 그 뒤는 기존 고리가 받는다 —
@@ -43,6 +48,12 @@ namespace Survive.World
         public static int LethalContacts { get; private set; }
 
         /// <summary>
+        /// 잠항구를 걸치고 액면을 통과한 횟수. 죽인 횟수와 짝이 되는 값이라
+        /// "같은 자리에서 무엇이 달라졌는가"를 숫자로 볼 수 있다.
+        /// </summary>
+        public static int DescentContacts { get; private set; }
+
+        /// <summary>
         /// 액면 위를 걸을 때 발밑에 깔아 주는 판의 한 변(m).
         ///
         /// 구역 전체를 덮는 판을 세우지 않는 이유: 액면섬의 구역은 반경 수십 미터라
@@ -69,6 +80,7 @@ namespace Survive.World
 
             LastOutcome = MacroniumContactOutcome.None;
             LethalContacts = 0;
+            DescentContacts = 0;
 
             var go = new GameObject("MacroniumContactService");
             DontDestroyOnLoad(go);
@@ -86,9 +98,13 @@ namespace Survive.World
 
         BoxCollider _plate;
         bool _killed;
+        bool _sinking;
 
         /// <summary>지금 액면이 몸을 받치고 있는가.</summary>
         public bool IsSupported => _plate != null && _plate.gameObject.activeSelf;
+
+        /// <summary>지금 액면을 뚫고 내려가는 중인가.</summary>
+        public bool IsDescending => LastOutcome == MacroniumContactOutcome.Descending;
 
         /// <summary>발바닥 높이. 액면과 견주는 값이 이것이다.</summary>
         public float FeetY => _cc != null
@@ -112,21 +128,49 @@ namespace Survive.World
             if (!MacroniumSurfaceZone.TryGetSurfaceAt(_body.position, out float surfaceY, out var zone))
             {
                 LastOutcome = MacroniumContactOutcome.None;
+                _sinking = false;
                 Support(false, 0f);
                 return;
             }
 
             float feetY = FeetY;
             var loadout = CurrentLoadout();
-            var outcome = MacroniumContact.Resolve(feetY, surfaceY, zone.Zone, loadout);
+            bool wantsDescent = DescentHeld();
+            var outcome = MacroniumContact.Resolve(feetY, surfaceY, zone.Zone, loadout, wantsDescent);
             LastOutcome = outcome;
 
             // 받침은 "닿았는가"보다 먼저 깔린다 — 위 SupportReach 주석 참고.
+            // 다만 가라앉기를 택한 순간에는 깔지 않는다. 깔아 두면 하강 키를 눌러도
+            // 발밑의 판이 그대로 받쳐 버려 아무 일도 일어나지 않는다.
             bool canWalk = EnvironmentThreat.CanPass(zone.Zone, loadout);
-            Support(canWalk && feetY <= surfaceY + SupportReach, surfaceY);
+            bool sinking = outcome == MacroniumContactOutcome.Descending;
+            Support(canWalk && !sinking && feetY <= surfaceY + SupportReach, surfaceY);
+
+            if (sinking && !_sinking)
+            {
+                _sinking = true;
+                DescentContacts++;
+                Debug.Log($"[MacroniumContactService] 잠항구를 걸치고 액면으로 내려간다 — " +
+                          $"발 {feetY:F2}, 액면 {surfaceY:F2} ({zone.name})");
+            }
+            else if (!sinking)
+            {
+                _sinking = false;
+            }
 
             if (outcome == MacroniumContactOutcome.Lethal) Kill(zone, feetY, surfaceY);
         }
+
+        /// <summary>
+        /// 지금 하강 키(Ctrl)를 누르고 있는가. 물속에서 가라앉는 데 쓰는 그 키다
+        /// (기획서 §5.6) — 액면 위에서만 쓰는 조작을 새로 만들면 배울 것이 하나 늘어난다.
+        ///
+        /// 입력을 못 찾으면 "누르지 않았다"로 친다. 입력이 없는 상태에서 기본값이
+        /// 하강이면 액면 보행 장비만으로 걷던 사람이 갑자기 빠지기 시작한다.
+        /// </summary>
+        bool DescentHeld() =>
+            GameServices.TryGet<Survive.Input.InputReaderSO>(out var input) &&
+            input != null && input.IsDescending;
 
         bool Acquire()
         {
