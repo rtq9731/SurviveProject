@@ -7,6 +7,7 @@ using TMPro;
 using Survive.Core;
 using Survive.Items;
 using Survive.Player;
+using Survive.World;
 
 namespace Survive.UI
 {
@@ -19,6 +20,11 @@ namespace Survive.UI
     ///
     /// 슬롯은 인벤토리의 도구로 자동으로 채운다. 따로 등록하는 절차를 두면
     /// 그 절차 자체를 또 설명해야 한다 — 챕터 1에 도구가 둘뿐이라 그럴 값이 없다.
+    ///
+    /// 도구 뒤에 <b>바로 쓰는 물건</b>이 붙는다. 지금은 발광 버섯 갓 하나뿐이고,
+    /// 누르면 장착이 아니라 발밑에 표식으로 놓인다(<see cref="GlowMarker"/>).
+    /// 도구를 앞에 두는 이유: 곡괭이 1·랜턴 2가 이미 손에 익었고,
+    /// 물건이 늘 때마다 그 번호가 밀리면 안 된다.
     /// </summary>
     [DisallowMultipleComponent]
     public class QuickSlotBar : MonoBehaviour
@@ -38,7 +44,22 @@ namespace Survive.UI
         [SerializeField] Color selectedColor = new Color(0.95f, 0.82f, 0.42f, 0.95f);
 
         readonly List<Slot> _slots = new List<Slot>();
-        readonly List<ToolItemSO> _tools = new List<ToolItemSO>();
+
+        /// <summary>슬롯에 올라간 것들. 도구가 앞, 바로 쓰는 물건이 뒤다.</summary>
+        readonly List<ItemDataSO> _entries = new List<ItemDataSO>();
+
+        /// <summary>
+        /// 도구가 아니면서 퀵슬롯에 오르는 물건의 id. 순서가 곧 슬롯 순서다.
+        ///
+        /// 아이템 데이터에 "놓을 수 있음" 같은 칸을 새로 파지 않는다 —
+        /// 그 칸을 아무도 안 쓰는 아이템 열두 개에까지 들려 보내는 값이 없고,
+        /// 이 리포지토리는 이미 id 상수로 특별한 물건을 가려낸다
+        /// (PlayerInventory.ScrapId, PlayerToolUser의 "lantern").
+        /// </summary>
+        static readonly string[] PlaceableIds = { GlowMarker.ItemId };
+
+        /// <summary>지금 슬롯 순서. 무엇을 몇 번으로 꺼내는지 검증에서 집는다.</summary>
+        public IReadOnlyList<ItemDataSO> Entries => _entries;
 
         class Slot
         {
@@ -98,19 +119,32 @@ namespace Survive.UI
             }
         }
 
-        void Select(int index)
+        /// <summary>슬롯 하나를 누른다. 도구면 장착, 바로 쓰는 물건이면 쓴다.</summary>
+        public void Select(int index)
         {
-            if (index < 0 || index >= _tools.Count) return;
-            var tool = _tools[index];
-            if (tool == null) return;
+            if (index < 0 || index >= _entries.Count) return;
+            var entry = _entries[index];
+            if (entry == null) return;
 
-            toolUser?.EquipFirst(tool.id);
+            if (entry is ToolItemSO tool) toolUser?.EquipFirst(tool.id);
+            else if (!Use(entry)) return;
 
             // 눌린 슬롯이 튀어오른다. 반응이 없으면 눌린 줄 모른다.
             var rect = _slots[index].rect;
             rect.DOKill();
             rect.localScale = Vector3.one;
             rect.DOPunchScale(Vector3.one * 0.18f, 0.22f, 8, 0.6f);
+        }
+
+        /// <summary>도구가 아닌 물건을 쓴다. 실제로 쓰였으면 true.</summary>
+        bool Use(ItemDataSO item)
+        {
+            if (item.id != GlowMarker.ItemId) return false;
+
+            var player = inventory != null ? inventory.GetComponentInParent<PlayerContext>() : null;
+            if (player == null) return false;
+
+            return GlowMarker.PlaceFrom(player) != null;
         }
 
         [Tooltip("복제할 기존 슬롯. 비우면 인벤토리 패널의 슬롯을 찾아 쓴다")]
@@ -192,14 +226,24 @@ namespace Survive.UI
 
         void Refresh()
         {
-            _tools.Clear();
+            _entries.Clear();
             var inv = inventory?.Inventory;
             if (inv != null)
             {
                 foreach (var s in inv.Slots)
                 {
                     if (s.IsEmpty) continue;
-                    if (s.item is ToolItemSO tool && !_tools.Contains(tool)) _tools.Add(tool);
+                    if (s.item is ToolItemSO tool && !_entries.Contains(tool)) _entries.Add(tool);
+                }
+
+                foreach (var id in PlaceableIds)
+                {
+                    foreach (var s in inv.Slots)
+                    {
+                        if (s.IsEmpty || s.item.id != id) continue;
+                        if (!_entries.Contains(s.item)) _entries.Add(s.item);
+                        break;
+                    }
                 }
             }
 
@@ -208,13 +252,14 @@ namespace Survive.UI
             for (int i = 0; i < _slots.Count; i++)
             {
                 var slot = _slots[i];
-                bool filled = i < _tools.Count;
-                var tool = filled ? _tools[i] : null;
+                bool filled = i < _entries.Count;
+                var entry = filled ? _entries[i] : null;
 
-                slot.icon.enabled = filled && tool.icon != null;
-                if (slot.icon.enabled) slot.icon.sprite = tool.icon;
+                slot.icon.enabled = filled && entry.icon != null;
+                if (slot.icon.enabled) slot.icon.sprite = entry.icon;
 
-                bool selected = filled && equipped != null && equipped.id == tool.id;
+                bool selected = filled && entry is ToolItemSO &&
+                                equipped != null && equipped.id == entry.id;
                 slot.frame.color = selected ? selectedColor : (filled ? filledColor : emptyColor);
                 slot.number.color = filled
                     ? new Color(0.95f, 0.94f, 0.88f, 0.95f)
