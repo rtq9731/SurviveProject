@@ -179,6 +179,112 @@ public class MeleeTargetingTests
         Assert.IsFalse(MeleeTargeting.IsSelfTarget(몸.transform, null));
     }
 
+    // ── 가시선: 벽 너머는 때리지 않는다 ─────────────────────────────────
+    //
+    // 백로그 28. 판정이 구(球)라 얇은 벽 하나쯤은 그냥 지나쳐, 방 밖에 서서
+    // 안에 있는 것을 때릴 수 있었다. 시전 지점과 대상 사이에 무엇이 걸렸는지는
+    // 물리가 알려 주고, 그것을 "가로막은 것"으로 볼지는 여기서 정한다.
+
+    [Test]
+    public void 사이에_낀_세운_벽은_타격을_가로막는다()
+    {
+        var 나 = 오브젝트("플레이어");
+        var 대상 = 오브젝트("생물");
+        var 벽 = 오브젝트("세운벽");
+
+        Assert.IsTrue(MeleeTargeting.IsOccluder(나.transform, 대상.transform, 벽.transform, false, true));
+    }
+
+    [Test]
+    public void 지형과_소품은_가로막지_않는다()
+    {
+        // 이 레벨은 광맥·잔해를 지형과 거대 버섯 안에 반쯤 파묻어 두었다.
+        // 지형까지 벽으로 세면 캘 수 있던 것이 통째로 캘 수 없게 된다.
+        var 나 = 오브젝트("플레이어");
+        var 광맥 = 오브젝트("광맥");
+        var 지형 = 오브젝트("섬");
+
+        Assert.IsFalse(MeleeTargeting.IsOccluder(나.transform, 광맥.transform, 지형.transform, false, false));
+    }
+
+    [Test]
+    public void 대상_자신의_표면은_가로막은_것이_아니다()
+    {
+        // 레이는 결국 대상에 가서 닿는다. 그것이 곧 명중이다.
+        var 나 = 오브젝트("플레이어");
+        var 대상 = 오브젝트("생물");
+
+        Assert.IsFalse(MeleeTargeting.IsOccluder(나.transform, 대상.transform, 대상.transform, false, true));
+    }
+
+    [Test]
+    public void 대상의_다른_콜라이더도_가로막은_것이_아니다()
+    {
+        // 몸통을 겨눴는데 머리 콜라이더가 먼저 걸리는 일은 흔하다.
+        var 나 = 오브젝트("플레이어");
+        var 대상 = 오브젝트("생물");
+        var 머리 = 오브젝트("머리");
+        머리.transform.SetParent(대상.transform);
+
+        Assert.IsFalse(MeleeTargeting.IsOccluder(나.transform, 대상.transform, 머리.transform, false, true));
+    }
+
+    [Test]
+    public void 자기_몸은_가로막은_것이_아니다()
+    {
+        // 판정 원점이 머릿속이라 자기 CharacterController가 늘 먼저 걸린다.
+        var 나 = 오브젝트("플레이어");
+        var 손 = 오브젝트("들고있는곡괭이");
+        손.transform.SetParent(나.transform);
+        var 대상 = 오브젝트("광맥");
+
+        Assert.IsFalse(MeleeTargeting.IsOccluder(나.transform, 대상.transform, 손.transform, false, true));
+    }
+
+    [Test]
+    public void 트리거는_가로막지_않는다()
+    {
+        // 풀숲·채집 범위 같은 것은 통과해 지나가는 것이지 벽이 아니다.
+        var 나 = 오브젝트("플레이어");
+        var 대상 = 오브젝트("생물");
+        var 풀숲 = 오브젝트("풀숲");
+
+        Assert.IsFalse(MeleeTargeting.IsOccluder(나.transform, 대상.transform, 풀숲.transform, true, true));
+    }
+
+    [Test]
+    public void 걸린_것이_없으면_가로막히지_않는다()
+    {
+        var 나 = 오브젝트("플레이어");
+        var 대상 = 오브젝트("생물");
+
+        Assert.IsFalse(MeleeTargeting.IsOccluder(나.transform, 대상.transform, null, false, true));
+    }
+
+    [Test]
+    public void 대상을_모르면_사이에_낀_것은_가로막은_것으로_본다()
+    {
+        // 보수적으로 — 대상 판별이 안 되는 상황에서 벽을 통과시킬 이유는 없다.
+        var 나 = 오브젝트("플레이어");
+        var 벽 = 오브젝트("벽");
+
+        Assert.IsTrue(MeleeTargeting.IsOccluder(나.transform, null, 벽.transform, false, true));
+    }
+
+    [Test]
+    public void 한_몸인지는_루트로_가린다()
+    {
+        var 몸 = 오브젝트("생물");
+        var 다리 = 오브젝트("다리");
+        다리.transform.SetParent(몸.transform);
+        var 남 = 오브젝트("바위");
+
+        Assert.IsTrue(MeleeTargeting.SharesRoot(몸.transform, 다리.transform));
+        Assert.IsFalse(MeleeTargeting.SharesRoot(몸.transform, 남.transform));
+        Assert.IsFalse(MeleeTargeting.SharesRoot(몸.transform, null));
+        Assert.IsFalse(MeleeTargeting.SharesRoot(null, 몸.transform));
+    }
+
     // ── 맞는 쪽: 자기가 낸 피해만 무시한다 ──────────────────────────────
 
     [Test]

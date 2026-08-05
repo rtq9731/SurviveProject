@@ -103,6 +103,8 @@ namespace Survive.Combat
                 Vector3 toTarget = col.bounds.center - swingOrigin.position;
                 if (!MeleeTargeting.IsWithinCone(swingOrigin.forward, toTarget, cosLimit)) continue;
 
+                if (IsBlocked(col)) continue;       // 벽 너머는 때리지 않는다
+
                 Vector3 dir = toTarget.normalized;
                 _hitThisSwing.Add(target);
                 target.TakeDamage(new DamageInfo(tool.damage, gameObject,
@@ -115,5 +117,68 @@ namespace Survive.Combat
                 hitFeedback?.PlayFeedbacks();
             }
         }
+
+        /// <summary>
+        /// 시전 지점과 이 콜라이더 사이를 세워 올린 벽이 가로막고 있는가.
+        ///
+        /// 판정이 구(球)라 얇은 벽 하나쯤은 그냥 지나쳐, 방 밖에 서서 안에 있는 것을
+        /// 때리는 일이 벌어졌다. 벽 너머는 도구도 닿지 않아야 한다.
+        ///
+        /// 막혔는가는 <see cref="MeleeTargeting.IsOccluder"/>가 정하고 —
+        /// 지형·소품을 왜 빼는지도 거기 적어 두었다 —
+        /// 여기서는 그 앞에 무엇이 있었는지만 물리에 물어본다.
+        /// </summary>
+        bool IsBlocked(Collider target)
+        {
+            Vector3 origin = swingOrigin.position;
+
+            // 원점이 대상 안에 들어가 있으면 사이에 낄 자리가 없다.
+            if (target.bounds.Contains(origin)) return false;
+
+            // 겨냥할 점은 둘이다. 하나만 뚫려 있어도 닿은 것으로 본다 —
+            // 광맥 한쪽이 흙에 묻혀 있다고 드러난 쪽까지 못 캘 이유는 없다.
+            Vector3 surface = target.ClosestPoint(origin);
+            if ((surface - origin).sqrMagnitude > AimEpsilon * AimEpsilon &&
+                HasClearLine(origin, target, surface))
+                return false;
+
+            return !HasClearLine(origin, target, target.bounds.center);
+        }
+
+        /// <summary>
+        /// 시전 지점에서 이 점까지 가로막은 것 없이 닿는가.
+        ///
+        /// <see cref="Collider.ClosestPoint"/>는 볼록한 콜라이더에서만 표면을 돌려주고
+        /// 오목한 메시(광맥 대부분)에서는 넣은 점을 그대로 돌려준다. 그래서 겨냥점은
+        /// 대상 <b>속</b>일 수도 있는데, 대상 표면에 먼저 닿으면 거기서 선을 끊는다 —
+        /// 그 너머는 이미 대상 안이라 무엇이 있든 가로막은 것이 아니다.
+        /// </summary>
+        bool HasClearLine(Vector3 origin, Collider target, Vector3 aim)
+        {
+            Vector3 to = aim - origin;
+            float distance = to.magnitude;
+            if (distance <= AimEpsilon) return true;
+
+            Vector3 dir = to / distance;
+            if (target.Raycast(new Ray(origin, dir), out RaycastHit onTarget, distance))
+                distance = onTarget.distance;
+
+            var hits = Physics.RaycastAll(origin, dir, distance,
+                                          Physics.DefaultRaycastLayers,
+                                          QueryTriggerInteraction.Ignore);
+
+            foreach (var hit in hits)
+            {
+                bool isWall = hit.collider.GetComponentInParent<Survive.Building.BuiltStructure>() != null;
+                if (MeleeTargeting.IsOccluder(transform, target.transform,
+                                              hit.collider.transform, hit.collider.isTrigger, isWall))
+                    return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>이 거리 안쪽이면 겨냥점이 시전 지점과 겹친 것으로 본다(1cm).</summary>
+        const float AimEpsilon = 0.01f;
     }
 }

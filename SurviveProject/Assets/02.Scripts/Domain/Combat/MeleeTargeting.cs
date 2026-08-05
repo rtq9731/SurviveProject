@@ -41,7 +41,47 @@ namespace Survive.Combat
         /// 자기 도구로 자기를 때리는 일이 실제로 벌어진다.
         /// </summary>
         public static bool BelongsToSelf(Transform self, Transform candidate) =>
-            self != null && candidate != null && candidate.root == self.root;
+            SharesRoot(self, candidate);
+
+        /// <summary>
+        /// 두 물건이 한 몸에 속하는가. 계층의 루트가 같으면 한 몸으로 본다.
+        /// 몸 하나가 콜라이더 여럿으로 되어 있어도(머리·몸통·다리) 루트는 하나다.
+        /// </summary>
+        public static bool SharesRoot(Transform a, Transform b) =>
+            a != null && b != null && a.root == b.root;
+
+        /// <summary>
+        /// 시전 지점과 대상 사이에서 걸린 이 물건이 <b>타격을 가로막는</b> 것인가.
+        ///
+        /// 벽 하나를 사이에 두고 서서 방 안의 것을 때리던 것을 막는다.
+        /// 가로막았다고 볼 수 없는 것이 넷 있다:
+        /// <list type="bullet">
+        /// <item>세워 올린 벽이 아닌 것 — 아래 <paramref name="hitIsWall"/> 설명 참고.</item>
+        /// <item>대상 자신의 표면 — 레이는 결국 대상에 가서 닿는다. 그게 곧 명중이다.</item>
+        /// <item>휘두른 본인의 몸 — 판정 원점이 머릿속이라 자기 콜라이더가 늘 먼저 걸린다.</item>
+        /// <item>트리거 — 풀숲·채집 범위 같은 것은 통과해 지나가는 것이지 벽이 아니다.</item>
+        /// </list>
+        /// </summary>
+        /// <param name="swinger">휘두른 쪽의 계층 어딘가(보통 카메라나 몸)</param>
+        /// <param name="target">때리려는 대상의 계층 어딘가</param>
+        /// <param name="hit">시선 위에서 걸린 물건</param>
+        /// <param name="hitIsTrigger">걸린 물건이 트리거 콜라이더인가</param>
+        /// <param name="hitIsWall">
+        /// 걸린 물건이 세워 올린 건축물인가. <b>지형과 소품은 가로막는 것으로 세지 않는다.</b>
+        /// 실측 결과 이 레벨은 광맥·잔해를 지형과 거대 버섯 메시 <i>안에</i> 반쯤 파묻어 두었고
+        /// (부술 수 있는 22개 중 8~12개), 지형까지 벽으로 세면 그것들이 통째로 캘 수 없게 된다.
+        /// 막으려던 것은 "세운 벽 너머를 때리는 일"이었지 채굴이 아니다.
+        /// </param>
+        public static bool IsOccluder(Transform swinger, Transform target, Transform hit,
+                                      bool hitIsTrigger, bool hitIsWall)
+        {
+            if (hit == null) return false;
+            if (!hitIsWall) return false;
+            if (hitIsTrigger) return false;
+            if (SharesRoot(hit, target)) return false;
+            if (SharesRoot(hit, swinger)) return false;
+            return true;
+        }
 
         /// <summary>
         /// 해석된 대상이 본인의 몸인가. 씬에 붙어 있지 않은 구현체(Component가 아닌 것)는
