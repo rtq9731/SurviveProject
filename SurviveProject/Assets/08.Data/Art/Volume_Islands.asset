@@ -15,7 +15,7 @@ MonoBehaviour:
   active: 1
   mode:
     m_OverrideState: 1
-    m_Value: 2
+    m_Value: 1
   neutralHDRRangeReductionMode:
     m_OverrideState: 0
     m_Value: 2
@@ -55,10 +55,10 @@ MonoBehaviour:
   active: 1
   postExposure:
     m_OverrideState: 1
-    m_Value: 0.2
+    m_Value: 0
   contrast:
     m_OverrideState: 1
-    m_Value: 10
+    m_Value: 14
   colorFilter:
     m_OverrideState: 1
     m_Value: {r: 1, g: 1, b: 1, a: 1}
@@ -67,7 +67,7 @@ MonoBehaviour:
     m_Value: 0
   saturation:
     m_OverrideState: 1
-    m_Value: -12
+    m_Value: -8
 --- !u!114 &-1270234449305473444
 MonoBehaviour:
   m_ObjectHideFlags: 2
@@ -80,7 +80,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 899c54efeace73346a0a16faa3afe726, type: 3}
   m_Name: Vignette
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.Vignette
-  active: 1
+  active: 0
   color:
     m_OverrideState: 0
     m_Value: {r: 0, g: 0, b: 0, a: 1}
@@ -114,6 +114,7 @@ MonoBehaviour:
   - {fileID: -4473008097006389778}
   - {fileID: -1270234449305473444}
   - {fileID: 4004008097006392001}
+  - {fileID: 0}
 --- !u!114 &581640783924834394
 MonoBehaviour:
   m_ObjectHideFlags: 2
@@ -132,13 +133,13 @@ MonoBehaviour:
     m_Value: 1
   threshold:
     m_OverrideState: 1
-    m_Value: 0.8
+    m_Value: 1.1
   intensity:
     m_OverrideState: 1
-    m_Value: 1.2
+    m_Value: 1
   scatter:
     m_OverrideState: 1
-    m_Value: 0.7
+    m_Value: 0.68
   clamp:
     m_OverrideState: 0
     m_Value: 65472
@@ -146,8 +147,8 @@ MonoBehaviour:
     m_OverrideState: 0
     m_Value: {r: 1, g: 1, b: 1, a: 1}
   highQualityFiltering:
-    m_OverrideState: 0
-    m_Value: 0
+    m_OverrideState: 1
+    m_Value: 1
   filter:
     m_OverrideState: 0
     m_Value: 0
