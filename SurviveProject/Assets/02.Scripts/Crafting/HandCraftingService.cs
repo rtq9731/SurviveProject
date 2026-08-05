@@ -68,12 +68,18 @@ namespace Survive.Crafting
         static Inventory PlayerInventory =>
             GameServices.TryGet<PlayerInventory>(out var pi) && pi != null ? pi.Inventory : null;
 
-        /// <summary>제작 UI가 부르는 창구. 재료는 여기서 빠진다.</summary>
-        public bool TryEnqueue(RecipeSO recipe, int count)
+        /// <summary>
+        /// 제작 UI가 부르는 창구. 재료는 여기서 빠진다.
+        ///
+        /// <paramref name="available"/>는 "지금 곁에 무엇이 있는가"다. 제작대 앞에서
+        /// 손으로 만드는 것까지 막을 이유는 없으므로, 스테이션 요건은 걸 때 한 번만 본다 —
+        /// 걸어 놓고 자리를 떠도 손에 든 일은 계속된다.
+        /// </summary>
+        public bool TryEnqueue(RecipeSO recipe, int count, StationType available = StationType.None)
         {
             var inv = PlayerInventory;
             if (inv == null) return false;
-            return CraftQueueService.TryEnqueue(Queue, recipe, count, inv, StationType.None);
+            return CraftQueueService.TryEnqueue(Queue, recipe, count, inv, available);
         }
 
         /// <summary>한 항목을 물린다. 완성되지 않은 것은 전부 돌아온다.</summary>

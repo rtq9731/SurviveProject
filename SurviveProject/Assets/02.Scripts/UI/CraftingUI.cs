@@ -438,7 +438,7 @@ namespace Survive.UI
                 ok = CraftQueueService.TryEnqueue(_stationHost.Work.Queue, r, want, inv, _station);
             else
                 ok = HandCraftingService.Instance != null &&
-                     HandCraftingService.Instance.TryEnqueue(r, want);
+                     HandCraftingService.Instance.TryEnqueue(r, want, _station);
 
             if (ok) craftFeedback?.PlayFeedbacks();
             RefreshList();

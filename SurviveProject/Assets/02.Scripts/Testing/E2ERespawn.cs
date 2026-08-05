@@ -288,6 +288,11 @@ namespace Survive.Testing
         /// 곁들여 확인하는 것이 하나 더 있다 — <b>연료를 넣는 것은 불붙이는 것이 아니다.</b>
         /// 타고 있는 불에 장작을 더한다고 그 불이 "마지막에 지핀 불"이 되지는 않는다.
         /// 이게 뒤집히면 셋째 시나리오의 전제가 조용히 무너진다.
+        ///
+        /// 경로 개정(백로그 34): 화톳불이 가공 스테이션이 되면서 <b>타고 있는 불</b> 앞의
+        /// E는 가공 화면을 연다(꺼진 불 앞에서는 여전히 지피기다 — 어둠 속에서 창을
+        /// 찾게 할 수는 없다). 연료 보급은 그 화면 안의 한 줄로 옮겨갔다. 그래서
+        /// 여기서도 E로 화면을 열고 그 줄을 눌러 넣는다 — 검사 범위는 오히려 늘었다.
         /// </summary>
         static IEnumerator 불을_지킨다(Campfire 불)
         {
@@ -303,6 +308,27 @@ namespace Survive.Testing
             E2EHarness.Log("  프롬프트: " + it.Current.InteractionPrompt);
             yield return E2EHarness.TapKey(UnityEngine.InputSystem.Key.E);
             yield return null;
+            yield return null;
+
+            var ui = Object.FindAnyObjectByType<Survive.UI.CraftingUI>(FindObjectsInactive.Include);
+            E2EHarness.Assert(ui != null && ui.IsOpen, "E로 화톳불 화면이 열린다");
+            E2EHarness.Assert(ui != null && ui.CurrentStationHost == (object)불,
+                              "열린 화면이 이 불에 매여 있다");
+
+            var 연료줄 = ui.GetComponentsInChildren<UnityEngine.UI.Button>(true)
+                          .FirstOrDefault(b => b.gameObject.name == "Row_StationAction" &&
+                                               b.gameObject.activeInHierarchy);
+            E2EHarness.Assert(연료줄 != null && 연료줄.interactable, "연료 넣기 줄을 누를 수 있다");
+            if (연료줄 == null) yield break;
+
+            UnityEngine.EventSystems.ExecuteEvents.Execute(
+                연료줄.gameObject,
+                new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current),
+                UnityEngine.EventSystems.ExecuteEvents.pointerClickHandler);
+            yield return null;
+            yield return null;
+
+            ui.Close();
             yield return null;
 
             E2EHarness.Assert(불.FuelNormalized > 이전연료,

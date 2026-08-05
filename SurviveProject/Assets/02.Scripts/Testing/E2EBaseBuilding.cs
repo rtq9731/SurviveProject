@@ -360,12 +360,36 @@ namespace Survive.Testing
                                       ExecuteEvents.pointerClickHandler);
                 yield return null;
                 yield return null;
-                E2EHarness.Assert(Inv.CountOf("pickaxe") > before, "세운 제작대에서 곡괭이가 나왔다");
-            }
 
-            ui.Close();
-            yield return null;
+                // 제작에 시간이 걸리게 되면서(백로그 34) 제작대에 건 작업은
+                // <b>제작대의 것</b>이 되었다. 눌러도 손에 바로 들어오지 않는다 —
+                // 제작대가 다 만들어 들고 있다가, 돌아온 사람에게 건넨다.
+                E2EHarness.AssertEqual(station.Work.Queue.Count, 1, "작업이 제작대에 걸렸다");
+                E2EHarness.AssertEqual(Inv.CountOf("pickaxe"), before,
+                                       "누른다고 바로 손에 들어오지는 않는다");
+
+                ui.Close();
+                yield return null;
+
+                yield return E2EHarness.WaitUntil(() => station.Work.HasOutput,
+                                                  "제작대가 곡괭이를 다 만들었다",
+                                                  Recipe포함시간(station) + 6f);
+
+                yield return E2EHarness.TapKey(Key.E);
+                yield return null;
+                E2EHarness.Assert(Inv.CountOf("pickaxe") > before,
+                                  "세운 제작대에서 곡괭이를 회수했다");
+            }
+            else
+            {
+                ui.Close();
+                yield return null;
+            }
         }
+
+        /// <summary>제작대에 걸린 것이 다 될 때까지의 넉넉한 상한.</summary>
+        static float Recipe포함시간(CraftingBench bench) =>
+            Survive.Crafting.CraftQueueService.TotalSecondsLeft(bench.Work.Queue);
 
         // ── 보관함 ──────────────────────────────────────────────
 

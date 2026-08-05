@@ -330,7 +330,13 @@ namespace Survive.Testing
             E2EHarness.Log($"  [주입] {itemId} +{count} (검증은 실채집으로 끝냈다)");
         }
 
-        /// <summary>제작 UI를 열고 해당 레시피 버튼을 실제로 누른다.</summary>
+        /// <summary>
+        /// 제작 UI를 열고 해당 레시피 버튼을 실제로 누른다.
+        ///
+        /// 누르는 것으로 끝나지 않는다 — 제작에 시간이 걸리게 되면서(백로그 34)
+        /// 누르면 줄에 서고, 재료는 그때 빠지고, 소요 시간이 지나야 손에 들어온다.
+        /// 목표 판정은 물건이 손에 들어와야 넘어가므로 여기서 기다린다.
+        /// </summary>
         static IEnumerator CraftRecipe(string recipeId)
         {
             var ui = Object.FindFirstObjectByType<CraftingUI>(FindObjectsInactive.Include);
@@ -349,6 +355,10 @@ namespace Survive.Testing
             E2EHarness.Assert(row != null, $"레시피 행이 있다: {recipeId}");
             E2EHarness.Assert(row.interactable, $"{recipeId} 제작 조건을 충족했다");
 
+            var recipe = Resources.FindObjectsOfTypeAll<RecipeSO>()
+                                  .FirstOrDefault(r => r != null && r.id == recipeId);
+            int before = recipe?.result?.item != null ? Inv.CountOf(recipe.result.item.id) : 0;
+
             // 실제 UI 클릭 이벤트를 보낸다
             ExecuteEvents.Execute(row.gameObject, new PointerEventData(EventSystem.current),
                                   ExecuteEvents.pointerClickHandler);
@@ -357,6 +367,12 @@ namespace Survive.Testing
 
             ui.Close();
             yield return null;
+
+            if (recipe?.result?.item != null)
+                yield return E2EHarness.WaitUntil(
+                    () => Inv.CountOf(recipe.result.item.id) > before,
+                    $"{recipeId} 제작이 끝났다 ({recipe.craftSeconds:F0}초)",
+                    recipe.craftSeconds + 6f);
         }
     }
 }
