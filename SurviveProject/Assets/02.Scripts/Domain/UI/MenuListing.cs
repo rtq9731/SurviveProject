@@ -2,6 +2,7 @@ using System.Text;
 using Survive.Building;
 using Survive.Crafting;
 using Survive.Items;
+using Survive.Localization;
 using Survive.Progression;
 
 namespace Survive.UI
@@ -31,11 +32,14 @@ namespace Survive.UI
         ///
         /// 몇 개가 잠겨 있는지는 세어 주지 않는다. 그 숫자도 "앞으로 이만큼 남았다"는
         /// 정보라, 감추기로 한 것을 옆문으로 흘리는 셈이 된다.
+        ///
+        /// 상수가 아니라 속성인 이유는 번역 표에서 꺼내기 때문이다. 로케일이 바뀌면
+        /// 다음에 읽는 쪽부터 바뀐 글자를 본다.
         /// </summary>
-        public const string NothingKnownToCraft = "아직 아는 제작법이 없다";
+        public static string NothingKnownToCraft => Loc.T("UI", "craft_empty");
 
         /// <summary>건축 목록의 같은 자리.</summary>
-        public const string NothingKnownToBuild = "아직 아는 건축물이 없다";
+        public static string NothingKnownToBuild => Loc.T("UI", "build_empty");
 
         // ── 무엇이 실리는가 ──────────────────────────────────────
 
@@ -83,7 +87,7 @@ namespace Survive.UI
             sb.Append(NameOf(r));
             sb.Append(Separator);
 
-            if (r.ingredients == null || r.ingredients.Length == 0) sb.Append("재료 없음");
+            if (r.ingredients == null || r.ingredients.Length == 0) sb.Append(Loc.T("UI", "no_ingredients"));
             else
             {
                 bool first = true;
@@ -98,7 +102,8 @@ namespace Survive.UI
             }
 
             sb.Append(Separator).Append(CraftTimeText.Short(r.craftSeconds * want));
-            if (!queueRoom) sb.Append("  (대기열이 가득 찼다)");
+            // 앞의 두 칸은 배치이지 번역할 것이 아니라 코드에 남긴다.
+            if (!queueRoom) sb.Append("  ").Append(Loc.T("UI", "queue_full"));
             return sb.ToString();
         }
 
@@ -111,7 +116,11 @@ namespace Survive.UI
             sb.Append(NameOf(b));
             sb.Append(Separator);
 
-            if (b.cost == null || b.cost.Length == 0) { sb.Append("재료 없음"); return sb.ToString(); }
+            if (b.cost == null || b.cost.Length == 0)
+            {
+                sb.Append(Loc.T("UI", "no_ingredients"));
+                return sb.ToString();
+            }
 
             bool first = true;
             foreach (var c in b.cost)
@@ -122,7 +131,7 @@ namespace Survive.UI
                 sb.Append($"{c.item.displayName} {held}/{c.count}");
                 first = false;
             }
-            return first ? sb.Append("재료 없음").ToString() : sb.ToString();
+            return first ? sb.Append(Loc.T("UI", "no_ingredients")).ToString() : sb.ToString();
         }
 
         /// <summary>
@@ -131,9 +140,9 @@ namespace Survive.UI
         /// </summary>
         public static string IngredientLine(RecipeSO r)
         {
-            if (r?.ingredients == null || r.ingredients.Length == 0) return "재료 없음";
+            if (r?.ingredients == null || r.ingredients.Length == 0) return Loc.T("UI", "no_ingredients");
 
-            var sb = new StringBuilder("재료").Append(Separator);
+            var sb = new StringBuilder(Loc.T("UI", "ingredients_label")).Append(Separator);
             bool first = true;
             foreach (var need in r.ingredients)
             {
@@ -142,7 +151,7 @@ namespace Survive.UI
                 sb.Append(need.item.displayName).Append(' ').Append(need.count);
                 first = false;
             }
-            return first ? "재료 없음" : sb.ToString();
+            return first ? Loc.T("UI", "no_ingredients") : sb.ToString();
         }
 
         /// <summary>이름이 비면 id라도 보여 준다. 빈 줄이 뜨는 것보다는 낫다.</summary>

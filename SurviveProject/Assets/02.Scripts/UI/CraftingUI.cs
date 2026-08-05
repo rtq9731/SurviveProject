@@ -10,6 +10,7 @@ using Survive.Core;
 using Survive.Crafting;
 using Survive.Input;
 using Survive.Items;
+using Survive.Localization;
 using Survive.Progression;
 
 namespace Survive.UI
@@ -54,6 +55,9 @@ namespace Survive.UI
             public Button plus;
             public Button max;
             public TMP_Text amount;
+
+            /// <summary>"최대" 버튼의 글자. 한 번 쓰고 마는 자리라 로케일이 바뀌면 여기만 다시 쓴다.</summary>
+            public TMP_Text maxCaption;
         }
 
         readonly List<Row> _rows = new List<Row>();
@@ -145,12 +149,24 @@ namespace Survive.UI
             // ESC 처리는 UIStateService가 전담한다. 여기서 따로 듣지 않는다 —
             // 패널마다 각자 들으면 닫히는 것과 안 닫히는 것이 생긴다.
             if (GameServices.TryGet<UIStateService>(out var ui)) ui.RegisterPanel(this);
+
+            // 목록 줄은 매 프레임 다시 그려지므로 로케일을 따라온다. 그러나 "최대"처럼
+            // 만들 때 한 번 쓰고 마는 글자는 아무도 다시 쓰지 않는다 — 그 자리만 듣는다.
+            Loc.LocaleChanged += ApplyStaticText;
             StartCoroutine(BindWhenReady());
         }
 
         void OnDisable()
         {
+            Loc.LocaleChanged -= ApplyStaticText;
             if (GameServices.TryGet<UIStateService>(out var ui)) ui.UnregisterPanel(this);
+        }
+
+        /// <summary>매 프레임 다시 쓰지 않는 글자들. 만들 때와 로케일이 바뀔 때만 부른다.</summary>
+        void ApplyStaticText()
+        {
+            foreach (var row in _rows)
+                if (row.maxCaption != null) row.maxCaption.text = Loc.T("UI", "craft_max_button");
         }
 
         IEnumerator BindWhenReady()
@@ -302,12 +318,14 @@ namespace Survive.UI
             var minus  = MakeMiniButton(go.transform, "Minus", "-",   188f, 34f);
             var amount = MakeMiniLabel(go.transform, "Amount",        150f, 44f);
             var plus   = MakeMiniButton(go.transform, "Plus",  "+",   102f, 34f);
-            var max    = MakeMiniButton(go.transform, "Max",   "최대",  60f, 52f);
+            var max    = MakeMiniButton(go.transform, "Max",
+                                        Loc.T("UI", "craft_max_button"), 60f, 52f);
 
             var row = new Row
             {
                 recipe = r, button = btn, frame = img, label = txt,
-                minus = minus, plus = plus, max = max, amount = amount
+                minus = minus, plus = plus, max = max, amount = amount,
+                maxCaption = max.GetComponentInChildren<TMP_Text>(true)
             };
 
             var captured = r;
