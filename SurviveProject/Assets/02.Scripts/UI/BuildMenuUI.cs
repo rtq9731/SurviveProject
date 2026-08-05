@@ -66,12 +66,17 @@ namespace Survive.UI
         {
             if (inventory?.Inventory != null) inventory.Inventory.Changed += Refresh;
             if (Survive.Core.GameServices.TryGet<UIStateService>(out var ui)) ui.RegisterPanel(this);
+
+            // 이 화면은 제작 목록과 달리 매 프레임 다시 그리지 않는다. 로케일이 바뀌면
+            // 아무도 다시 쓰지 않으므로 여기서 듣고 한 번 다시 그린다.
+            Survive.Localization.Loc.LocaleChanged += Refresh;
             StartCoroutine(BindLedger());
         }
 
         void OnDisable()
         {
             if (inventory?.Inventory != null) inventory.Inventory.Changed -= Refresh;
+            Survive.Localization.Loc.LocaleChanged -= Refresh;
             if (Survive.Core.GameServices.TryGet<UIStateService>(out var ui)) ui.UnregisterPanel(this);
             Unbind();
         }
@@ -271,6 +276,8 @@ namespace Survive.UI
             {
                 bool empty = shown <= 0;
                 if (_emptyRow.activeSelf != empty) _emptyRow.SetActive(empty);
+                // 만들 때 한 번 쓰고 말면 로케일이 바뀌어도 옛 글자가 남는다.
+                if (_emptyLabel != null) _emptyLabel.text = MenuListing.NothingKnownToBuild;
             }
 
             FitPanel(MenuListing.PanelRows(shown));

@@ -1,0 +1,16 @@
+# 번역 표. 이 파일이 진실의 원천이다 — 여기를 고치면 게임에 그대로 반영된다.
+# 형식과 키 규약은 docs/번역-체계.md 참조.
+#
+# Category = 화면/영역 (나중에 Unity Localization의 String Table Collection 이름이 된다)
+# Key      = 그 안에서의 이름 (Entry Name)
+# ko       = 기본 로케일. 이 칸은 절대 비우지 않는다 (EditMode 게이트가 잡는다).
+# en 이하  = 번역. 비워 두면 ko로 폴백한다.
+#
+# 쉼표·따옴표·줄바꿈이 든 값은 따옴표로 감싼다 ("따옴표"는 ""로 겹쳐 쓴다).
+Category,Key,ko,en
+UI,craft_empty,아직 아는 제작법이 없다,
+UI,build_empty,아직 아는 건축물이 없다,
+UI,no_ingredients,재료 없음,No materials
+UI,queue_full,(대기열이 가득 찼다),
+UI,ingredients_label,재료,Materials
+UI,craft_max_button,최대,Max
