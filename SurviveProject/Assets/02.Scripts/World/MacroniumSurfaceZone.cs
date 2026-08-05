@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Survive.World
@@ -12,10 +13,17 @@ namespace Survive.World
     ///
     /// <see cref="Survive.Building.Campfire"/>가 <see cref="ILitZoneSource"/>로 자신을 내놓는 것과
     /// 같은 모양이다 — 등록·해제를 OnEnable/OnDisable에 두면 생명주기를 따로 신경 쓸 필요가 없다.
+    ///
+    /// <b>액면의 높이도 여기서 답한다.</b> 관문 판정에는 필요 없지만 "닿았는가"에는 필요하다
+    /// (<see cref="MacroniumContact"/>). 물이 <see cref="WaterBody.TryGetSurfaceAt"/>로
+    /// 수면을 내놓는 것과 같은 모양으로 맞췄다 — 잠김 판정이 두 가지 방식으로 갈리면
+    /// 물에서 되는 것이 액면에서 안 되는 일이 생긴다.
     /// </summary>
     [DisallowMultipleComponent]
     public class MacroniumSurfaceZone : MonoBehaviour, IHazardZoneSource
     {
+        static readonly List<MacroniumSurfaceZone> _all = new List<MacroniumSurfaceZone>();
+
         [Tooltip("액면이 깔린 반경(m). 이 안에 들어오면 판정이 걸린다")]
         [Min(0f)] [SerializeField] float radius = 18f;
 
@@ -34,8 +42,65 @@ namespace Survive.World
 
         public float Magnitude => crossingWidth;
 
-        void OnEnable() => HazardZoneRegistry.Register(this);
-        void OnDisable() => HazardZoneRegistry.Unregister(this);
+        /// <summary>판정에 넘길 구간 하나. 위협과 크기를 짝지어 내놓는 것이 전부다.</summary>
+        public HazardZone Zone => new HazardZone(Hazard, crossingWidth);
+
+        /// <summary>
+        /// 액면의 높이. 구역의 중심이 곧 액면이다 —
+        /// <see cref="centerOffset"/>의 툴팁이 말하는 "발밑으로 내린 중심"이 그 자리다.
+        /// </summary>
+        public float SurfaceY => HazardZoneCenter.y;
+
+        /// <summary>이 지점이 액면 위(수평으로)인가. 높이는 보지 않는다.</summary>
+        public bool ContainsHorizontally(Vector3 p)
+        {
+            var c = HazardZoneCenter;
+            float dx = p.x - c.x, dz = p.z - c.z;
+            return dx * dx + dz * dz <= radius * radius;
+        }
+
+        void OnEnable()
+        {
+            HazardZoneRegistry.Register(this);
+            if (!_all.Contains(this)) _all.Add(this);
+        }
+
+        void OnDisable()
+        {
+            HazardZoneRegistry.Unregister(this);
+            _all.Remove(this);
+        }
+
+        /// <summary>
+        /// 이 지점의 액면 높이. 액면이 없으면 false.
+        /// 겹치면 가장 높은 액면을 쓴다 — <see cref="WaterBody.TryGetSurfaceAt"/>와 같은 규칙이다.
+        /// </summary>
+        public static bool TryGetSurfaceAt(Vector3 p, out float surfaceY, out MacroniumSurfaceZone zone)
+        {
+            surfaceY = float.MinValue;
+            zone = null;
+
+            for (int i = 0; i < _all.Count; i++)
+            {
+                var z = _all[i];
+                if (z == null || !z.ContainsHorizontally(p)) continue;
+
+                float s = z.SurfaceY;
+                if (zone == null || s > surfaceY) { surfaceY = s; zone = z; }
+            }
+            return zone != null;
+        }
+
+        /// <summary>
+        /// 코드로 세울 때 값을 넣는다. 검증이 런타임에 구역을 스폰하기 위한 것이다 —
+        /// <see cref="Survive.Interaction.ItemPickup.Setup"/>이 같은 이유로 열려 있다.
+        /// </summary>
+        public void Setup(float zoneRadius, float width, Vector3 offset = default)
+        {
+            radius = Mathf.Max(0f, zoneRadius);
+            crossingWidth = Mathf.Max(0f, width);
+            centerOffset = offset;
+        }
 
 #if UNITY_EDITOR
         void OnDrawGizmosSelected()
