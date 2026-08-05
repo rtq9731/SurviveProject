@@ -20,6 +20,15 @@ namespace Survive.Testing
     /// 사망만 확인하면 "죽기는 하는데 물과 무관하다"를 놓친다.
     ///
     /// 그래서 여기서는 셋을 한 줄로 이어서 본다 — 실제로 잠긴 채 기다려서 죽는다.
+    ///
+    /// <b>바다가 살을 깎게 된 뒤(백로그 32)의 개정.</b> 이제 물속에서는 숨이 붙어 있는
+    /// 동안에도 체력이 준다 — 섬 사이 액체가 물이 아니라 묽은 매크로늄이 됐기 때문이다.
+    /// 그래서 "산소가 0이면 체력이 깎인다"만 보면 부족하다: 그 말은 바다가 깎는 것만으로도
+    /// 참이 되어, 질식 피해가 통째로 죽어도 이 검사는 통과한다.
+    ///
+    /// 개정한 것은 <b>재는 방식</b>이지 기준이 아니다. 숨이 붙어 있는 동안의 감소 속도를
+    /// 먼저 재 두고, 산소가 0이 된 뒤의 속도와 견준다 — 질식은 바다 <i>위에 더해져야</i>
+    /// 하고, 그 차이가 곧 질식이 살아 있다는 증거다.
     /// </summary>
     public static class E2ESuffocation
     {
@@ -39,6 +48,7 @@ namespace Survive.Testing
 
             yield return Prepare();
             yield return Submerge(swim);
+            yield return 숨이_붙어_있는_동안의_속도를_잰다();
             yield return OxygenRunsOut(swim);
             yield return HealthDrainsWhileEmpty(swim);
             yield return DiesAndLeavesABag();
@@ -116,6 +126,38 @@ namespace Survive.Testing
             E2EHarness.Assert(swim.IsHeadSubmerged, $"머리까지 잠겼다 ({t:F1}초)");
         }
 
+        // ── 숨이 붙어 있는 동안 ─────────────────────────────────
+
+        /// <summary>
+        /// 산소가 남아 있는 동안의 체력 감소 속도. 이것이 바다만 깎는 값이다.
+        ///
+        /// 뒤에서 질식이 더해졌는지 보려면 더해지기 전의 값이 있어야 한다.
+        /// 상수를 적어 두지 않고 실제로 재는 이유는, 규칙이 바뀌면 기준도 같이
+        /// 따라가야 하기 때문이다 — 적어 둔 숫자는 반드시 낡는다.
+        /// </summary>
+        static float _바다만깎는속도;
+
+        static IEnumerator 숨이_붙어_있는_동안의_속도를_잰다()
+        {
+            E2EHarness.Assert(!Vitals.Oxygen.IsEmpty, "아직 숨이 붙어 있다");
+
+            float 전 = Vitals.Health.Current;
+            float t = 0f;
+            while (t < 3f && !Vitals.Oxygen.IsEmpty)
+            {
+                E2EHarness.QueueKeys();
+                t += Time.deltaTime;
+                yield return null;
+            }
+
+            _바다만깎는속도 = (전 - Vitals.Health.Current) / Mathf.Max(0.01f, t);
+            E2EHarness.Log($"  숨이 붙은 채 {t:F1}초 — 체력 {전:F1} → {Vitals.Health.Current:F1} " +
+                           $"(초당 {_바다만깎는속도:F1})");
+
+            E2EHarness.Assert(_바다만깎는속도 > 0f,
+                              "산소가 남아 있어도 잠겨 있으면 체력이 준다 — 바다가 매크로늄이다");
+        }
+
         // ── 산소가 다한다 ───────────────────────────────────────
 
         /// <summary>
@@ -149,9 +191,17 @@ namespace Survive.Testing
             while (t < 2f) { E2EHarness.QueueKeys(); t += Time.deltaTime; yield return null; }
 
             float after = Vitals.Health.Current;
+            float 속도 = (before - after) / t;
             E2EHarness.Log($"  산소 0으로 {t:F1}초 — 체력 {before:F1} → {after:F1} " +
-                           $"(초당 {(after - before) / t:F1})");
+                           $"(초당 {속도:F1}, 숨 붙었을 때는 {_바다만깎는속도:F1})");
+
             E2EHarness.Assert(after < before - 1f, "산소가 0이면 체력이 깎인다");
+
+            // 질식은 바다 위에 <b>더해진다</b>. 둘 중 하나가 다른 하나를 대신하면
+            // 여기서 걸린다 — 대신하는 순간 두 속도가 같아진다.
+            E2EHarness.Assert(속도 > _바다만깎는속도 + 1f,
+                              $"질식 피해가 바다 위에 더해진다 " +
+                              $"(숨 있을 때 {_바다만깎는속도:F1} → 숨 없을 때 {속도:F1})");
         }
 
         // ── 죽고, 남긴다 ────────────────────────────────────────

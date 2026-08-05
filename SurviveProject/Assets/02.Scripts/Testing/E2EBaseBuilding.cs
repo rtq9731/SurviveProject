@@ -63,9 +63,29 @@ namespace Survive.Testing
             yield return DemolishRefunds(fire);
 
             yield return SwimAndSee();
+            yield return 물에서_깎인_몸을_되돌린다();
             yield return HoldToSwing();
 
             E2EHarness.Log("=== 거점 시스템 완주 ===");
+        }
+
+        /// <summary>
+        /// 수영 구간을 지나며 바다가 깎은 만큼 돌려준다 (백로그 32의 개정).
+        ///
+        /// 섬 사이 액체가 묽은 매크로늄이 된 뒤로, 이 시나리오의 수영 구간은
+        /// 물속에서 십수 초를 보내며 체력을 절반 가까이 태운다. 그대로 두면 뒤의
+        /// 타격 구간이 반쯤 죽은 몸으로 돌고, 언젠가는 검사가 아니라 체력이 실패한다.
+        /// 바다의 값을 재는 것은 <see cref="E2EMacroniumSea"/>의 몫이다 —
+        /// 여기서 보는 것은 조작과 화면이지 생존이 아니다.
+        /// </summary>
+        static IEnumerator 물에서_깎인_몸을_되돌린다()
+        {
+            var vitals = E2EHarness.Player.Vitals;
+            if (vitals == null) yield break;
+
+            E2EHarness.Log($"  수영 구간 뒤 체력 {vitals.Health.Current:F0} — 되돌린다");
+            vitals.Revive();
+            yield return null;
         }
 
         // ── 준비 ────────────────────────────────────────────────

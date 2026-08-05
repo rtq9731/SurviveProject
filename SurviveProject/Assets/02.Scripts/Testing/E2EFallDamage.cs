@@ -156,6 +156,14 @@ namespace Survive.Testing
         ///
         /// 굳은 땅이었다면 확실히 죽었을 높이를 쓴다. 중간 높이로 보면
         /// "물이라서 무해한 것"과 "덜 떨어져서 무해한 것"이 구별되지 않는다.
+        ///
+        /// <b>바다가 살을 깎게 된 뒤(백로그 32)의 개정.</b> 입수한 뒤 잠겨 있는 동안은
+        /// 체력이 준다 — 섬 사이 액체가 물이 아니라 묽은 매크로늄이 됐기 때문이다.
+        /// 그래서 "체력이 한 점도 줄지 않았다"는 더 이상 성립하지 않는다.
+        ///
+        /// 기준을 낮춘 것이 아니라 <b>좁혔다</b>: 줄어든 체력이 <i>전부 바다가 낸 것인지</i>를
+        /// 본다. 낙하 몫이 1이라도 섞이면 두 값이 어긋나 걸린다. 예전 기준은 "0이면 통과",
+        /// 지금 기준은 "낙하 몫이 0이면 통과"다 — R8이 정한 "입수는 무해하다"는 그대로다.
         /// </summary>
         static IEnumerator 물에는_같은_높이에서_떨어져도_무해하다()
         {
@@ -170,6 +178,7 @@ namespace Survive.Testing
             Vitals.Revive();
             float 전 = Vitals.Health.Current;
             float 전피해 = Loco.TotalFallDamage;
+            float 전바다 = MacroniumSeaService.TotalDamage;
 
             bool 떨어졌다 = false;
             yield return 발판에서_떨군다(LethalHeight, true, r => 떨어졌다 = r);
@@ -177,13 +186,17 @@ namespace Survive.Testing
             if (!떨어졌다) yield break;
 
             float 후 = Vitals.Health.Current;
+            float 바다몫 = MacroniumSeaService.TotalDamage - 전바다;
             E2EHarness.Log($"  마지막 착지 {Loco.LastLandingSpeed:F2} m/s, " +
-                           $"낙하 피해 {Loco.TotalFallDamage - 전피해:F1}, 체력 {전:F0} → {후:F0}");
+                           $"낙하 피해 {Loco.TotalFallDamage - 전피해:F1}, 체력 {전:F0} → {후:F0} " +
+                           $"(그중 바다 {바다몫:F1})");
 
             E2EHarness.Assert(Mathf.Approximately(Loco.TotalFallDamage, 전피해),
                               $"물에서는 낙하 피해가 없다 (이 구간 {Loco.TotalFallDamage - 전피해:F1})");
-            E2EHarness.Assert(후 >= 전 - 0.5f,
-                              $"체력이 줄지 않았다 ({전:F0} → {후:F0}) — 굳은 땅이었으면 죽었을 높이다");
+            E2EHarness.Assert(후 >= 전 - 바다몫 - 0.5f,
+                              $"줄어든 체력은 전부 바다가 낸 것이다 ({전:F0} → {후:F0}, 바다 {바다몫:F1}) " +
+                              "— 굳은 땅이었으면 죽었을 높이다");
+            E2EHarness.Assert(!Vitals.Health.IsEmpty, "물에 빠진 것으로 죽지는 않았다");
 
             // 물 밖으로 꺼내 둔다. 다음 시나리오가 산소 0에서 시작하면 안 된다.
             yield return 마른_땅으로_돌아간다();

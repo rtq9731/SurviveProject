@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using Survive.Player;
 using Survive.Vitals;
+using Survive.World;
 
 namespace Survive.Testing
 {
@@ -21,6 +22,13 @@ namespace Survive.Testing
     ///
     /// 그래서 여기서는 처음부터 끝까지 <b>키를 눌러</b> 오간다.
     /// 순간이동은 출발선에 서는 데만 쓴다.
+    ///
+    /// <b>바다가 살을 깎게 된 뒤(백로그 32)의 개정.</b> 이 시나리오는 왕복하는 데
+    /// 1분 남짓 물에 머무는데, 초당 3의 값이 붙은 뒤로는 그동안 체력이 두 번 넘게
+    /// 사라진다 — 조작을 보러 온 검사가 익사 실험이 되어 버린다. 그래서 구간 사이마다
+    /// 몸을 되돌린다. <b>값을 안 보는 것이 아니다</b>: 값은 구간 하나
+    /// (<see cref="바다가_값을_매긴다"/>)에서 실제로 재고, 나머지 구간은 그 값에
+    /// 방해받지 않고 원래 보던 것을 본다.
     /// </summary>
     public static class E2ESwimRoundTrip
     {
@@ -52,13 +60,94 @@ namespace Survive.Testing
                            $"앞쪽 수심 {depth:F1}m");
 
             yield return WalkIn(swim, shore, towardWater);
+            yield return 바다가_값을_매긴다(swim);
+            yield return 몸을_되돌린다();
             yield return OxygenFallsWhileSubmerged(swim);
+            yield return 몸을_되돌린다();
             yield return SprintIsFasterUnderwater();
+            // 여기서는 되돌리지 않는다. Revive는 산소도 가득 채우는데, 바로 뒤의
+            // OxygenComesBack이 "산소가 돌아온다"를 보려면 돌아올 자리가 남아 있어야 한다.
             yield return SurfaceWithSpace(swim, surface);
             yield return OxygenComesBack();
+            yield return 몸을_되돌린다();
             yield return WalkOut(swim, shore, surface);
 
             E2EHarness.Log("=== 수영 왕복 완주 ===");
+        }
+
+        /// <summary>
+        /// 바다가 깎은 만큼 돌려준다. 다음 구간이 보려는 것은 조작이지 생존이 아니다.
+        /// 되돌리지 않으면 왕복 도중에 죽어, 실패한 것이 조작인지 체력인지 알 수 없게 된다.
+        /// </summary>
+        static IEnumerator 몸을_되돌린다()
+        {
+            Vitals.Revive();
+            yield return null;
+        }
+
+        /// <summary>
+        /// 긴 구간 도중에 바다가 다 깎아 버리지 않게 반쯤에서 숨을 붙여 준다.
+        ///
+        /// 물가로 돌아오는 데 최대 45초가 걸릴 수 있고, 그동안 바다는 100을 넘게 깎는다.
+        /// 되돌리지 않으면 "물에서 나올 수 있는가"를 묻는 자리에서 "물에서 나오기 전에
+        /// 죽는다"가 답이 되어, 정작 보려던 물가 기어오르기는 한 번도 시험되지 않는다.
+        /// </summary>
+        static void 숨을_붙여_둔다()
+        {
+            if (Vitals.Health.Normalized < 0.5f) Vitals.Revive();
+        }
+
+        // ── 건너는 데 값이 든다 ─────────────────────────────────
+
+        /// <summary>
+        /// 물에 잠긴 채로 있는 동안 실제로 체력이 깎이는지, 그리고 그 값이
+        /// <b>한 번 건널 만한 값</b>인지 본다 (백로그 32).
+        ///
+        /// 규칙 자체는 <c>MacroniumSeaTests</c>가, 실제 1→2 횡단은
+        /// <see cref="E2EMacroniumSea"/>가 본다. 여기서 굳이 한 번 더 재는 이유는
+        /// 이 시나리오가 <b>물가에서 걸어 들어간 진짜 몸</b>으로 물속에 있는 유일한
+        /// 자리이기 때문이다 — 순간이동으로 넣은 몸에서만 값이 붙고 걸어 들어간
+        /// 몸에서는 안 붙는 어긋남은 여기서만 걸린다.
+        /// </summary>
+        static IEnumerator 바다가_값을_매긴다(PlayerSwimming swim)
+        {
+            Vitals.Revive();
+            yield return null;
+
+            float 전체력 = Vitals.Health.Current;
+            float 전바다 = MacroniumSeaService.TotalDamage;
+
+            float t = 0f, 잠김 = 0f;
+            while (t < 5f)
+            {
+                if (MacroniumSeaService.IsCorroding) 잠김 += Time.deltaTime;
+                t += Time.deltaTime;
+                yield return null;
+            }
+
+            float 잃은것 = 전체력 - Vitals.Health.Current;
+            float 바다가낸것 = MacroniumSeaService.TotalDamage - 전바다;
+
+            E2EHarness.Log($"  물에 잠긴 채 {t:F1}초 (그중 깎인 시간 {잠김:F1}초) — " +
+                           $"체력 {전체력:F1} → {Vitals.Health.Current:F1}, 그중 바다 {바다가낸것:F1}");
+
+            E2EHarness.Assert(잠김 > 3f, $"물속에 있는 동안 계속 깎인다 ({잠김:F1}초)");
+            E2EHarness.Assert(잃은것 > 0f, "몸이 잠기면 체력이 준다");
+            E2EHarness.Assert(Mathf.Abs(잃은것 - 바다가낸것) < 0.01f,
+                              $"잃은 체력은 전부 바다가 낸 것이다 (잃음 {잃은것:F1}, 바다 {바다가낸것:F1})");
+
+            // 초당 얼마인지가 이 기능의 값이다. 규칙과 어긋나면 여기서 걸린다.
+            float 초당 = 바다가낸것 / Mathf.Max(0.01f, 잠김);
+            E2EHarness.Assert(Mathf.Abs(초당 - MacroniumSea.CorrosionPerSecond)
+                              <= MacroniumSea.BiteDamage,
+                              $"초당 피해가 규칙과 맞는다 (실측 {초당:F2}, 규칙 {MacroniumSea.CorrosionPerSecond:F2})");
+
+            // 한 번 건너는 값. 실측 횡단 시간(1→2, 맨몸 보통 수영 10.3초)으로 환산한다.
+            float 횡단 = MacroniumSea.DamageOver(SeaImmersion.Swimming, false, 10.3f)
+                       / Vitals.Health.Max;
+            E2EHarness.Log($"  이 값으로 1→2를 건너면 체력의 {횡단:P0}");
+            E2EHarness.Assert(횡단 >= 0.25f && 횡단 <= 0.35f,
+                              $"한 번 건너는 값이 체력의 25~35%다 ({횡단:P0})");
         }
 
         // ── 걸어 들어간다 ───────────────────────────────────────
@@ -202,14 +291,36 @@ namespace Survive.Testing
             E2EHarness.Assert(rose > 0.3f, $"실제로 떠올랐다 ({rose:F1}m)");
         }
 
+        /// <summary>
+        /// 머리를 물 밖에 둔 채 기다리면 산소가 돌아온다.
+        ///
+        /// <b>Space를 계속 누르는 이유.</b> 손을 놓으면 몸이 부력과 중력 사이에서
+        /// 오르내리며 머리가 수면을 넘나든다 — 3초 중 절반쯤 잠겨 있으면 소모가
+        /// 회복을 이겨 산소가 오히려 준다. 그러면 실패하는 것은 "회복이 안 된다"가
+        /// 아니라 "머리가 안 나와 있었다"인데, 재는 쪽에서 그 둘을 구별하지 못한다.
+        /// 수면에 머무는 것은 사람이 하는 일이기도 하다.
+        /// </summary>
         static IEnumerator OxygenComesBack()
         {
+            var swim = Swim;
             float before = Vitals.Oxygen.Current;
 
-            float t = 0f;
-            while (t < 3f) { t += Time.deltaTime; yield return null; }
+            yield return E2EHarness.PressKey(Key.Space);
 
-            E2EHarness.Log($"  수면에서 {t:F1}초 — 산소 {before:F1} → {Vitals.Oxygen.Current:F1}");
+            float t = 0f;
+            bool 잠긴적있다 = false;
+            while (t < 3f)
+            {
+                E2EHarness.QueueKeys();
+                if (swim != null && swim.IsHeadSubmerged) 잠긴적있다 = true;
+                t += Time.deltaTime;
+                yield return null;
+            }
+            yield return E2EHarness.ReleaseKey(Key.Space);
+
+            E2EHarness.Log($"  수면에서 {t:F1}초 — 산소 {before:F1} → {Vitals.Oxygen.Current:F1} " +
+                           $"(도중에 잠긴 적 {잠긴적있다})");
+            E2EHarness.Assert(!잠긴적있다, "재는 동안 머리가 물 밖에 있었다");
             E2EHarness.Assert(Vitals.Oxygen.Current > before, "머리가 나오면 산소가 돌아온다");
         }
 
@@ -252,6 +363,7 @@ namespace Survive.Testing
                     rig.SetLook(Mathf.Atan2(d.x, d.z) * Mathf.Rad2Deg, 0f);
 
                 E2EHarness.QueueKeys();
+                숨을_붙여_둔다();
                 t += Time.deltaTime;
 
                 if (t >= nextReport)
