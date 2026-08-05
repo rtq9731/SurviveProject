@@ -106,6 +106,14 @@ namespace Survive.Testing
                     "잠항구는 매크로늄을 요구한다 — 마지막 섬의 자원이 출구가 된다");
             }
 
+            // 잠항 설계는 이제 연구대의 산출물이다(백로그 38). 그 연구의 소재인 유물은
+            // 낫이 떨구는데 그 배선은 작업 39라, 지금 세계에는 유물이 하나도 없다 —
+            // 여기서 볼 것은 종막이지 연구가 아니고, 연구 절차 자체는
+            // E2EResearchStation이 실제 조작으로 처음부터 끝까지 본다.
+            // 39가 붙으면 이 줄 대신 실제로 유물을 주워 연구하도록 고친다.
+            E2EHarness.Assert(E2EResearchStation.원장에_적는다("bp_submersible", "bp_surface_walker"),
+                              "[연구 대행] 잠항·보행 설계를 원장에 적는다 (유물 공급은 작업 39)");
+
             DescentZone.ResetCounters();
             _chapterEndedFired = false;
 
