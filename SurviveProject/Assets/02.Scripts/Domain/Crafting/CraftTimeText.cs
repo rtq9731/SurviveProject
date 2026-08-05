@@ -1,13 +1,14 @@
 namespace Survive.Crafting
 {
     /// <summary>
-    /// 남은 시간을 사람이 읽는 길이로 적는다.
+    /// 남은 시간을 시계 꼴(HH:MM:SS)로 적는다.
     ///
     /// 초를 소수점까지 보여 주면 숫자가 쉴 새 없이 흔들려 오히려 못 읽는다.
-    /// 시간이 넘어가면 시·분, 분이 넘어가면 분·초, 아니면 초만.
     ///
-    /// 붙는 칸이 좁다(대기열 슬롯 하나). 그래서 단위 사이를 띄우지 않는다 —
-    /// "2분30초"는 다섯 글자지만 "2분 30초"는 여섯 글자다.
+    /// 자릿수를 항상 채우는 이유는 <b>폭이 변하지 않게</b> 하기 위해서다.
+    /// 대기열 칸에 붙어 매초 다시 그려지는 글자라, "9초"에서 "10초"로 넘어갈 때
+    /// 길이가 달라지면 칸 안에서 글자가 들썩인다. 00:00:09 → 00:00:10 은
+    /// 숫자만 바뀌고 자리는 그대로다.
     /// </summary>
     public static class CraftTimeText
     {
@@ -18,23 +19,16 @@ namespace Survive.Crafting
         {
             if (seconds < 0f) seconds = 0f;
 
-            // 올림이다. 0.4초 남았는데 "0초"라고 적으면 이미 끝난 것처럼 보인다.
+            // 올림이다. 0.4초 남았는데 00:00:00이라고 적으면 이미 끝난 것처럼 보인다.
             int total = UnityEngine.Mathf.CeilToInt(seconds);
 
-            if (total < Minute) return total + "초";
-
-            if (total < Hour)
-            {
-                int m = total / Minute;
-                int s = total % Minute;
-                return s == 0 ? m + "분" : $"{m}분{s}초";
-            }
-
-            // 시간 단위에서는 초를 버린다. 한 시간을 기다리는 사람에게
-            // 초 자리는 정보가 아니라 소음이다.
             int h = total / Hour;
-            int rm = (total % Hour) / Minute;
-            return rm == 0 ? h + "시간" : $"{h}시간{rm}분";
+            int m = (total % Hour) / Minute;
+            int s = total % Minute;
+
+            // 시가 100을 넘으면 자리가 하나 늘어난다. 그런 제작은 없지만,
+            // 잘라 내서 거짓말을 하느니 칸을 넘기는 편이 낫다.
+            return $"{h:00}:{m:00}:{s:00}";
         }
     }
 }
