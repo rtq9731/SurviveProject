@@ -75,3 +75,9 @@ crashlytics-build.properties
 /[Aa]ssets/_Recovery/
 /[Aa]ssets/_Recovery.meta
 
+# .unitypackage 자체가 무시 대상(56행)이니 그 meta도 무시한다.
+# 13행 주석이 말하는 바로 그 경우 — "자산이 무시될 때만 meta도 무시한다".
+# 이걸 안 걸어 두면 에디터를 열 때마다 Feel의 구버전 패키지 meta 셋이
+# 되살아나 작업 사본이 더러워진다.
+*.unitypackage.meta
+
