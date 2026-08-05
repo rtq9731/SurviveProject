@@ -10,6 +10,7 @@
 Category,Key,ko,en
 UI,craft_empty,아직 아는 제작법이 없다,
 UI,build_empty,아직 아는 건축물이 없다,
+UI,research_empty,아직 들여다볼 것이 없다,
 UI,no_ingredients,재료 없음,No materials
 UI,queue_full,(대기열이 가득 찼다),
 UI,ingredients_label,재료,Materials

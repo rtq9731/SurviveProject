@@ -49,8 +49,12 @@ namespace Survive.UI
         /// <summary>
         /// 연구 목록의 같은 자리. 여기서도 <b>몇 개가 남았는지 세어 주지 않는다</b> —
         /// 그 숫자는 앞으로 몇 종의 생물을 더 만나게 되는지를 말한다.
+        ///
+        /// 이 줄만 한동안 상수로 남아 있었다. 번역 층과 연구 게이팅이 서로를 모르는
+        /// 가지에서 자라 같은 날 합쳐진 탓인데, 셋 중 하나만 표 밖에 있으면
+        /// "화면 문구는 전부 CSV에서 나온다"는 전제가 깨진다.
         /// </summary>
-        public const string NothingKnownToResearch = "아직 들여다볼 것이 없다";
+        public static string NothingKnownToResearch => Loc.T("UI", "research_empty");
 
         // ── 무엇이 실리는가 ──────────────────────────────────────
 
