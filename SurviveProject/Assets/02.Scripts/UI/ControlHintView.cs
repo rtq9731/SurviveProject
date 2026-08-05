@@ -78,6 +78,11 @@ namespace Survive.UI
             if (inv.Has("pickaxe", 1))
                 Show("pickaxe", "[Q] 도구를 손에 든다 · 곡괭이로 광맥을 부순다");
 
+            // 도구는 전용이다. 곡괭이를 쥔 채로 버섯을 때리다 고장으로 오해하지 않게,
+            // 도끼가 손에 들어온 그 순간에 무엇을 베는 물건인지 말해 준다.
+            if (inv.Has("axe", 1))
+                Show("axe", "[Q] 도구를 손에 든다 · 도끼로 거대 버섯을 벤다");
+
             if (inv.Has("lantern", 1))
                 Show("lantern", "[F] 랜턴 켜기 / 끄기");
         }

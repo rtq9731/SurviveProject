@@ -35,6 +35,13 @@ namespace Survive.Testing
         /// <summary>죽으면서 떨굴 것. 가방이 죽은 자리에 남는지 보려면 담길 것이 있어야 한다.</summary>
         static readonly string[] 떨굴것 = { "scrap", "alien_alloy" };
 
+        /// <summary>
+        /// 불에 넣을 것. 화톳불 <b>건축</b> 비용에는 목재가 없지만
+        /// 불을 <b>지키는</b> 데는 목재가 든다(백로그 35) — 비용에서 자동으로
+        /// 끌어올 수 없는 유일한 재료라 따로 적는다.
+        /// </summary>
+        static string 연료 => Survive.Harvesting.MushroomLumberRule.WoodItemId;
+
         /// <summary>두 번째 시나리오에서 세운 화톳불. 셋째 시나리오가 상대로 삼는다.</summary>
         static Campfire _첫불;
 
@@ -76,7 +83,7 @@ namespace Survive.Testing
             var db = E2EHarness.Player.Inventory.Database;
             if (db == null) return;
 
-            var 필요 = new HashSet<string>(떨굴것);
+            var 필요 = new HashSet<string>(떨굴것) { 연료 };
 
             var placer = Placer;
             if (placer != null)
@@ -282,7 +289,7 @@ namespace Survive.Testing
         }
 
         /// <summary>
-        /// 불에 스크랩을 넣어 살려 둔다. 검사가 오래 도는 동안 연료가 다 타 버리면
+        /// 불에 버섯 목재를 넣어 살려 둔다. 검사가 오래 도는 동안 연료가 다 타 버리면
         /// "둘 중 나중 것을 고른다"가 아니라 "하나밖에 안 남았다"를 보게 된다.
         ///
         /// 곁들여 확인하는 것이 하나 더 있다 — <b>연료를 넣는 것은 불붙이는 것이 아니다.</b>
@@ -332,7 +339,7 @@ namespace Survive.Testing
             yield return null;
 
             E2EHarness.Assert(불.FuelNormalized > 이전연료,
-                              $"스크랩을 넣어 불을 살렸다 ({이전연료:P0} → {불.FuelNormalized:P0})");
+                              $"목재를 넣어 불을 살렸다 ({이전연료:P0} → {불.FuelNormalized:P0})");
             E2EHarness.AssertEqual(불.KindledAt, 이전시각,
                                    "연료를 넣어도 '불붙인 시각'은 그대로다");
         }

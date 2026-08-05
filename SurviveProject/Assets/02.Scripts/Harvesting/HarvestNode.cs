@@ -48,6 +48,20 @@ namespace Survive.Harvesting
         public HarvestNodeSO Definition => definition;
         public bool IsDepleted => _depleted;
 
+        /// <summary>
+        /// 실행 시점에 노드를 세우는 서비스가 정의를 물려 준다.
+        ///
+        /// 씬에 놓인 노드는 인스펙터에서 정의를 받지만, MainScene을 건드리지 않고
+        /// 세워야 하는 것들(거대 버섯)은 코드로 붙는다 — 그때 쓰는 창구다.
+        /// 이미 정의가 있는 노드는 덮어쓰지 않는다.
+        /// </summary>
+        public void Bind(HarvestNodeSO def)
+        {
+            if (def == null || definition != null) return;
+            definition = def;
+            _health = def.durability;
+        }
+
         /// <summary>도구가 필요한 노드는 눌러서 캐는 게 아니라 부순다.</summary>
         public bool IsBreakable => definition != null && definition.requiredTool != ToolType.None;
 
@@ -120,20 +134,16 @@ namespace Survive.Harvesting
             return ToolSatisfied(equipped);
         }
 
-        bool ToolSatisfied(ToolItemSO tool)
-        {
-            if (definition.requiredTool == ToolType.None) return true;
-            if (tool == null) return false;
-            return tool.toolType == definition.requiredTool && tool.tier >= definition.requiredTier;
-        }
+        /// <summary>
+        /// 규칙 자체는 <see cref="ToolMatch"/>에 있다 — 도구가 전용이라는 것은
+        /// 이 컴포넌트의 사정이 아니라 게임의 규칙이라 Unity 없이 검증되어야 한다.
+        /// </summary>
+        bool ToolSatisfied(ToolItemSO tool) => ToolMatch.Satisfies(
+            definition.requiredTool, definition.requiredTier,
+            tool != null ? tool.toolType : ToolType.None,
+            tool != null ? tool.tier : 0);
 
-        static string ToolName(ToolType t) => t switch
-        {
-            ToolType.Pickaxe => "곡괭이",
-            ToolType.Hammer => "망치",
-            ToolType.Axe => "도끼",
-            _ => "도구"
-        };
+        static string ToolName(ToolType t) => ToolMatch.Name(t);
 
         public void OnHoldProgress(float normalized)
         {
@@ -169,6 +179,8 @@ namespace Survive.Harvesting
             {
                 // 튕겨나가는 반응. 아무 일도 안 일어나면 버그로 오해한다.
                 Recoil(0.06f);
+                WrongToolHits++;
+                Announce();
                 return;
             }
 
@@ -183,6 +195,34 @@ namespace Survive.Harvesting
 
             Break(info.HitPoint);
         }
+
+        /// <summary>
+        /// 맞지 않는 도구로 때린 횟수. 검증에서 "정말 안 먹혔는가"를 집는다.
+        /// </summary>
+        public static int WrongToolHits { get; private set; }
+
+        /// <summary>
+        /// 안 먹힌다고 한 줄 알려 준다.
+        ///
+        /// 흔들리기만 하면 "때리는 중"으로 읽힌다. 특히 곡괭이로 광맥을 부수던
+        /// 사람이 같은 손으로 버섯을 때릴 때, 왜 안 부서지는지 화면 어디에도
+        /// 적혀 있지 않으면 고장으로 읽는다.
+        ///
+        /// 안내 창구는 새로 만들지 않는다 — 조작키를 알려 주던
+        /// <see cref="Survive.UI.ControlHintView"/>가 이미 "필요한 순간에 한 번만"
+        /// 이라는 규칙을 들고 있으므로 그것을 그대로 쓴다.
+        /// </summary>
+        void Announce()
+        {
+            if (_hint == null)
+                _hint = FindAnyObjectByType<Survive.UI.ControlHintView>(FindObjectsInactive.Include);
+
+            _hint?.Show("wrongtool_" + definition.requiredTool,
+                        $"{definition.displayName}에는 흠집도 나지 않는다 · " +
+                        $"{ToolName(definition.requiredTool)}가 필요하다");
+        }
+
+        Survive.UI.ControlHintView _hint;
 
         /// <summary>맞은 티가 나게 흔든다. 남은 내구도가 적을수록 크게 흔들린다.</summary>
         void Recoil(float strength)
@@ -237,7 +277,7 @@ namespace Survive.Harvesting
             }
 
             completeFeedback?.PlayFeedbacks();
-            visual.SetActive(false);
+            SetVisible(false);
 
             if (definition.respawnSeconds > 0f) StartCoroutine(Respawn());
         }
@@ -245,9 +285,47 @@ namespace Survive.Harvesting
         IEnumerator Respawn()
         {
             yield return new WaitForSeconds(definition.respawnSeconds);
-            visual.SetActive(true);
+            SetVisible(true);
             _health = definition.durability;
             _depleted = false;
         }
+
+        /// <summary>
+        /// 캔 자리를 감추거나 되돌린다.
+        ///
+        /// <b>왜 통째로 끄지 않는 경우가 있는가.</b> <see cref="visual"/>이 이 오브젝트
+        /// 자신인데 재생까지 해야 하면, 오브젝트를 끄는 순간 <see cref="Respawn"/>
+        /// 코루틴이 함께 죽어 <b>영영 돌아오지 않는다</b>. 그래서 그때만은 보이는 것과
+        /// 만져지는 것만 끈다 — <c>GlowCapCluster</c>가 같은 이유로 택한 방식이다.
+        ///
+        /// 빛도 함께 끈다. 발광하는 거대 버섯을 베면 그 자리의 빛도 사라져야 한다.
+        /// 밑동만 남은 자리가 여전히 환하면 무엇을 벤 것인지 알 수 없다.
+        ///
+        /// 재생하지 않는 노드(씬에 놓인 광맥·잔해 마흔 남짓)는 전과 똑같이
+        /// 오브젝트째 끈다. 돌아오지 않을 것에 굳이 다른 길을 낼 이유가 없다.
+        /// </summary>
+        void SetVisible(bool on)
+        {
+            if (visual != gameObject || definition == null || definition.respawnSeconds <= 0f)
+            {
+                visual.SetActive(on);
+                return;
+            }
+
+            if (_renderers == null) _renderers = GetComponentsInChildren<Renderer>(true);
+            if (_colliders == null) _colliders = GetComponentsInChildren<Collider>(true);
+            if (_lights == null) _lights = GetComponentsInChildren<Light>(true);
+
+            for (int i = 0; i < _renderers.Length; i++)
+                if (_renderers[i] != null) _renderers[i].enabled = on;
+            for (int i = 0; i < _colliders.Length; i++)
+                if (_colliders[i] != null) _colliders[i].enabled = on;
+            for (int i = 0; i < _lights.Length; i++)
+                if (_lights[i] != null) _lights[i].enabled = on;
+        }
+
+        Renderer[] _renderers;
+        Collider[] _colliders;
+        Light[] _lights;
     }
 }

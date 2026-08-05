@@ -106,8 +106,11 @@ namespace Survive.Testing
 
             // 목록을 손으로 적으면 건축물에 재료가 하나 추가될 때마다 낡는다.
             // 카탈로그가 요구하는 것을 그대로 채운다.
+            // 목재만 예외다 — 화톳불을 <b>세우는</b> 비용에는 없지만
+            // 불을 <b>지키는</b> 데는 목재가 들기 때문이다(백로그 35).
             var needed = new System.Collections.Generic.HashSet<string>
-                             { "scrap", "machine_part", "alien_alloy" };
+                             { "scrap", "machine_part", "alien_alloy",
+                               Survive.Harvesting.MushroomLumberRule.WoodItemId };
 
             yield return E2EHarness.WaitUntil(() => Placer != null, "BuildPlacer가 준비된다", 8f);
 

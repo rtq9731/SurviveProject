@@ -179,8 +179,25 @@ namespace Survive.Testing
 
         // ── 공통 동작 ────────────────────────────────────────────
 
-        /// <summary>조건이 찰 때까지 지정 도구로 캘 수 있는 노드를 계속 캔다.</summary>
-        static IEnumerator HarvestRepeatedly(ToolType tool, System.Func<bool> IsDone, int maxTries)
+        /// <summary>이 노드가 그 아이템을 떨구는가. itemId를 안 주면 아무 노드나 좋다.</summary>
+        static bool Drops(HarvestNode node, string itemId)
+        {
+            if (string.IsNullOrEmpty(itemId)) return true;
+            var table = node.Definition != null ? node.Definition.drops : null;
+            if (table?.entries == null) return false;
+            return table.entries.Any(e => e?.item != null && e.item.id == itemId);
+        }
+
+        /// <summary>
+        /// 조건이 찰 때까지 지정 도구로 캘 수 있는 노드를 계속 캔다.
+        ///
+        /// <paramref name="wantItem"/>을 주면 그것을 떨구는 노드만 고른다.
+        /// 도구만으로 고르면 안 되는 이유: 곡괭이로 캘 수 있는 것이 광맥 하나뿐이던
+        /// 시절은 끝났다(백로그 35의 거대 버섯). 합금을 캐러 나가서 목재를 들고
+        /// 돌아오면 채집 경로를 통과시킨 것이 아니라 우연히 다른 것을 캔 것이다.
+        /// </summary>
+        static IEnumerator HarvestRepeatedly(ToolType tool, System.Func<bool> IsDone, int maxTries,
+                                             string wantItem = null)
         {
             for (int i = 0; i < maxTries; i++)
             {
@@ -188,17 +205,24 @@ namespace Survive.Testing
 
                 var node = Object.FindObjectsByType<HarvestNode>(FindObjectsSortMode.None)
                     .FirstOrDefault(h => !h.IsDepleted && h.Definition != null &&
-                                         h.Definition.requiredTool == tool);
+                                         h.Definition.requiredTool == tool &&
+                                         Drops(h, wantItem));
                 if (node == null)
                 {
-                    E2EHarness.Log($"  캘 수 있는 노드가 없다 (요구 도구 {tool})");
+                    E2EHarness.Log($"  캘 수 있는 노드가 없다 (요구 도구 {tool}" +
+                                   (wantItem != null ? $", {wantItem} 산출" : "") + ")");
                     yield break;
                 }
 
+                // 원점이 아니라 콜라이더 한가운데를 눈앞에 둔다. 거대 버섯처럼
+                // 원점이 발밑에 있는 것은 원점을 겨누면 몸통이 전방 원뿔 위로 벗어난다.
                 var cam = E2EHarness.Eye;
-                node.transform.position = cam.transform.position + cam.transform.forward * 2.2f;
+                var body = node.GetComponentInChildren<Collider>(true);
+                Vector3 aim = cam.transform.position + cam.transform.forward * 2.2f;
+                if (body != null) node.transform.position += aim - body.bounds.center;
+                else node.transform.position = aim;
                 yield return null;
-                E2EHarness.LookAt(node.transform.position);
+                E2EHarness.LookAt(body != null ? body.bounds.center : node.transform.position);
                 yield return null;
                 yield return null;
 
@@ -301,7 +325,7 @@ namespace Survive.Testing
             }
 
             int before = Inv.CountOf(itemId);
-            yield return HarvestRepeatedly(tool, () => Inv.CountOf(itemId) > before, 3);
+            yield return HarvestRepeatedly(tool, () => Inv.CountOf(itemId) > before, 3, itemId);
 
             if (Inv.CountOf(itemId) > before)
                 E2EHarness.Log($"  {itemId} 실채집 확인 ({before} -> {Inv.CountOf(itemId)})");

@@ -17,8 +17,10 @@ MonoBehaviour:
   prefab: {fileID: 3887848618564863563, guid: eff525f4c6df22642a638b1a1572de52, type: 3}
   ghostPrefab: {fileID: 3887848618564863563, guid: eff525f4c6df22642a638b1a1572de52, type: 3}
   cost:
+  - item: {fileID: 11400000, guid: 507082b7e5574fb982fc0989ae305ded, type: 2}
+    count: 4
   - item: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}
-    count: 6
+    count: 2
   requiredBlueprint: {fileID: 11400000, guid: 8400403fa0bae07429af970910117dfe, type: 2}
   placement: 0
   maxSlopeDegrees: 35

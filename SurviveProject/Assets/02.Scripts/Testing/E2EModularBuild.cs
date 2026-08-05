@@ -33,10 +33,16 @@ namespace Survive.Testing
             yield return E2EHarness.WaitUntil(() => dir != null && dir.Current != null,
                                               "챕터가 시작된다", 8f);
 
+            // 조각 값은 목재 중심으로 재편됐다(백로그 35) — 스크랩만 채우면
+            // 첫 토대부터 자원 부족으로 막힌다. 격자를 보는 것이 이 시나리오의
+            // 일이므로 재료는 넉넉히 들려 보낸다.
             var db = E2EHarness.Player.Inventory.Database;
-            var scrap = db != null ? db.GetById("scrap") : null;
-            E2EHarness.Assert(scrap != null, "스크랩 정의를 찾았다");
-            if (scrap != null) Inv.TryAdd(scrap, 400);
+            foreach (var id in new[] { "scrap", Survive.Harvesting.MushroomLumberRule.WoodItemId })
+            {
+                var item = db != null ? db.GetById(id) : null;
+                E2EHarness.Assert(item != null, $"{id} 정의를 찾았다");
+                if (item != null && Inv.CountOf(id) < 200) Inv.TryAdd(item, 200);
+            }
 
             var placer = Placer;
             E2EHarness.Assert(placer != null, "BuildPlacer가 있다");

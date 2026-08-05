@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e7f1797e5edde543978bb8369b71e2a, type: 3}
+  m_Name: "\uBC84\uC12F \uBAA9\uC7AC"
+  m_EditorClassIdentifier: Survive.Domain::Survive.Items.ItemDataSO
+  id: mushroom_wood
+  displayName: "\uBC84\uC12F \uBAA9\uC7AC"
+  description: "\uAC70\uB300 \uBC84\uC12F\uC758 \uB2E8\uB2E8\uD55C \uB300. \uC774 \uC138\uACC4\uC5D0\uC11C \uC720\uC77C\uD558\uAC8C \uD0C0\uB294 \uAC83\uC774\uB2E4."
+  icon: {fileID: 21300000, guid: 101de9b13688cf44cb955d48eab6987a, type: 3}
+  maxStack: 200
+  category: 0
+  worldPrefab: {fileID: 0}
