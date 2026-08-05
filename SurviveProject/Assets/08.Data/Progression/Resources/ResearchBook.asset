@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c6390f7a6c05ac429f96c3264783511, type: 3}
+  m_Name: ResearchBook
+  m_EditorClassIdentifier: Survive.Domain::Survive.Progression.ResearchBookSO
+  entries:
+  - {fileID: 11400000, guid: 5ebdf8c5f690af04197d7e87e5197324, type: 2}
+  - {fileID: 11400000, guid: bc47b1f014548f749a07b59a98354cbc, type: 2}
+  energyItem: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}
