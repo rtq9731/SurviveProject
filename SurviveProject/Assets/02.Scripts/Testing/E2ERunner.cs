@@ -43,6 +43,13 @@ namespace Survive.Testing
 
         public static void Run(string name, IEnumerator routine)
         {
+            // 화면 밝기는 사람이 정하는 값이지만, 검증은 언제나 기본값으로 돌아야 한다.
+            // 안 그러면 같은 빌드가 기계마다(그 기계의 감마 설정마다) 다른 결과를 낸다.
+            // 조절 화면도 스크린샷 위에 겹치지 않게 비켜 세운다.
+            Survive.Art.GammaSettings.ForceNeutral = true;
+            Survive.Art.GammaCalibrationScreen.AutoShow = false;
+            Survive.Art.GammaCalibrationScreen.Close();
+
             var runner = EnsureExists();
             runner.StopAllCoroutines();
             runner.StartCoroutine(runner.RunGuarded(name, routine));
