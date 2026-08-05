@@ -17,8 +17,10 @@ MonoBehaviour:
   prefab: {fileID: 5690437822353357725, guid: 2d9f0388b85f5a643b8820ec2838766a, type: 3}
   ghostPrefab: {fileID: 5690437822353357725, guid: 2d9f0388b85f5a643b8820ec2838766a, type: 3}
   cost:
+  - item: {fileID: 11400000, guid: 507082b7e5574fb982fc0989ae305ded, type: 2}
+    count: 5
   - item: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}
-    count: 8
+    count: 3
   placement: 0
   maxSlopeDegrees: 35
   clearanceRadius: 0

@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Serialization;
 using DG.Tweening;
 using MoreMountains.Feedbacks;
 using Survive.Core;
@@ -19,7 +20,9 @@ namespace Survive.Building
     /// 화톳불은 "여기가 내 자리다"를 세우는 첫 물건이다.
     ///
     /// 연료를 계속 넣어야 꺼지지 않는다. 켜 두면 알아서 되는 것이면
-    /// 거점이 아니라 배경이 된다.
+    /// 거점이 아니라 배경이 된다. 그 연료는 <b>버섯 목재</b>다 — 세계에서
+    /// 유일하게 타는 물질이고, 그것을 얻으려면 거대 버섯을 베러 나가야 한다.
+    /// 불을 지키는 일이 곧 밖으로 나가는 이유가 된다.
     ///
     /// 그리고 이 불은 <b>에너지 추출기</b>이기도 하다. 스크랩은 타는 물건이 아니라
     /// 에너지를 <b>담고 있는</b> 매체다 — 불의 열은 그 안에 갇힌 것을 끌어내어
@@ -33,13 +36,17 @@ namespace Survive.Building
 
         [Header("연료")]
         [Tooltip("가득 찼을 때의 연료. 초 단위로 탄다")]
-        [SerializeField] float maxFuel = 180f;
+        [SerializeField] float maxFuel = CampfireFuelRule.MaxFuelSeconds;
 
-        [Tooltip("스크랩 하나가 주는 연료(초)")]
-        [SerializeField] float fuelPerScrap = 45f;
+        // 이름이 바뀌어도 이미 저장된 프리팹 값을 잃지 않게 옛 이름을 적어 둔다.
+        // 프리팹은 병합할 수 없는 파일이라 이 작업에서 손대지 않는다.
+        [Tooltip("목재 하나가 주는 연료(초)")]
+        [FormerlySerializedAs("fuelPerScrap")]
+        [SerializeField] float fuelPerLog = CampfireFuelRule.SecondsPerLog;
 
-        [Tooltip("한 번에 넣는 스크랩 수")]
-        [SerializeField] int scrapPerRefuel = 2;
+        [Tooltip("한 번에 넣는 목재 수")]
+        [FormerlySerializedAs("scrapPerRefuel")]
+        [SerializeField] int logsPerRefuel = CampfireFuelRule.LogsPerRefuel;
 
         [Header("빛")]
         [SerializeField] float fullIntensity = 1.9f;
@@ -62,7 +69,7 @@ namespace Survive.Building
 
         readonly StationCraftQueue _work = new StationCraftQueue();
 
-        public bool IsBurning => _fuel > 0f;
+        public bool IsBurning => CampfireFuelRule.IsBurning(_fuel);
         public float FuelNormalized => maxFuel <= 0f ? 0f : Mathf.Clamp01(_fuel / maxFuel);
 
         /// <summary>
@@ -104,7 +111,7 @@ namespace Survive.Building
         {
             if (_fuel > 0f)
             {
-                _fuel = Mathf.Max(0f, _fuel - Time.deltaTime);
+                _fuel = CampfireFuelRule.AfterBurn(_fuel, Time.deltaTime);
                 if (_fuel <= 0f) ApplyLight();
             }
 
@@ -172,9 +179,9 @@ namespace Survive.Building
             () =>
             {
                 int pct = Mathf.RoundToInt(FuelNormalized * 100f);
-                return $"연료 넣기 (스크랩 {scrapPerRefuel})  ·  연료 {pct}%";
+                return $"연료 넣기 (버섯 목재 {logsPerRefuel})  ·  연료 {pct}%";
             },
-            () => PlayerScrap() > 0,
+            () => PlayerWood() > 0,
             () => Refuel(PlayerBag())));
 
         StationSideAction _sideAction;
@@ -182,27 +189,33 @@ namespace Survive.Building
         static Inventory PlayerBag() =>
             GameServices.TryGet<PlayerInventory>(out var pi) && pi != null ? pi.Inventory : null;
 
-        static int PlayerScrap()
+        static int PlayerWood()
         {
             var bag = PlayerBag();
-            return bag != null ? bag.CountOf(PlayerInventory.ScrapId) : 0;
+            return bag != null ? bag.CountOf(CampfireFuelRule.FuelItemId) : 0;
         }
 
         /// <summary>
-        /// 불을 살린다. 지금 그 자리를 스크랩이 대신하고 있을 뿐,
-        /// 스크랩은 본래 태우는 물건이 아니다 — 연료 물질은 아직 세계에 없다.
+        /// 불을 살린다. 들어가는 것은 <b>버섯 목재뿐</b>이다.
+        ///
+        /// 스크랩은 태우는 물건이 아니라 에너지를 담고 있는 매체다 —
+        /// 이 불 앞에서 스크랩이 하는 일은 타는 것이 아니라 열에 짜여
+        /// 배터리 셀로 옮겨 가는 것이다(<see cref="StationCraftQueue"/>).
+        /// 태울 것과 뽑아낼 것을 같은 물질로 두면 둘 중 무엇이 일어날지
+        /// 플레이어가 예측할 수 없다.
         /// </summary>
         public bool Refuel(Inventory inv)
         {
             if (inv == null) return false;
 
             // 가진 만큼만 넣는다.
-            int take = Mathf.Min(scrapPerRefuel, inv.CountOf(PlayerInventory.ScrapId));
+            int take = CampfireFuelRule.LogsToTake(inv.CountOf(CampfireFuelRule.FuelItemId),
+                                                   logsPerRefuel);
             if (take <= 0) return false;
-            if (!inv.TryRemove(PlayerInventory.ScrapId, take)) return false;
+            if (!inv.TryRemove(CampfireFuelRule.FuelItemId, take)) return false;
 
             bool wasOut = !IsBurning;
-            _fuel = Mathf.Min(maxFuel, _fuel + fuelPerScrap * take);
+            _fuel = CampfireFuelRule.AfterRefuel(_fuel, take, fuelPerLog, maxFuel);
 
             if (wasOut) ApplyLight();
             refuelFeedback?.PlayFeedbacks();
@@ -236,15 +249,15 @@ namespace Survive.Building
         }
 
         /// <summary>
-        /// 스크랩이 없어도 다가설 수 있어야 한다 — 구워 놓은 것을 가지러 오거나
-        /// 추출을 걸러 오는 사람도 있다. 불을 지필 때만 스크랩이 필요하다.
+        /// 목재가 없어도 다가설 수 있어야 한다 — 뽑아 놓은 것을 가지러 오거나
+        /// 추출을 걸러 오는 사람도 있다. 불을 지필 때만 목재가 필요하다.
         /// </summary>
         public bool CanInteract(PlayerContext player)
         {
             var inv = player?.Inventory?.Inventory;
             if (inv == null) return false;
             if (_work.HasOutput) return true;
-            if (!IsBurning) return inv.Has(PlayerInventory.ScrapId, 1);
+            if (!IsBurning) return inv.Has(CampfireFuelRule.FuelItemId, 1);
             return true;
         }
 
