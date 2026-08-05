@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using Survive.Building;
 using Survive.Crafting;
+using Survive.Domain.Art;
 using Survive.Interaction;
 using Survive.Items;
 using Survive.Player;
@@ -644,9 +645,8 @@ namespace Survive.Testing
             if (swim == null) { E2EHarness.Log("  PlayerSwimming이 없어 건너뛴다"); yield break; }
 
             // P0에서 씬 안개가 항상 켜져 있게 바뀌어 RenderSettings.fog만으로는
-            // 물속/뭍을 구분할 수 없다. 물에 들어가기 전의 안개 색/밀도를 기준으로 삼는다.
+            // 물속/뭍을 구분할 수 없다. 물에 들어가기 전의 안개 색을 기준으로 삼는다.
             var landFogColor = RenderSettings.fogColor;
-            var landFogDensity = RenderSettings.fogDensity;
 
             var water = GameObject.FindGameObjectsWithTag("Untagged")
                                   .FirstOrDefault(g => g.name.Contains("Water"));
@@ -716,20 +716,37 @@ namespace Survive.Testing
             // 씬 안개가 상시 켜진 뒤로는 RenderSettings.fog가 항상 true라 이 자체로는
             // 아무것도 증명하지 못한다. 물속 색으로 실제로 바뀌었는지를 본다.
             E2EHarness.Assert(RenderSettings.fogColor != landFogColor, "머리가 잠기면 안개 색이 물속 색으로 바뀐다");
+            var underwaterFogColor = RenderSettings.fogColor;
 
             yield return DescendAndSprint(swim, deepest, best);
             yield return CanSurface(swim, deepest, best, surface);
 
-            // 물 밖으로 나오면 원래대로 돌아와야 한다. 안개 색/밀도가 남으면 지상이 물속처럼 보인다.
+            // 물 밖으로 나오면 물속 색이 걷혀야 한다. 남으면 지상이 물속처럼 보인다.
+            //
+            // <b>"들어가기 전 값으로 돌아온다"고 단언하지 않는다.</b> 뭍의 안개는
+            // 백로그 40부터 고정값이 아니라 높이에서 나온다(<see cref="DepthFog"/>) —
+            // 물 밑바닥에서 수면 위 4m로 올라오면 높이가 달라졌으니 안개도 달라지는
+            // 것이 맞다. 대신 지금 높이의 밴드 값과 일치하는지를 본다. 이쪽이 더
+            // 강한 단언이다: 스냅숏 비교는 안개가 아예 갱신되지 않아도 통과하지만,
+            // 이것은 갱신된 값이 규칙과 맞는지까지 본다.
             E2EHarness.Teleport(deepest + Vector3.up * (best + 4f));
             yield return null;
+
             float back = 0f;
-            while (back < 2f && RenderSettings.fogColor != landFogColor) { back += Time.deltaTime; yield return null; }
+            while (back < 2f && RenderSettings.fogColor == underwaterFogColor)
+            { back += Time.deltaTime; yield return null; }
+
+            float standY = E2EHarness.Player.transform.position.y;
+            DepthFog.Sample(standY, out var bandColor, out float bandDensity);
 
             E2EHarness.Assert(!swim.IsHeadSubmerged, "물 밖으로 나왔다");
-            E2EHarness.Assert(RenderSettings.fogColor == landFogColor
-                               && Mathf.Approximately(RenderSettings.fogDensity, landFogDensity),
-                               "물 밖으로 나오면 안개 색/밀도가 뭍 값으로 돌아온다");
+            E2EHarness.Assert(RenderSettings.fogColor != underwaterFogColor,
+                               "물 밖으로 나오면 물속 안개 색이 걷힌다");
+            E2EHarness.Assert(Mathf.Abs(RenderSettings.fogColor.r - bandColor.r) < 0.01f
+                               && Mathf.Abs(RenderSettings.fogColor.g - bandColor.g) < 0.01f
+                               && Mathf.Abs(RenderSettings.fogColor.b - bandColor.b) < 0.01f
+                               && Mathf.Abs(RenderSettings.fogDensity - bandDensity) < 0.002f,
+                               $"뭍의 안개가 y={standY:F1}의 깊이 밴드 값과 같다");
 
             E2EHarness.Log($"  수영={swim.IsSwimming} 머리잠김={swim.IsHeadSubmerged} 안개색={RenderSettings.fogColor}");
         }
