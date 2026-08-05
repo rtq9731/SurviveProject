@@ -1,0 +1,52 @@
+# Unity가 쓰는 YAML 텍스트 자산은 항상 LF로 체크아웃한다.
+# (Unity 직렬화기는 플랫폼과 무관하게 LF로 쓴다. core.autocrlf=true 환경에서
+#  체크아웃만 CRLF가 되어, 에디터가 파일을 한 번 건드리면 내용이 같은데도
+#  영구히 "modified"로 남는 현상을 막는다.)
+#
+# eol=lf 는 체크아웃(smudge)에만 영향을 준다. 저장소 blob은 이미 LF이고,
+# 커밋 시 정규화는 그대로이므로 기존 작업 사본이 더러워지지 않는다.
+
+*.asset            text eol=lf
+*.unity            text eol=lf
+*.prefab           text eol=lf
+*.meta             text eol=lf
+*.mat              text eol=lf
+*.anim             text eol=lf
+*.controller       text eol=lf
+*.overrideController text eol=lf
+*.physicMaterial   text eol=lf
+*.physicsMaterial  text eol=lf
+*.playable         text eol=lf
+*.mask             text eol=lf
+*.terrainlayer     text eol=lf
+*.signal           text eol=lf
+*.guiskin          text eol=lf
+*.flare            text eol=lf
+*.fontsettings     text eol=lf
+*.spriteatlas      text eol=lf
+*.lighting         text eol=lf
+*.shadergraph      text eol=lf
+*.shadersubgraph   text eol=lf
+*.inputactions     text eol=lf
+*.uxml             text eol=lf
+*.uss              text eol=lf
+
+# 바이너리로 다뤄야 하는 것 (줄바꿈 변환 금지)
+*.unitypackage     binary
+*.cubemap          binary
+*.png              binary
+*.jpg              binary
+*.psd              binary
+*.tga              binary
+*.exr              binary
+*.hdr              binary
+*.fbx              binary
+*.obj              binary
+*.blend            binary
+*.wav              binary
+*.mp3              binary
+*.ogg              binary
+*.ttf              binary
+*.otf              binary
+*.dll              binary
+*.pdf              binary
