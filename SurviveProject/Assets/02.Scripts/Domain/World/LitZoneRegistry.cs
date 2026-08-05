@@ -46,6 +46,37 @@ namespace Survive.World
             return false;
         }
 
+        /// <summary>
+        /// 이 위치를 밝히고 있는 광원 중 <b>중심이 가장 가까운</b> 것의 중심.
+        /// 밝지 않으면 false다.
+        ///
+        /// 빛을 꺼리는 생물이 빛에서 물러날 때 필요하다. "플레이어에게서 멀어진다"로
+        /// 대신할 수 없다 — 화톳불 건너편에 플레이어가 서 있으면 그 방향은
+        /// 불 속으로 들어가는 방향이다.
+        /// </summary>
+        public static bool TryGetLitCenter(Vector3 position, out Vector3 center)
+        {
+            center = Vector3.zero;
+            float best = float.MaxValue;
+            bool found = false;
+
+            for (int i = 0; i < _sources.Count; i++)
+            {
+                var source = _sources[i];
+                if (source == null || !source.IsLit) continue;
+
+                float r = source.LitZoneRadius;
+                float d2 = (position - source.LitZoneCenter).sqrMagnitude;
+                if (d2 > r * r) continue;
+
+                if (d2 >= best) continue;
+                best = d2;
+                center = source.LitZoneCenter;
+                found = true;
+            }
+            return found;
+        }
+
         /// <summary>테스트·씬 전환 사이에 상태를 비운다.</summary>
         public static void Clear() => _sources.Clear();
     }

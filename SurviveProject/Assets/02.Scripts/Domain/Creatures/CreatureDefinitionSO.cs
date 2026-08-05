@@ -41,8 +41,14 @@ namespace Survive.Creatures
         public float attackRange = 1.5f;
         public float attackCooldown = 1.5f;
 
-        [Tooltip("Defensive가 반격을 유지하는 시간")]
+        [Tooltip("Defensive가 반격을 유지하는 시간. Aggressive는 시야에서 놓친 뒤 이만큼 더 쫓다가 돌아간다")]
         public float aggroSeconds = 5f;
+
+        [Header("빛")]
+        [Tooltip("밝은 구역을 꺼린다. 소비자만 켠다 — 대상이 빛 안에 있는 동안은 " +
+                 "추격하지 않고, 자기가 빛 안에 들면 물러난다. " +
+                 "기존 4종은 꺼져 있어 판단이 예전과 같다")]
+        public bool avoidsLight = false;
 
         public LootTableSO drops;
 

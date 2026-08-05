@@ -12,15 +12,31 @@ namespace Survive.Creatures
         public readonly float DetectRadius;
         public readonly float AttackRange;
 
+        /// <summary>
+        /// 밝은 곳을 꺼리는가. 소비자(포식자)만 참이다.
+        ///
+        /// 이 게임에서 빛은 배터리를 태우는 대가로 얻는 것이고, 그 대가에는
+        /// 값이 있어야 한다 — 랜턴을 켜면 포식자가 다가오지 못한다는 것이 그 값이다.
+        /// </summary>
+        public readonly bool AvoidsLight;
+
         public CreatureTraits(BehaviorProfile behavior, float detectRadius, float attackRange)
+            : this(behavior, detectRadius, attackRange, false)
+        {
+        }
+
+        public CreatureTraits(BehaviorProfile behavior, float detectRadius, float attackRange,
+                              bool avoidsLight)
         {
             Behavior = behavior;
             DetectRadius = detectRadius;
             AttackRange = attackRange;
+            AvoidsLight = avoidsLight;
         }
 
         public static CreatureTraits From(CreatureDefinitionSO definition) =>
-            new CreatureTraits(definition.behavior, definition.detectRadius, definition.attackRange);
+            new CreatureTraits(definition.behavior, definition.detectRadius, definition.attackRange,
+                               definition.avoidsLight);
     }
 
     /// <summary>
@@ -38,16 +54,34 @@ namespace Survive.Creatures
         /// <summary>현재 상태가 유지되기로 한 남은 시간. 0 이하면 다시 고를 때다.</summary>
         public readonly float StateTimer;
 
+        /// <summary>내가 지금 밝은 구역 안에 서 있는가.</summary>
+        public readonly bool SelfInLight;
+
+        /// <summary>위협이 지금 밝은 구역 안에 서 있는가. 위협이 없으면 false다.</summary>
+        public readonly bool ThreatInLight;
+
         public CreatureSenses(float distanceToThreat, float aggroLeft, float stateTimer)
+            : this(distanceToThreat, aggroLeft, stateTimer, false, false)
+        {
+        }
+
+        public CreatureSenses(float distanceToThreat, float aggroLeft, float stateTimer,
+                              bool selfInLight, bool threatInLight)
         {
             DistanceToThreat = distanceToThreat;
             AggroLeft = aggroLeft;
             StateTimer = stateTimer;
+            SelfInLight = selfInLight;
+            ThreatInLight = threatInLight;
         }
 
         /// <summary>위협이 하나도 없는 상황.</summary>
         public static CreatureSenses NoThreat(float aggroLeft, float stateTimer) =>
             new CreatureSenses(float.MaxValue, aggroLeft, stateTimer);
+
+        /// <summary>위협도 없고 빛도 없는 것이 아니라, 위협만 없는 상황. 빛은 따로 준다.</summary>
+        public static CreatureSenses NoThreat(float aggroLeft, float stateTimer, bool selfInLight) =>
+            new CreatureSenses(float.MaxValue, aggroLeft, stateTimer, selfInLight, false);
     }
 
     /// <summary>
@@ -105,7 +139,9 @@ namespace Survive.Creatures
         /// <item><b>Passive</b> — 위협을 아예 보지 않는다. 시간이 되면 생태 행동만 다시 고른다.</item>
         /// <item><b>Skittish</b> — 감지되면 무조건 도망. 그 외에는 생태 행동.</item>
         /// <item><b>Defensive</b> — 먼저 덤비지 않는다. 맞아서 어그로가 남아 있을 때만 추격·공격.</item>
-        /// <item><b>Aggressive</b> — 감지되기만 해도 추격·공격. 한가하면 배회(생태 행동이 아니다).</item>
+        /// <item><b>Aggressive</b> — 감지되기만 해도 추격·공격. 한가하면 배회(생태 행동이 아니다).
+        ///   <see cref="CreatureTraits.AvoidsLight"/>가 켜져 있으면 빛이 그 앞을 막는다 —
+        ///   <see cref="LightVerdict"/> 참조.</item>
         /// </list>
         /// </summary>
         public static CreatureIntent NextIntent(in CreatureTraits traits, in CreatureSenses senses)
@@ -126,6 +162,11 @@ namespace Survive.Creatures
                     return senses.StateTimer <= 0f ? CreatureIntent.Ecology : CreatureIntent.Hold;
 
                 case BehaviorProfile.Aggressive:
+                    switch (JudgeLight(traits, senses))
+                    {
+                        case LightVerdict.Retreat: return CreatureIntent.Flee;
+                        case LightVerdict.Blocked: return CreatureIntent.Wander;
+                    }
                     if (detected || senses.AggroLeft > 0f) return Engage(traits, senses);
                     return senses.StateTimer <= 0f ? CreatureIntent.Wander : CreatureIntent.Hold;
 
@@ -133,6 +174,48 @@ namespace Survive.Creatures
                     return CreatureIntent.Hold;
             }
         }
+
+        /// <summary>
+        /// 빛이 이번 판단을 어떻게 가로막는가.
+        ///
+        /// 빛을 꺼리지 않는 생물에게는 언제나 <see cref="LightVerdict.Clear"/>다 —
+        /// 기존 4종(눈·공·날개·열매게)은 <see cref="CreatureDefinitionSO.avoidsLight"/>가
+        /// 꺼져 있으므로 이 함수를 통과하고 나면 예전과 완전히 같은 판단을 받는다.
+        ///
+        /// 도주·방어 성향에는 아예 적용하지 않는다. 도주는 빛과 무관하게 이미 달아나고,
+        /// 방어는 먼저 덤비지 않아 빛이 더 막을 것이 없다. 규칙을 넓게 걸어 두면
+        /// 나중에 그 두 성향의 감촉이 조용히 바뀐다.
+        /// </summary>
+        public static LightVerdict JudgeLight(in CreatureTraits traits, in CreatureSenses senses)
+        {
+            if (!traits.AvoidsLight) return LightVerdict.Clear;
+
+            // 내가 빛 안이면 무엇을 하던 중이든 물러난다. 화톳불 옆을 지나던 중일 수도,
+            // 코앞에서 플레이어가 랜턴을 켠 것일 수도 있다 — 둘 다 결과는 같다.
+            if (senses.SelfInLight) return LightVerdict.Retreat;
+
+            // 대상이 빛 안이면 경계에서 끊는다. 어그로가 타고 있어도 마찬가지다 —
+            // 빛이 어그로보다 세지 않으면 "랜턴을 켜면 다가오지 못한다"가 거짓이 된다.
+            if (senses.ThreatInLight) return LightVerdict.Blocked;
+
+            return LightVerdict.Clear;
+        }
+
+        /// <summary>
+        /// 선공 성향이 위협을 계속 보고 있어 어그로 시계를 다시 채워야 하는가.
+        ///
+        /// 이것이 없으면 선공 추격은 감지 반경을 한 발짝 벗어난 순간 끝난다 —
+        /// 어그로는 피격으로만 차오르기 때문이다. 시야에 담고 있는 동안 계속
+        /// 다시 채워 두면, 놓친 뒤 <see cref="CreatureDefinitionSO.aggroSeconds"/>만큼
+        /// 더 쫓다가 배회(=거처 주변)로 돌아간다. 그것이 "도망이 성립한다"는 말의 내용이다.
+        ///
+        /// 빛에 막힌 프레임에는 채우지 않는다. 채워 버리면 플레이어가 랜턴을 켜고
+        /// 서 있는 내내 어그로가 만료되지 않아, 빛을 끄는 순간 추격이 이어진다.
+        /// </summary>
+        public static bool ShouldRenewAggro(in CreatureTraits traits, in CreatureSenses senses)
+            => traits.Behavior == BehaviorProfile.Aggressive
+            && JudgeLight(traits, senses) == LightVerdict.Clear
+            && IsDetected(senses.DistanceToThreat, traits.DetectRadius);
 
         /// <summary>덤비기로 했을 때 — 닿으면 때리고, 아니면 쫓는다.</summary>
         static CreatureIntent Engage(in CreatureTraits traits, in CreatureSenses senses) =>
