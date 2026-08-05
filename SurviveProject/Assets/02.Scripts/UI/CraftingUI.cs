@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
@@ -525,27 +524,38 @@ namespace Survive.UI
             }
 
             shown += RefreshSideRow() ? 1 : 0;
-            shown += RefreshResearchRows(inv, ledger);
-            RefreshEmptyRow(shown);
-            FitPanel(MenuListing.PanelRows(shown));
+
+            // 연구대의 머리띠는 목록이 아니라 상태 표시다. 판때기 높이에는 들어가되
+            // "목록이 비었는가"를 셀 때는 빠진다 — 머리띠를 세어 버리면 연구 항목이
+            // 하나도 없는데도 안내 한 줄이 서지 않는다.
+            int researchRows = RefreshResearchRows(inv, ledger);
+            shown += researchRows + (researching ? 1 : 0);
+
+            int listed = researching ? researchRows : shown;
+            RefreshEmptyRow(listed, researching ? MenuListing.NothingKnownToResearch
+                                                : MenuListing.NothingKnownToCraft);
+            FitPanel(MenuListing.PanelRows(shown + (listed <= 0 ? 1 : 0)));
         }
 
         /// <summary>
         /// 목록이 통째로 비었을 때만 안내 한 줄을 세운다.
         /// 몇 개가 잠겼는지는 적지 않는다 — 그 숫자도 앞으로 무엇이 있는지를 말한다.
         /// </summary>
-        void RefreshEmptyRow(int shown)
+        void RefreshEmptyRow(int shown, string notice)
         {
             if (_emptyRow == null) return;
 
             bool empty = shown <= 0;
             if (_emptyRow.activeSelf != empty) _emptyRow.SetActive(empty);
-            if (empty && _emptyLabel != null) _emptyLabel.text = MenuListing.NothingKnownToCraft;
+            if (empty && _emptyLabel != null) _emptyLabel.text = notice;
         }
 
         // ── 연구 목록 ────────────────────────────────────────────
 
-        /// <summary>연구대 줄들을 그린다. 연구대가 아니면 전부 접고 0을 돌려준다.</summary>
+        /// <summary>
+        /// 연구대 줄들을 그린다. 연구대가 아니면 전부 접고 0을 돌려준다.
+        /// </summary>
+        /// <returns>실제로 켜진 <b>항목</b> 줄 수. 맨 위 머리띠는 세지 않는다.</returns>
         int RefreshResearchRows(Inventory inv, UnlockLedger ledger)
         {
             bool researching = _researchHost != null;
@@ -566,19 +576,22 @@ namespace Survive.UI
 
             if (_researchHeaderLabel != null)
             {
-                float left = ResearchService.TotalSecondsLeft(queue);
-                _researchHeaderLabel.text = queue == null || queue.IsEmpty
-                    ? $"{_researchHost.StationName}  ·  분석 대기열 비어 있음"
-                    : $"{_researchHost.StationName}  ·  분석 대기열 {queue.Count}/{queue.Capacity}" +
-                      $"  ·  남은 {CraftTimeText.Short(left)}";
+                _researchHeaderLabel.text =
+                    MenuListing.ResearchHeaderLine(_researchHost.StationName, queue);
                 _researchHeaderLabel.color = new Color(0.72f, 0.86f, 0.92f, 1f);
             }
 
-            int shown = 1;
+            int shown = 0;
             foreach (var row in _researchRows)
             {
-                if (row.button != null && !row.button.gameObject.activeSelf)
-                    row.button.gameObject.SetActive(true);
+                // 가져 본 적 없는 재료의 항목은 줄을 만들지도 켜지도 않는다.
+                // 남겨 두면 생물의 존재와 부위 이름이 통째로 새어 나간다 —
+                // 제작 목록에서 지운 정보가 여기로 돌아오는 셈이다(MenuListing 참조).
+                bool visible = MenuListing.ShouldList(row.entry, ledger);
+
+                if (row.button != null && row.button.gameObject.activeSelf != visible)
+                    row.button.gameObject.SetActive(visible);
+                if (!visible) continue;
                 shown++;
 
                 var state = ResearchService.Evaluate(row.entry, inv, ledger, queue, energy);
@@ -593,62 +606,14 @@ namespace Survive.UI
                 if (row.label == null) continue;
 
                 row.label.text = at >= 0
-                    ? DescribeQueued(row.entry, queue, at)
-                    : DescribeResearch(row.entry, inv, energy, state);
+                    ? MenuListing.QueuedResearchLine(row.entry, queue, at)
+                    : MenuListing.ResearchLine(row.entry, inv, energy, state);
                 row.label.color = at >= 0 ? new Color(0.72f, 0.86f, 0.92f, 1f)
                                 : state == ResearchReadiness.Ready ? Color.white
                                 : state == ResearchReadiness.AlreadyKnown ? LockedLabel
                                                                           : new Color(0.65f, 0.65f, 0.7f, 1f);
             }
             return shown;
-        }
-
-        /// <summary>걸리지 않은 항목 — 무엇이 얼마나 드는가.</summary>
-        string DescribeResearch(ResearchEntrySO e, Inventory inv, ItemDataSO energy,
-                                ResearchReadiness state)
-        {
-            var sb = new StringBuilder();
-            sb.Append(string.IsNullOrEmpty(e.displayName) ? e.id : e.displayName);
-
-            if (state == ResearchReadiness.AlreadyKnown)
-            {
-                sb.Append("  ·  ").Append(ResearchService.Describe(state));
-                return sb.ToString();
-            }
-
-            sb.Append("  ·  ");
-            if (e.materials != null)
-            {
-                foreach (var need in e.materials)
-                {
-                    if (need?.item == null || need.count <= 0) continue;
-                    int held = inv != null ? inv.CountOf(need.item.id) : 0;
-                    sb.Append($"{need.item.displayName} {held}/{need.count}, ");
-                }
-            }
-
-            string energyName = energy != null ? energy.displayName : "스크랩";
-            int heldEnergy = inv != null ? inv.CountOf(ResearchService.EnergyIdOf(energy)) : 0;
-            sb.Append($"{energyName} {heldEnergy}/{e.energyCost}");
-
-            sb.Append($"  ·  {CraftTimeText.Short(e.researchSeconds)}");
-            if (state != ResearchReadiness.Ready)
-                sb.Append($"  ({ResearchService.Describe(state)})");
-            return sb.ToString();
-        }
-
-        /// <summary>줄에 서 있는 항목 — 몇 번째인지와 얼마나 남았는지.</summary>
-        static string DescribeQueued(ResearchEntrySO e, ResearchQueue queue, int index)
-        {
-            var job = queue.At(index);
-            string name = string.IsNullOrEmpty(e.displayName) ? e.id : e.displayName;
-
-            if (index == 0)
-                return $"{name}  ·  분석 중 {job.Progress:P0}  ·  남은 " +
-                       $"{CraftTimeText.Short(job.SecondsLeft)}  (누르면 물린다)";
-
-            return $"{name}  ·  대기 {index + 1}번째  ·  " +
-                   $"{CraftTimeText.Short(job.SecondsLeft)}  (누르면 물린다)";
         }
 
         /// <summary>

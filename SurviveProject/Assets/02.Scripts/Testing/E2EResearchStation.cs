@@ -54,6 +54,7 @@ namespace Survive.Testing
 
             yield return 연구대를_짓는다();
             yield return 잠항구는_아직_잠겨_있다();
+            yield return 가져_본_적_없는_것은_목록에_없다();
             yield return 소재가_없으면_분석할_수_없다();
             yield return 스크랩이_모자라면_거절한다();
             yield return 물리면_유물과_스크랩이_전부_돌아온다();
@@ -130,9 +131,31 @@ namespace Survive.Testing
             E2EHarness.AssertEqual(Inv.CountOf(핵), 0, "낫의 핵을 아직 갖고 있지 않다");
         }
 
+        /// <summary>
+        /// 앞선 시나리오가 손에 남긴 것을 턴다.
+        ///
+        /// 진행 장비만 털던 자리였는데 <b>연구 소재도 전부</b> 털게 됐다. 이제 연구
+        /// 목록은 "가져 본 적 있는가"로 걸리고(<see cref="HeldRecord"/>), 손에 남은
+        /// 것은 매 프레임 다시 기록으로 찍힌다. 앞선 시나리오가 낫의 부품을 남겨
+        /// 두었으면 원장을 비워도 그 줄이 되살아나, "처음 열면 아무것도 없다"를
+        /// 볼 수 없게 된다.
+        /// </summary>
         static void 앞선것을_치운다()
         {
-            foreach (var id in new[] { 막, 핵, 잠항구, "surface_walker" })
+            var ids = new HashSet<string> { 막, 핵, 잠항구, "surface_walker" };
+
+            var book = Resources.Load<ResearchBookSO>("ResearchBook");
+            if (book?.entries != null)
+            {
+                foreach (var e in book.entries)
+                {
+                    if (e?.materials == null) continue;
+                    foreach (var need in e.materials)
+                        if (need?.item != null) ids.Add(need.item.id);
+                }
+            }
+
+            foreach (var id in ids)
             {
                 int n = Inv.CountOf(id);
                 if (n > 0) Inv.TryRemove(id, n);
@@ -201,6 +224,133 @@ namespace Survive.Testing
 
             UI.Close();
             yield return null;
+        }
+
+        // ── 2-b. 겪지 않은 것은 목록에 없다 ─────────────────────
+
+        /// <summary>
+        /// 연구대를 처음 열면 <b>아무 줄도 없다</b>. 부위 하나를 손에 넣으면
+        /// <b>창을 닫지 않은 채</b> 그 줄만 생기고, 다 써 버려도 남는다.
+        ///
+        /// 감추기 전에는 연구대 앞에 서는 순간 일곱 줄이 펼쳐졌다 —
+        /// "공 개체 분석 · 공의 껍질 0/3", "삼켜지지 않는 핵 분석 · 낫의 핵 0/1"...
+        /// 생물 다섯 종의 존재와 한 번도 본 적 없는 부위 일곱 종의 이름이 통째로
+        /// 새어 나갔다. 제작 목록에서 지운 정보가 옆문으로 돌아온 셈이다.
+        /// </summary>
+        static IEnumerator 가져_본_적_없는_것은_목록에_없다()
+        {
+            E2EHarness.Log("— 있는지도 모르는 물체를 가져오라 할 수는 없다 —");
+            if (_station == null) yield break;
+
+            var book = _station.Book;
+            E2EHarness.Assert(book?.entries != null && book.entries.Length > 0,
+                              "연구 목록에 항목이 있다 — 감출 것이 없으면 검사가 공회전한다");
+            if (book?.entries == null) yield break;
+
+            // 앞선 단계에서 유물을 쥔 적이 없어야 한다. Prepare가 원장을 비우고
+            // 재료를 치웠으므로 여기까지는 아직 아무 부위도 겪지 않은 상태다.
+            var 겪은것 = book.entries.Where(e => e?.materials != null)
+                                     .SelectMany(e => e.materials)
+                                     .Where(m => m?.item != null && HeldRecord.Has(Ledger, m.item.id))
+                                     .Select(m => m.item.id)
+                                     .Distinct().ToList();
+            E2EHarness.Assert(겪은것.Count == 0,
+                              "어떤 부위도 아직 가져 본 적이 없다" +
+                              (겪은것.Count > 0 ? " (겪은 것: " + string.Join(", ", 겪은것) + ")" : ""));
+
+            _station.Interact(E2EHarness.Player);
+            yield return null;
+            yield return null;
+
+            E2EHarness.Assert(UI.CurrentResearchHost == (object)_station, "연구대 목록이 열렸다");
+
+            var 켜진항목 = 켜진_연구줄(book);
+            E2EHarness.AssertEqual(켜진항목.Count, 0,
+                                   "연구대를 처음 열면 항목 줄이 하나도 없다" +
+                                   (켜진항목.Count > 0 ? " (실제: " + string.Join(", ", 켜진항목) + ")" : ""));
+
+            var 화면 = 보이는줄();
+            화면.Add(안내문());
+
+            var 샌것 = 샌_이름들(book, 화면);
+            E2EHarness.Assert(샌것.Count == 0,
+                              "화면 어디에도 항목 이름도 재료 이름도 없다" +
+                              (샌것.Count > 0 ? " (샌 것: " + string.Join(", ", 샌것) + ")" : ""));
+
+            E2EHarness.Assert(안내문() == MenuListing.NothingKnownToResearch,
+                              $"빈 목록에도 할 말은 있다 — \"{안내문()}\"");
+            E2EHarness.Assert(!안내문().Any(char.IsDigit),
+                              "몇 개가 남았는지 세어 주지 않는다 — 그 숫자도 앞으로 무엇이 있는지를 말한다");
+
+            // ── 창을 닫지 않은 채 부위 하나를 손에 넣는다 ──
+            준다(핵, 1);
+            yield return null;
+            yield return null;
+
+            var 이제켜진것 = 켜진_연구줄(book);
+            E2EHarness.AssertEqual(이제켜진것.Count, 1,
+                                   "창을 닫았다 열지 않았는데 줄 하나가 생겼다 " +
+                                   "(실제: " + string.Join(", ", 이제켜진것) + ")");
+            E2EHarness.Assert(이제켜진것.Contains(핵연구),
+                              $"생긴 줄이 손에 쥔 것의 항목이다 — {핵연구}");
+
+            var 줄글자 = 글자(줄(핵연구));
+            E2EHarness.Assert(줄글자.Contains("1/1"), $"쥔 것이 줄에 세어진다 — \"{줄글자}\"");
+
+            // ── 다 써 버려도 기록은 남는다 ──
+            Inv.TryRemove(핵, Inv.CountOf(핵));
+            yield return null;
+            yield return null;
+
+            E2EHarness.AssertEqual(Inv.CountOf(핵), 0, "손에서 다시 비웠다");
+            E2EHarness.AssertEqual(켜진_연구줄(book).Count, 1,
+                                   "다 써 버렸다고 줄이 사라지지는 않는다 — " +
+                                   "겪은 것은 겪은 것이다");
+
+            UI.Close();
+            yield return null;
+        }
+
+        /// <summary>지금 켜져 있는 연구 항목 줄들의 id.</summary>
+        static List<string> 켜진_연구줄(ResearchBookSO book) =>
+            book.entries.Where(e => e != null)
+                        .Select(e => e.id)
+                        .Where(id => 줄(id) != null && 줄(id).gameObject.activeInHierarchy)
+                        .ToList();
+
+        /// <summary>목록이 비었을 때 대신 서는 한 줄. 이름이 Row_로 시작하지 않는다.</summary>
+        static string 안내문()
+        {
+            var t = UI.GetComponentsInChildren<TMP_Text>(true)
+                      .FirstOrDefault(x => x.transform.parent != null &&
+                                           x.transform.parent.name == "EmptyNotice" &&
+                                           x.gameObject.activeInHierarchy);
+            return t != null ? t.text : "";
+        }
+
+        /// <summary>화면 문자열들에 섞여 나온 연구 항목 이름·소재 이름. 없으면 빈 목록.</summary>
+        static List<string> 샌_이름들(ResearchBookSO book, List<string> 화면)
+        {
+            var 감출것 = new HashSet<string>();
+            foreach (var e in book.entries)
+            {
+                if (e == null) continue;
+                if (!string.IsNullOrWhiteSpace(e.displayName)) 감출것.Add(e.displayName.Trim());
+                if (e.materials == null) continue;
+
+                foreach (var need in e.materials)
+                {
+                    var name = need?.item != null ? need.item.displayName : null;
+                    if (!string.IsNullOrWhiteSpace(name)) 감출것.Add(name.Trim());
+                }
+            }
+
+            E2EHarness.Assert(감출것.Count > 5,
+                              $"감출 이름이 실제로 에셋에 있다 ({감출것.Count}종)");
+
+            return 감출것.Where(n => 화면.Any(s => !string.IsNullOrEmpty(s) && s.Contains(n)))
+                         .Select(n => $"\"{n}\"")
+                         .ToList();
         }
 
         /// <summary>지금 실제로 켜져 있는 줄들의 글자.</summary>
