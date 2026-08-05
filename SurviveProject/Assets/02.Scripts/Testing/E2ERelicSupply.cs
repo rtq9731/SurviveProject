@@ -5,6 +5,7 @@ using UnityEngine.AI;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using DG.Tweening;
 using Survive.Combat;
 using Survive.Creatures;
 using Survive.Interaction;
@@ -358,56 +359,74 @@ namespace Survive.Testing
         }
 
         /// <summary>
-        /// 눈앞에 서서 E를 눌러 줍는다. 실제 상호작용 경로를 그대로 쓴다.
+        /// 떨어진 것을 <b>눈앞으로 옮겨</b> 조준하고 E를 눌러 줍는다.
         ///
-        /// <b>설 자리는 수평으로 정한다.</b> 처음에는 카메라 정면의 반대편에 섰는데,
-        /// 앞 시나리오가 위나 아래를 본 채로 끝나면 물건의 머리 위나 발밑에 서게 되어
-        /// 조준에 잡히지 않았다(실측: 종막 시나리오 뒤에 4초 초과로 실패).
-        /// 그래서 물건을 중심으로 수평 여덟 방향을 돌아 가며 잡히는 자리를 찾는다.
+        /// <b>왜 걸어가지 않고 옮겨 오는가.</b> 떨구는 자리를 이 시나리오가 고를 수 없다.
+        /// 낫은 비탈에서도 바위 위에서도 죽고 순찰 중에도 어디서든 흘리는데, 그렇게
+        /// 놓인 것 곁에는 사람이 설 자리가 없는 경우가 많다. 실제로 세 번 다른 방식으로
+        /// 깨졌다 — 물건이 머리 위 4m에 있었고(NavMesh로 내려섰다), 딛을 것이 없어
+        /// 중력에 끌려 내려갔고, 지형 속으로 들어가 컨트롤러가 5m 위로 밀어냈다.
+        /// 전부 유물 공급과 아무 상관 없는 지형 사정이다.
+        ///
+        /// 옮겨 오되 <b>줍는 절차는 건너뛰지 않는다</b> — 조준도 프롬프트도 E도 그대로
+        /// 지난다(<c>E2EScenarios.HoldHarvest</c>가 같은 이유로 확립한 방식).
+        /// 걸어가서 줍는 것 자체는 <c>E2EScenarios.Pickup</c>이 따로 본다.
         /// </summary>
         static IEnumerator 줍는다(ItemPickup pickup)
         {
             Vitals.Health.Modify(Vitals.Health.Max);
 
-            var 목표 = pickup.transform.position;
-            Vector3 옆 = 사람자리 - 목표;
-            옆.y = 0f;
-            if (옆.sqrMagnitude < 0.04f) 옆 = Vector3.forward;
-            옆.Normalize();
-
             var it = E2EHarness.Player.Interactor;
+            var cam = E2EHarness.Eye;
 
-            for (int 시도 = 0; 시도 < 8; 시도++)
+            // 착지·부유 트윈이 계속 자리를 되돌린다. 먼저 멈춘다.
+            pickup.transform.DOKill();
+
+            // 방향도 거리도 돌려 본다. 눈앞이 늘 비어 있는 것은 아니고, 거대 버섯처럼
+            // 넓은 조준 판정을 가진 것이 곁에 있으면 그쪽이 먼저 잡힌다
+            // (실측: 1.1m 앞에 놓았는데 "거대 버섯 · 도끼 필요"가 잡혔다).
+            foreach (float 거리 in new[] { 1.8f, 1.2f, 0.8f })
             {
-                var dir = Quaternion.Euler(0f, 시도 * 45f, 0f) * 옆;
-                var 설자리 = 목표 + dir * 1.7f + Vector3.up * 0.6f;
-                if (NavMesh.SamplePosition(설자리, out var hit, 3f, NavMesh.AllAreas))
-                    설자리 = hit.position + Vector3.up * 0.15f;
-
-                for (int i = 0; i < 3; i++)
+                for (int a = 0; a < 8; a++)
                 {
-                    E2EHarness.Teleport(설자리);
+                    var d = Quaternion.Euler(0f, a * 45f, 0f) * Vector3.forward;
+
+                    // 그 방향이 막혀 있으면 놓아 봐야 벽 속이다.
+                    if (Physics.Raycast(cam.transform.position, d, 거리 + 0.4f, ~0,
+                                        QueryTriggerInteraction.Ignore))
+                        continue;
+
+                    bool 잡혔다 = false;
+                    for (int f = 0; f < 4 && !잡혔다; f++)
+                    {
+                        pickup.transform.position = cam.transform.position + d * 거리;
+
+                        // autoSyncTransforms가 꺼져 있다. 맞추지 않으면 조준용
+                        // SphereCast가 옛 자리의 콜라이더를 훑는다.
+                        E2EHarness.SyncPhysics();
+                        E2EHarness.LookAt(pickup.transform.position);
+
+                        yield return null;
+                        잡혔다 = ReferenceEquals(it.Current, pickup);
+                    }
+
+                    // <b>겨눈 것이 그것인지 확인한다.</b> 시체 곁에는 스크랩·합금이 함께
+                    // 떨어져 있고, 조준에 무엇이든 잡히기만 하면 눌러 버리면 엉뚱한 것을
+                    // 줍고 끝난다(실측: 부품 대신 스크랩만 넷 주웠다).
+                    if (!잡혔다) continue;
+
+                    E2EHarness.Log("  프롬프트: " + it.Current.InteractionPrompt);
+                    yield return E2EHarness.TapKey(Key.E);
                     yield return null;
+                    yield return null;
+                    yield break;
                 }
-                E2EHarness.LookAt(목표);
-                yield return null;
-                yield return null;
-
-                float t = 0f;
-                while (t < 0.5f && it.Current == null) { t += Time.deltaTime; yield return null; }
-
-                if (it.Current == null) continue;
-
-                E2EHarness.Log("  프롬프트: " + it.Current.InteractionPrompt);
-                yield return E2EHarness.TapKey(Key.E);
-                yield return null;
-                yield return null;
-                yield break;
             }
 
             E2EHarness.Assert(false,
-                $"떨어진 것이 조준에 잡힌다 ({pickup.name} {목표.ToString("F1")}, " +
-                $"사람 {사람자리.ToString("F1")})");
+                $"떨어진 것이 조준에 잡힌다 ({pickup.name} {pickup.transform.position.ToString("F1")}, " +
+                $"눈 {cam.transform.position.ToString("F1")}, " +
+                $"지금 잡힌 것 {(it.Current == null ? "없음" : it.Current.InteractionPrompt)})");
         }
 
         // ── pity ────────────────────────────────────────────────
@@ -492,6 +511,11 @@ namespace Survive.Testing
 
             E2EHarness.Assert(체력.IsDead, "곡괭이를 휘둘러 죽였다");
             Vitals.Health.Modify(Vitals.Health.Max);
+
+            // 시체는 0.1초 뒤에 사라진다. 그 전에 다음 회차가 돌면 이미 죽은 것을
+            // 다시 때리게 되고, 아무것도 죽지 않았으니 아무것도 떨어지지 않는다
+            // (실측: 두 번째 "죽였다"가 그냥 통과하고 부품 대기가 5초 초과로 깨졌다).
+            _낫 = null;
         }
 
         static IEnumerator 떨어진_부품을_줍는다()
@@ -505,9 +529,15 @@ namespace Survive.Testing
             for (int i = 0; i < 4; i++)
             {
                 var p = Object.FindObjectsByType<ItemPickup>(FindObjectsInactive.Exclude)
-                              .FirstOrDefault(x => x.name == "Drop_" + 낫부품);
+                              .FirstOrDefault(x => x != null && x.name == "Drop_" + 낫부품);
                 if (p == null) break;
+
                 yield return 줍는다(p);
+
+                // 주운 것이 세계에서 빠지기를 기다린다. 파괴는 프레임 끝에 일어나므로
+                // 곧바로 다시 찾으면 방금 주운 것을 또 집는다.
+                yield return null;
+                yield return null;
             }
         }
 
@@ -546,6 +576,14 @@ namespace Survive.Testing
         {
             if (_station != null) yield break;
 
+            // <b>거점으로 돌아온다.</b> 낫은 제 영역에 남는다 — 연구대를 그 곁에 세우면
+            // 기다리는 동안 계속 맞는다. 시간을 여덟 배로 접어 기다리므로 맞는 것도
+            // 여덟 배로 빨라져, 실제로 연구 한 건을 보는 사이에 죽어 소지품을 전부
+            // 떨궜다(실측: 유물도 스크랩도 사라져 다음 연구가 걸리지 않았다).
+            남은것을_치운다();
+            yield return null;
+            Vitals.Health.Modify(Vitals.Health.Max);
+
             // 짓는 비용은 여기서 볼 것이 아니다. 배치 절차는 E2EBaseBuilding이,
             // 연구대의 비용 사슬은 E2EResearchStation이 이미 실제 조작으로 본다.
             준다("scrap", 60 - Inv.CountOf("scrap"));
@@ -579,6 +617,15 @@ namespace Survive.Testing
             E2EHarness.Assert(entry != null, $"연구 항목을 찾았다: {연구id}");
             if (entry == null) yield break;
 
+            // 태울 것을 채워 둔다. 연구대를 짓느라 스크랩이 줄고 앞 연구가 또 태워서,
+            // 두 번째 항목이 에너지 부족으로 거절되는 일이 있었다(실측: 잠항 분석이
+            // 걸리지 않았다). <b>모자랄 때 거절하는가</b>는 E2EResearchStation이 보는
+            // 것이고, 여기서 볼 것은 유물에서 앎까지 이어지는 사슬이다.
+            준다("scrap", entry.energyCost + 20 - Inv.CountOf("scrap"));
+            E2EHarness.Log($"  {연구id}: 소재 {entry.materials[0].item.id} " +
+                           $"{entry.materials[0].count}, 스크랩 {entry.energyCost} " +
+                           $"(가진 것 {Inv.CountOf("scrap")}), {entry.researchSeconds:F0}초");
+
             int 끝낸것 = _station.CompletedCount;
             int 말한줄수 = UnlockService.Instance.LinesSpoken;
 
@@ -601,6 +648,10 @@ namespace Survive.Testing
 
             UI.Close();
             yield return null;
+
+            // 시간을 접으면 굶주림도 여덟 배로 빨라진다. 여기서 죽으면 소지품을
+            // 전부 떨궈 다음 연구가 성립하지 않는다 — 볼 것은 그것이 아니다.
+            Vitals.Health.Modify(Vitals.Health.Max);
 
             float 이전배속 = Time.timeScale;
             Time.timeScale = 8f;
