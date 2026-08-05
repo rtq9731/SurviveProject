@@ -3,8 +3,10 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using DG.Tweening;
 using MoreMountains.Feedbacks;
+using Survive.Audio;
 using Survive.Core;
 using Survive.Crafting;
+using Survive.Domain.Audio;
 using Survive.Interaction;
 using Survive.Items;
 using Survive.Player;
@@ -64,8 +66,16 @@ namespace Survive.Building
         [Header("피드백")]
         [SerializeField] MMF_Player refuelFeedback;
 
+        [Header("소리")]
+        [Tooltip("꺼진 불을 다시 지필 때 한 번. 비우면 소리 표의 campfireIgnite")]
+        [SerializeField] AudioCueSO igniteCue;
+
+        [Tooltip("타는 동안 계속. loop를 켠 cue라야 한다. 비우면 소리 표의 campfireLoop")]
+        [SerializeField] AudioCueSO burningCue;
+
         float _fuel;
         Tween _flicker;
+        AudioHandle _burning;
 
         readonly StationCraftQueue _work = new StationCraftQueue();
 
@@ -105,7 +115,14 @@ namespace Survive.Building
 
         // 비활성화·철거(Destroy)·씬 언로드 모두 OnDisable을 거친다 —
         // 등록 해제를 여기 한 곳에만 두면 셋 다 저절로 해결된다.
-        void OnDisable() => LitZoneRegistry.Unregister(this);
+        void OnDisable()
+        {
+            LitZoneRegistry.Unregister(this);
+
+            // 꺼진 불에서 타는 소리가 계속 나면 안 된다. 다시 켜지면 ApplyLight가
+            // 같은 자리에서 다시 건다.
+            StopBurningLoop();
+        }
 
         void Update()
         {
@@ -140,6 +157,11 @@ namespace Survive.Building
             // 나중에 점화 경로가 하나 더 생겨도 저절로 따라온다.
             if (IsBurning) KindledAt = Time.time;
 
+            // 타는 소리도 불의 상태에 붙는다. 여기 한 곳에 두면 꺼짐·되살림·철거가
+            // 전부 같은 줄을 지난다. 소리가 없으면 무효한 손잡이가 돌아오고,
+            // 그것을 멈추라고 해도 아무 일도 일어나지 않는다.
+            ApplyBurningLoop();
+
             if (flame == null) return;
 
             flame.enabled = IsBurning;
@@ -157,7 +179,29 @@ namespace Survive.Building
                             .SetLink(gameObject);
         }
 
-        void OnDestroy() => _flicker?.Kill();
+        void OnDestroy()
+        {
+            _flicker?.Kill();
+            StopBurningLoop();
+        }
+
+        /// <summary>불이 살아 있으면 타는 소리를 걸고, 꺼졌으면 거둔다.</summary>
+        void ApplyBurningLoop()
+        {
+            if (!IsBurning) { StopBurningLoop(); return; }
+            if (AudioService.IsPlaying(_burning)) return;
+
+            var book = AudioService.Book;
+            _burning = AudioService.PlayLoop(
+                AudioCueBookSO.Or(burningCue, book != null ? book.campfireLoop : null),
+                transform);
+        }
+
+        void StopBurningLoop()
+        {
+            AudioService.StopLoop(_burning);
+            _burning = AudioHandle.None;
+        }
 
         // ── 에너지 추출 스테이션 ─────────────────────────────────
 
@@ -219,6 +263,18 @@ namespace Survive.Building
 
             if (wasOut) ApplyLight();
             refuelFeedback?.PlayFeedbacks();
+
+            // 점화음은 꺼져 있던 불을 살렸을 때만 난다. 이미 타는 불에 목재를 더
+            // 넣은 것은 점화가 아니다 — 그때까지 불붙는 소리가 나면 무슨 일이
+            // 일어났는지가 소리와 어긋난다.
+            if (wasOut)
+            {
+                var book = AudioService.Book;
+                AudioService.Play(
+                    AudioCueBookSO.Or(igniteCue, book != null ? book.campfireIgnite : null),
+                    transform.position);
+            }
+
             return true;
         }
 

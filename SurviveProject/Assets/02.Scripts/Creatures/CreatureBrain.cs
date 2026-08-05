@@ -84,6 +84,12 @@ namespace Survive.Creatures
             if (definition != null && definition.relicShed != null &&
                 GetComponent<RelicShedder>() == null)
                 gameObject.AddComponent<RelicShedder>();
+
+            // 기척을 내는 종만 재는 컴포넌트를 단다. 소리가 없는 종에는 아예 붙지
+            // 않으므로 Update 하나가 늘지 않는다 — 지금은 모든 종이 그 상태다.
+            if (definition != null && definition.approachCue != null &&
+                GetComponent<CreatureApproachAudio>() == null)
+                gameObject.AddComponent<CreatureApproachAudio>().Bind(definition);
         }
 
         void OnEnable()

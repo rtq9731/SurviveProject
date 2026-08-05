@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe93acca777d08d49b22766f91c08776, type: 3}
+  m_Name: AudioCueBook
+  m_EditorClassIdentifier: Survive.Domain::Survive.Domain.Audio.AudioCueBookSO
+  footstepWalk: {fileID: 0}
+  footstepRun: {fileID: 0}
+  land: {fileID: 0}
+  jump: {fileID: 0}
+  swing: {fileID: 0}
+  swingHit: {fileID: 0}
+  swingMiss: {fileID: 0}
+  creatureHit: {fileID: 0}
+  creatureDeath: {fileID: 0}
+  playerHurt: {fileID: 0}
+  itemPickup: {fileID: 0}
+  harvestHit: {fileID: 0}
+  harvestBreak: {fileID: 0}
+  harvestWrongTool: {fileID: 0}
+  plantHarvest: {fileID: 0}
+  plantWither: {fileID: 0}
+  campfireIgnite: {fileID: 0}
+  campfireLoop: {fileID: 0}
