@@ -25,6 +25,9 @@ namespace Survive.Building
 
         /// <summary>그 자리에는 같은 조각이 이미 있다.</summary>
         SlotTaken,
+
+        /// <summary>지을 줄 모른다 — 청사진이 아직 안 열렸다.</summary>
+        NotResearched,
     }
 
     public static class PlacementCheckText
@@ -40,6 +43,7 @@ namespace Survive.Building
             PlacementResult.WrongSurface => "여기엔 놓을 수 없다",
             PlacementResult.NoAnchor => "붙일 곳이 없다 — 토대부터 놓아라",
             PlacementResult.SlotTaken => "그 자리엔 이미 있다",
+            PlacementResult.NotResearched => "지을 줄 모른다 — 청사진이 없다",
             _ => "",
         };
     }

@@ -7,6 +7,7 @@ using DG.Tweening;
 using TMPro;
 using Survive.Building;
 using Survive.Items;
+using Survive.Progression;
 
 namespace Survive.UI
 {
@@ -31,8 +32,13 @@ namespace Survive.UI
 
         [SerializeField] float tweenSeconds = 0.18f;
 
-        readonly List<(BuildableSO item, Button button, TMP_Text label)> _rows =
-            new List<(BuildableSO, Button, TMP_Text)>();
+        readonly List<(BuildableSO item, Button button, TMP_Text label, Image frame)> _rows =
+            new List<(BuildableSO, Button, TMP_Text, Image)>();
+
+        /// <summary>제작 목록과 같은 색을 쓴다. 잠긴 줄은 실루엣만 남는다.</summary>
+        static readonly Color LockedFrame = new Color(0.09f, 0.10f, 0.13f, 0.75f);
+        static readonly Color LockedLabel = new Color(0.46f, 0.48f, 0.56f, 1f);
+        static readonly Color NormalFrame = new Color(0.12f, 0.14f, 0.18f, 0.9f);
 
         bool _isOpen;
         Survive.Player.PlayerContext _player;
@@ -68,7 +74,7 @@ namespace Survive.UI
         {
             if (rowParent == null || catalog == null) return;
 
-            foreach (var (_, b, _) in _rows) if (b != null) Destroy(b.gameObject);
+            foreach (var (_, b, _, _) in _rows) if (b != null) Destroy(b.gameObject);
             _rows.Clear();
 
             var sprite = UISkin.Panel;
@@ -85,7 +91,7 @@ namespace Survive.UI
                 var img = go.AddComponent<Image>();
                 img.sprite = sprite;
                 img.type = Image.Type.Sliced;
-                img.color = new Color(0.12f, 0.14f, 0.18f, 0.9f);
+                img.color = NormalFrame;
 
                 var btn = go.AddComponent<Button>();
 
@@ -110,7 +116,7 @@ namespace Survive.UI
                 var captured = e;
                 btn.onClick.AddListener(() => Choose(captured));
 
-                _rows.Add((e, btn, txt));
+                _rows.Add((e, btn, txt, img));
             }
 
             FitPanel();
@@ -142,9 +148,14 @@ namespace Survive.UI
         void Refresh()
         {
             var inv = inventory?.Inventory;
+            var ledger = BlueprintGate.Active;
 
-            foreach (var (item, button, label) in _rows)
+            foreach (var (item, button, label, frame) in _rows)
             {
+                // 재료와 청사진은 독립된 두 잠금이다. 제작 목록과 같은 규칙으로,
+                // 모르는 것도 줄은 남기고 실루엣으로 가라앉힌다.
+                bool known = BlueprintGate.IsUnlocked(item.requiredBlueprint, ledger);
+
                 bool affordable = true;
                 if (inv != null && item.cost != null)
                 {
@@ -155,13 +166,23 @@ namespace Survive.UI
                     }
                 }
 
-                if (button != null) button.interactable = affordable;
+                if (button != null) button.interactable = known && affordable;
+                if (frame != null) frame.color = known ? NormalFrame : LockedFrame;
                 if (label != null)
                 {
-                    label.text = Describe(item, inv);
-                    label.color = affordable ? Color.white : new Color(0.65f, 0.65f, 0.7f, 1f);
+                    label.text = known ? Describe(item, inv) : DescribeLocked(item);
+                    label.color = !known ? LockedLabel
+                                : affordable ? Color.white
+                                             : new Color(0.65f, 0.65f, 0.7f, 1f);
                 }
             }
+        }
+
+        /// <summary>잠긴 줄 — 이름과 여는 방법만.</summary>
+        static string DescribeLocked(BuildableSO b)
+        {
+            string name = string.IsNullOrEmpty(b.displayName) ? b.id : b.displayName;
+            return $"{name}  ·  {BlueprintGate.LockText(b.requiredBlueprint)}";
         }
 
         string Describe(BuildableSO b, Inventory inv)

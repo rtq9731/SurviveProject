@@ -79,7 +79,8 @@ namespace Survive.Crafting
         {
             var inv = PlayerInventory;
             if (inv == null) return false;
-            return CraftQueueService.TryEnqueue(Queue, recipe, count, inv, available);
+            return CraftQueueService.TryEnqueue(Queue, recipe, count, inv, available,
+                                                Survive.Progression.BlueprintGate.Active);
         }
 
         /// <summary>한 항목을 물린다. 완성되지 않은 것은 전부 돌아온다.</summary>

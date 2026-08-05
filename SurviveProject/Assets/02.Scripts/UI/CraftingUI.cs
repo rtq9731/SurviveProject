@@ -10,6 +10,7 @@ using Survive.Core;
 using Survive.Crafting;
 using Survive.Input;
 using Survive.Items;
+using Survive.Progression;
 
 namespace Survive.UI
 {
@@ -47,6 +48,7 @@ namespace Survive.UI
         {
             public RecipeSO recipe;
             public Button button;      // 행 전체 = 걸기
+            public Image frame;        // 잠긴 줄은 판때기까지 가라앉힌다
             public TMP_Text label;
             public Button minus;
             public Button plus;
@@ -201,7 +203,7 @@ namespace Survive.UI
 
             var row = new Row
             {
-                recipe = r, button = btn, label = txt,
+                recipe = r, button = btn, frame = img, label = txt,
                 minus = minus, plus = plus, max = max, amount = amount
             };
 
@@ -308,9 +310,15 @@ namespace Survive.UI
             return txt;
         }
 
+        /// <summary>잠긴 줄의 판때기·글자색. 실루엣만 남기고 가라앉힌다.</summary>
+        static readonly Color LockedFrame = new Color(0.09f, 0.10f, 0.13f, 0.75f);
+        static readonly Color LockedLabel = new Color(0.46f, 0.48f, 0.56f, 1f);
+        static readonly Color NormalFrame = new Color(0.12f, 0.14f, 0.18f, 0.9f);
+
         void RefreshList()
         {
             var inv = _inventory?.Inventory;
+            var ledger = BlueprintGate.Active;
             int shown = 0;
 
             foreach (var row in _rows)
@@ -327,28 +335,40 @@ namespace Survive.UI
                 if (!visible) continue;
                 shown++;
 
-                int max = MaxFor(row.recipe);
+                // 모르는 것은 목록에서 지우지 않는다. 무엇이 있는지는 보여야
+                // 찾아 나설 수 있다 — 대신 실루엣으로 가라앉히고, 왜 잠겼는지와
+                // 무엇을 하면 열리는지를 그 자리에 적는다.
+                bool known = BlueprintGate.IsUnlocked(row.recipe.requiredBlueprint, ledger);
+
+                int max = known ? MaxFor(row.recipe) : 0;
                 int want = Mathf.Clamp(Wanted(row.recipe), 1, Mathf.Max(1, max));
                 _wanted[row.recipe.id] = want;
 
                 var queue = ActiveQueue;
                 bool queueRoom = queue != null && !queue.IsFull;
-                bool canMake = max >= want && queueRoom;
+                bool canMake = known && max >= want && queueRoom;
 
                 if (row.button != null) row.button.interactable = canMake;
-                if (row.minus != null) row.minus.interactable = want > 1;
-                if (row.plus != null) row.plus.interactable = want < max;
-                if (row.max != null) row.max.interactable = max >= 1 && want != max;
+                if (row.frame != null) row.frame.color = known ? NormalFrame : LockedFrame;
+                if (row.minus != null) row.minus.interactable = known && want > 1;
+                if (row.plus != null) row.plus.interactable = known && want < max;
+                if (row.max != null) row.max.interactable = known && max >= 1 && want != max;
                 if (row.amount != null)
                 {
-                    row.amount.text = "x" + want;
-                    row.amount.color = canMake ? Color.white : new Color(0.6f, 0.6f, 0.66f);
+                    row.amount.text = known ? "x" + want : "—";
+                    row.amount.color = canMake ? Color.white
+                                     : known ? new Color(0.6f, 0.6f, 0.66f)
+                                             : LockedLabel;
                 }
 
                 if (row.label != null)
                 {
-                    row.label.text = Describe(row.recipe, inv, want, queueRoom);
-                    row.label.color = canMake ? Color.white : new Color(0.65f, 0.65f, 0.7f, 1f);
+                    row.label.text = known
+                        ? Describe(row.recipe, inv, want, queueRoom)
+                        : DescribeLocked(row.recipe);
+                    row.label.color = canMake ? Color.white
+                                    : known ? new Color(0.65f, 0.65f, 0.7f, 1f)
+                                            : LockedLabel;
                 }
             }
 
@@ -431,6 +451,19 @@ namespace Survive.UI
             return sb.ToString();
         }
 
+        /// <summary>
+        /// 잠긴 줄. 재료 목록은 적지 않는다 — 무엇이 드는지도 아직 모르는 것이
+        /// 잠겼다는 뜻이다. 이름과 여는 방법만 남긴다.
+        /// </summary>
+        static string DescribeLocked(RecipeSO r)
+        {
+            string name = string.IsNullOrEmpty(r.displayName)
+                ? r.result?.item?.displayName ?? r.id
+                : r.displayName;
+
+            return $"{name}  ·  {BlueprintGate.LockText(r.requiredBlueprint)}";
+        }
+
         // ── 수량과 걸기 ──────────────────────────────────────────
 
         int Wanted(RecipeSO r) =>
@@ -446,7 +479,7 @@ namespace Survive.UI
         void Nudge(RecipeSO r, int delta) => SetWanted(r, Wanted(r) + delta);
 
         int MaxFor(RecipeSO r) =>
-            CraftQueueService.MaxCraftable(r, _inventory?.Inventory, _station);
+            CraftQueueService.MaxCraftable(r, _inventory?.Inventory, _station, BlueprintGate.Active);
 
         /// <summary>
         /// 누르면 만들어지는 것이 아니라 줄에 선다. 재료는 이때 빠진다 —
@@ -461,7 +494,8 @@ namespace Survive.UI
 
             bool ok;
             if (_stationHost != null)
-                ok = CraftQueueService.TryEnqueue(_stationHost.Work.Queue, r, want, inv, _station);
+                ok = CraftQueueService.TryEnqueue(_stationHost.Work.Queue, r, want, inv, _station,
+                                                  BlueprintGate.Active);
             else
                 ok = HandCraftingService.Instance != null &&
                      HandCraftingService.Instance.TryEnqueue(r, want, _station);

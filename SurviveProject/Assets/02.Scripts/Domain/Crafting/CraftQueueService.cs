@@ -1,5 +1,6 @@
 using UnityEngine;
 using Survive.Items;
+using Survive.Progression;
 
 namespace Survive.Crafting
 {
@@ -26,12 +27,16 @@ namespace Survive.Crafting
         /// <summary>
         /// 지금 가진 재료로 이 레시피를 몇 개까지 걸 수 있는가.
         /// 재료가 없는 레시피는 <see cref="MaxBatch"/>까지.
+        ///
+        /// 청사진이 잠겨 있으면 0이다 — 화면은 이 값 하나로 회색이 되고,
+        /// 걸기도 여기서 함께 막힌다.
         /// </summary>
-        public static int MaxCraftable(RecipeSO recipe, Inventory inventory, StationType available)
+        public static int MaxCraftable(RecipeSO recipe, Inventory inventory, StationType available,
+                                       UnlockLedger unlocked = null)
         {
             if (recipe == null || inventory == null) return 0;
             if (recipe.result == null || recipe.result.item == null) return 0;
-            if (!CraftingService.CanCraft(recipe, inventory, available)) return 0;
+            if (!CraftingService.CanCraft(recipe, inventory, available, unlocked)) return 0;
 
             int best = MaxBatch;
             if (recipe.ingredients != null)
@@ -53,11 +58,12 @@ namespace Survive.Crafting
         /// 사용자는 자기가 무엇을 잃었는지 알 수 없다.
         /// </summary>
         public static bool TryEnqueue(CraftQueue queue, RecipeSO recipe, int count,
-                                      Inventory source, StationType available)
+                                      Inventory source, StationType available,
+                                      UnlockLedger unlocked = null)
         {
             if (queue == null || source == null || count <= 0) return false;
             if (queue.IsFull) return false;
-            if (count > MaxCraftable(recipe, source, available)) return false;
+            if (count > MaxCraftable(recipe, source, available, unlocked)) return false;
 
             if (recipe.ingredients != null)
             {

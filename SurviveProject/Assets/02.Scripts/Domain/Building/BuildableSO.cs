@@ -37,6 +37,12 @@ namespace Survive.Building
 
         public ItemStack[] cost = new ItemStack[0];
 
+        /// <summary>
+        /// 이걸 지을 줄 알아야 한다. 비어 있으면 처음부터 열려 있다 —
+        /// 화톳불처럼 생존의 바닥에 깔리는 것은 비워 둔다.
+        /// </summary>
+        public Survive.Progression.BlueprintSO requiredBlueprint;
+
         public PlacementMode placement = PlacementMode.Ground;
 
         [Tooltip("이 각도보다 가파른 비탈에는 못 짓는다")]

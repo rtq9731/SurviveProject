@@ -37,5 +37,14 @@ namespace Survive.Crafting
         /// 화톳불의 배터리 가공도 별개의 체계가 아니라 이 필드로 갈린다.
         /// </summary>
         public StationType requiredStation = StationType.None;
+
+        /// <summary>
+        /// 이걸 만들 줄 알아야 한다. 비어 있으면 <b>처음부터 열려 있다</b> —
+        /// 청사진을 얹기 전에 만들어 둔 레시피 에셋들이 그대로 동작하는 근거다.
+        ///
+        /// 재료 요건과는 독립이다. 재료가 있어도 모르면 못 만들고,
+        /// 알아도 재료가 없으면 못 만든다.
+        /// </summary>
+        public Survive.Progression.BlueprintSO requiredBlueprint;
     }
 }

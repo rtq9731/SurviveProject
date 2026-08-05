@@ -1,4 +1,5 @@
 using Survive.Items;
+using Survive.Progression;
 
 namespace Survive.Crafting
 {
@@ -7,11 +8,17 @@ namespace Survive.Crafting
     /// </summary>
     public static class CraftingService
     {
-        public static bool CanCraft(RecipeSO recipe, Inventory inventory, StationType available)
+        /// <param name="unlocked">
+        /// 해금 원장. 넘기지 않으면 청사진을 따지지 않는다 —
+        /// <see cref="BlueprintGate.IsUnlocked"/>의 실패 개방 규칙과 같다.
+        /// </param>
+        public static bool CanCraft(RecipeSO recipe, Inventory inventory, StationType available,
+                                    UnlockLedger unlocked = null)
         {
             if (recipe == null || inventory == null) return false;
             if (recipe.result == null || recipe.result.item == null) return false;
             if (!StationSatisfied(recipe.requiredStation, available)) return false;
+            if (!BlueprintGate.IsUnlocked(recipe.requiredBlueprint, unlocked)) return false;
 
             if (recipe.ingredients != null)
             {
@@ -28,9 +35,10 @@ namespace Survive.Crafting
         /// 재료를 먼저 빼고 결과를 넣는다. 결과가 다 안 들어가면
         /// 재료를 되돌리고 실패로 처리한다 — 재료만 사라지는 일이 없어야 한다.
         /// </summary>
-        public static bool Craft(RecipeSO recipe, Inventory inventory, StationType available)
+        public static bool Craft(RecipeSO recipe, Inventory inventory, StationType available,
+                                 UnlockLedger unlocked = null)
         {
-            if (!CanCraft(recipe, inventory, available)) return false;
+            if (!CanCraft(recipe, inventory, available, unlocked)) return false;
 
             if (recipe.ingredients != null)
             {

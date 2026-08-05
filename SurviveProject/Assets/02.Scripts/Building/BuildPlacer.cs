@@ -145,6 +145,13 @@ namespace Survive.Building
 
             if (_selected == null || rayOrigin == null) return PlacementResult.NoSurface;
 
+            // 지을 줄 모르면 자리를 따질 것도 없다. 미리보기 색과 실제 배치가
+            // 같은 판정을 쓰므로(TryBuild가 이 함수를 다시 부른다) 여기 한 줄이면
+            // 유령 색·안내문·실제 건설이 한꺼번에 막힌다.
+            if (!Survive.Progression.BlueprintGate.IsUnlocked(
+                    _selected.requiredBlueprint, Survive.Progression.BlueprintGate.Active))
+                return PlacementResult.NotResearched;
+
             bool hitSomething = Physics.Raycast(rayOrigin.position, rayOrigin.forward, out var hit,
                                                 maxDistance, surfaceMask, QueryTriggerInteraction.Ignore);
 
