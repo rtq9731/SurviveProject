@@ -70,3 +70,8 @@ crashlytics-build.properties
 # 새 솔루션 포맷
 *.slnx
 
+# Unity 크래시 복구 사본 (에디터가 로컬에 만든 것 — 파일은 디스크에 그대로 남는다)
+# 13행의 meta 되살리기 규칙보다 뒤에 와야 .meta까지 걸린다.
+/[Aa]ssets/_Recovery/
+/[Aa]ssets/_Recovery.meta
+

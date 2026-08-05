@@ -3,7 +3,3 @@
 /assets/generated/
 
 .superpowers/
-
-# Unity 크래시 복구 사본 (에디터가 로컬에 만든 것, 파일은 디스크에 그대로 남는다)
-/SurviveProject/Assets/_Recovery/
-/SurviveProject/Assets/_Recovery.meta
