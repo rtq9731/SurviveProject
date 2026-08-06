@@ -38,6 +38,16 @@ public class LocSentenceGateTests
     {
         "Assets/02.Scripts/Domain/UI/",
         "Assets/02.Scripts/UI/",
+
+        // 제작·건축·진행. 도감이 내놓는 글이 이 안에 있다.
+        "Assets/02.Scripts/Crafting/",
+        "Assets/02.Scripts/Domain/Crafting/",
+        "Assets/02.Scripts/Building/",
+        "Assets/02.Scripts/Domain/Building/",
+        "Assets/02.Scripts/Progression/",
+        "Assets/02.Scripts/Domain/Progression/",
+        "Assets/02.Scripts/Inventory/",
+        "Assets/02.Scripts/Domain/Items/",
     };
 
     /// <summary>
@@ -67,6 +77,17 @@ public class LocSentenceGateTests
         "Assets/02.Scripts/UI/ControlHintView.cs",    // 조작 안내 네 줄
         "Assets/02.Scripts/UI/CraftQueueView.cs",     // "가득"
         "Assets/02.Scripts/UI/ScrapCounterView.cs",   // 인스펙터 기본값 "스크랩 {0}"
+
+        // 아래 둘은 "아직 못 옮긴" 것이 아니라 옮기지 않기로 한 것이다.
+        // 화면이 아니라서 표에 넣으면 오히려 손해다 — 이유를 적어 둔다.
+        "Assets/02.Scripts/Domain/Items/ItemDatabaseSO.cs",
+        // 에디터 콘솔 진단문(OnValidate → Debug.LogError). 사람 눈이 아니라
+        // 개발자 눈에 닿는 글이고, 번역하면 문제를 찾기 더 어려워진다.
+
+        "Assets/02.Scripts/Domain/Progression/ResearchService.cs",
+        // ResearchService.Describe. 화면은 이것을 쓰지 않는다 —
+        // MenuListing.ReadinessText가 UI/research_state_* 를 꺼낸다.
+        // 규칙을 담은 파일에 화면 문구를 섞지 않기로 한 결정(docs/번역-체계.md §9).
     };
 
     static readonly List<(string Path, string Source)> Files = new List<(string, string)>();

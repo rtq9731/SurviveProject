@@ -9,6 +9,7 @@ using Survive.Crafting;
 using Survive.Domain.Audio;
 using Survive.Interaction;
 using Survive.Items;
+using Survive.Localization;
 using Survive.Player;
 using Survive.World;
 
@@ -206,11 +207,11 @@ namespace Survive.Building
         // ── 에너지 추출 스테이션 ─────────────────────────────────
 
         public StationType StationType => StationType.Campfire;
-        public string StationName => "화톳불";
+        public string StationName => Loc.T("Build", "campfire_name");
         public StationCraftQueue Work => _work;
         public bool IsPowered => IsBurning;
 
-        public string PausedReason => IsBurning ? null : "불이 꺼져 에너지 추출이 멈췄다";
+        public string PausedReason => IsBurning ? null : Loc.T("Build", "campfire_paused");
 
         /// <summary>
         /// 추출 화면에서 바로 불을 살린다.
@@ -223,7 +224,7 @@ namespace Survive.Building
             () =>
             {
                 int pct = Mathf.RoundToInt(FuelNormalized * 100f);
-                return $"연료 넣기 (버섯 목재 {logsPerRefuel})  ·  연료 {pct}%";
+                return Loc.F("Build", "campfire_refuel", logsPerRefuel, pct);
             },
             () => PlayerWood() > 0,
             () => Refuel(PlayerBag())));
@@ -291,16 +292,17 @@ namespace Survive.Building
         {
             get
             {
-                if (_work.HasOutput) return $"[E] 화톳불에서 {_work.OutputCount}개 회수";
-                if (!IsBurning) return "[E] 화톳불 지피기";
+                if (_work.HasOutput)
+                    return Loc.F("Build", "campfire_prompt_collect", _work.OutputCount);
+                if (!IsBurning) return Loc.T("Build", "campfire_prompt_ignite");
 
                 int pct = Mathf.RoundToInt(FuelNormalized * 100f);
                 if (!_work.Queue.IsEmpty)
                 {
                     float left = CraftQueueService.TotalSecondsLeft(_work.Queue);
-                    return $"[E] 화톳불 (에너지 추출 중 {CraftTimeText.Short(left)}, 연료 {pct}%)";
+                    return Loc.F("Build", "campfire_prompt_busy", CraftTimeText.Short(left), pct);
                 }
-                return $"[E] 화톳불 (연료 {pct}%)";
+                return Loc.F("Build", "campfire_prompt_idle", pct);
             }
         }
 

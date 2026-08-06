@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Survive.Interaction;
+using Survive.Localization;
 using Survive.Player;
 
 namespace Survive.Items
@@ -57,7 +58,7 @@ namespace Survive.Items
 
         public bool IsEmpty => !DeathDrop.HasAnything(_contents);
 
-        public string InteractionPrompt => IsEmpty ? "" : "[E] 남긴 것 회수";
+        public string InteractionPrompt => IsEmpty ? "" : Loc.T("Inv", "deathbag_prompt");
 
         public bool CanInteract(PlayerContext player) =>
             !IsEmpty && player != null && player.Inventory != null &&

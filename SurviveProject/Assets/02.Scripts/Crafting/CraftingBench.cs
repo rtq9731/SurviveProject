@@ -1,6 +1,7 @@
 using UnityEngine;
 using MoreMountains.Feedbacks;
 using Survive.Interaction;
+using Survive.Localization;
 using Survive.Player;
 
 namespace Survive.Crafting
@@ -16,14 +17,24 @@ namespace Survive.Crafting
     [DisallowMultipleComponent]
     public class CraftingBench : MonoBehaviour, IInteractable, ICraftStation
     {
-        [SerializeField] string displayName = "제작대";
+        [Tooltip("이 제작대의 이름. 비우면 표의 Craft/bench_default_name을 쓴다")]
+        [SerializeField] string displayName = "";
+
         [SerializeField] StationType stationType = StationType.Bench;
         [SerializeField] MMF_Player openFeedback;
 
         readonly StationCraftQueue _work = new StationCraftQueue();
 
         public StationType StationType => stationType;
-        public string StationName => displayName;
+
+        /// <summary>
+        /// 인스펙터에 적은 이름이 우선이고, 비어 있으면 표에서 꺼낸다.
+        /// 기본값을 코드에 한국어로 박아 두면 로케일을 따라오지 못한다.
+        /// </summary>
+        public string StationName => string.IsNullOrWhiteSpace(displayName)
+            ? Loc.T("Craft", "bench_default_name")
+            : displayName;
+
         public StationCraftQueue Work => _work;
 
         /// <summary>제작대는 연료를 먹지 않는다. 세워 두면 늘 돌아간다.</summary>
@@ -41,13 +52,15 @@ namespace Survive.Crafting
         {
             get
             {
-                if (_work.HasOutput) return $"[E] {displayName}에서 {_work.OutputCount}개 회수";
+                if (_work.HasOutput)
+                    return Loc.F("Craft", "bench_prompt_collect", StationName, _work.OutputCount);
                 if (!_work.Queue.IsEmpty)
                 {
                     float left = CraftQueueService.TotalSecondsLeft(_work.Queue);
-                    return $"[E] {displayName} 사용 (제작 중 {CraftTimeText.Short(left)})";
+                    return Loc.F("Craft", "bench_prompt_busy", StationName,
+                                 CraftTimeText.Short(left));
                 }
-                return $"[E] {displayName} 사용";
+                return Loc.F("Craft", "bench_prompt_idle", StationName);
             }
         }
 

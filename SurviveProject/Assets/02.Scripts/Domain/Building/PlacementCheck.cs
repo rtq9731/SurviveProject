@@ -1,3 +1,5 @@
+using Survive.Localization;
+
 namespace Survive.Building
 {
     /// <summary>배치가 가능한지, 아니면 왜 안 되는지.</summary>
@@ -41,14 +43,14 @@ namespace Survive.Building
         public static string Describe(PlacementResult r) => r switch
         {
             PlacementResult.Ok => "",
-            PlacementResult.NoSurface => "놓을 자리가 없다",
-            PlacementResult.TooSteep => "너무 가파르다",
-            PlacementResult.Blocked => "다른 것과 겹친다",
-            PlacementResult.NotEnoughResources => "재료가 모자라다",
-            PlacementResult.WrongSurface => "여기엔 놓을 수 없다",
-            PlacementResult.NoAnchor => "붙일 곳이 없다: 토대부터 놓아라",
-            PlacementResult.SlotTaken => "그 자리엔 이미 있다",
-            PlacementResult.NotResearched => "지을 줄 모른다: 청사진이 없다",
+            PlacementResult.NoSurface => Loc.T("Build", "reject_no_surface"),
+            PlacementResult.TooSteep => Loc.T("Build", "reject_too_steep"),
+            PlacementResult.Blocked => Loc.T("Build", "reject_blocked"),
+            PlacementResult.NotEnoughResources => Loc.T("Build", "reject_not_enough"),
+            PlacementResult.WrongSurface => Loc.T("Build", "reject_wrong_surface"),
+            PlacementResult.NoAnchor => Loc.T("Build", "reject_no_anchor"),
+            PlacementResult.SlotTaken => Loc.T("Build", "reject_slot_taken"),
+            PlacementResult.NotResearched => Loc.T("Build", "reject_not_researched"),
             _ => "",
         };
     }

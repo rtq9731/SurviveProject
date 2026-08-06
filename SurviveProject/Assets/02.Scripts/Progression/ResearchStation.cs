@@ -3,6 +3,7 @@ using MoreMountains.Feedbacks;
 using Survive.Crafting;
 using Survive.Interaction;
 using Survive.Items;
+using Survive.Localization;
 using Survive.Player;
 
 namespace Survive.Progression
@@ -25,7 +26,8 @@ namespace Survive.Progression
         /// <summary>Resources 아래에서 연구 목록을 찾는 이름.</summary>
         public const string BookResourceName = "ResearchBook";
 
-        [SerializeField] string displayName = "연구대";
+        [Tooltip("이 연구대의 이름. 비우면 표의 UI/research_station_default를 쓴다")]
+        [SerializeField] string displayName = "";
 
         [Tooltip("비우면 Resources/ResearchBook을 찾는다")]
         [SerializeField] ResearchBookSO book;
@@ -35,7 +37,14 @@ namespace Survive.Progression
 
         readonly ResearchQueue _work = new ResearchQueue();
 
-        public string StationName => displayName;
+        /// <summary>
+        /// 인스펙터에 적은 이름이 우선이고, 비어 있으면 표에서 꺼낸다.
+        /// 목록 머리띠(<c>MenuListing.ResearchHeaderLine</c>)가 이미 쓰던 것과
+        /// 같은 이름표라, 같은 이름이 두 자리에서 갈라지지 않는다.
+        /// </summary>
+        public string StationName => string.IsNullOrWhiteSpace(displayName)
+            ? Loc.T("UI", "research_station_default")
+            : displayName;
         public ResearchBookSO Book => book;
         public ResearchQueue Work => _work;
         public ItemDataSO EnergyItem => book != null ? book.energyItem : null;
@@ -80,10 +89,11 @@ namespace Survive.Progression
         {
             get
             {
-                if (_work.IsEmpty) return $"[E] {displayName} 사용";
+                if (_work.IsEmpty) return Loc.F("Progress", "research_prompt_idle", StationName);
 
                 float left = ResearchService.TotalSecondsLeft(_work);
-                return $"[E] {displayName} 사용 (분석 중 {CraftTimeText.Short(left)})";
+                return Loc.F("Progress", "research_prompt_busy", StationName,
+                             CraftTimeText.Short(left));
             }
         }
 
