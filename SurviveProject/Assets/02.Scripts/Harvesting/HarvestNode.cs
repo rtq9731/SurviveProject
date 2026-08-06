@@ -7,6 +7,7 @@ using Survive.Combat;
 using Survive.Domain.Audio;
 using Survive.Interaction;
 using Survive.Items;
+using Survive.Localization;
 using Survive.Player;
 
 namespace Survive.Harvesting
@@ -125,16 +126,16 @@ namespace Survive.Harvesting
                 if (IsBreakable)
                 {
                     if (!ToolSatisfied(equipped))
-                        return $"{definition.displayName} · {ToolName(definition.requiredTool)} 필요";
+                        return $"{DataText.Name(definition)} · {ToolName(definition.requiredTool)} 필요";
 
                     // 부수는 대상에는 E가 아니라 공격 키를 안내해야 한다
                     int pct = Mathf.CeilToInt(HealthNormalized * 100f);
-                    return $"{definition.displayName} · 좌클릭으로 부순다 ({pct}%)";
+                    return $"{DataText.Name(definition)} · 좌클릭으로 부순다 ({pct}%)";
                 }
 
                 // 홀드형이므로 프롬프트에서 그 사실이 드러나야 한다.
                 // "[E]"만 쓰면 탭으로 오해한다.
-                return $"[E] 길게 눌러 {definition.displayName} 채집";
+                return $"[E] 길게 눌러 {DataText.Name(definition)} 채집";
             }
         }
 
@@ -241,7 +242,7 @@ namespace Survive.Harvesting
                 _hint = FindAnyObjectByType<Survive.UI.ControlHintView>(FindObjectsInactive.Include);
 
             _hint?.Show("wrongtool_" + definition.requiredTool,
-                        $"{definition.displayName}에는 흠집도 나지 않는다 · " +
+                        $"{DataText.Name(definition)}에는 흠집도 나지 않는다 · " +
                         $"{ToolName(definition.requiredTool)}가 필요하다");
         }
 
@@ -287,7 +288,7 @@ namespace Survive.Harvesting
                     {
                         int remaining = toInventory.Inventory.Add(stack.item, stack.count);
                         if (remaining > 0)
-                            Debug.LogWarning($"[HarvestNode] 인벤토리가 가득 차 {stack.item.displayName} " +
+                            Debug.LogWarning($"[HarvestNode] 인벤토리가 가득 차 {DataText.Name(stack.item)} " +
                                              $"{remaining}개를 넣지 못했습니다.", this);
                     }
                     else

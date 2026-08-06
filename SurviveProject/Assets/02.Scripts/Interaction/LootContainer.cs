@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using MoreMountains.Feedbacks;
 using Survive.Items;
+using Survive.Localization;
 using Survive.Player;
 
 namespace Survive.Interaction
@@ -39,7 +40,7 @@ namespace Survive.Interaction
                 if (c?.item == null) continue;
                 int remaining = player.Inventory.Add(c.item, c.count);
                 if (remaining > 0)
-                    Debug.LogWarning($"[LootContainer] 인벤토리가 가득 차 {c.item.displayName} {remaining}개를 넣지 못했습니다.", this);
+                    Debug.LogWarning($"[LootContainer] 인벤토리가 가득 차 {DataText.Name(c.item)} {remaining}개를 넣지 못했습니다.", this);
             }
         }
     }

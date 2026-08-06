@@ -5,6 +5,7 @@ using MoreMountains.Feedbacks;
 using Survive.Core;
 using Survive.Items;
 using Survive.Interaction;
+using Survive.Localization;
 using Survive.Player;
 
 namespace Survive.World
@@ -47,7 +48,7 @@ namespace Survive.World
                 {
                     if (need?.item == null) continue;
                     if (!isFirst) sb.Append(", ");
-                    sb.Append($"{need.item.displayName} {HeldCount(need.item.id)}/{need.count}");
+                    sb.Append($"{DataText.Name(need.item)} {HeldCount(need.item.id)}/{need.count}");
                     isFirst = false;
                 }
                 return sb.ToString();

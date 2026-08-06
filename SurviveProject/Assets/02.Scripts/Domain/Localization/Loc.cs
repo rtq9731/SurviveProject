@@ -113,6 +113,22 @@ namespace Survive.Localization
         }
 
         /// <summary>
+        /// 표에 있으면 꺼내고, 없으면 <c>false</c>다. <see cref="T(LocKey)"/>와 달리
+        /// <b>키를 대신 내주지 않는다</b>.
+        ///
+        /// 데이터 에셋 경로(<see cref="DataText"/>)가 이것을 쓴다. 그쪽의 마지막 폴백은
+        /// 키가 아니라 <b>에셋에 적힌 한국어 원문</b>이라, 표에 있는지 없는지를
+        /// 먼저 알아야 한다. 조회 비용은 <see cref="T(LocKey)"/>와 같다.
+        /// </summary>
+        public static bool TryT(LocKey key, out string value)
+        {
+            if (_current != null && _current.TryGetValue(key, out value)) return true;
+            if (_fallback != null && _fallback.TryGetValue(key, out value)) return true;
+            value = null;
+            return false;
+        }
+
+        /// <summary>
         /// 서식 인자를 끼운다. 서식이 번역과 어긋나 <c>FormatException</c>이 나면
         /// 번역문을 그대로 낸다 — 화면이 비거나 게임이 멈추는 것보다 낫다.
         /// </summary>
