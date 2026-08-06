@@ -1,6 +1,5 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Serialization;
 using DG.Tweening;
 using MoreMountains.Feedbacks;
 using Survive.Audio;
@@ -27,6 +26,12 @@ namespace Survive.Building
     /// 유일하게 타는 물질이고, 그것을 얻으려면 거대 버섯을 베러 나가야 한다.
     /// 불을 지키는 일이 곧 밖으로 나가는 이유가 된다.
     ///
+    /// <b>목재가 가장 많이 들어가는 곳이 여기다</b>(기획서 §5.3). 불이 꺼지면
+    /// 이 자리는 <see cref="Survive.World.LitZoneRegistry"/>에서 빠져 밝은
+    /// 구역이 사라지고, 부활 지점 후보에서도 빠진다. 그래서 목재 재고가
+    /// 곧 안전 재고다. 수치는 전부
+    /// <see cref="CampfireFuelRule"/> 한 곳에 있다 — 여기에는 사본을 두지 않는다.
+    ///
     /// 그리고 이 불은 <b>에너지 추출기</b>이기도 하다. 스크랩은 타는 물건이 아니라
     /// 에너지를 <b>담고 있는</b> 매체다 — 불의 열은 그 안에 갇힌 것을 끌어내어
     /// 배터리 셀로 옮기는 손이다. 넣어 두고 떠났다가 셀을 받아 간다.
@@ -37,19 +42,15 @@ namespace Survive.Building
     {
         [SerializeField] Light flame;
 
-        [Header("연료")]
-        [Tooltip("가득 찼을 때의 연료. 초 단위로 탄다")]
-        [SerializeField] float maxFuel = CampfireFuelRule.MaxFuelSeconds;
-
-        // 이름이 바뀌어도 이미 저장된 프리팹 값을 잃지 않게 옛 이름을 적어 둔다.
-        // 프리팹은 병합할 수 없는 파일이라 이 작업에서 손대지 않는다.
-        [Tooltip("목재 하나가 주는 연료(초)")]
-        [FormerlySerializedAs("fuelPerScrap")]
-        [SerializeField] float fuelPerLog = CampfireFuelRule.SecondsPerLog;
-
-        [Tooltip("한 번에 넣는 목재 수")]
-        [FormerlySerializedAs("scrapPerRefuel")]
-        [SerializeField] int logsPerRefuel = CampfireFuelRule.LogsPerRefuel;
+        // ── 연료 ─────────────────────────────────────────────────
+        // 직렬화 필드가 아니다. 프리팹에 사본을 두면 CampfireFuelRule의 상수를
+        // 돌려도 게임이 바뀌지 않는다 — 실제로 그랬다(프리팹의 maxFuel 180이
+        // 상수를 덮고 있었고, 프리팹은 병합할 수 없어 손대기도 어렵다).
+        // 목재 밸런스는 아직 확정이 아니므로(상세기획서 §13) 돌릴 자리가
+        // 한 곳이어야 한다. 그 한 곳이 CampfireFuelRule이다.
+        static float MaxFuel => CampfireFuelRule.MaxFuelSeconds;
+        static float FuelPerLog => CampfireFuelRule.SecondsPerLog;
+        static int LogsPerRefuel => CampfireFuelRule.LogsPerRefuel;
 
         [Header("빛")]
         [SerializeField] float fullIntensity = 1.9f;
@@ -81,7 +82,10 @@ namespace Survive.Building
         readonly StationCraftQueue _work = new StationCraftQueue();
 
         public bool IsBurning => CampfireFuelRule.IsBurning(_fuel);
-        public float FuelNormalized => maxFuel <= 0f ? 0f : Mathf.Clamp01(_fuel / maxFuel);
+        public float FuelNormalized => MaxFuel <= 0f ? 0f : Mathf.Clamp01(_fuel / MaxFuel);
+
+        /// <summary>남은 연료(초). 표와 검사가 "목재 N개 → T초"를 읽는 창구다.</summary>
+        public float FuelSeconds => _fuel;
 
         /// <summary>
         /// 마지막으로 <b>불이 붙은</b> 시각(<see cref="Time.time"/>).
@@ -107,8 +111,10 @@ namespace Survive.Building
             if (flame == null) flame = GetComponentInChildren<Light>(true);
 
             // 세우자마자 한 번은 타야 한다. 지어 놓고 연료부터 넣으라고 하면
-            // 무엇을 지은 건지 알 수 없다.
-            _fuel = maxFuel * 0.5f;
+            // 무엇을 지은 건지 알 수 없다. 다만 이것은 <b>불씨</b>이지 한 번 넣은
+            // 몫이 아니다 — 용량의 비율로 두면 용량을 올릴 때마다 공짜 목재가
+            // 함께 늘어난다(CampfireFuelRule.StarterLogs).
+            _fuel = CampfireFuelRule.StarterFuelSeconds;
             ApplyLight();
         }
 
@@ -224,10 +230,16 @@ namespace Survive.Building
             () =>
             {
                 int pct = Mathf.RoundToInt(FuelNormalized * 100f);
-                return Loc.F("Build", "campfire_refuel", logsPerRefuel, pct);
+                // 상한이 아니라 <b>이번에 실제로 들어갈 수</b>를 적는다. 가득 찬 불
+                // 앞에서 "목재 5"라고 말해 놓고 아무것도 안 들어가면 거짓말이 된다.
+                return Loc.F("Build", "campfire_refuel", LogsToTake(), pct);
             },
-            () => PlayerWood() > 0,
+            () => LogsToTake() > 0,
             () => Refuel(PlayerBag())));
+
+        /// <summary>이번에 넣을 수 있는 목재 수. 가진 것과 남은 자리 둘 다 본다.</summary>
+        int LogsToTake() =>
+            CampfireFuelRule.LogsToTake(PlayerWood(), LogsPerRefuel, _fuel, FuelPerLog, MaxFuel);
 
         StationSideAction _sideAction;
 
@@ -253,14 +265,15 @@ namespace Survive.Building
         {
             if (inv == null) return false;
 
-            // 가진 만큼만 넣는다.
+            // 가진 만큼만, 그리고 들어갈 만큼만 넣는다. 자리보다 많이 받으면
+            // 상한에 잘려 배낭의 목재가 그대로 사라진다.
             int take = CampfireFuelRule.LogsToTake(inv.CountOf(CampfireFuelRule.FuelItemId),
-                                                   logsPerRefuel);
+                                                   LogsPerRefuel, _fuel, FuelPerLog, MaxFuel);
             if (take <= 0) return false;
             if (!inv.TryRemove(CampfireFuelRule.FuelItemId, take)) return false;
 
             bool wasOut = !IsBurning;
-            _fuel = CampfireFuelRule.AfterRefuel(_fuel, take, fuelPerLog, maxFuel);
+            _fuel = CampfireFuelRule.AfterRefuel(_fuel, take, FuelPerLog, MaxFuel);
 
             if (wasOut) ApplyLight();
             refuelFeedback?.PlayFeedbacks();
