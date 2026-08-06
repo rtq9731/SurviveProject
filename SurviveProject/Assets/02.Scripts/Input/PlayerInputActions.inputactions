@@ -87,15 +87,6 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "ToggleLantern",
-                    "type": "Button",
-                    "id": "a1000000-0000-0000-0000-00000000010a",
-                    "expectedControlType": "Button",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                },
-                {
                     "name": "Descend",
                     "type": "Button",
                     "id": "11111111-2222-3333-4444-555555555501",
@@ -246,17 +237,6 @@
                     "processors": "",
                     "groups": "",
                     "action": "NextTool",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "b1000000-0000-0000-0000-00000000000e",
-                    "path": "<Keyboard>/f",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "ToggleLantern",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

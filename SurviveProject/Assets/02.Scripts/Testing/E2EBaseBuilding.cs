@@ -153,11 +153,14 @@ namespace Survive.Testing
             E2EHarness.Assert(E2EResearchStation.원장에_적는다(BenchOnlyBlueprint),
                               "제작대 전용 청사진을 원장에 적었다");
 
-            // 랜턴을 지금 켜 둔다. 뒤의 화톳불 검사는 배터리가 <b>줄어 있어야</b>
-            // 차오르는 것을 볼 수 있는데, Recharge는 음수를 받지 않는다.
-            // 시나리오를 도는 동안 자연히 닳게 두는 것이 실제 플레이와도 같다.
-            var lantern = Object.FindAnyObjectByType<LanternController>(FindObjectsInactive.Include);
-            if (lantern != null) lantern.SetOn(true);
+            // 랜턴은 지니고 있으면 저절로 켜진다(스펙 §12). 뒤의 화톳불 검사는
+            // 배터리가 <b>줄어 있어야</b> 차오르는 것을 볼 수 있으므로, 켜 두는 것이
+            // 아니라 <b>쥐여 두는</b> 것이 여기서 할 일이다. 나머지는 시나리오를
+            // 도는 동안 자연히 닳는다 — 실제 플레이와 같다.
+            var 아이템표 = E2EHarness.Player.Inventory.Database;
+            var 랜턴정의 = 아이템표 != null ? 아이템표.GetById(LanternRule.ItemId) : null;
+            if (랜턴정의 != null && E2EHarness.Player.Inventory.Inventory.CountOf(LanternRule.ItemId) == 0)
+                E2EHarness.Player.Inventory.Inventory.TryAdd(랜턴정의, 1);
 
             yield return null;
         }
@@ -608,8 +611,14 @@ namespace Survive.Testing
 
             E2EHarness.Assert(lantern.IsOn, "랜턴이 켜져 배터리가 닳고 있다");
 
+            // 충전을 보려면 채울 자리가 있어야 한다. 걸어온 동안 얼마나 닳았는지는
+            // 경로 길이에 달려 있어 믿을 수 없으므로, 여기서 확실히 비워 둔다.
+            if (lantern.BatteryNormalized > 0.5f)
+                lantern.Drain(LanternRule.MaxBattery * 0.5f);
+
             float before = lantern.Battery;
-            E2EHarness.Assert(before < lantern.BatteryNormalized * 100f + 0.01f, "배터리를 읽을 수 있다");
+            E2EHarness.Assert(before < LanternRule.MaxBattery,
+                              $"배터리에 채울 자리가 있다 ({before:F0}/{LanternRule.MaxBattery:F0})");
 
             // 불 곁으로 간다. 충전 반경(6m) 안이어야 한다.
             yield return E2EHarness.TryWalkTo(fire.transform.position, 2.5f, 20f);

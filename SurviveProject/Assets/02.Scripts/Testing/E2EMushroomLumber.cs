@@ -671,9 +671,8 @@ namespace Survive.Testing
 
             // 씬의 발광 군락이 불 자리를 이미 덮고 있으면 아무것도 재지 못한다.
             int 끈광원 = E2EHarness.MuteAmbientLitZones();
-            var lantern = Object.FindAnyObjectByType<LanternController>(FindObjectsInactive.Exclude);
-            if (lantern != null && lantern.IsOn) lantern.SetOn(false);
-            E2EHarness.Log($"  무대 정리: 주변 광원 {끈광원}곳을 뺐고 랜턴을 껐다");
+            E2EHarness.DarkenLantern();
+            E2EHarness.Log($"  무대 정리: 주변 광원 {끈광원}곳을 뺐고 랜턴 배터리를 비웠다");
 
             var fire = 화톳불을_세운다();
             E2EHarness.Assert(fire != null, "화톳불을 세웠다");

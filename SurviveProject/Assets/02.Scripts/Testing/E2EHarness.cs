@@ -506,6 +506,54 @@ namespace Survive.Testing
             RestoreAmbientLitZones();
         }
 
+        // ── 랜턴 ────────────────────────────────────────────────
+        //
+        // 랜턴은 상시 점등이 전제고 끄는 입력이 없다(스펙 §12). 그래서 시나리오가
+        // "어두운 자리"를 만들려면 F를 누르는 대신 <b>배터리를 다 쓰는</b> 하나뿐인
+        // 길을 지나야 한다. 그 길을 시나리오마다 다시 적지 않도록 여기 둔다.
+
+        public static LanternController Lantern =>
+            UnityEngine.Object.FindAnyObjectByType<LanternController>(FindObjectsInactive.Include);
+
+        /// <summary>
+        /// 랜턴을 끈다 — 정확히는 배터리를 다 쓴다.
+        ///
+        /// 여분 셀을 지니고 있으면 0이 되는 순간 저절로 갈아 끼워지므로
+        /// (<see cref="LanternController.TryInsertBatteryCell"/>) 셀도 함께 치운다.
+        /// 재려는 것이 어둠인데 세계가 알아서 불을 되살리면 아무것도 재지 못한다.
+        /// </summary>
+        /// <returns>실제로 불이 꺼졌는가. 랜턴이 아예 없으면 이미 꺼진 것이므로 true.</returns>
+        public static bool DarkenLantern()
+        {
+            // Player는 못 찾으면 던진다. 여기서는 인벤토리가 없어도 할 일이 남으므로 조용히 찾는다.
+            var owner = UnityEngine.Object.FindAnyObjectByType<PlayerContext>(FindObjectsInactive.Exclude);
+            var inv = owner != null && owner.Inventory != null ? owner.Inventory.Inventory : null;
+            if (inv != null)
+            {
+                int cells = inv.CountOf(LanternController.BatteryCellId);
+                if (cells > 0) inv.TryRemove(LanternController.BatteryCellId, cells);
+            }
+
+            var lamp = Lantern;
+            if (lamp == null) return true;
+
+            lamp.Drain(LanternRule.MaxBattery * 2f);
+            return !lamp.IsOn;
+        }
+
+        /// <summary>
+        /// 랜턴에 불이 들어오게 한다 — 정확히는 배터리를 채운다.
+        /// 랜턴을 지니고 있지 않으면 채워도 불은 안 들어온다(그것이 규칙이다).
+        /// </summary>
+        public static bool LightLantern()
+        {
+            var lamp = Lantern;
+            if (lamp == null) return false;
+
+            lamp.Recharge(LanternRule.MaxBattery);
+            return lamp.IsOn;
+        }
+
         static IEnumerator SendKeyState()
         {
             QueueKeys();

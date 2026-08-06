@@ -95,7 +95,8 @@ namespace Survive.Testing
             _lantern = Object.FindAnyObjectByType<LanternController>(FindObjectsInactive.Include);
             E2EHarness.Assert(_lantern != null, "랜턴이 있다");
 
-            // 랜턴을 F로 켤 수 있으려면 인벤토리에 있어야 한다(PlayerToolUser.ToggleLantern)
+            // 랜턴은 지니고 있으면 저절로 켜진다(스펙 §12). 그래서 이 시나리오가
+            // 빛을 재려면 먼저 랜턴을 손에 쥐여 놓아야 한다.
             var db = E2EHarness.Player.Inventory.Database;
             if (E2EHarness.Player.Inventory.Inventory.CountOf("lantern") == 0)
             {
@@ -154,7 +155,7 @@ namespace Survive.Testing
                            $"주변 광원 {끈광원}곳을 밝은 구역에서 뺐다 (랜턴은 남긴다)");
 
             E2EHarness.Assert(!LitZoneRegistry.IsLit(PlayerPos),
-                              "랜턴을 끈 지금, 플레이어 자리를 밝히는 것이 하나도 없다");
+                              "배터리가 다한 지금, 플레이어 자리를 밝히는 것이 하나도 없다");
             yield return null;
         }
 
@@ -167,18 +168,22 @@ namespace Survive.Testing
             E2EHarness.Log("  무대 복원: 재운 생물을 깨우고 주변 광원을 돌려놓았다");
         }
 
-        /// <summary>F를 눌러 켜고 끈다. 실제 조작 경로를 쓴다.</summary>
+        /// <summary>
+        /// 랜턴에 불이 들어오게 하거나 꺼지게 한다.
+        ///
+        /// <b>F는 더 이상 없다.</b> 랜턴은 상시 점등이 전제이므로(스펙 §12) 켜는 조작도
+        /// 끄는 조작도 존재하지 않는다. 불이 없는 상태에 이르는 유일한 길은
+        /// 배터리를 다 쓰는 것이고, 검사도 그 하나뿐인 길을 지난다.
+        /// </summary>
         static IEnumerator 랜턴(bool 켜기)
         {
-            for (int i = 0; i < 3 && _lantern.IsOn != 켜기; i++)
-            {
-                yield return E2EHarness.TapKey(Key.F);
-                yield return null;
-            }
-            E2EHarness.AssertEqual(_lantern.IsOn, 켜기, 켜기 ? "F로 랜턴을 켰다" : "F로 랜턴을 껐다");
+            if (켜기) E2EHarness.LightLantern();
+            else E2EHarness.DarkenLantern();
+            yield return null;
 
-            // 배터리가 닳아 저절로 꺼지면 이후 판정이 흔들린다. 채워 둔다.
-            if (켜기) _lantern.Recharge(100f);
+            E2EHarness.AssertEqual(_lantern.IsOn, 켜기,
+                                   켜기 ? "배터리를 채우니 저절로 불이 들어왔다"
+                                        : "배터리가 다하자 불이 꺼졌다");
             yield return null;
         }
 

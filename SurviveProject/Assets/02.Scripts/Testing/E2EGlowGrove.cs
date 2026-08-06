@@ -133,9 +133,10 @@ namespace Survive.Testing
             E2EHarness.Assert(_낫정의 != null && _낫정의.avoidsLight, "낫은 빛을 꺼린다");
 
             // 랜턴이 켜져 있으면 플레이어 자리가 언제나 밝아 군락의 몫을 가린다.
-            var lantern = Object.FindAnyObjectByType<LanternController>(FindObjectsInactive.Include);
-            if (lantern != null) lantern.SetOn(false);
-            E2EHarness.Assert(lantern == null || !lantern.IsOn, "랜턴은 꺼 둔다");
+            // 끄는 입력이 없으므로(스펙 §12) 배터리를 다 써서 어둡게 만든다.
+            E2EHarness.DarkenLantern();
+            var lantern = E2EHarness.Lantern;
+            E2EHarness.Assert(lantern == null || !lantern.IsOn, "랜턴 배터리를 비워 둔다");
 
             result(고른군락);
         }

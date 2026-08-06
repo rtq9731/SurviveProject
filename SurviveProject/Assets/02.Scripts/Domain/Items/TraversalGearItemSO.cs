@@ -13,8 +13,9 @@ namespace Survive.Items
     /// 코드가 아니라 에셋만 늘어난다.
     ///
     /// <b>장착 규칙 — 인벤토리에 있으면 몸에 걸친 것으로 본다.</b> 이 프로젝트는 이미 랜턴에서
-    /// 같은 규칙을 택했다(<c>PlayerToolUser.ToggleLantern</c>: "랜턴은 손에 드는 도구가 아니라
-    /// 몸에 다는 조명으로 다룬다"). 손 소켓(<see cref="ToolItemSO.socketChildName"/>)은 곡괭이처럼
+    /// 같은 규칙을 택했다(<see cref="Survive.World.LanternRule.EquippedTier"/>: 랜턴은 손에 드는
+    /// 도구가 아니라 몸에 다는 조명이고, 자리가 비면 가방에 든 것이 켜진다).
+    /// 손 소켓(<see cref="ToolItemSO.socketChildName"/>)은 곡괭이처럼
     /// 휘두르는 물건의 것이고, 발에 신는 액면 보행 장비를 거기 넣으면
     /// 액면을 건너는 동안 곡괭이를 놓아야 한다는, 스펙에 없는 제약이 생긴다.
     /// </summary>

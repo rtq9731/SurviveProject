@@ -2,6 +2,7 @@ using System.Text;
 using UnityEngine;
 using Survive.Art;
 using Survive.Core;
+using Survive.Items;
 using Survive.Vitals;
 using Survive.World;
 
@@ -126,13 +127,24 @@ namespace Survive.Testing
             root.rotation = Quaternion.Euler(0f, yaw, 0f);
             if (controller != null) controller.enabled = true;
 
+            // 랜턴은 지니고 있어야 켜진다. 스위치가 없으므로 "켠 화면"을 세우려면
+            // 먼저 쥐여 주어야 한다.
+            var pack = root.GetComponentInChildren<PlayerInventory>(true);
+            if (lantern && pack != null && pack.Inventory != null && pack.Database != null
+                && pack.Inventory.CountOf(LanternRule.ItemId) == 0)
+            {
+                var def = pack.Database.GetById(LanternRule.ItemId);
+                if (def != null) pack.Inventory.TryAdd(def, 1);
+            }
+
             if (GameServices.TryGet<LanternController>(out var lamp) && lamp != null)
             {
-                // 배터리를 먼저 채운다. 안 그러면 재 두는 동안(초당 1.6) 배터리가
-                // 바닥나서 램프가 꺼지고, "켠 상태"라고 믿은 스크린샷이 실은
-                // 꺼진 화면이 된다 — 실제로 한 번 그렇게 속았다.
-                lamp.Recharge(99999f);
-                lamp.SetOn(lantern);
+                // 랜턴에는 스위치가 없다(스펙 §12). 켜진 화면은 배터리를 채워서,
+                // 꺼진 화면은 배터리를 비워서 만든다. 채워 두는 이유는 예전과 같다 —
+                // 재 두는 동안 배터리가 바닥나면 "켠 상태"라고 믿은 스크린샷이 실은
+                // 꺼진 화면이 된다. 실제로 한 번 그렇게 속았다.
+                if (lantern) lamp.Recharge(LanternRule.MaxBattery * 10f);
+                else lamp.Drain(LanternRule.MaxBattery * 2f);
             }
 
             var pickaxe = FindChild(root, "pickaxe01");
