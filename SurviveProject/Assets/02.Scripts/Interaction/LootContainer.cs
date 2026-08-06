@@ -17,7 +17,8 @@ namespace Survive.Interaction
             [Min(1)] public int count = 1;
         }
 
-        [SerializeField] string displayName = "잔해";
+        [Tooltip("비우면 번역 표의 World/loot_container_default를 쓴다")]
+        [SerializeField] string displayName = "";
         [SerializeField] Entry[] contents = new Entry[0];
 
         [Tooltip("열 때 재생")]
@@ -25,7 +26,15 @@ namespace Survive.Interaction
 
         bool _isOpen;
 
-        public string InteractionPrompt => _isOpen ? "" : $"[E] {displayName} 뒤지기";
+        /// <summary>
+        /// 인스펙터에 적힌 이름이 이긴다. 그것은 배치한 사람이 이 하나에만 붙인
+        /// 이름이라 표가 대신 정할 수 없다. 비어 있을 때만 표의 기본 이름을 쓴다.
+        /// </summary>
+        string Name => string.IsNullOrEmpty(displayName)
+            ? Loc.T("World", "loot_container_default")
+            : displayName;
+
+        public string InteractionPrompt => _isOpen ? "" : Loc.F("Prompt", "loot_search", Name);
 
         public bool CanInteract(PlayerContext player) => !_isOpen && player?.Inventory != null;
 

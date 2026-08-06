@@ -20,8 +20,14 @@ namespace Survive.Interaction
         [Tooltip("주울 때 소리. 비우면 소리 표의 itemPickup")]
         [SerializeField] AudioCueSO pickupCue;
 
+        /// <summary>
+        /// 화면 한가운데에 뜨는 한 줄. <b>수량이 있고 없고를 두 문장으로 갈랐다</b> —
+        /// "…줍기"에 "×3"을 이어 붙이면 그 조각의 자리를 번역가가 옮길 수 없다.
+        /// </summary>
         public string InteractionPrompt =>
-            item == null ? "" : $"[E] {DataText.Name(item)} 줍기" + (count > 1 ? $" ×{count}" : "");
+            item == null ? ""
+            : count > 1 ? Loc.F("Prompt", "pickup_many", DataText.Name(item), count)
+                        : Loc.F("Prompt", "pickup", DataText.Name(item));
 
         public bool CanInteract(PlayerContext player) => item != null && player?.Inventory != null;
 

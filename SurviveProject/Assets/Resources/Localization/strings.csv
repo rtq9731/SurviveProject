@@ -85,6 +85,44 @@ UI,item_category_other,물품,Item,
 # │ 구역 C — 세계·상호작용 (World/, Harvesting/, Interaction/) │
 # └──────────────────────────────────────────────────────────┘
 #
+# ── 상호작용 프롬프트 ─────────────────────────────────────────
+# 화면 한가운데, 조준한 것 위에 뜨는 한 줄이다. 게임 내내 제일 많이 읽히는
+# 글자라 어순이 자유로워야 한다 — "[E] 스크랩 줍기"와 "[E] Pick up Scrap"은
+# 낱말 순서가 통째로 다르다. 그래서 대괄호 안내까지 한 칸에 넣었다.
+# 이름 자리({0})에는 데이터 에셋에서 온 값이 들어간다 (DataText).
+Prompt,pickup,[E] {0} 줍기,[E] Pick up {0},{0}=아이템 이름
+Prompt,pickup_many,[E] {0} ×{1} 줍기,[E] Pick up {0} ×{1},{0}=아이템 이름 {1}=한 번에 집는 개수
+Prompt,harvest_hold,[E] 길게 눌러 {0} 채집,[E] Hold to harvest {0},{0}=채집물 이름
+Prompt,harvest_tool_needed,{0} · {1} 필요,{0} · needs {1},{0}=채집물 이름 {1}=필요한 도구 이름
+Prompt,harvest_break,{0} · 좌클릭으로 부순다 ({1}%),{0} · left click to break ({1}%),{0}=채집물 이름 {1}=남은 내구도 백분율
+Prompt,harvest_regrowing,{0} · 다시 자라는 중 ({1}초),{0} · regrowing ({1}s),{0}=채집물 이름 {1}=다시 자라기까지 남은 초
+Prompt,plant_not_grown,{0} · 아직 자라지 않았다,{0} · not grown yet,{0}=식물 이름
+# 맞지 않는 도구로 때렸을 때 조작 안내 자리에 뜨는 한 줄.
+Prompt,wrong_tool,{0}에는 흠집도 나지 않는다 · {1}가 필요하다,{0} is not even scratched · you need {1},{0}=채집물 이름 {1}=필요한 도구 이름
+Prompt,glow_cap_retrieve,[E] {0} 회수,[E] Retrieve {0},{0}=놓아둔 갓의 이름
+Prompt,loot_search,[E] {0} 뒤지기,[E] Search {0},{0}=뒤질 대상 이름
+Prompt,storage_open,[E] {0} 열기,[E] Open {0},{0}=보관함 이름
+Prompt,portal_activate,[E] {0} 기동,[E] Activate {0},{0}=구조물 이름
+# 아직 모자란 부품이 있을 때. {1}은 아래 portal_need_entry를 UI/list_separator로 이은 것이다.
+Prompt,portal_activate_needs,[E] {0} 기동: {1},[E] Activate {0}: {1},{0}=구조물 이름 {1}=드는 부품 목록
+Prompt,portal_need_entry,{0} {1}/{2},{1}/{2} {0},{0}=부품 이름 {1}=가진 수 {2}=드는 수
+#
+# ── 세계의 이름 ───────────────────────────────────────────────
+# 08.Data에 에셋이 없어 코드가 직접 들고 있는 이름들. 에셋이 생기면
+# 그 이름은 아래 자동 생성 구역으로 옮겨 가고 여기서는 사라진다.
+World,glow_cap_name,발광 버섯 갓,Glowcap,
+World,mushroom_tree_name,거대 버섯,Giant mushroom,
+# 도구 이름. 채집 프롬프트가 "무엇이 필요한가"를 말할 때 쓴다.
+World,tool_pickaxe,곡괭이,Pickaxe,
+World,tool_hammer,망치,Hammer,
+World,tool_axe,도끼,Axe,
+World,tool_generic,도구,Tool,
+# 인스펙터에서 이름을 비워 둔 상호작용 대상이 쓰는 이름.
+# 씬·프리팹에 이미 적힌 이름은 그쪽이 이긴다 (그것은 배치 데이터다).
+World,loot_container_default,잔해,Wreckage,
+World,storage_default,보관함,Storage,
+World,portal_default,외계 구조물,Alien structure,
+#
 # ══════════════════════════════════════════════════════════════
 # 데이터 에셋에서 자동으로 붙는 이름표는 이 아래에 둔다
 # (Item/{id}.name, Blueprint/{id}.hint 등). 위쪽 UI 구역과 섞지 마라.

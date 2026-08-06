@@ -1,4 +1,5 @@
 using Survive.Items;
+using Survive.Localization;
 
 namespace Survive.Harvesting
 {
@@ -31,13 +32,19 @@ namespace Survive.Harvesting
             return haveTier >= requiredTier;
         }
 
-        /// <summary>화면에 보일 도구 이름.</summary>
+        /// <summary>
+        /// 화면에 보일 도구 이름. 채집 프롬프트가 "무엇이 필요한가"를 말할 때 쓴다.
+        ///
+        /// <b>상수가 아니라 매번 표를 뒤진다.</b> 상수로 두면 로케일을 바꿔도
+        /// 그 자리만 옛 언어로 남는다 — 프롬프트는 매 프레임 다시 물으므로
+        /// 여기서 꺼내면 저절로 따라온다.
+        /// </summary>
         public static string Name(ToolType t) => t switch
         {
-            ToolType.Pickaxe => "곡괭이",
-            ToolType.Hammer => "망치",
-            ToolType.Axe => "도끼",
-            _ => "도구"
+            ToolType.Pickaxe => Loc.T("World", "tool_pickaxe"),
+            ToolType.Hammer => Loc.T("World", "tool_hammer"),
+            ToolType.Axe => Loc.T("World", "tool_axe"),
+            _ => Loc.T("World", "tool_generic")
         };
     }
 }

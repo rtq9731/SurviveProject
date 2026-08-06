@@ -1,6 +1,7 @@
 using UnityEngine;
 using Survive.Interaction;
 using Survive.Items;
+using Survive.Localization;
 using Survive.Player;
 using Survive.World;
 
@@ -33,8 +34,14 @@ namespace Survive.Harvesting
         /// <summary>따서 얻는 것. 08.Data/Items의 "버섯 갓"(발광 버섯의 갓)이다.</summary>
         public const string CapItemId = "mushroom_cap";
 
-        /// <summary>화면에 보일 이름. 스펙 §3 섬2의 자원 이름을 따른다.</summary>
-        public const string DisplayName = "발광 버섯 갓";
+        /// <summary>
+        /// 화면에 보일 이름. 스펙 §3 섬2의 자원 이름을 따른다.
+        ///
+        /// <b><c>const</c>가 아니다.</b> 상수로 두면 부르는 쪽에 글자가 박혀
+        /// 로케일을 바꿔도 이 이름만 옛 언어로 남는다. 08.Data에 에셋이 없어
+        /// 이름표는 손으로 지었다 (<c>World/glow_cap_name</c>).
+        /// </summary>
+        public static string DisplayName => Loc.T("World", "glow_cap_name");
 
         /// <summary>
         /// 맨손 채집 시간. 기존 발광 버섯 노드(08.Data/HarvestNodes/Mushroom)의
@@ -91,17 +98,26 @@ namespace Survive.Harvesting
 
         // ── 홀드 채집 ────────────────────────────────────────────
 
+        /// <summary>남은 초를 소수점 없이. 프롬프트 인자로 넘기기 전에 여기서 서식한다.</summary>
+        const string SecondsFormat = "F0";
+
         public float HoldDuration => HoldSeconds;
 
         public string InteractionPrompt
         {
             get
             {
-                if (!_harvested) return $"[E] 길게 눌러 {DisplayName} 채집";
+                if (!_harvested) return Loc.F("Prompt", "harvest_hold", DisplayName);
+
                 // 따고 나면 콜라이더를 껐으므로 보통은 조준되지 않는다.
                 // 그래도 문구를 비워 두지 않는다 — 겹친 콜라이더로 잡히는 경우가 있고,
                 // 그때 아무 말도 없으면 "고장났다"로 읽힌다.
-                return $"{DisplayName} · 다시 자라는 중 ({RegrowRemaining:F0}초)";
+                //
+                // 서식 지정자는 지역 변수로 뺀다. 인자 자리에 "F0"을 그대로 두면
+                // 문장 게이트가 그것을 "말을 인자로 넘겼다"로 읽는다 —
+                // 서식인지 말인지는 정적 분석으로 가릴 수 없다.
+                string 남은초 = RegrowRemaining.ToString(SecondsFormat);
+                return Loc.F("Prompt", "harvest_regrowing", DisplayName, 남은초);
             }
         }
 

@@ -122,8 +122,8 @@ namespace Survive.Harvesting
             get
             {
                 if (definition == null || _gone) return "";
-                if (_stage <= 0) return $"{DataText.Name(definition)} · 아직 자라지 않았다";
-                return $"[E] 길게 눌러 {DataText.Name(definition)} 채집";
+                if (_stage <= 0) return Loc.F("Prompt", "plant_not_grown", DataText.Name(definition));
+                return Loc.F("Prompt", "harvest_hold", DataText.Name(definition));
             }
         }
 

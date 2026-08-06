@@ -4,6 +4,7 @@ using UnityEngine;
 using MoreMountains.Feedbacks;
 using Survive.Core;
 using Survive.Items;
+using Survive.Localization;
 using Survive.Player;
 
 namespace Survive.Interaction
@@ -18,7 +19,8 @@ namespace Survive.Interaction
     [DisallowMultipleComponent]
     public class StorageContainer : MonoBehaviour, IInteractable, ISaveable
     {
-        [SerializeField] string displayName = "보관함";
+        [Tooltip("비우면 번역 표의 World/storage_default를 쓴다")]
+        [SerializeField] string displayName = "";
         [SerializeField] int slotCount = 18;
 
         [Tooltip("열 때 재생")]
@@ -30,11 +32,19 @@ namespace Survive.Interaction
         Inventory _contents;
 
         public Inventory Contents => _contents ??= new Inventory(slotCount);
-        public string DisplayName => displayName;
+
+        /// <summary>
+        /// 보관함 창의 제목이자 프롬프트에 들어가는 이름.
+        /// 인스펙터에 적힌 것이 이기고, 비어 있을 때만 표의 기본 이름을 쓴다 —
+        /// 세워 둔 보관함마다 다른 이름을 붙일 수 있어야 하기 때문이다.
+        /// </summary>
+        public string DisplayName => string.IsNullOrEmpty(displayName)
+            ? Loc.T("World", "storage_default")
+            : displayName;
 
         public event Action<StorageContainer> Opened;
 
-        public string InteractionPrompt => $"[E] {displayName} 열기";
+        public string InteractionPrompt => Loc.F("Prompt", "storage_open", DisplayName);
 
         public bool CanInteract(PlayerContext player) => player?.Inventory != null;
 
