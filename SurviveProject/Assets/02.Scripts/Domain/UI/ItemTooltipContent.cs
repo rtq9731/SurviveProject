@@ -1,4 +1,5 @@
 using Survive.Items;
+using Survive.Localization;
 
 namespace Survive.UI
 {
@@ -17,9 +18,6 @@ namespace Survive.UI
     /// </summary>
     public static class ItemTooltipContent
     {
-        /// <summary>분류와 묶음 수 사이. 제작 목록도 같은 기호로 잇는다.</summary>
-        public const string Separator = "  ·  ";
-
         /// <summary>쪽지를 띄울 값어치가 있는가. 이름조차 없으면 띄우지 않는다.</summary>
         public static bool CanShow(ItemDataSO item) =>
             item != null && !string.IsNullOrWhiteSpace(Title(item));
@@ -42,6 +40,10 @@ namespace Survive.UI
         /// <summary>
         /// 아래 한 줄. 분류는 늘 적고, 겹쳐지는 물건만 묶음 수를 덧붙인다 —
         /// 도구마다 "최대 1개"라고 적어 봐야 아무것도 알려 주지 않는다.
+        ///
+        /// 겹쳐지는 경우와 아닌 경우를 <b>다른 문장</b>으로 둔다. 뒤에 조각을 덧붙이면
+        /// 번역가가 "한 칸에 200개"를 분류 앞으로 옮길 수 없다 — 영어는 실제로
+        /// 그쪽 순서가 자연스럽다(<c>200 per slot  ·  Material</c>).
         /// </summary>
         public static string Meta(ItemDataSO item)
         {
@@ -49,7 +51,7 @@ namespace Survive.UI
 
             string category = CategoryName(item.category);
             return item.maxStack > 1
-                ? category + Separator + "한 칸에 " + item.maxStack + "개"
+                ? Loc.F("UI", "item_meta_stack", category, item.maxStack)
                 : category;
         }
 
@@ -58,11 +60,11 @@ namespace Survive.UI
         {
             switch (category)
             {
-                case ItemCategory.Tool:       return "도구";
-                case ItemCategory.Consumable: return "소모품";
-                case ItemCategory.Quest:      return "진행 물품";
-                case ItemCategory.Resource:   return "재료";
-                default:                      return "물품";
+                case ItemCategory.Tool:       return Loc.T("UI", "item_category_tool");
+                case ItemCategory.Consumable: return Loc.T("UI", "item_category_consumable");
+                case ItemCategory.Quest:      return Loc.T("UI", "item_category_quest");
+                case ItemCategory.Resource:   return Loc.T("UI", "item_category_resource");
+                default:                      return Loc.T("UI", "item_category_other");
             }
         }
     }

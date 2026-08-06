@@ -7,7 +7,8 @@ namespace Survive.Localization
     /// CSV 한 장을 읽어 로케일별 표로 세워 둔 것. 여기까지가 순수부다 —
     /// 파일을 어디서 어떻게 읽어 왔는지는 이 클래스가 모른다.
     ///
-    /// 표의 모양은 <c>Category,Key,ko,en,…</c>. 첫 두 칸은 이름표이고 나머지가 로케일이다.
+    /// 표의 모양은 <c>Category,Key,ko,en,…,Comment</c>. 첫 두 칸은 이름표이고
+    /// 나머지가 로케일이다 — 다만 <see cref="CommentColumn"/> 하나만 로케일이 아니다.
     /// Unity Localization의 CSV(<c>Key</c> + 로케일 열)와 어긋나지 않게 두었다 —
     /// 그쪽으로 갈아탈 때 <c>Category</c>별로 줄을 갈라 테이블 파일로 나누면 끝이다.
     ///
@@ -28,9 +29,27 @@ namespace Survive.Localization
         public const string CategoryColumn = "Category";
         public const string KeyColumn = "Key";
 
+        /// <summary>
+        /// 로케일이 아닌 열. 번역가에게 <c>{0}</c>이 무엇인지 알려 주는 자리다.
+        ///
+        /// <b>왜 필요한가.</b> 이 층의 요점은 번역가가 <c>{0} {1} {2}</c>의 순서를
+        /// 마음대로 바꾸는 것인데, <c>{0}</c>만 보고는 무엇이 들어가는지 알 수 없어
+        /// 정작 바꾸지 못한다. 어순을 바꾸라고 만든 규칙인데 못 바꾸면 헛일이다.
+        ///
+        /// <b>왜 <c>#</c> 주석 줄이 아닌가.</b> 주석 줄은 키에 붙어 있지 않아
+        /// 기계가 "이 값의 설명"으로 읽을 수 없고, Unity Localization으로 내보낼 때
+        /// 사라진다. 열이면 게이트가 "자리표가 있는데 설명이 없다"를 막을 수 있다.
+        ///
+        /// <b>왜 맨 끝인가.</b> 새 언어를 더할 때 헤더 끝에 열을 붙이는 관례를
+        /// 지키려면 이 열이 <see cref="KeyColumn"/> 바로 뒤에 있으면 안 된다 —
+        /// 그러면 옛 꼴로 적힌 줄의 값이 한 칸씩 밀려 Comment 자리에 들어간다.
+        /// </summary>
+        public const string CommentColumn = "Comment";
+
         readonly List<string> _locales = new List<string>();
         readonly List<LocKey> _keys = new List<LocKey>();
         readonly List<string> _problems = new List<string>();
+        readonly Dictionary<LocKey, string> _comments = new Dictionary<LocKey, string>();
         readonly Dictionary<string, Dictionary<LocKey, string>> _tables =
             new Dictionary<string, Dictionary<LocKey, string>>(StringComparer.OrdinalIgnoreCase);
 
@@ -48,6 +67,14 @@ namespace Survive.Localization
         /// 중복 이름표, 헤더와 칸 수가 다른 줄, 기본 로케일 칸이 빈 줄.
         /// </summary>
         public IReadOnlyList<string> Problems => _problems;
+
+        /// <summary>
+        /// 번역가에게 남긴 설명. 없으면 빈 글자.
+        /// 규약은 <c>{0}=제작물 이름 {1}=재료 목록</c> 꼴이다 —
+        /// 게이트가 자리표마다 <c>{n}=</c>이 있는지 본다.
+        /// </summary>
+        public string CommentFor(LocKey key) =>
+            _comments.TryGetValue(key, out var c) ? c : "";
 
         public bool Contains(LocKey key) =>
             _tables.TryGetValue(DefaultLocale, out var t) && t.ContainsKey(key);
@@ -96,12 +123,22 @@ namespace Survive.Localization
             if (header.Length > 1 && header[1].Trim() != KeyColumn)
                 catalog._problems.Add($"{lines[0]}행 헤더의 둘째 칸이 \"{KeyColumn}\"이 아니다: \"{header[1]}\"");
 
+            // 로케일이 아닌 열의 자리. -1이면 표에 그 열이 없다.
+            int commentColumn = -1;
+
             for (int c = 2; c < header.Length; c++)
             {
                 string locale = header[c].Trim();
                 if (locale.Length == 0)
                 {
                     catalog._problems.Add($"{lines[0]}행 헤더 {c + 1}번째 칸에 로케일 이름이 없다");
+                    continue;
+                }
+                if (locale.Equals(CommentColumn, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (commentColumn >= 0)
+                        catalog._problems.Add($"{lines[0]}행 헤더에 \"{CommentColumn}\" 열이 두 번 있다");
+                    commentColumn = c;
                     continue;
                 }
                 if (locale.Equals(PseudoLocale, StringComparison.OrdinalIgnoreCase))
@@ -133,9 +170,17 @@ namespace Survive.Localization
                 var row = rows[r];
                 int line = lines[r];
 
-                if (row.Length != header.Length)
+                // 칸이 <b>남는</b> 것만 문제로 적는다. 거의 언제나 값 안의 쉼표를
+                // 따옴표로 감싸지 않은 것이고, 그대로 두면 값이 잘려 나간다.
+                //
+                // 모자란 것은 문제로 적지 않는다. 뒤쪽 빈 칸을 일일이 채우게 하면
+                // 사람이 손으로 고치는 표에서 쉼표만 세는 일이 늘고, 열이 하나
+                // 늘어난 날 표 전체가 한꺼번에 붉어진다. 없는 칸은 빈 값으로 본다 —
+                // 정말 비어서는 안 될 기본 로케일 칸은 아래에서 따로 잡는다.
+                if (row.Length > header.Length)
                     catalog._problems.Add(
-                        $"{line}행: 칸이 {row.Length}개인데 헤더는 {header.Length}개다");
+                        $"{line}행: 칸이 {row.Length}개인데 헤더는 {header.Length}개다 " +
+                        "— 값에 든 쉼표는 따옴표로 감싼다");
 
                 string category = row.Length > 0 ? row[0].Trim() : "";
                 string key = row.Length > 1 ? row[1].Trim() : "";
@@ -154,8 +199,13 @@ namespace Survive.Localization
                 }
                 catalog._keys.Add(lk);
 
+                if (commentColumn >= 0 && commentColumn < row.Length &&
+                    !string.IsNullOrWhiteSpace(row[commentColumn]))
+                    catalog._comments[lk] = row[commentColumn].Trim();
+
                 for (int c = 2; c < header.Length && c < row.Length; c++)
                 {
+                    if (c == commentColumn) continue;
                     string locale = header[c].Trim();
                     if (!catalog._tables.TryGetValue(locale, out var table)) continue;
                     string value = row[c];

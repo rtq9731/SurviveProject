@@ -105,14 +105,14 @@ namespace Survive.Testing
                 E2EHarness.Assert(PseudoLocalizer.IsTransformed(c.text),
                                   "모든 행의 버튼이 함께 바뀌었다");
 
-            // 의사 번역의 두 번째 목적: 아직 안 옮긴 글자가 눈에 띈다.
-            // 목록 줄은 이번 라운드에서 옮기지 않았으므로 부풀지 않는다.
+            // 목록 줄도 이제 표에서 나온다. 줄 전체가 부풀어야 한다 —
+            // 부풀지 않으면 그 자리는 아직 코드에 박힌 문장이라는 신호다.
             if (줄글자 != null)
             {
                 string 줄후 = 줄글자.text;
-                E2EHarness.Log($"  아직 안 옮긴 줄: \"{줄후}\"");
-                E2EHarness.Assert(!PseudoLocalizer.IsTransformed(줄후),
-                    "옮기지 않은 줄은 부풀지 않는다 — 이것이 무엇이 남았는지를 화면에서 보여 주는 신호다");
+                E2EHarness.Log($"  목록 줄: \"{줄후}\"");
+                E2EHarness.Assert(PseudoLocalizer.IsTransformed(줄후),
+                    "목록 줄이 통째로 표에서 나온다 — 부풀지 않으면 아직 코드에 박힌 문장이다");
             }
         }
 
@@ -128,6 +128,54 @@ namespace Survive.Testing
             E2EHarness.Assert(captions.Length > 0, "행이 그대로 서 있다");
             E2EHarness.Log($"  en: \"{captions[0].text}\"");
             E2EHarness.AssertEqual(captions[0].text, "Max", "en 칸의 값이 화면에 나왔다");
+
+            yield return 어순이_뒤집혔다();
+        }
+
+        /// <summary>
+        /// <b>어순이 실제로 뒤집혀 화면에 섰는가.</b>
+        ///
+        /// 표의 en 열은 재료 한 항목을 "가진수/드는수 이름" 순서로 적어 두었다.
+        /// 한국어는 "이름 가진수/드는수"다. 코드는 한 줄도 다르지 않으므로,
+        /// 화면 문자열의 앞뒤가 바뀌었다면 그것은 표가 순서를 바꾼 것이다.
+        /// </summary>
+        static IEnumerator 어순이_뒤집혔다()
+        {
+            var 줄 = 목록줄_글자();
+            if (줄 == null)
+            {
+                E2EHarness.Log("  (목록 줄이 없어 어순 검사를 건너뛴다)");
+                yield break;
+            }
+
+            string en줄 = 줄.text;
+            E2EHarness.Log($"  en 목록 줄: \"{en줄}\"");
+
+            Loc.SetLocale("ko");
+            yield return null;
+            yield return null;
+
+            줄 = 목록줄_글자();
+            string ko줄 = 줄 != null ? 줄.text : "";
+            E2EHarness.Log($"  ko 목록 줄: \"{ko줄}\"");
+
+            E2EHarness.Assert(en줄 != ko줄, "같은 줄이 로케일에 따라 다르게 적힌다");
+
+            // 표에 적힌 en 항목 틀이 실제로 다른 순서인지 여기서 확인한다.
+            // 화면 문자열만 비교하면 값이 달라서 다른 것인지 순서가 달라서 다른 것인지 모른다.
+            Loc.SetLocale("en");
+            yield return null;
+            string en항목 = Loc.F("UI", "ingredient_entry", "Wood", 2, 5);
+            Loc.SetLocale("ko");
+            yield return null;
+            string ko항목 = Loc.F("UI", "ingredient_entry", "Wood", 2, 5);
+
+            E2EHarness.Log($"  같은 값으로: ko \"{ko항목}\" / en \"{en항목}\"");
+            E2EHarness.Assert(ko항목.StartsWith("Wood"), "ko는 이름이 앞이다");
+            E2EHarness.Assert(en항목.StartsWith("2/5"), "en은 수가 앞이다 — 자리가 통째로 뒤집혔다");
+
+            Loc.SetLocale("en");
+            yield return null;
         }
 
         static IEnumerator 되돌리면_원래_글자로_돌아온다(string 처음로케일)

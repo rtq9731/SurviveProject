@@ -5,13 +5,69 @@
 # Key      = 그 안에서의 이름 (Entry Name)
 # ko       = 기본 로케일. 이 칸은 절대 비우지 않는다 (EditMode 게이트가 잡는다).
 # en 이하  = 번역. 비워 두면 ko로 폴백한다.
+# Comment  = 번역가에게 남기는 설명. 로케일 열이 아니다. 항상 맨 끝 칸이다.
+#
+# 한 줄에 보이는 문장은 한 칸에 통째로 들어간다. 그 안의 {0} {1} {2}가 값이
+# 들어갈 자리이고, 순서는 언어에 맞게 마음대로 바꿔도 된다 ({1} {0}도 된다).
+# {0}이 무엇인지는 Comment 칸에 "{0}=..." 꼴로 적혀 있다.
+#
+# 한국어 조사는 자연스럽게 적으면 된다 — {0}을 이라고 적든 {0}를 이라고 적든
+# 화면에는 "을(를)"로 나간다. 다른 언어 줄에는 이 처리가 돌지 않는다.
 #
 # 쉼표·따옴표·줄바꿈이 든 값은 따옴표로 감싼다 ("따옴표"는 ""로 겹쳐 쓴다).
-Category,Key,ko,en
-UI,craft_empty,아직 아는 제작법이 없다,
-UI,build_empty,아직 아는 건축물이 없다,
-UI,research_empty,아직 들여다볼 것이 없다,
-UI,no_ingredients,재료 없음,No materials
-UI,queue_full,(대기열이 가득 찼다),
-UI,ingredients_label,재료,Materials
-UI,craft_max_button,최대,Max
+Category,Key,ko,en,Comment
+#
+# ── 목록이 비었을 때 ──────────────────────────────────────────
+UI,craft_empty,아직 아는 제작법이 없다,Nothing you know how to craft yet,
+UI,build_empty,아직 아는 건축물이 없다,Nothing you know how to build yet,
+UI,research_empty,아직 들여다볼 것이 없다,Nothing to look into yet,
+UI,no_ingredients,재료 없음,No materials,
+#
+# ── 버튼과 수량 ───────────────────────────────────────────────
+UI,craft_max_button,최대,Max,
+UI,quantity_amount,x{0},x{0},{0}=한 번에 만들 개수
+#
+# ── 되풀이 목록 (통짜 문장 규칙의 유일한 예외) ────────────────
+# 재료가 세 종이면 같은 꼴이 세 번 반복된다. 그것만은 통짜로 만들 수 없어서
+# 항목 하나의 틀과 항목 사이 구분자를 따로 둔다. 이어 붙인 결과는 아래
+# 문장들의 {n} 자리에 통째로 들어간다.
+UI,list_separator,", ",", ",항목과 항목 사이에 들어가는 것. 언어마다 다르다
+UI,ingredient_entry,{0} {1}/{2},{1}/{2} {0},{0}=재료 이름 {1}=가진 수 {2}=드는 수
+UI,ingredient_need,{0} {1},{1}x {0},{0}=재료 이름 {1}=드는 수
+#
+# ── 제작·건축 줄 ──────────────────────────────────────────────
+UI,recipe_line,{0}  ·  {1}  ·  {2},{0}  ·  {1}  ·  {2},{0}=제작물 이름 {1}=재료 목록 {2}=걸리는 시간
+UI,recipe_line_queue_full,{0}  ·  {1}  ·  {2}  (대기열이 가득 찼다),{0}  ·  {1}  ·  {2}  (queue is full),{0}=제작물 이름 {1}=재료 목록 {2}=걸리는 시간
+UI,buildable_line,{0}  ·  {1},{0}  ·  {1},{0}=건축물 이름 {1}=재료 목록
+UI,ingredients_line,{0}을 만들려면 {1},Needs {1} for {0},{0}=제작물 이름 {1}=재료 목록
+#
+# ── 연구대 ────────────────────────────────────────────────────
+UI,research_line,{0}  ·  {1}  ·  {2},{0}  ·  {1}  ·  {2},{0}=연구 항목 이름 {1}=드는 것 목록 {2}=걸리는 시간
+UI,research_line_state,{0}  ·  {1}  ·  {2}  ({3}),{0}  ·  {1}  ·  {2}  ({3}),{0}=연구 항목 이름 {1}=드는 것 목록 {2}=걸리는 시간 {3}=지금 상태
+UI,research_line_known,{0}  ·  {1},{0}  ·  {1},{0}=연구 항목 이름 {1}=지금 상태
+UI,research_queued_active,{0}  ·  분석 중 {1}  ·  남은 {2}  (누르면 물린다),{0}  ·  analyzing {1}  ·  {2} left  (click to cancel),{0}=연구 항목 이름 {1}=진행률 {2}=남은 시간
+UI,research_queued_waiting,{0}  ·  대기 {1}번째  ·  {2}  (누르면 물린다),{0}  ·  #{1} in queue  ·  {2}  (click to cancel),{0}=연구 항목 이름 {1}=줄에서 몇 번째 {2}=남은 시간
+UI,research_header,{0}  ·  분석 대기열 {1}/{2}  ·  남은 {3},{0}  ·  queue {1}/{2}  ·  {3} left,{0}=연구대 이름 {1}=걸린 수 {2}=한꺼번에 걸 수 있는 수 {3}=남은 시간
+UI,research_header_empty,{0}  ·  분석 대기열 비어 있음,{0}  ·  queue is empty,{0}=연구대 이름
+UI,research_station_default,연구대,Research bench,에셋이 이름을 적지 않았을 때 쓰는 이름
+UI,research_energy_default,스크랩,Scrap,에셋이 태울 것을 지정하지 않았을 때 쓰는 이름
+UI,research_state_ready,분석할 수 있다,Ready to analyze,
+UI,research_state_known,이미 밝혀냈다,Already known,
+UI,research_state_queued,분석 중,Analyzing,
+UI,research_state_queue_full,연구대가 가득 찼다,The bench is full,
+UI,research_state_no_material,분석할 물건이 없다,Nothing to analyze,
+UI,research_state_no_energy,태울 스크랩이 모자란다,Not enough scrap to burn,
+UI,research_state_invalid,분석할 수 없다,Cannot analyze,
+#
+# ── 물건 쪽지 ─────────────────────────────────────────────────
+UI,item_meta_stack,{0}  ·  한 칸에 {1}개,{1} per slot  ·  {0},{0}=분류 이름 {1}=한 칸에 담기는 수
+UI,item_category_tool,도구,Tool,
+UI,item_category_consumable,소모품,Consumable,
+UI,item_category_quest,진행 물품,Quest item,
+UI,item_category_resource,재료,Material,
+UI,item_category_other,물품,Item,
+#
+# ══════════════════════════════════════════════════════════════
+# 데이터 에셋에서 자동으로 붙는 이름표는 이 아래에 둔다
+# (Item/{id}.name, Blueprint/{id}.hint 등). 위쪽 UI 구역과 섞지 마라.
+# ══════════════════════════════════════════════════════════════
