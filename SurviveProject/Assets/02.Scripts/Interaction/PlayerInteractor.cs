@@ -7,20 +7,51 @@ namespace Survive.Interaction
 {
     /// <summary>
     /// 카메라 전방을 훑어 상호작용 대상을 찾고 실행한다.
+    ///
+    /// 무엇을 겨눴는가는 <see cref="AimQuery"/>가 묻고 <see cref="AimSelection"/>이 정한다.
+    /// 여기 남은 것은 입력·홀드·프롬프트뿐이다.
     /// </summary>
     [DisallowMultipleComponent]
     public class PlayerInteractor : MonoBehaviour
     {
         [SerializeField] InputReaderSO input;
         [SerializeField] Transform rayOrigin;      // 보통 카메라
+
+        [Tooltip("손이 닿는 거리(m)")]
         [SerializeField] float detectDistance = 3f;
-        [SerializeField] float detectRadius = 0.3f;
+
         [SerializeField] LayerMask interactableMask = ~0;
+
+        /// <summary>
+        /// 시선에서 이만큼 벗어난 것까지는 겨눈 것으로 봐준다(m).
+        /// 작은 물건을 픽셀 단위로 겨누게 하면 그것대로 괴로우므로 여유를 남긴다.
+        ///
+        /// <b>0.3에서 0.2로 줄였다.</b> 씬의 상호작용 대상 59개를 여덟 자리에서
+        /// 겨눠 본 실측(<c>Testing/AimAccuracyProbe</c>)이 근거다. 똑바로 겨눴을 때의
+        /// 적중은 0.2와 0.3이 똑같았고(둘 다 472표본 중 466, 98.7%), <b>시선을 40도
+        /// 비껴 놓았을 때만</b> 갈렸다 — 944표본에서 엉뚱한 것이 잡히는 수가
+        /// 41(0.3)에서 21(0.2)로 절반이 됐다. 0.15까지 줄이면 그것이 20으로 하나 더
+        /// 주는 대신 똑바로 겨눴을 때의 놓침이 2에서 3으로 늘어, 얻는 것보다 잃는 것이 크다.
+        ///
+        /// 손이 닿는 거리(3m)는 그대로 두었다. 2.5·3·3.5m를 같은 방식으로 재 봤지만
+        /// 세 값의 적중률 차이가 0.2%p 안이라 바꿀 근거가 없었다.
+        ///
+        /// <b>왜 인스펙터 필드가 아닌가.</b> 이 값은 <c>05.Prefabs/Player.prefab</c>에
+        /// 0.3으로 직렬화되어 있다. 필드로 두면 코드의 기본값을 고쳐도 프리팹의 값이
+        /// 이기고, 이번 라운드는 그 프리팹을 고칠 수 없다. 필드를 없애면 직렬화된
+        /// 값이 아예 읽히지 않으므로 언제나 여기서 나온다 —
+        /// <c>ScrapCounterView.format</c>에서 같은 함정을 같은 수로 풀었다.
+        /// </summary>
+        const float AimTolerance = 0.2f;
 
         PlayerContext _player;
         Transform _playerRoot;
+        readonly AimQuery _aim = new AimQuery();
 
         public IInteractable Current { get; private set; }
+
+        /// <summary>지금 조준한 것의 계층. 윤곽을 그리는 쪽이 읽는다. 없으면 null.</summary>
+        public Transform CurrentRoot { get; private set; }
 
         public event Action<string> PromptChanged;       // null이면 숨김
         public event Action<float> HoldProgressChanged;  // 0~1
@@ -34,6 +65,11 @@ namespace Survive.Interaction
             _player = GetComponentInParent<PlayerContext>();
             _playerRoot = _player != null ? _player.transform : transform.root;
             if (rayOrigin == null && Camera.main != null) rayOrigin = Camera.main.transform;
+
+            _aim.MaxDistance = detectDistance;
+            _aim.Radius = AimTolerance;
+            _aim.Mask = interactableMask;
+            _aim.Self = _playerRoot;
         }
 
         void OnEnable()
@@ -56,48 +92,20 @@ namespace Survive.Interaction
             AdvanceHold();
         }
 
+        void LateUpdate()
+        {
+            // 조준한 것에 옅은 윤곽을 그린다. Update가 대상을 정한 뒤라야 한다.
+            AimOutline.Draw(CurrentRoot, rayOrigin);
+        }
+
         void RefreshTarget()
         {
             if (rayOrigin == null) return;
 
-            // 카메라가 플레이어 콜라이더 안에 있어 SphereCast가 자기 자신을 거리 0에서
-            // 명중시킨다. 단일 SphereCast로는 그 뒤가 보이지 않으므로 전부 받아
-            // 자기 몸을 건너뛰고 가장 가까운 상호작용 대상을 고른다.
-            var hits = Physics.SphereCastAll(rayOrigin.position, detectRadius, rayOrigin.forward,
-                                             detectDistance, interactableMask,
-                                             QueryTriggerInteraction.Collide);
+            _aim.TryPick(rayOrigin.position, rayOrigin.forward,
+                         out IInteractable found, out Transform root, out _);
 
-            IInteractable found = null;
-            float nearest = float.MaxValue;
-
-            // 시작 지점에서 이미 겹쳐 있는 콜라이더는 거리 0으로 돌아온다.
-            // 그대로 거리로 쓰면 "몸이 그 안에 들어가 있는 것"이 언제나 1등이 되어,
-            // 코앞의 통을 보고 있어도 발밑 고사리가 잡힌다 — 채집 편의를 위해 붙인
-            // 넓은 InteractBounds(약 3m) 안에 서면 다른 것은 아무것도 조준되지 않았다.
-            // 겹친 것은 <b>겨눈 것이 하나도 없을 때만</b> 쓰는 차선책으로 내린다.
-            IInteractable enclosing = null;
-
-            foreach (var hit in hits)
-            {
-                if (IsOwnBody(hit.collider)) continue;
-
-                var candidates = hit.collider.GetComponentInParent<IInteractable>();
-                if (candidates == null) continue;
-
-                if (hit.distance <= 0f)
-                {
-                    if (enclosing == null) enclosing = candidates;
-                    continue;
-                }
-
-                if (hit.distance < nearest)
-                {
-                    nearest = hit.distance;
-                    found = candidates;
-                }
-            }
-
-            if (found == null) found = enclosing;
+            CurrentRoot = root;
 
             if (!ReferenceEquals(found, Current))
             {
@@ -121,13 +129,6 @@ namespace Survive.Interaction
                 _lastPrompt = prompt;
                 PromptChanged?.Invoke(prompt);
             }
-        }
-
-        /// <summary>플레이어 자신의 콜라이더인지. 카메라가 몸 안에 있어 반드시 걸러야 한다.</summary>
-        bool IsOwnBody(Collider col)
-        {
-            if (_playerRoot == null) return false;
-            return col.transform == _playerRoot || col.transform.IsChildOf(_playerRoot);
         }
 
         /// <summary>E를 누르고 있는가. 연속 채집 판단에 쓴다.</summary>
