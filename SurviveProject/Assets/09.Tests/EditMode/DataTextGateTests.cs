@@ -238,16 +238,11 @@ public class DataTextGateTests
     /// <summary>
     /// 접근자를 거치지 않고 SO의 글자 필드를 직접 읽는 자리. <b>여기 없는 것이 나오면 실패다.</b>
     ///
-    /// 이 네 파일은 지금 다른 작업이 진행 중이라 이번 라운드에서 손대지 않았다.
-    /// 목록이 비는 날 이 검사는 "우회가 하나도 없다"가 된다.
+    /// <b>비었다.</b> 네 화면 파일(MenuListing·ItemTooltipContent·CraftQueueView·
+    /// ObjectiveListView)이 전부 <see cref="DataText"/>를 거치게 됐다.
+    /// 이제 이 검사는 그냥 "우회가 하나도 없다"이다 — 새 우회가 생기면 즉시 빨개진다.
     /// </summary>
-    static readonly string[] 아직_옮기지_못한_파일 =
-    {
-        "Assets/02.Scripts/Domain/UI/MenuListing.cs",
-        "Assets/02.Scripts/Domain/UI/ItemTooltipContent.cs",
-        "Assets/02.Scripts/UI/CraftQueueView.cs",
-        "Assets/02.Scripts/UI/ObjectiveListView.cs",
-    };
+    static readonly string[] 아직_옮기지_못한_파일 = { };
 
     /// <summary>글자 필드를 직접 읽는 꼴. 대입(<c>= 값</c>)은 읽기가 아니라 세우기다.</summary>
     static readonly Regex 직접읽기 = new Regex(

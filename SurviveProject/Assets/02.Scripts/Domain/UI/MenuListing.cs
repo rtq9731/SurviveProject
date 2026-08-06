@@ -194,7 +194,7 @@ namespace Survive.UI
 
                 int held = inv != null ? inv.CountOf(need.item.id) : 0;
                 sb.Append(Loc.F("UI", "ingredient_entry",
-                                need.item.displayName, held, need.count * want));
+                                DataText.Name(need.item), held, need.count * want));
                 first = false;
             }
 
@@ -214,7 +214,7 @@ namespace Survive.UI
             {
                 if (need?.item == null || need.count <= 0) continue;
                 if (!first) sb.Append(separator);
-                sb.Append(Loc.F("UI", "ingredient_need", need.item.displayName, need.count));
+                sb.Append(Loc.F("UI", "ingredient_need", DataText.Name(need.item), need.count));
                 first = false;
             }
 
@@ -263,14 +263,15 @@ namespace Survive.UI
                     if (need?.item == null || need.count <= 0) continue;
                     int held = inv != null ? inv.CountOf(need.item.id) : 0;
                     sb.Append(Loc.F("UI", "ingredient_entry",
-                                    need.item.displayName, held, need.count));
+                                    DataText.Name(need.item), held, need.count));
                     sb.Append(separator);
                 }
             }
 
-            string energyName = energy != null && !string.IsNullOrWhiteSpace(energy.displayName)
-                ? energy.displayName
-                : Loc.T("UI", "research_energy_default");
+            string energyLabel = DataText.Name(energy);
+            string energyName = string.IsNullOrWhiteSpace(energyLabel)
+                ? Loc.T("UI", "research_energy_default")
+                : energyLabel;
             int heldEnergy = inv != null ? inv.CountOf(ResearchService.EnergyIdOf(energy)) : 0;
 
             sb.Append(Loc.F("UI", "ingredient_entry", energyName, heldEnergy, e.energyCost));
@@ -329,27 +330,38 @@ namespace Survive.UI
                          CraftTimeText.Short(ResearchService.TotalSecondsLeft(queue)));
         }
 
+        // 아래 이름들은 전부 <see cref="DataText"/>를 거친다. 에셋의 displayName을
+        // 여기서 직접 읽으면 이 목록만 로케일을 안 따라오고, 그 구멍은 이 화면을
+        // 그 로케일로 열어 보기 전까지 아무 신호도 내지 않는다.
+        // 표에 키가 없으면 DataText가 에셋 원문을 그대로 돌려주므로 옛 동작 그대로다.
+
         /// <summary>이름이 비면 id라도 보여 준다. 빈 줄이 뜨는 것보다는 낫다.</summary>
         public static string NameOf(ResearchEntrySO e)
         {
             if (e == null) return "";
-            return string.IsNullOrWhiteSpace(e.displayName) ? (e.id ?? "") : e.displayName;
+            string name = DataText.Name(e);
+            return string.IsNullOrWhiteSpace(name) ? (e.id ?? "") : name;
         }
 
         /// <summary>이름이 비면 id라도 보여 준다. 빈 줄이 뜨는 것보다는 낫다.</summary>
         public static string NameOf(RecipeSO r)
         {
             if (r == null) return "";
-            if (!string.IsNullOrWhiteSpace(r.displayName)) return r.displayName;
-            if (r.result?.item != null && !string.IsNullOrWhiteSpace(r.result.item.displayName))
-                return r.result.item.displayName;
+
+            string name = DataText.Name(r);
+            if (!string.IsNullOrWhiteSpace(name)) return name;
+
+            string resultName = DataText.Name(r.result?.item);
+            if (!string.IsNullOrWhiteSpace(resultName)) return resultName;
+
             return r.id ?? "";
         }
 
         public static string NameOf(BuildableSO b)
         {
             if (b == null) return "";
-            return string.IsNullOrWhiteSpace(b.displayName) ? (b.id ?? "") : b.displayName;
+            string name = DataText.Name(b);
+            return string.IsNullOrWhiteSpace(name) ? (b.id ?? "") : name;
         }
     }
 }

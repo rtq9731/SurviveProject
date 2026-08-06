@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using Survive.Core;
 using Survive.Creatures;
+using Survive.Localization;
 using Survive.Progression;
 
 namespace Survive.UI
@@ -87,6 +88,12 @@ namespace Survive.UI
         TMP_Text _detailBody;
         TMP_Text _summary;
 
+        // 한 번 쓰고 마는 글자들. 로케일이 바뀌면 아무도 다시 쓰지 않으므로
+        // 붙들고 있다가 직접 갈아 끼운다 (docs/번역-체계.md 2절).
+        TMP_Text _title;
+        TMP_Text _caption;
+        TMP_Text _footer;
+
         /// <summary>지금 화면에 뜬 갈래. 검증 하네스가 본다.</summary>
         public CodexSection Section => _section;
 
@@ -98,11 +105,26 @@ namespace Survive.UI
 
         // ── 생애 ─────────────────────────────────────────────────
 
+        void OnEnable() => Loc.LocaleChanged += OnLocaleChanged;
+
         void OnDisable()
         {
+            Loc.LocaleChanged -= OnLocaleChanged;
             Unbind();
             if (GameServices.TryGet<UIStateService>(out var ui)) ui.UnregisterPanel(this);
             if (_instance == this) _instance = null;
+        }
+
+        /// <summary>
+        /// 로케일이 바뀌면 <b>창을 연 채로</b> 글자가 바뀌어야 한다. 목록·탭·요약은
+        /// 다시 그리면 따라오지만 제목·부제·바닥글은 세울 때 한 번 쓰이고 아무도
+        /// 다시 쓰지 않는다 — 창을 닫았다 열면 바뀌어 있어 사람 눈으로는
+        /// 통과한 것처럼 보인다.
+        /// </summary>
+        void OnLocaleChanged()
+        {
+            ApplyStaticText();
+            _dirty = true;
         }
 
         void Update()
@@ -268,8 +290,8 @@ namespace Survive.UI
                     source = _scratch;
                 }
 
-                label.text = $"{CodexCatalog.SectionTitle(section)}  " +
-                             $"{CodexCatalog.CountUnlocked(source)}/{source.Count}";
+                label.text = Loc.F("UI", "codex_tab", CodexCatalog.SectionTitle(section),
+                                   CodexCatalog.CountUnlocked(source), source.Count);
                 label.color = section == _section ? ActiveTabLabel : IdleTabLabel;
 
                 if (_tabFrames.TryGetValue(section, out var frame))
@@ -377,8 +399,8 @@ namespace Survive.UI
 
             if (_entries.Count == 0)
             {
-                _detailTitle.text = "기록 없음";
-                _detailBody.text = "이 갈래에 등록된 항목이 없습니다.";
+                _detailTitle.text = Loc.T("UI", "codex_empty_title");
+                _detailBody.text = Loc.T("UI", "codex_empty_body");
                 if (_summary != null) _summary.text = "";
                 return;
             }
@@ -390,7 +412,8 @@ namespace Survive.UI
             _detailBody.color = entry.Unlocked ? BodyLabel : LockedRowLabel;
 
             if (_summary != null)
-                _summary.text = $"열람 가능 {CodexCatalog.CountUnlocked(_entries)} / 전체 {_entries.Count}";
+                _summary.text = Loc.F("UI", "codex_summary",
+                                      CodexCatalog.CountUnlocked(_entries), _entries.Count);
         }
 
         // ── 색과 치수 ────────────────────────────────────────────
@@ -439,13 +462,12 @@ namespace Survive.UI
             var panel = NewImage("Panel", _root.transform, PanelFrame);
             Anchor(panel.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(1360f, 820f));
 
-            var title = NewText("Title", panel.transform, "분석 기록", 40, TextAlignmentOptions.Left);
-            Place(title.rectTransform, new Vector2(0f, 1f), new Vector2(40f, -30f), new Vector2(700f, 56f));
-            title.color = Accent;
+            _title = NewText("Title", panel.transform, "", 40, TextAlignmentOptions.Left);
+            Place(_title.rectTransform, new Vector2(0f, 1f), new Vector2(40f, -30f), new Vector2(700f, 56f));
+            _title.color = Accent;
 
-            var caption = NewText("Caption", panel.transform,
-                "우주복 AI가 지금까지 기록한 것", 20, TextAlignmentOptions.Left);
-            Place(caption.rectTransform, new Vector2(0f, 1f), new Vector2(42f, -84f), new Vector2(700f, 30f));
+            _caption = NewText("Caption", panel.transform, "", 20, TextAlignmentOptions.Left);
+            Place(_caption.rectTransform, new Vector2(0f, 1f), new Vector2(42f, -84f), new Vector2(700f, 30f));
 
             _summary = NewText("Summary", panel.transform, "", 20, TextAlignmentOptions.Right);
             Place(_summary.rectTransform, new Vector2(1f, 1f), new Vector2(-40f, -40f), new Vector2(420f, 32f));
@@ -453,11 +475,22 @@ namespace Survive.UI
             BuildTabs(panel.transform);
             BuildColumns(panel.transform);
 
-            var footer = NewText("Footer", panel.transform,
-                $"[{ToggleKey}] 닫기   [ESC] 닫기", 19, TextAlignmentOptions.Center);
-            Place(footer.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 22f), new Vector2(700f, 30f));
+            _footer = NewText("Footer", panel.transform, "", 19, TextAlignmentOptions.Center);
+            Place(_footer.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 22f), new Vector2(700f, 30f));
 
+            ApplyStaticText();
             _root.SetActive(false);
+        }
+
+        /// <summary>
+        /// 세울 때 한 번 쓰이고 마는 글자를 표에서 다시 꺼낸다.
+        /// <see cref="OnLocaleChanged"/>가 로케일이 바뀔 때마다 다시 부른다.
+        /// </summary>
+        void ApplyStaticText()
+        {
+            if (_title != null) _title.text = Loc.T("UI", "codex_title");
+            if (_caption != null) _caption.text = Loc.T("UI", "codex_caption");
+            if (_footer != null) _footer.text = Loc.F("UI", "codex_footer", ToggleKey);
         }
 
         void BuildTabs(Transform parent)

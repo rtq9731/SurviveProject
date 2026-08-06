@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
 using Survive.Crafting;
+using Survive.Localization;
 
 namespace Survive.UI
 {
@@ -141,7 +142,7 @@ namespace Survive.UI
             {
                 bool many = job.Remaining > 1;
                 slot.count.enabled = many;
-                if (many) slot.count.text = "x" + job.Remaining;
+                if (many) slot.count.text = Loc.F("UI", "quantity_amount", job.Remaining);
             }
 
             // 남은 시간은 맨 앞에만. 뒤 칸은 언제 시작할지 모른다.
@@ -150,7 +151,9 @@ namespace Survive.UI
                 slot.time.enabled = isFront;
                 if (isFront)
                 {
-                    slot.time.text = job.Stalled ? "가득" : CraftTimeText.Short(job.SecondsLeft);
+                    slot.time.text = job.Stalled
+                        ? Loc.T("UI", "queue_slot_full")
+                        : CraftTimeText.Short(job.SecondsLeft);
                     slot.time.color = job.Stalled
                         ? new Color(1f, 0.62f, 0.42f)
                         : new Color(0.95f, 0.9f, 0.72f);
@@ -164,12 +167,15 @@ namespace Survive.UI
             }
 
             // 아이콘 없는 아이템도 있다. 그럴 땐 이름 첫 글자라도 보여 준다.
+            // 이름은 반드시 DataText를 거친다 — 여기서 SO를 직접 읽으면 이 칸만
+            // 로케일을 안 따라온다.
             if (slot.icon != null && !slot.icon.enabled && slot.count != null && item != null)
             {
+                string initial = Abbrev(DataText.Name(item));
                 slot.count.enabled = true;
                 slot.count.text = job.Remaining > 1
-                    ? $"{Abbrev(item.displayName)}x{job.Remaining}"
-                    : Abbrev(item.displayName);
+                    ? Loc.F("UI", "queue_slot_initial_count", initial, job.Remaining)
+                    : initial;
             }
         }
 

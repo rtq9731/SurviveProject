@@ -38,6 +38,16 @@ public class LocSentenceGateTests
     {
         "Assets/02.Scripts/Domain/UI/",
         "Assets/02.Scripts/UI/",
+
+        // 밝기 조절 화면(GammaCalibrationScreen)이 여기 있다. 첫 실행에 실제로 뜨는
+        // 화면이라 번역 대상이다.
+        //
+        // <b>Domain/Art/는 일부러 넣지 않았다.</b> 그쪽의 한글은 아트 규칙 위반을
+        // 적는 진단문("광원 4색 밖 라이트: ...")이고 콘솔로만 나간다. 화면이 아니므로
+        // 범위에 넣을 것이 아니다. NotScreenCode에 넣지도 않았다 — 그 목록은 규칙
+        // ①③(Loc 인자·조각 이어 붙이기)의 면제이고, Domain/Art/는 Loc을 아예
+        // 부르지 않으므로 넣어 봐야 검사만 약해진다.
+        "Assets/02.Scripts/Art/",
     };
 
     /// <summary>
@@ -60,14 +70,9 @@ public class LocSentenceGateTests
         "Assets/02.Scripts/Testing/",
     };
 
-    static readonly string[] NotYetMoved =
-    {
-        "Assets/02.Scripts/UI/BatteryBarView.cs",     // "배터리 {n}"
-        "Assets/02.Scripts/UI/CodexUI.cs",            // 도감 제목·안내·요약
-        "Assets/02.Scripts/UI/ControlHintView.cs",    // 조작 안내 네 줄
-        "Assets/02.Scripts/UI/CraftQueueView.cs",     // "가득"
-        "Assets/02.Scripts/UI/ScrapCounterView.cs",   // 인스펙터 기본값 "스크랩 {0}"
-    };
+    // 비었다. 화면 범위(위 ScreenScopes) 안에 아직 표로 못 옮긴 파일이 하나도 없다.
+    // 범위를 넓히면 여기에 다시 이름이 생길 수 있다 — 그때도 목록은 줄기만 해야 한다.
+    static readonly string[] NotYetMoved = { };
 
     static readonly List<(string Path, string Source)> Files = new List<(string, string)>();
     static readonly List<LocCall> Calls = new List<LocCall>();

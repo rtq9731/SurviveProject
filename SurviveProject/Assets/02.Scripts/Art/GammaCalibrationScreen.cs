@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using Survive.Domain.Art;
+using Survive.Localization;
 using Survive.Testing;
 using Survive.UI;
 
@@ -68,6 +69,21 @@ namespace Survive.Art
         GameObject _root;
         Slider _slider;
 
+        // 한 번 쓰고 마는 글자들. 이 화면에는 매 프레임 다시 그리는 고리가 없어서
+        // 로케일이 바뀌어도 아무도 이 칸들을 건드리지 않는다 — 붙들고 있다가
+        // 직접 갈아 끼운다 (docs/번역-체계.md 2절).
+        TextMeshProUGUI _title;
+        TextMeshProUGUI _guide;
+        TextMeshProUGUI _footer;
+        TextMeshProUGUI _confirmLabel;
+        TextMeshProUGUI _patchHidden;
+        TextMeshProUGUI _patchBarely;
+        TextMeshProUGUI _patchClear;
+
+        void OnEnable() => Loc.LocaleChanged += ApplyStaticText;
+
+        void OnDisable() => Loc.LocaleChanged -= ApplyStaticText;
+
         void Start()
         {
             if (AutoShow && !GammaSettings.Calibrated && !GammaSettings.ForceNeutral) Show();
@@ -128,27 +144,43 @@ namespace Survive.Art
             var backdrop = NewPlain("Backdrop", _root.transform, Color.black);
             Stretch(backdrop.rectTransform);
 
-            var title = NewText("Title", _root.transform,
-                "화면 밝기를 맞춘다", 46, TextAlignmentOptions.Center);
-            Anchor(title.rectTransform, new Vector2(0.5f, 0.86f), new Vector2(1200f, 70f));
+            _title = NewText("Title", _root.transform, "", 46, TextAlignmentOptions.Center);
+            Anchor(_title.rectTransform, new Vector2(0.5f, 0.86f), new Vector2(1200f, 70f));
 
-            var guide = NewText("Guide", _root.transform,
-                "가운데 무늬가 <b>간신히 보일 때까지</b> 아래 막대를 옮긴다.\n" +
-                "왼쪽은 보이지 않아야 하고, 오른쪽은 분명히 보여야 한다.",
-                28, TextAlignmentOptions.Top);
-            Anchor(guide.rectTransform, new Vector2(0.5f, 0.76f), new Vector2(1200f, 110f));
+            _guide = NewText("Guide", _root.transform, "", 28, TextAlignmentOptions.Top);
+            Anchor(_guide.rectTransform, new Vector2(0.5f, 0.76f), new Vector2(1200f, 110f));
 
             BuildPatches(_root.transform);
 
             _slider = BuildSlider(_root.transform);
             _slider.onValueChanged.AddListener(v => GammaSettings.Value = v);
 
-            var done = BuildButton(_root.transform, "이대로 시작", new Vector2(0.5f, 0.13f));
+            var done = BuildButton(_root.transform, new Vector2(0.5f, 0.13f), out _confirmLabel);
             done.onClick.AddListener(() => Hide());
 
-            var footer = NewText("Footer", _root.transform,
-                $"나중에 다시 맞추려면 {ReopenKey} 키를 누른다.", 22, TextAlignmentOptions.Center);
-            Anchor(footer.rectTransform, new Vector2(0.5f, 0.06f), new Vector2(1200f, 40f));
+            _footer = NewText("Footer", _root.transform, "", 22, TextAlignmentOptions.Center);
+            Anchor(_footer.rectTransform, new Vector2(0.5f, 0.06f), new Vector2(1200f, 40f));
+
+            ApplyStaticText();
+        }
+
+        /// <summary>
+        /// 세울 때 한 번 쓰이고 마는 글자를 표에서 다시 꺼낸다.
+        /// 이 화면은 다시 그리는 고리가 없어서, 로케일이 바뀌면 여기를 부르지 않는 한
+        /// 묵은 글자가 그대로 남는다 (docs/번역-체계.md 2절).
+        /// </summary>
+        void ApplyStaticText()
+        {
+            if (_title != null) _title.text = Loc.T("UI", "gamma_title");
+            if (_guide != null) _guide.text = Loc.T("UI", "gamma_guide");
+            if (_confirmLabel != null) _confirmLabel.text = Loc.T("UI", "gamma_confirm");
+            if (_footer != null) _footer.text = Loc.F("UI", "gamma_footer", ReopenKey);
+
+            // 이름표를 변수로 만들지 않는다 — 변수 키는 누락 키 게이트가
+            // 검사할 수 없어 사각지대가 하나 늘어난다.
+            if (_patchHidden != null) _patchHidden.text = Loc.T("UI", "gamma_patch_hidden");
+            if (_patchBarely != null) _patchBarely.text = Loc.T("UI", "gamma_patch_barely");
+            if (_patchClear != null) _patchClear.text = Loc.T("UI", "gamma_patch_clear");
         }
 
         /// <summary>
@@ -169,12 +201,13 @@ namespace Survive.Art
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = true;
 
-            AddPatch(row.transform, "보이면 안 된다", GammaGrade.PatchLuminance * 0.5f);
-            AddPatch(row.transform, "간신히 보여야 한다", GammaGrade.PatchLuminance);
-            AddPatch(row.transform, "분명히 보여야 한다", GammaGrade.PatchLuminance * 3f);
+            _patchHidden = AddPatch(row.transform, GammaGrade.PatchLuminance * 0.5f);
+            _patchBarely = AddPatch(row.transform, GammaGrade.PatchLuminance);
+            _patchClear = AddPatch(row.transform, GammaGrade.PatchLuminance * 3f);
         }
 
-        void AddPatch(Transform parent, string caption, float luminance)
+        /// <summary>무늬 하나. 아래 글자는 <see cref="ApplyStaticText"/>가 표에서 채운다.</summary>
+        TextMeshProUGUI AddPatch(Transform parent, float luminance)
         {
             var cell = new GameObject("Patch", typeof(RectTransform));
             cell.transform.SetParent(parent, false);
@@ -190,13 +223,14 @@ namespace Survive.Art
             r.offsetMin = Vector2.zero;
             r.offsetMax = Vector2.zero;
 
-            var label = NewText("Caption", plate.transform, caption, 22, TextAlignmentOptions.Bottom);
+            var label = NewText("Caption", plate.transform, "", 22, TextAlignmentOptions.Bottom);
             var lr = label.rectTransform;
             lr.anchorMin = new Vector2(0f, 0f);
             lr.anchorMax = new Vector2(1f, 0.25f);
             lr.offsetMin = Vector2.zero;
             lr.offsetMax = Vector2.zero;
             label.color = new Color(0.45f, 0.45f, 0.45f, 1f);
+            return label;
         }
 
         Slider BuildSlider(Transform parent)
@@ -233,13 +267,14 @@ namespace Survive.Art
             return slider;
         }
 
-        Button BuildButton(Transform parent, string label, Vector2 anchor)
+        Button BuildButton(Transform parent, Vector2 anchor, out TextMeshProUGUI label)
         {
             var image = NewImage("Confirm", parent, new Color(0.2f, 0.2f, 0.24f, 1f));
             Anchor(image.rectTransform, anchor, new Vector2(280f, 62f));
 
-            var text = NewText("Label", image.transform, label, 28, TextAlignmentOptions.Center);
+            var text = NewText("Label", image.transform, "", 28, TextAlignmentOptions.Center);
             Stretch(text.rectTransform);
+            label = text;
 
             var button = image.gameObject.AddComponent<Button>();
             button.targetGraphic = image;

@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using Survive.Items;
+using Survive.Localization;
 using Survive.Progression;
 using Survive.UI;
 
@@ -144,7 +145,15 @@ namespace Survive.Testing
 
             string detail = Text("Detail");
             E2EHarness.Log($"  재료 줄: {detail}");
-            E2EHarness.Assert(detail.StartsWith("재료"), $"재료가 함께 적힌다 — \"{detail}\"");
+
+            // 예전에는 이 줄이 "재료 …"로 시작하는지만 봤다. 지금 이 문장은 표의
+            // 한 칸(UI/ingredients_line)에서 통째로 나오고 <b>어순은 언어마다 다르다</b> —
+            // 첫 글자로 판정하면 번역가가 순서를 바꾸는 순간 검증이 무너진다.
+            // 물어야 할 것은 "무엇이 몇 개 드는지가 적혀 있는가" 하나다.
+            E2EHarness.Assert(!string.IsNullOrWhiteSpace(detail) &&
+                              detail != Loc.T("UI", "no_ingredients") &&
+                              detail.Any(char.IsDigit),
+                              $"재료가 드는 수와 함께 적힌다 — \"{detail}\"");
 
             yield return Unhover();
             E2EHarness.Assert(!Tip.IsVisible, "제작 줄에서도 커서를 떼면 사라진다");
