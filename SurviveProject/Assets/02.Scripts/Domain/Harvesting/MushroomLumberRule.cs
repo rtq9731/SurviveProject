@@ -1,4 +1,5 @@
 using Survive.Items;
+using Survive.Localization;
 
 namespace Survive.Harvesting
 {
@@ -17,8 +18,16 @@ namespace Survive.Harvesting
         /// <summary>벌목으로 나오는 것. 세계에서 유일하게 <b>타는</b> 물질이다.</summary>
         public const string WoodItemId = "mushroom_wood";
 
-        /// <summary>노드 이름. 프롬프트에 그대로 나온다.</summary>
-        public const string DisplayName = "거대 버섯";
+        /// <summary>
+        /// 노드 이름. 프롬프트에 그대로 나온다.
+        ///
+        /// <b>이 하나만 상수가 아니다.</b> 나머지 수치는 규칙이지만 이것은 <b>말</b>이라
+        /// 번역 표가 주인이다. <c>const</c>인 채로는 로케일을 따라올 수 없다 —
+        /// 컴파일 시점에 부르는 쪽에 박혀 버려 표를 다시 볼 기회가 없다.
+        /// 실행 시점에 세우는 노드라 08.Data에 에셋이 없어서 이름표도 손으로 짓는다
+        /// (<c>World/mushroom_tree_name</c>).
+        /// </summary>
+        public static string DisplayName => Loc.T("World", "mushroom_tree_name");
 
         /// <summary>
         /// 그루터기에서 다시 자라기까지. 300초다.

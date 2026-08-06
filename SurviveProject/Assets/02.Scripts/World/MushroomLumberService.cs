@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Survive.Harvesting;
 using Survive.Items;
+using Survive.Localization;
 
 namespace Survive.World
 {
@@ -39,10 +40,25 @@ namespace Survive.World
             // static 구독이 살아남아 같은 씬에 두 번 붙을 수 있다.
             SceneManager.sceneLoaded -= OnSceneLoaded;
             SceneManager.sceneLoaded += OnSceneLoaded;
+
+            // 이름은 정의를 만들 때 한 번 찍히므로, 그 뒤에 로케일이 바뀌면
+            // 벌목 노드만 옛 언어로 남는다. 다시 찍어 준다.
+            Loc.LocaleChanged -= RenameToCurrentLocale;
+            Loc.LocaleChanged += RenameToCurrentLocale;
+
             BuildOrRetry();
         }
 
         static void OnSceneLoaded(Scene scene, LoadSceneMode mode) => BuildOrRetry();
+
+        /// <summary>
+        /// 이미 세워 둔 정의의 이름만 지금 로케일로 바꾼다.
+        /// 정의가 아직 없으면 할 일이 없다 — 만들 때 어차피 지금 로케일로 찍는다.
+        /// </summary>
+        static void RenameToCurrentLocale()
+        {
+            if (_definition != null) _definition.displayName = MushroomLumberRule.DisplayName;
+        }
 
         /// <summary>
         /// 세우고, 한 번에 안 됐으면 잠깐 더 본다.

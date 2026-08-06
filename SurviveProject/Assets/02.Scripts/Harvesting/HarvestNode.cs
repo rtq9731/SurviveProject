@@ -126,16 +126,17 @@ namespace Survive.Harvesting
                 if (IsBreakable)
                 {
                     if (!ToolSatisfied(equipped))
-                        return $"{DataText.Name(definition)} · {ToolName(definition.requiredTool)} 필요";
+                        return Loc.F("Prompt", "harvest_tool_needed",
+                                     DataText.Name(definition), ToolName(definition.requiredTool));
 
                     // 부수는 대상에는 E가 아니라 공격 키를 안내해야 한다
                     int pct = Mathf.CeilToInt(HealthNormalized * 100f);
-                    return $"{DataText.Name(definition)} · 좌클릭으로 부순다 ({pct}%)";
+                    return Loc.F("Prompt", "harvest_break", DataText.Name(definition), pct);
                 }
 
-                // 홀드형이므로 프롬프트에서 그 사실이 드러나야 한다.
-                // "[E]"만 쓰면 탭으로 오해한다.
-                return $"[E] 길게 눌러 {DataText.Name(definition)} 채집";
+                // 홀드형이라는 것이 문구에서 드러나야 한다 — "[E]"만 쓰면 탭으로 오해한다.
+                // 그 사정은 표의 ko 칸("길게 눌러")에 들어 있다.
+                return Loc.F("Prompt", "harvest_hold", DataText.Name(definition));
             }
         }
 
@@ -242,8 +243,8 @@ namespace Survive.Harvesting
                 _hint = FindAnyObjectByType<Survive.UI.ControlHintView>(FindObjectsInactive.Include);
 
             _hint?.Show("wrongtool_" + definition.requiredTool,
-                        $"{DataText.Name(definition)}에는 흠집도 나지 않는다 · " +
-                        $"{ToolName(definition.requiredTool)}가 필요하다");
+                        Loc.F("Prompt", "wrong_tool",
+                              DataText.Name(definition), ToolName(definition.requiredTool)));
         }
 
         Survive.UI.ControlHintView _hint;

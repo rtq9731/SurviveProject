@@ -38,6 +38,20 @@ public class LocSentenceGateTests
     {
         "Assets/02.Scripts/Domain/UI/",
         "Assets/02.Scripts/UI/",
+
+        // 세계·상호작용. 프롬프트는 화면 한가운데에 뜨는 글이라 제일 많이 읽힌다.
+        "Assets/02.Scripts/Combat/",
+        "Assets/02.Scripts/Core/",
+        "Assets/02.Scripts/Creatures/",
+        "Assets/02.Scripts/Domain/Creatures/",
+        "Assets/02.Scripts/Domain/Harvesting/",
+        "Assets/02.Scripts/Domain/World/",
+        "Assets/02.Scripts/Harvesting/",
+        "Assets/02.Scripts/Interaction/",
+        "Assets/02.Scripts/Narrative/",
+        "Assets/02.Scripts/Player/",
+        "Assets/02.Scripts/Vitals/",
+        "Assets/02.Scripts/World/",
     };
 
     /// <summary>
@@ -67,6 +81,12 @@ public class LocSentenceGateTests
         "Assets/02.Scripts/UI/ControlHintView.cs",    // 조작 안내 네 줄
         "Assets/02.Scripts/UI/CraftQueueView.cs",     // "가득"
         "Assets/02.Scripts/UI/ScrapCounterView.cs",   // 인스펙터 기본값 "스크랩 {0}"
+
+        // 데이터 에셋의 인스펙터 기본값. 08.Data의 에셋이 하나도 빠짐없이 덮어쓰고
+        // 있어 화면에 닿지 않지만, 새로 만든 에셋을 비워 두면 그때는 닿는다.
+        // 옮기려면 DataText의 폴백(원문)이 빈 글자를 어떻게 다룰지부터 정해야 한다.
+        "Assets/02.Scripts/Domain/Harvesting/HarvestNodeSO.cs",   // 기본값 "채집물"
+        "Assets/02.Scripts/Domain/Harvesting/PlantNodeSO.cs",     // 기본값 "식물"
     };
 
     static readonly List<(string Path, string Source)> Files = new List<(string, string)>();
@@ -312,6 +332,21 @@ public class LocSentenceGateTests
 
         Assert.IsEmpty(LocSentenceRules.Inspect(소스, banKoreanLiterals: true),
             "번역 대상이 아닌 자리까지 잡으면 게이트를 끄게 된다");
+    }
+
+    [Test]
+    public void 여러_줄에_걸친_인스펙터_설명도_세지_않는다()
+    {
+        // 긴 Tooltip은 줄을 나눠 이어 붙여 적는다. 한 줄만 훑으면 둘째 줄의 조각이
+        // "화면에 남은 한글"로 잘못 잡히고, 그러면 멀쩡한 파일을 NotYetMoved에
+        // 적게 되어 빚 목록이 진짜 빚과 구별되지 않는다.
+        const string 소스 =
+            "[Tooltip(\"밝은 구역을 꺼린다. 대상이 빛 안에 있는 동안은 \" +\n" +
+            "         \"추격하지 않고, 자기가 빛 안에 들면 물러난다\")]\n" +
+            "public bool avoidsLight;\n";
+
+        Assert.IsEmpty(LocSentenceRules.Inspect(소스, banKoreanLiterals: true),
+            "인스펙터에만 뜨는 글이다 — 두 줄로 적었다고 번역 대상이 되지는 않는다");
     }
 
     [Test]

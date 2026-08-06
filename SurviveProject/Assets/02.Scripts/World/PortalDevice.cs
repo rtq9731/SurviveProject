@@ -15,7 +15,8 @@ namespace Survive.World
     /// </summary>
     public class PortalDevice : MonoBehaviour, IInteractable
     {
-        [SerializeField] string displayName = "외계 구조물";
+        [Tooltip("비우면 번역 표의 World/portal_default를 쓴다")]
+        [SerializeField] string displayName = "";
         [SerializeField] ItemStack[] requiredItems = new ItemStack[0];
         [SerializeField] SceneReferenceSO destination;
 
@@ -32,26 +33,40 @@ namespace Survive.World
 
         public bool IsActivated => _activated;
 
+        /// <summary>
+        /// 인스펙터에 적힌 이름이 이긴다. 강 이쪽과 저쪽의 장치를 다르게 부를 수
+        /// 있어야 하기 때문이다. 비어 있을 때만 표의 기본 이름을 쓴다.
+        /// </summary>
+        string Name => string.IsNullOrEmpty(displayName)
+            ? Loc.T("World", "portal_default")
+            : displayName;
+
         public string InteractionPrompt
         {
             get
             {
                 if (_activated) return "";
                 if (requiredItems == null || requiredItems.Length == 0)
-                    return $"[E] {displayName} 기동";
+                    return Loc.F("Prompt", "portal_activate", Name);
 
+                // 되풀이 목록이라 항목 틀과 구분자를 표에서 꺼내 이어 붙인다
+                // (통짜 문장 규칙의 유일한 예외). 코드가 적어 넣는 말은 하나도 없다.
                 var sb = new StringBuilder();
-                // 쌍점으로 잇는다. 줄표(—)는 본문 글꼴(ChosunGu)에 없어 두부(□)로 뜬다.
-                sb.Append($"[E] {displayName} 기동: ");
+                string separator = Loc.T("UI", "list_separator");
                 bool isFirst = true;
                 foreach (var need in requiredItems)
                 {
                     if (need?.item == null) continue;
-                    if (!isFirst) sb.Append(", ");
-                    sb.Append($"{DataText.Name(need.item)} {HeldCount(need.item.id)}/{need.count}");
+                    if (!isFirst) sb.Append(separator);
+                    sb.Append(Loc.F("Prompt", "portal_need_entry",
+                                    DataText.Name(need.item), HeldCount(need.item.id), need.count));
                     isFirst = false;
                 }
-                return sb.ToString();
+
+                // 요구 목록이 통째로 비어 있으면 빈 목록을 문장에 꽂지 않는다
+                if (isFirst) return Loc.F("Prompt", "portal_activate", Name);
+
+                return Loc.F("Prompt", "portal_activate_needs", Name, sb.ToString());
             }
         }
 

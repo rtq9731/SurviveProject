@@ -4,6 +4,7 @@ using Survive.Domain.Art;
 using Survive.Harvesting;
 using Survive.Interaction;
 using Survive.Items;
+using Survive.Localization;
 using Survive.Player;
 
 namespace Survive.World
@@ -168,7 +169,8 @@ namespace Survive.World
 
         // ── 회수 ─────────────────────────────────────────────────
 
-        public string InteractionPrompt => $"[E] {GlowCapCluster.DisplayName} 회수";
+        public string InteractionPrompt =>
+            Loc.F("Prompt", "glow_cap_retrieve", GlowCapCluster.DisplayName);
 
         public bool CanInteract(PlayerContext player)
             => player != null && player.Inventory?.Inventory != null;

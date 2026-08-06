@@ -91,10 +91,18 @@ namespace Survive.Localization
         static readonly Regex LiteralOnly =
             new Regex(@"^\s*""((?:[^""\\]|\\.)*)""\s*$", RegexOptions.Compiled);
 
-        /// <summary>인스펙터에만 뜨는 글. 화면에 나가지 않으므로 번역 대상이 아니다.</summary>
+        /// <summary>
+        /// 인스펙터에만 뜨는 글. 화면에 나가지 않으므로 번역 대상이 아니다.
+        ///
+        /// <b>여는 괄호까지만 잡는다.</b> 닫는 괄호는 <see cref="BlankCalls"/>가 짝을 세어 찾는다 —
+        /// 긴 설명은 <c>[Tooltip("앞 " + "뒤")]</c>처럼 <b>여러 줄에 걸쳐</b> 적히는데,
+        /// 정규식으로 한 줄만 훑으면 둘째 줄의 조각이 "화면에 남은 한글"로 잘못 잡힌다.
+        /// 그 오탐 때문에 멀쩡한 파일을 <c>NotYetMoved</c>에 적게 되고, 그러면 빚 목록이
+        /// 진짜 빚과 구별되지 않는다.
+        /// </summary>
         static readonly Regex EditorOnlyAttributes = new Regex(
             @"\[\s*(Tooltip|Header|TextArea|Multiline|Space|InspectorName|MenuItem|" +
-            @"CreateAssetMenu|AddComponentMenu|HelpURL|ContextMenu)\b[^\]\n]*\]",
+            @"CreateAssetMenu|AddComponentMenu|HelpURL|ContextMenu)\s*\(",
             RegexOptions.Compiled);
 
         /// <summary>콘솔에만 나가는 글. 사람에게 보여 주는 화면이 아니다.</summary>
@@ -161,7 +169,7 @@ namespace Survive.Localization
             if (string.IsNullOrEmpty(source)) return "";
 
             string code = LocSourceScanner.StripComments(source);
-            code = BlankMatches(code, EditorOnlyAttributes);
+            code = BlankCalls(code, EditorOnlyAttributes);
             code = BlankCalls(code, ConsoleCalls);
             return code;
         }
@@ -405,11 +413,6 @@ namespace Survive.Localization
             return arg;
         }
 
-        static string BlankMatches(string code, Regex pattern)
-        {
-            return pattern.Replace(code, m => Blank(m.Value));
-        }
-
         /// <summary>
         /// 여는 괄호부터 짝이 맞는 닫는 괄호까지를 지운다. 정규식으로는 짝을 못 센다.
         /// </summary>
@@ -423,13 +426,6 @@ namespace Survive.Localization
                 for (int i = m.Index; i < end; i++)
                     if (sb[i] != '\n') sb[i] = ' ';
             }
-            return sb.ToString();
-        }
-
-        static string Blank(string s)
-        {
-            var sb = new StringBuilder(s.Length);
-            foreach (char c in s) sb.Append(c == '\n' ? '\n' : ' ');
             return sb.ToString();
         }
 
