@@ -15,7 +15,7 @@ using Survive.World;
 namespace Survive.Testing
 {
     /// <summary>
-    /// 백로그 36 — 챕터 1의 종막. <b>포탈을 켜고 떠나는 것이 아니라 뚫고 내려간다.</b>
+    /// 백로그 36 — 챕터 1의 종막. <b>남의 장치를 켜고 떠나는 것이 아니라 뚫고 내려간다.</b>
     ///
     /// 세 가지를 이어서 본다.
     /// <list type="number">

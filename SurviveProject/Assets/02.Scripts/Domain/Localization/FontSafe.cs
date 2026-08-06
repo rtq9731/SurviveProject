@@ -24,7 +24,7 @@ namespace Survive.Localization
         /// 그러면 게이트가 실패해 사람이 판단하게 된다 — 아무 글자나 밀어 넣는 것보다 낫다.
         ///
         /// 줄표를 가운뎃점으로 바꾸는 것은 이 저장소가 이미 쓰던 방식이다
-        /// (<c>HarvestNode</c>의 프롬프트, <c>PortalDevice</c>의 주석).
+        /// (<c>HarvestNode</c>의 프롬프트, <c>MenuListing</c>의 주석).
         /// </summary>
         const string MissingWithSubstitute = "—«»‹›−";
         const string Substitutes /*        */ = "·\"\"\"\"-";

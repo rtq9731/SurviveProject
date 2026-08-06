@@ -191,7 +191,7 @@ namespace Survive.Testing
 
             yield return 눈앞에_둔다(node);
 
-            // 착지 지점은 소품이 빽빽해 조준선이 포탈 장치 같은 남의 것을 먼저 잡는다.
+            // 착지 지점은 소품이 빽빽해 조준선이 버섯 기둥 같은 남의 것을 먼저 잡는다.
             // 조준 경로 자체는 다른 시나리오가 이미 통과시켰으므로, 여기서 볼
             // "무엇이 필요한지 말하는가"는 노드에서 직접 읽는다.
             var it = E2EHarness.Player.Interactor;

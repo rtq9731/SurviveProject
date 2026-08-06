@@ -3,7 +3,7 @@ using NUnit.Framework;
 using Survive.World;
 
 /// <summary>
-/// 백로그 36 — "챕터 1은 포탈이 아니라 짙은 매크로늄 층을 뚫고 내려가며 끝난다".
+/// 백로그 36 — "챕터 1은 남의 장치를 켜는 것이 아니라 짙은 매크로늄 층을 뚫고 내려가며 끝난다".
 ///
 /// 두 가지를 본다.
 /// <list type="number">

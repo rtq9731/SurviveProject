@@ -350,7 +350,7 @@ namespace Survive.Testing
             E2EHarness.Log($"  {from.ToString("F1")} -> {trigger.transform.position.ToString("F1")} " +
                            $"({Vector3.Distance(from, trigger.transform.position):F1}m)");
 
-            // 판의 중심은 포탈 장치 너머 바위 위다. 목표가 요구하는 것은 판을 밟는 것뿐이고,
+            // 판의 중심은 스폰에서 한참 떨어진 바위 위다. 목표가 요구하는 것은 판을 밟는 것뿐이고,
             // 중심을 목표로 잡으면 게임이 아니라 검사가 실패한다.
             yield return E2EHarness.WalkInto(trigger, 60f);
         }

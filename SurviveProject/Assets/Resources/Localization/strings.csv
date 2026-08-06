@@ -207,10 +207,6 @@ Prompt,wrong_tool,{0}에는 흠집도 나지 않는다 · {1}가 필요하다,{0
 Prompt,glow_cap_retrieve,[E] {0} 회수,[E] Retrieve {0},{0}=놓아둔 갓의 이름
 Prompt,loot_search,[E] {0} 뒤지기,[E] Search {0},{0}=뒤질 대상 이름
 Prompt,storage_open,[E] {0} 열기,[E] Open {0},{0}=보관함 이름
-Prompt,portal_activate,[E] {0} 기동,[E] Activate {0},{0}=구조물 이름
-# 아직 모자란 부품이 있을 때. {1}은 아래 portal_need_entry를 UI/list_separator로 이은 것이다.
-Prompt,portal_activate_needs,[E] {0} 기동: {1},[E] Activate {0}: {1},{0}=구조물 이름 {1}=드는 부품 목록
-Prompt,portal_need_entry,{0} {1}/{2},{1}/{2} {0},{0}=부품 이름 {1}=가진 수 {2}=드는 수
 #
 # ── 세계의 이름 ───────────────────────────────────────────────
 # 08.Data에 에셋이 없어 코드가 직접 들고 있는 이름들. 에셋이 생기면
@@ -226,7 +222,6 @@ World,tool_generic,도구,Tool,
 # 씬·프리팹에 이미 적힌 이름은 그쪽이 이긴다 (그것은 배치 데이터다).
 World,loot_container_default,잔해,Wreckage,
 World,storage_default,보관함,Storage,
-World,portal_default,외계 구조물,Alien structure,
 #
 # ══════════════════════════════════════════════════════════════
 # 데이터 에셋에서 자동으로 붙는 이름표는 이 아래에 둔다
@@ -240,8 +235,6 @@ World,portal_default,외계 구조물,Alien structure,
 #
 # ---- Blueprint ----
 #   청사진 이름(.name)과 여는 방법(.hint). hint는 도감의 잠긴 줄에만 뜬다.
-Blueprint,bp_alloy_shaping.hint,외계 합금을 손에 넣으면 알게 된다,
-Blueprint,bp_alloy_shaping.name,합금 성형,
 Blueprint,bp_fibercraft.hint,양치 섬유를 손에 넣으면 알게 된다,
 Blueprint,bp_fibercraft.name,섬유 세공,
 Blueprint,bp_salvaged_mechanism.hint,기계 부품을 손에 넣으면 알게 된다,
@@ -291,9 +284,6 @@ Creature,wing.name,날개,
 #     [관찰된 성질] 분석... [용도 판정, "~것으로 보입니다"]. [해금 정형구].
 #     아이템 이름을 되뇌지 않는다. 감탄/추측/이모지/물음 금지. 규격 원본은 DiscoverySO의 문서 주석.
 #   현장 발견의 마지막 문장: "해당 물질을 사용한 제작법이 있습니다."
-Discovery,disc_alien_alloy.line.speaker,우주복 AI,
-#   재료를 처음 쥐었을 때의 대사. 대상 아이템: 외계 합금 (alien_alloy)
-Discovery,disc_alien_alloy.line.text,미등록 결정 격자 분석... 고강도 구조재로 판단됩니다. 해당 물질을 사용한 제작법이 있습니다.,
 Discovery,disc_fern_fiber.line.speaker,우주복 AI,
 #   재료를 처음 쥐었을 때의 대사. 대상 아이템: 양치 섬유 (fern_fiber)
 Discovery,disc_fern_fiber.line.text,유연 섬유질 분석... 결속재로 적합한 것으로 보입니다. 해당 물질을 사용한 제작법이 있습니다.,
@@ -316,7 +306,7 @@ Harvest,ore_vein.name,매크로늄 광맥,
 #
 # ---- Item ----
 #   아이템 이름(.name)과 설명(.desc). 설명은 소지품 쪽지에 뜬다.
-Item,alien_alloy.desc,화성인이 만든 합금. 포탈 기동에 쓰인다.,
+Item,alien_alloy.desc,화성인이 만든 고강도 구조재. 매크로늄 광맥과 낫의 잔해에서 나온다. 쓸 데는 아직 밝혀지지 않았다.,
 Item,alien_alloy.name,외계 합금,
 Item,axe.desc,거대 버섯을 베는 도구. 돌은 이것으로 깨지지 않는다.,
 Item,axe.name,도끼,
@@ -348,8 +338,6 @@ Item,part_wing.desc,몸통 양쪽 팬에서 떼어 낸 날 한 장. 두께가 �
 Item,part_wing.name,날개의 팬날,
 Item,pickaxe.desc,광부의 기본 도구. 기계 잔해와 광맥을 캘 수 있다.,
 Item,pickaxe.name,곡괭이,
-Item,portal_key.desc,외계 구조물을 깨우는 장치.,
-Item,portal_key.name,포탈 기동 키,
 Item,relic_core.desc,낫의 안쪽에서 나온 굳은 덩어리. 매크로늄과 같은 빛을 띠면서도 짙은 층에 삼켜지지 않았다. 무게가 크기에 맞지 않는다.,
 Item,relic_core.name,낫의 핵,
 Item,relic_membrane.desc,낫의 몸을 감싸던 얇은 막 한 조각. 액면에 잠겨 있었는데도 젖은 자국이 없다. 손끝으로 눌러도 가라앉지 않고 되밀어 낸다.,
@@ -384,7 +372,6 @@ Recipe,battery_cell.name,스크랩 에너지 추출,
 Recipe,lantern.name,랜턴,
 Recipe,oxygen_filter.name,산소 필터,
 Recipe,pickaxe.name,곡괭이,
-Recipe,portal_key.name,포탈 기동 키,
 Recipe,repair_kit.name,수리 키트,
 Recipe,submersible.name,잠항구,
 Recipe,surface_walker.name,액면 보행 장비,
