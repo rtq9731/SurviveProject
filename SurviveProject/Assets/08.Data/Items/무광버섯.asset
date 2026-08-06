@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e7f1797e5edde543978bb8369b71e2a, type: 3}
+  m_Name: "\uBB34\uAD11\uBC84\uC12F"
+  m_EditorClassIdentifier: Survive.Domain::Survive.Items.ItemDataSO
+  id: matte_mushroom
+  displayName: "\uBB34\uAD11\uBC84\uC12F"
+  description: "\uBE5B\uB3C4 \uB9E4\uD06C\uB85C\uB284\uB3C4 \uB418\uC3D8\uC9C0 \uC54A\uACE0
+    \uBE68\uC544\uB4E4\uC774\uB294 \uAC80\uC740 \uAC13. \uC548\uCABD\uC740 \uC5B8\uC81C\uB098
+    \uC11C\uB298\uD558\uACE0, \uAC00\uAE4C\uC774 \uB300\uBA74 \uACC4\uAE30\uC758
+    \uBC14\uB298\uC774 \uAC00\uB77C\uC549\uB294\uB2E4."
+  icon: {fileID: 21300000, guid: 24bc003324d27bc4a83a4d8ea0b9d4ca, type: 3}
+  maxStack: 30
+  category: 0
+  equipSlot: 0
+  worldPrefab: {fileID: 0}
