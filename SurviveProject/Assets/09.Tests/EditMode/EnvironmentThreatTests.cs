@@ -15,6 +15,7 @@ public class EnvironmentThreatTests
     [TestCase(EnvironmentHazard.None, TraversalGear.None)]
     [TestCase(EnvironmentHazard.Darkness, TraversalGear.Lantern)]
     [TestCase(EnvironmentHazard.Depth, TraversalGear.Swimming)]
+    [TestCase(EnvironmentHazard.Submersion, TraversalGear.MacroniumSuit)]
     [TestCase(EnvironmentHazard.MacroniumSurface, TraversalGear.SurfaceWalker)]
     [TestCase(EnvironmentHazard.MacroniumLayer, TraversalGear.BreachPod)]
     public void 위협마다_뚫는_장비가_하나씩_대응한다(EnvironmentHazard 위협, TraversalGear 장비종류)
@@ -41,6 +42,7 @@ public class EnvironmentThreatTests
 
     [TestCase(EnvironmentHazard.Darkness, TraversalGear.Lantern)]
     [TestCase(EnvironmentHazard.Depth, TraversalGear.Swimming)]
+    [TestCase(EnvironmentHazard.Submersion, TraversalGear.MacroniumSuit)]
     [TestCase(EnvironmentHazard.MacroniumSurface, TraversalGear.SurfaceWalker)]
     [TestCase(EnvironmentHazard.MacroniumLayer, TraversalGear.BreachPod)]
     public void 맞는_장비를_충분히_갖추면_지난다(EnvironmentHazard 위협, TraversalGear 장비종류)
@@ -51,6 +53,7 @@ public class EnvironmentThreatTests
 
     [TestCase(EnvironmentHazard.Darkness)]
     [TestCase(EnvironmentHazard.Depth)]
+    [TestCase(EnvironmentHazard.Submersion)]
     [TestCase(EnvironmentHazard.MacroniumSurface)]
     [TestCase(EnvironmentHazard.MacroniumLayer)]
     public void 맨몸으로는_어떤_위협도_뚫지_못한다(EnvironmentHazard 위협)
@@ -212,15 +215,19 @@ public class EnvironmentThreatTests
     [Test]
     public void 하위_티어_장비로는_상위_관문을_지나지_못한다()
     {
-        // 건넌다 → 위를 걷는다 → 뚫는다. 셋이 서로 다른 동사이고
+        // 건넌다 → 위를 걷는다 → 안으로 들어간다 → 뚫는다. 넷이 서로 다른 동사이고
         // 어느 것도 앞의 것으로 대신할 수 없다는 것이 이 검사의 내용이다.
-        // 수심은 초, 액면은 미터(건너는 폭), 층은 미터(뚫는 두께)다.
+        // 수심과 잠수는 초, 액면은 미터(건너는 폭), 층은 미터(뚫는 두께)다.
         var 강 = new HazardZone(EnvironmentHazard.Depth, 20f);
         var 액면 = new HazardZone(EnvironmentHazard.MacroniumSurface, 30f);
+        var 잠수통로 = new HazardZone(EnvironmentHazard.Submersion, 36f);
         var 진한층 = new HazardZone(EnvironmentHazard.MacroniumLayer, 18f);
 
+        // 수영은 관문이 아니라 학습 장치다 — 숨을 아무리 오래 참아도
+        // 잠수 통로는 방호복 없이 열리지 않는다(기획서 갱신점 _3 §2).
         var 수영까지 = 장비(new GearCapability(TraversalGear.Swimming, 20f));
         Assert.IsTrue(EnvironmentThreat.CanPass(강, 수영까지));
+        Assert.IsFalse(EnvironmentThreat.CanPass(잠수통로, 수영까지));
         Assert.IsFalse(EnvironmentThreat.CanPass(액면, 수영까지));
         Assert.IsFalse(EnvironmentThreat.CanPass(진한층, 수영까지));
 
@@ -228,11 +235,20 @@ public class EnvironmentThreatTests
             new GearCapability(TraversalGear.Swimming, 20f),
             new GearCapability(TraversalGear.SurfaceWalker, 30f));
         Assert.IsTrue(EnvironmentThreat.CanPass(액면, 액면보행까지));
+        Assert.IsFalse(EnvironmentThreat.CanPass(잠수통로, 액면보행까지));
         Assert.IsFalse(EnvironmentThreat.CanPass(진한층, 액면보행까지));
+
+        var 방호복까지 = 장비(
+            new GearCapability(TraversalGear.Swimming, 20f),
+            new GearCapability(TraversalGear.SurfaceWalker, 30f),
+            new GearCapability(TraversalGear.MacroniumSuit, 40f));
+        Assert.IsTrue(EnvironmentThreat.CanPass(잠수통로, 방호복까지));
+        Assert.IsFalse(EnvironmentThreat.CanPass(진한층, 방호복까지));
 
         var 돌파정까지 = 장비(
             new GearCapability(TraversalGear.Swimming, 20f),
             new GearCapability(TraversalGear.SurfaceWalker, 30f),
+            new GearCapability(TraversalGear.MacroniumSuit, 40f),
             new GearCapability(TraversalGear.BreachPod, 18f));
         Assert.IsTrue(EnvironmentThreat.CanPass(진한층, 돌파정까지));
     }

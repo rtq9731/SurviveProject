@@ -80,6 +80,17 @@ namespace Survive.Domain.Audio
         [Tooltip("타는 동안 계속. loop를 켜 둘 것")]
         public AudioCueSO campfireLoop;
 
+        [Header("잠수")]
+        // 잠수의 압박은 수치가 아니라 연출이 진다(Survive.World.DiveRule).
+        // 화면 쪽(가장자리·게이지)은 코드로 서 있고, 귀 쪽 자리를 여기 비워 둔다 —
+        // 클립이 꽂히는 날 코드를 고칠 일이 없게 하려는 것이다.
+
+        [Tooltip("잠수 중 심박. 남은 산소가 줄수록 간격이 짧아진다(DiveRule.BeatSeconds)")]
+        public AudioCueSO diveHeartbeat;
+
+        [Tooltip("잠수 중 숨소리. 심박 사이에 깔린다")]
+        public AudioCueSO diveBreath;
+
         /// <summary>
         /// 컴포넌트에 꽂힌 값이 있으면 그것을, 없으면 표의 값을 쓴다.
         /// 이 저장소의 "비움이 기본" 관례를 한 줄로 적어 둔 것이다.
