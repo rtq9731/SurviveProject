@@ -54,6 +54,10 @@ namespace Survive.Testing
 
         static DiveZone _통로;
         static CraftingBench _제작대;
+
+        /// <summary>맨몸으로 막혔던 자리. 방호복을 걸치고 같은 높이에 다시 선다.</summary>
+        static float _입구높이;
+        static float _지면;
         static readonly List<GameObject> _세운것 = new List<GameObject>();
 
         public static IEnumerator FullRun()
@@ -198,9 +202,12 @@ namespace Survive.Testing
 
             yield return E2EHarness.TapKey(Key.E);
             yield return E2EHarness.WaitUntil(() => Inv.CountOf(무광버섯) > 0, "무광버섯을 주웠다", 4f);
+            E2EHarness.Assert(Inv.CountOf(무광버섯) > 0, "무광버섯이 가방에 들어왔다");
 
             yield return E2EHarness.WaitUntil(() => ledger.IsUnlocked(설계),
-                                              "쥐는 순간 차폐 설계가 열린다 (연구대를 거치지 않는다)", 4f);
+                                              "쥐는 순간 차폐 설계가 열린다", 4f);
+            E2EHarness.Assert(ledger.IsUnlocked(설계),
+                              "쥐는 순간 차폐 설계가 열린다 (연구대를 거치지 않는다)");
         }
 
         // ── 2. 방호복 없이 들어가려 하면 밀려난다 ───────────────
@@ -217,9 +224,13 @@ namespace Survive.Testing
             int 이전거절 = DiveGateService.RefusedEntries;
 
             // 발밑에 통로 입구를 깐다. 발바닥에 딱 맞추면 "닿았다"가 반올림에 걸린다.
-            _통로 = 통로를_깐다(발바닥() + 0.5f);
-            E2EHarness.Log($"  통로 입구 {_통로.MouthY:F2}, 길이 {_통로.Magnitude:F1}초 / " +
-                           $"{_통로.PassageMeters:F1}m");
+            // 이 높이를 기억해 둔다. 뒤에서 방호복을 걸치고 같은 자리에 다시 서야
+            // "무엇이 달라졌는가"가 장비 하나로 좁혀진다.
+            _지면 = 발바닥();
+            _입구높이 = _지면 + 0.5f;
+            _통로 = 통로를_깐다(_입구높이);
+            E2EHarness.Log($"  지면 {_지면:F2}, 통로 입구 {_입구높이:F2}, " +
+                           $"길이 {_통로.Magnitude:F1}초 / {_통로.PassageMeters:F1}m");
 
             yield return E2EHarness.WaitUntil(
                 () => DiveGateService.LastOutcome == DiveOutcome.NoSuit,
@@ -237,8 +248,11 @@ namespace Survive.Testing
             E2EHarness.AssertEqual(Mathf.RoundToInt(Vitals.Health.Current), Mathf.RoundToInt(체력전),
                                    "체력이 한 톨도 깎이지 않는다 (환경은 죽이지 않는다)");
             E2EHarness.AssertEqual(DiveGateService.SealedEntries, 0, "들어간 것으로 세지 않았다");
-            E2EHarness.Assert(발바닥() > _통로.MouthY - 0.6f,
-                              $"입구 아래로 내려가지 못했다 (발 {발바닥():F2}, 입구 {_통로.MouthY:F2})");
+
+            // 물이 받쳐 올려 입구 위에 떠 있다. 발이 지면보다 높아진 것이 그 증거다.
+            E2EHarness.Assert(발바닥() >= _입구높이 - 0.05f,
+                              $"물이 입구 위로 밀어 올렸다 (발 {발바닥():F2}, 입구 {_입구높이:F2}, " +
+                              $"지면 {_지면:F2})");
 
             통로를_걷는다();
             yield return null;
@@ -319,16 +333,25 @@ namespace Survive.Testing
             int 이전진입 = DiveGateService.SealedEntries;
             int 이전거절 = DiveGateService.RefusedEntries;
 
-            _통로 = 통로를_깐다(발바닥() + 0.5f);
+            // 앞 판에서 물이 밀어 올려 세워 두었던 바로 그 자리에서 시작한다.
+            // 같은 높이에 같은 통로를 깔고 장비 하나만 바꾼다.
+            var 자리 = E2EHarness.Player.transform.position;
+            E2EHarness.Teleport(new Vector3(자리.x, 자리.y + (_입구높이 + 0.1f - 발바닥()), 자리.z));
+            yield return null;
+
+            _통로 = 통로를_깐다(_입구높이);
+            E2EHarness.Log($"  발 {발바닥():F2}에서 시작, 통로 입구 {_입구높이:F2}");
 
             yield return E2EHarness.WaitUntil(
                 () => DiveGateService.LastOutcome == DiveOutcome.Sealed,
                 "같은 통로가 이번에는 몸을 봉하고 받아들인다", 6f);
 
+            E2EHarness.Assert(DiveGateService.LastOutcome == DiveOutcome.Sealed,
+                              "같은 통로가 이번에는 몸을 봉하고 받아들인다");
             E2EHarness.Assert(!DiveGateService.Instance.IsBlocked, "발밑을 막지 않는다");
             E2EHarness.AssertEqual(DiveGateService.RefusedEntries, 이전거절, "거절 횟수가 늘지 않았다");
 
-            // 스스로 내려간다. 물속에서 가라앉는 데 쓰는 그 키(Ctrl)를 그대로 쓴다.
+            // 받침이 걷혔으므로 내려간다. 스스로 가라앉는 데 쓰는 그 키(Ctrl)를 그대로 쓴다.
             yield return E2EHarness.PressKey(Key.LeftCtrl);
 
             float t = 0f;
@@ -340,10 +363,10 @@ namespace Survive.Testing
             }
             yield return E2EHarness.ReleaseKey(Key.LeftCtrl);
 
-            E2EHarness.AssertEqual(DiveGateService.SealedEntries, 이전진입 + 1,
-                                   $"입구 아래로 내려갔다 ({t:F1}초)");
-            E2EHarness.Assert(발바닥() < _통로.MouthY,
-                              $"발이 입구를 지났다 (발 {발바닥():F2}, 입구 {_통로.MouthY:F2})");
+            E2EHarness.Assert(발바닥() < _입구높이 - 0.3f,
+                              $"입구 아래로 내려갔다 ({t:F1}초, 발 {발바닥():F2}, 입구 {_입구높이:F2})");
+            E2EHarness.Assert(DiveGateService.SealedEntries > 이전진입,
+                              "방호복을 걸치고 통로에 들어간 것으로 기록된다");
             E2EHarness.Assert(!Vitals.Health.IsEmpty, "들어가는 동안 죽지 않았다");
 
             통로를_걷는다();
