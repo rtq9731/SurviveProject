@@ -30,3 +30,5 @@ MonoBehaviour:
   plantWither: {fileID: 0}
   campfireIgnite: {fileID: 0}
   campfireLoop: {fileID: 0}
+  diveHeartbeat: {fileID: 0}
+  diveBreath: {fileID: 0}

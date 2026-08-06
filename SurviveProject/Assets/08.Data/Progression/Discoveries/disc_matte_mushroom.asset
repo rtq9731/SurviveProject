@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 570c2334212e9d642bb39f8afda3b6a9, type: 3}
+  m_Name: disc_matte_mushroom
+  m_EditorClassIdentifier: Survive.Domain::Survive.Progression.DiscoverySO
+  id: disc_matte_mushroom
+  item: {fileID: 11400000, guid: f9b0bca60a8c7e24ca4148d828b1c88e, type: 2}
+  locationId: 
+  unlocks:
+  - {fileID: 11400000, guid: 0ac50ef0134548649832a0cee30bb42c, type: 2}
+  line:
+    speaker: "\uC6B0\uC8FC\uBCF5 AI"
+    text: "\uBE5B\uACFC \uBC29\uC0AC\uB97C \uD761\uC218\uD558\uB294 \uC720\uAE30
+      \uC870\uC9C1 \uBD84\uC11D... \uCC28\uD3D0\uC7AC\uB85C \uC0AC\uC6A9\uAC00\uB2A5\uD55C
+      \uAC83\uC73C\uB85C \uBCF4\uC785\uB2C8\uB2E4. \uD574\uB2F9 \uBB3C\uC9C8\uC744
+      \uC0AC\uC6A9\uD55C \uC81C\uC791\uBC95\uC774 \uC788\uC2B5\uB2C8\uB2E4."
+    holdSeconds: 4.5

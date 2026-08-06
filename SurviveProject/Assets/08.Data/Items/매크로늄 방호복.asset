@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 134eef50754026045bb5d663fd8e08b4, type: 3}
+  m_Name: "\uB9E4\uD06C\uB85C\uB284 \uBC29\uD638\uBCF5"
+  m_EditorClassIdentifier: Survive.Domain::Survive.Items.TraversalGearItemSO
+  id: macronium_suit
+  displayName: "\uB9E4\uD06C\uB85C\uB284 \uBC29\uD638\uBCF5"
+  description: "\uBB34\uAD11\uBC84\uC12F\uC758 \uAC13\uC744 \uACB9\uCCD0 \uC9C0\uC740
+    \uD55C \uBC8C. \uBE5B\uACFC \uB9E4\uD06C\uB85C\uB284\uC744 \uBE68\uC544\uB4E4\uC774\uB294
+    \uC131\uC9C8\uC774 \uBAB8\uC744 \uAC10\uC2F8\uBBC0\uB85C \uBB3C\uC18D\uC73C\uB85C
+    \uB4E4\uC5B4\uAC08 \uC218 \uC788\uB2E4. \uC228\uC740 \uADF8\uB798\uB3C4 \uC904\uC5B4\uB4E0\uB2E4."
+  icon: {fileID: 21300000, guid: c22fa761c71f74b4890054dd62b42a2a, type: 3}
+  maxStack: 1
+  category: 1
+  equipSlot: 0
+  worldPrefab: {fileID: 0}
+  gear: 4
+  capacity: 40

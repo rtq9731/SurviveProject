@@ -176,13 +176,15 @@ public class BridgeRetirementTests
     ///
     /// <see cref="TraversalGearItemSO.gear"/>는 정수로 직렬화되므로,
     /// 열거형 중간 값을 지우면 에셋이 조용히 옆 장비를 가리킨다
-    /// (다리를 뺄 때 실제로 액면 보행 장비 4→3, 돌파정 5→4로 밀렸다).
+    /// (다리를 뺄 때 실제로 액면 보행 장비 4→3, 돌파정 5→4로 밀렸다.
+    /// 매크로늄 방호복을 사이에 끼울 때는 반대로 돌파정이 4→5로 되밀렸다).
     /// 컴파일도 다른 테스트도 그것을 잡아 주지 못해서 여기 표로 못 박는다.
     /// </summary>
     static readonly Dictionary<string, TraversalGear> 의도한장비 =
         new Dictionary<string, TraversalGear>
         {
             { "surface_walker", TraversalGear.SurfaceWalker },
+            { "macronium_suit", TraversalGear.MacroniumSuit },
             { "breach_pod", TraversalGear.BreachPod },
         };
 
@@ -234,8 +236,9 @@ public class BridgeRetirementTests
         Assert.AreEqual(1, (int)TraversalGear.Lantern);
         Assert.AreEqual(2, (int)TraversalGear.Swimming);
         Assert.AreEqual(3, (int)TraversalGear.SurfaceWalker);
-        Assert.AreEqual(4, (int)TraversalGear.BreachPod);
-        Assert.AreEqual(5, System.Enum.GetValues(typeof(TraversalGear)).Length,
+        Assert.AreEqual(4, (int)TraversalGear.MacroniumSuit);
+        Assert.AreEqual(5, (int)TraversalGear.BreachPod);
+        Assert.AreEqual(6, System.Enum.GetValues(typeof(TraversalGear)).Length,
                         "장비가 늘거나 줄었다 — 08.Data의 gear: 값을 대조해라");
     }
 }

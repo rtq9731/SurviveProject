@@ -25,6 +25,23 @@ namespace Survive.World
         /// <summary>수심 — 산소가 다하면 익사한다.</summary>
         Depth,
 
+        /// <summary>
+        /// 잠수 — 물 <b>속으로 들어가</b> 통로를 지나야 한다.
+        ///
+        /// <see cref="Depth"/>와 물질이 같고 묻는 것이 다르다. 수심은
+        /// "머리가 잠긴 동안 숨이 버티는가"를 묻고 맨몸으로도 답이 나온다 —
+        /// 강을 건너며 숨이 시계라는 것을 배우는 자리라 관문이 아니다.
+        /// 잠수는 "바닥으로 내려가 저쪽으로 나올 수 있는가"를 묻고,
+        /// 방호복이 없으면 애초에 시작되지 않는다.
+        ///
+        /// <b>이 위협은 죽이지 않는다.</b> 위협 계층 원칙 — 환경은 죽이지 않고
+        /// 생물만 죽인다(기획서 갱신점 _3 §2). 장비 없이 들어가려 하면
+        /// 물이 몸을 밀어내지, 익사시키지 않는다(<see cref="DiveRule"/>).
+        ///
+        /// 크기의 단위는 <b>초</b> — 통로를 정상 속도로 지나는 데 걸리는 시간이다.
+        /// </summary>
+        Submersion,
+
         /// <summary>매크로늄 액면 — 표면장력이 강해 뚫고 갈 수 없다.</summary>
         MacroniumSurface,
 
@@ -50,6 +67,7 @@ namespace Survive.World
     /// <list type="bullet">
     /// <item><see cref="EnvironmentHazard.Darkness"/> — 광원 없이 지나야 하는 거리(m)</item>
     /// <item><see cref="EnvironmentHazard.Depth"/> — 물속에 머물러야 하는 시간(초)</item>
+    /// <item><see cref="EnvironmentHazard.Submersion"/> — 잠수 통로를 지나는 데 걸리는 시간(초)</item>
     /// <item><see cref="EnvironmentHazard.MacroniumSurface"/> — 액면 위로 지나야 하는 폭(m)</item>
     /// <item><see cref="EnvironmentHazard.MacroniumLayer"/> — 뚫고 내려가야 하는 층의 두께(m)</item>
     /// <item><see cref="EnvironmentHazard.None"/> — 쓰이지 않는다</item>

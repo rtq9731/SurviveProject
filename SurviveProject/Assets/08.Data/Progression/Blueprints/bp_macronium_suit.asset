@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd70e4c37af8bd648a7135245419af52, type: 3}
+  m_Name: bp_macronium_suit
+  m_EditorClassIdentifier: Survive.Domain::Survive.Progression.BlueprintSO
+  id: bp_macronium_suit
+  displayName: "\uCC28\uD3D0 \uC124\uACC4"
+  hint: "\uBB34\uAD11\uBC84\uC12F\uC744 \uCC98\uC74C \uC950\uBA74 \uC54C\uAC8C \uB41C\uB2E4"
