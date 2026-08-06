@@ -349,6 +349,24 @@ namespace Survive.Testing
         }
 
         /// <summary>
+        /// <b>다른 시나리오가 쓰는 창구</b> — 사람이 설 수 있는 <b>어두운 육지</b>를 찾는다.
+        ///
+        /// <see cref="내륙인가"/>에는 이 섬을 실제로 훑어 가며 알아낸 것이 들어 있다
+        /// (거대 버섯의 갓이 NavMesh를 이고 있다는 것, 하늘에서 쏜 광선이 그 갓부터
+        /// 맞는다는 것). 그 지식을 시나리오마다 다시 적으면 한쪽만 고쳐지고 갈라진다.
+        /// </summary>
+        public static bool 육지를_찾는다(Vector3 중심, float 최소, float 최대, out Vector3 자리)
+        {
+            자리 = Vector3.zero;
+
+            // 판정이 액면 높이를 기준으로 도므로 먼저 재어 둔다. FullRun도 제 무대를
+            // 고를 때 이 값을 다시 잰다 — 남의 실행에 끼어들 자리가 없다.
+            if (!WaterBody.TryGetSurfaceAt(new Vector3(중심.x, 0f, 중심.z), out _액면)) return false;
+
+            return 가까운_구역을_찾는다(중심, 내륙인가, 최소, 최대, out 자리);
+        }
+
+        /// <summary>
         /// 이 자리도, 배회하다 닿을 만한 둘레도 어두운가.
         ///
         /// 중심만 보면 발광 군락 가장자리에 세워 놓고 곧 빛 속으로 들어가게 된다.
@@ -769,17 +787,27 @@ namespace Survive.Testing
             E2EHarness.Assert(false, $"떨어진 것이 조준에 잡힌다 ({pickup.name})");
         }
 
+        /// <summary>
+        /// 랜턴에 불이 들어오게 하거나 꺼지게 한다.
+        ///
+        /// <b>F는 더 이상 없다.</b> 랜턴은 상시 점등이 전제라(스펙 §12) 켜는 조작도
+        /// 끄는 조작도 없다. 불이 없는 상태에 이르는 유일한 길이 배터리를 다 쓰는
+        /// 것이므로 검사도 그 길을 지난다 — <c>E2EConsumer</c>가 같은 이유로 같은 모양이다.
+        ///
+        /// 이 시나리오는 <b>어둠이 전제</b>다. 빛을 꺼리는 개체를 빛 안에 세우면
+        /// 영원히 물러나기만 해 재려던 것을 하나도 재지 못한다.
+        /// </summary>
         static IEnumerator 랜턴(bool 켜기)
         {
             if (_lantern == null) yield break;
 
-            for (int i = 0; i < 3 && _lantern.IsOn != 켜기; i++)
-            {
-                yield return E2EHarness.TapKey(Key.F);
-                yield return null;
-            }
+            if (켜기) E2EHarness.LightLantern();
+            else E2EHarness.DarkenLantern();
 
-            if (켜기) _lantern.Recharge(100f);
+            yield return null;
+            E2EHarness.AssertEqual(_lantern.IsOn, 켜기,
+                                   켜기 ? "배터리를 채우니 저절로 불이 들어왔다"
+                                        : "배터리가 다하자 불이 꺼졌다");
             yield return null;
         }
 

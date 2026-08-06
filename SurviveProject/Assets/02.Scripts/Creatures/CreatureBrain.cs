@@ -67,6 +67,16 @@ namespace Survive.Creatures
         public float AggroLeft => _aggroLeft;
 
         /// <summary>
+        /// 이번 프레임에 잰 위협까지의 거리. 위협이 없으면 <see cref="float.MaxValue"/>다.
+        ///
+        /// <b>왜 여는가.</b> 표현하는 쪽(<see cref="ScytheTail"/>)이 같은 판단을 다시
+        /// 하려면 같은 입력이 필요한데, 거리를 저쪽에서 따로 재면 두뇌가 보는 것과
+        /// 꼬리가 보는 것이 갈린다 — 두뇌는 쫓기 시작했는데 꼬리는 아직 늘어져 있는
+        /// 프레임이 그렇게 생긴다. 재는 곳은 한 군데여야 한다.
+        /// </summary>
+        public float ThreatDistance { get; private set; } = float.MaxValue;
+
+        /// <summary>
         /// NavMeshAgent가 아닌 몸. 검증이 "무엇으로 움직이는 개체인가"를 값으로
         /// 확인하고, 부유체의 서식 범위를 집어 보라고 연다.
         /// </summary>
@@ -105,6 +115,11 @@ namespace Survive.Creatures
                 var drifter = GetComponent<HoverDrifter>();
                 if (drifter == null) drifter = gameObject.AddComponent<HoverDrifter>();
                 _motor = drifter;
+
+                // 꼬리가 상태를 말한다(스펙 §4). 부유하는 몸 다음에 붙이는 것은
+                // ScytheTail이 그 몸에서 구역과 태세를 읽기 때문이다.
+                // 꼬리 부품이 없는 프리팹에 붙어도 스스로 아무것도 하지 않는다.
+                if (GetComponent<ScytheTail>() == null) gameObject.AddComponent<ScytheTail>();
             }
 
             if (agent != null && definition != null) agent.speed = definition.moveSpeed;
@@ -179,6 +194,7 @@ namespace Survive.Creatures
             float distance = _player != null
                 ? Vector3.Distance(transform.position, _player.position)
                 : float.MaxValue;
+            ThreatDistance = distance;
 
             UpdateState(distance);
             RunState();
