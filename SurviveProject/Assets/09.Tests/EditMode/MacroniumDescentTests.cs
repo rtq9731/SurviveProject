@@ -7,7 +7,7 @@ using Survive.World;
 ///
 /// 두 가지를 본다.
 /// <list type="number">
-/// <item>액면에 닿았을 때 잠항구가 결과를 어떻게 바꾸는가 — 죽던 자리에서 가라앉는다</item>
+/// <item>액면에 닿았을 때 돌파정이 결과를 어떻게 바꾸는가 — 죽던 자리에서 가라앉는다</item>
 /// <item>층을 다 지났는가 — 종막이 열리는 조건</item>
 /// </list>
 ///
@@ -22,14 +22,14 @@ public class MacroniumDescentTests
     static HazardZone 층(float 두께 = 12f) => new HazardZone(EnvironmentHazard.MacroniumLayer, 두께);
 
     static GearCapability 보행기(float 용량 = 36f) => new GearCapability(TraversalGear.SurfaceWalker, 용량);
-    static GearCapability 잠항구(float 용량 = 20f) => new GearCapability(TraversalGear.Submersible, 용량);
+    static GearCapability 돌파정(float 용량 = 20f) => new GearCapability(TraversalGear.BreachCraft, 용량);
 
     // ── 장비표가 닫혀 있는가 ───────────────────────────────────────────────
 
     [Test]
-    public void 층을_뚫는_것은_잠항구다()
+    public void 층을_뚫는_것은_돌파정이다()
     {
-        Assert.AreEqual(TraversalGear.Submersible,
+        Assert.AreEqual(TraversalGear.BreachCraft,
                         EnvironmentThreat.RequiredGear(EnvironmentHazard.MacroniumLayer));
     }
 
@@ -42,7 +42,7 @@ public class MacroniumDescentTests
                         EnvironmentThreat.RequiredGear(EnvironmentHazard.MacroniumSurface));
     }
 
-    // ── 액면 접촉 — 잠항구가 결과를 바꾼다 ─────────────────────────────────
+    // ── 액면 접촉 — 돌파정이 결과를 바꾼다 ─────────────────────────────────
 
     [Test]
     public void 맨몸으로_닿으면_여전히_죽는다()
@@ -54,17 +54,17 @@ public class MacroniumDescentTests
     }
 
     [Test]
-    public void 잠항구만_지니면_닿는_즉시_가라앉는다()
+    public void 돌파정만_지니면_닿는_즉시_가라앉는다()
     {
         // 걸을 수단이 없으니 남는 것은 내려가는 것뿐이다. 그리고 그것은 사고가 아니다.
         Assert.AreEqual(MacroniumContactOutcome.Descending,
-                        MacroniumContact.Resolve(true, 액면(), 장비(잠항구())));
+                        MacroniumContact.Resolve(true, 액면(), 장비(돌파정())));
     }
 
     [Test]
-    public void 잠항구를_지니면_하강을_누르지_않아도_죽지는_않는다()
+    public void 돌파정을_지니면_하강을_누르지_않아도_죽지는_않는다()
     {
-        var 결과 = MacroniumContact.Resolve(true, 액면(), 장비(잠항구()), descentRequested: false);
+        var 결과 = MacroniumContact.Resolve(true, 액면(), 장비(돌파정()), descentRequested: false);
         Assert.AreNotEqual(MacroniumContactOutcome.Lethal, 결과);
     }
 
@@ -74,7 +74,7 @@ public class MacroniumDescentTests
         // 종막에 이른 사람은 반드시 둘 다 지니고 있다(§5.4의 사슬).
         // 여기서 가라앉기가 기본이면 4번 섬으로 돌아가려다 챕터가 끝난다.
         Assert.AreEqual(MacroniumContactOutcome.Supported,
-                        MacroniumContact.Resolve(true, 액면(), 장비(보행기(), 잠항구()),
+                        MacroniumContact.Resolve(true, 액면(), 장비(보행기(), 돌파정()),
                                                  descentRequested: false));
     }
 
@@ -82,12 +82,12 @@ public class MacroniumDescentTests
     public void 둘_다_지닌_채_하강을_누르면_가라앉는다()
     {
         Assert.AreEqual(MacroniumContactOutcome.Descending,
-                        MacroniumContact.Resolve(true, 액면(), 장비(보행기(), 잠항구()),
+                        MacroniumContact.Resolve(true, 액면(), 장비(보행기(), 돌파정()),
                                                  descentRequested: true));
     }
 
     [Test]
-    public void 잠항구가_없으면_하강을_눌러도_아무것도_달라지지_않는다()
+    public void 돌파정이_없으면_하강을_눌러도_아무것도_달라지지_않는다()
     {
         // 키를 누르는 것만으로 액면이 열리면 장비가 관문이 아니게 된다.
         Assert.AreEqual(MacroniumContactOutcome.Supported,
@@ -97,20 +97,20 @@ public class MacroniumDescentTests
     }
 
     [Test]
-    public void 액면_보행_장비의_용량이_모자라도_잠항구가_있으면_죽지_않는다()
+    public void 액면_보행_장비의_용량이_모자라도_돌파정이_있으면_죽지_않는다()
     {
         // 걷기로는 못 지나는 폭이다. 하지만 껍데기를 걸친 사람은 빠져 죽는 것이 아니라
         // 내려간다 — "못 걷는다"의 결말이 죽음에서 하강으로 바뀐다.
         Assert.AreEqual(MacroniumContactOutcome.Descending,
                         MacroniumContact.Resolve(true, 액면(폭: 40f),
-                                                 장비(보행기(용량: 10f), 잠항구())));
+                                                 장비(보행기(용량: 10f), 돌파정())));
     }
 
     [Test]
-    public void 닿지_않았으면_잠항구가_있어도_아무_일도_없다()
+    public void 닿지_않았으면_돌파정이_있어도_아무_일도_없다()
     {
         Assert.AreEqual(MacroniumContactOutcome.None,
-                        MacroniumContact.Resolve(false, 액면(), 장비(잠항구()), descentRequested: true));
+                        MacroniumContact.Resolve(false, 액면(), 장비(돌파정()), descentRequested: true));
     }
 
     [Test]
@@ -118,14 +118,14 @@ public class MacroniumDescentTests
     {
         var 어둠 = new HazardZone(EnvironmentHazard.Darkness, 20f);
         Assert.AreEqual(MacroniumContactOutcome.None,
-                        MacroniumContact.Resolve(true, 어둠, 장비(잠항구()), descentRequested: true));
+                        MacroniumContact.Resolve(true, 어둠, 장비(돌파정()), descentRequested: true));
     }
 
     [Test]
     public void 껍데기를_걸쳤는가는_용량을_보지_않는다()
     {
         // 얼마나 깊은 층을 뚫는지는 층이 묻는다. 접촉은 걸쳤는가만 본다.
-        Assert.IsTrue(MacroniumContact.HasHull(장비(new GearCapability(TraversalGear.Submersible, 0f))));
+        Assert.IsTrue(MacroniumContact.HasHull(장비(new GearCapability(TraversalGear.BreachCraft, 0f))));
         Assert.IsFalse(MacroniumContact.HasHull(장비(보행기())));
         Assert.IsFalse(MacroniumContact.HasHull(null));
     }
@@ -141,30 +141,30 @@ public class MacroniumDescentTests
     [Test]
     public void 아랫면을_넘어서면_뚫은_것이다()
     {
-        Assert.IsTrue(MacroniumDescent.Breached(feetY: 37.9f, layerTopY: 50f, 층(), 장비(잠항구())));
+        Assert.IsTrue(MacroniumDescent.Breached(feetY: 37.9f, layerTopY: 50f, 층(), 장비(돌파정())));
     }
 
     [Test]
     public void 아랫면에_정확히_닿은_것도_뚫은_것으로_친다()
     {
         // 경계값은 통과로 친다 — EnvironmentThreat이 용량에서 잡은 규칙과 같다.
-        Assert.IsTrue(MacroniumDescent.Breached(feetY: 38f, layerTopY: 50f, 층(), 장비(잠항구())));
+        Assert.IsTrue(MacroniumDescent.Breached(feetY: 38f, layerTopY: 50f, 층(), 장비(돌파정())));
     }
 
     [Test]
     public void 층_속에_있는_동안은_아직_뚫은_것이_아니다()
     {
-        Assert.IsFalse(MacroniumDescent.Breached(feetY: 44f, layerTopY: 50f, 층(), 장비(잠항구())));
+        Assert.IsFalse(MacroniumDescent.Breached(feetY: 44f, layerTopY: 50f, 층(), 장비(돌파정())));
     }
 
     [Test]
     public void 액면_위에_서_있으면_뚫은_것이_아니다()
     {
-        Assert.IsFalse(MacroniumDescent.Breached(feetY: 50f, layerTopY: 50f, 층(), 장비(잠항구())));
+        Assert.IsFalse(MacroniumDescent.Breached(feetY: 50f, layerTopY: 50f, 층(), 장비(돌파정())));
     }
 
     [Test]
-    public void 잠항구_없이_그_깊이에_있어도_뚫은_것이_아니다()
+    public void 돌파정_없이_그_깊이에_있어도_뚫은_것이_아니다()
     {
         // 지형의 틈 하나가 챕터를 끝내면 안 된다.
         Assert.IsFalse(MacroniumDescent.Breached(feetY: 10f, layerTopY: 50f, 층(), 장비()));
@@ -175,21 +175,21 @@ public class MacroniumDescentTests
     public void 용량이_모자란_껍데기로는_층을_뚫지_못한다()
     {
         Assert.IsFalse(MacroniumDescent.Breached(feetY: 10f, layerTopY: 50f,
-                                                 층(두께: 30f), 장비(잠항구(용량: 12f))));
+                                                 층(두께: 30f), 장비(돌파정(용량: 12f))));
     }
 
     [Test]
     public void 용량이_두께와_같으면_뚫는다()
     {
         Assert.IsTrue(MacroniumDescent.Breached(feetY: 10f, layerTopY: 50f,
-                                                층(두께: 20f), 장비(잠항구(용량: 20f))));
+                                                층(두께: 20f), 장비(돌파정(용량: 20f))));
     }
 
     [Test]
     public void 층이_아닌_구간은_아무리_내려가도_뚫리지_않는다()
     {
         Assert.IsFalse(MacroniumDescent.Breached(feetY: -100f, layerTopY: 50f,
-                                                 액면(), 장비(잠항구())));
+                                                 액면(), 장비(돌파정())));
     }
 
     [Test]
@@ -197,10 +197,10 @@ public class MacroniumDescentTests
     {
         var 결과 = MacroniumDescent.Evaluate(층(두께: 30f), 장비());
         Assert.AreEqual(PassageResult.MissingGear, 결과.Result);
-        Assert.AreEqual(TraversalGear.Submersible, 결과.RequiredGear);
+        Assert.AreEqual(TraversalGear.BreachCraft, 결과.RequiredGear);
         Assert.AreEqual(EnvironmentHazard.MacroniumLayer, 결과.Hazard);
 
-        var 모자람 = MacroniumDescent.Evaluate(층(두께: 30f), 장비(잠항구(용량: 12f)));
+        var 모자람 = MacroniumDescent.Evaluate(층(두께: 30f), 장비(돌파정(용량: 12f)));
         Assert.AreEqual(PassageResult.NotEnough, 모자람.Result);
         Assert.AreEqual(18f, 모자람.Shortfall, 0.0001f);
     }

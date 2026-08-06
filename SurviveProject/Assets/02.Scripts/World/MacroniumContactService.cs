@@ -48,7 +48,7 @@ namespace Survive.World
         public static int LethalContacts { get; private set; }
 
         /// <summary>
-        /// 잠항구를 걸치고 액면을 통과한 횟수. 죽인 횟수와 짝이 되는 값이라
+        /// 돌파정을 걸치고 액면을 통과한 횟수. 죽인 횟수와 짝이 되는 값이라
         /// "같은 자리에서 무엇이 달라졌는가"를 숫자로 볼 수 있다.
         /// </summary>
         public static int DescentContacts { get; private set; }
@@ -150,7 +150,7 @@ namespace Survive.World
             {
                 _sinking = true;
                 DescentContacts++;
-                Debug.Log($"[MacroniumContactService] 잠항구를 걸치고 액면으로 내려간다 — " +
+                Debug.Log($"[MacroniumContactService] 돌파정을 걸치고 액면으로 내려간다 — " +
                           $"발 {feetY:F2}, 액면 {surfaceY:F2} ({zone.name})");
             }
             else if (!sinking)

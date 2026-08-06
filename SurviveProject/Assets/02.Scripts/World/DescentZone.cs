@@ -12,7 +12,7 @@ using Survive.Vitals;
 namespace Survive.World
 {
     /// <summary>
-    /// 짙은 매크로늄 층 하나. 잠항구를 걸치고 여기를 <b>끝까지 내려가면 챕터가 끝난다</b>
+    /// 짙은 매크로늄 층 하나. 돌파정을 걸치고 여기를 <b>끝까지 내려가면 챕터가 끝난다</b>
     /// (기획서 §6.2 "종막 — 뚫고 내려간다").
     ///
     /// <b>무엇이 새로운가.</b> 예전 종막은 남이 놔둔 외계 장치를 켜고 떠나는 이야기였고,
@@ -41,7 +41,7 @@ namespace Survive.World
         [Tooltip("층이 깔린 반경(m). 이 안에서 내려가야 뚫은 것으로 친다")]
         [Min(0f)] [SerializeField] float radius = 18f;
 
-        [Tooltip("뚫고 내려가야 하는 층의 두께(m). 잠항구의 용량이 이 값 이상이어야 지난다")]
+        [Tooltip("뚫고 내려가야 하는 층의 두께(m). 돌파정의 용량이 이 값 이상이어야 지난다")]
         [Min(0f)] [SerializeField] float layerThickness = 12f;
 
         [Tooltip("중심을 오브젝트 원점에서 옮긴다. 중심의 높이가 곧 층의 윗면(액면)이다")]

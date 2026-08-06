@@ -243,48 +243,48 @@ World,storage_default,보관함,Storage,
 #
 # ---- Blueprint ----
 #   청사진 이름(.name)과 여는 방법(.hint). hint는 도감의 잠긴 줄에만 뜬다.
-Blueprint,bp_fibercraft.hint,양치 섬유를 손에 넣으면 알게 된다,
-Blueprint,bp_fibercraft.name,섬유 세공,
-Blueprint,bp_salvaged_mechanism.hint,기계 부품을 손에 넣으면 알게 된다,
-Blueprint,bp_salvaged_mechanism.name,부품 재조립,
-Blueprint,bp_scrapworks.hint,스크랩을 손에 넣으면 알게 된다,
-Blueprint,bp_scrapworks.name,스크랩 재활용,
-Blueprint,bp_spore_filter.hint,버섯 갓을 손에 넣으면 알게 된다,
-Blueprint,bp_spore_filter.name,포자 여과,
-Blueprint,bp_submersible.hint,낫의 핵을 연구대에서 분석하면 알게 된다,
-Blueprint,bp_submersible.name,잠항 설계,
-Blueprint,bp_surface_walker.hint,낫의 막을 연구대에서 분석하면 알게 된다,
-Blueprint,bp_surface_walker.name,액면 보행 설계,
+Blueprint,bp_breach_craft.hint,낫의 핵을 연구대에서 분석하면 알게 된다,,
+Blueprint,bp_breach_craft.name,돌파 설계,,
+Blueprint,bp_fibercraft.hint,양치 섬유를 손에 넣으면 알게 된다,,
+Blueprint,bp_fibercraft.name,섬유 세공,,
+Blueprint,bp_salvaged_mechanism.hint,기계 부품을 손에 넣으면 알게 된다,,
+Blueprint,bp_salvaged_mechanism.name,부품 재조립,,
+Blueprint,bp_scrapworks.hint,스크랩을 손에 넣으면 알게 된다,,
+Blueprint,bp_scrapworks.name,스크랩 재활용,,
+Blueprint,bp_spore_filter.hint,버섯 갓을 손에 넣으면 알게 된다,,
+Blueprint,bp_spore_filter.name,포자 여과,,
+Blueprint,bp_surface_walker.hint,낫의 막을 연구대에서 분석하면 알게 된다,,
+Blueprint,bp_surface_walker.name,액면 보행 설계,,
 #
 # ---- Buildable ----
 #   지을 수 있는 것의 이름. 건축 메뉴와 철거 프롬프트에 뜬다.
-Buildable,bench.name,간이 제작대,
-Buildable,campfire.name,화톳불,Campfire
-Buildable,fence.name,울타리,
-Buildable,piece_doorway.name,문간,
-Buildable,piece_floor.name,바닥,
-Buildable,piece_foundation.name,토대,
-Buildable,piece_ramp.name,경사로,
-Buildable,piece_wall.name,벽,
-Buildable,research_bench.name,연구대,
-Buildable,storage.name,보관함,
+Buildable,bench.name,간이 제작대,,
+Buildable,campfire.name,화톳불,Campfire,
+Buildable,fence.name,울타리,,
+Buildable,piece_doorway.name,문간,,
+Buildable,piece_floor.name,바닥,,
+Buildable,piece_foundation.name,토대,,
+Buildable,piece_ramp.name,경사로,,
+Buildable,piece_wall.name,벽,,
+Buildable,research_bench.name,연구대,,
+Buildable,storage.name,보관함,,
 #
 # ---- Chapter ----
 #   챕터 제목.
-Chapter,chapter1.title,챕터 1 · 부유섬,
+Chapter,chapter1.title,챕터 1 · 부유섬,,
 #
 # ---- Creature ----
 #   생물 이름(.name)과 도감 관측 기록(.codex).
-Creature,ball.codex,동그란 구 형태의 기계. 눈과 비슷한 소형부터 사람만 한 대형까지 여러 크기가 발견되었으며 주로 굴러다닌다. 몸체 하부의 구멍으로 죽은 기계의 잔해를 회수해 스크랩을 모은다.,
-Creature,ball.name,공,
-Creature,eye.codex,작은 추진기로 공중에 부양하는 드론형 기계. 몸체 전방의 큰 눈이 주 탐지기관이며 다른 탐지기관은 발견되지 않았다. 죽은 식물에 레이저를 쏘아 스크랩으로 전환하고 역장으로 연료탱크에 옮긴다. 어느 지역에나 있지만 평야에 자주 보인다.,
-Creature,eye.name,눈,
-Creature,fruit_crab.codex,"다리가 4개 달린 소형 기계. 앞쪽으로 튀어나온 두 눈으로 주변을 감지하며, 먹이를 먹을 때는 위쪽을 덮쳐 몸통 아래의 입으로 담아 스크랩으로 전환한다. 주로 강가에 서식한다.",
-Creature,fruit_crab.name,열매게,
-Creature,scythe.codex,"이족보행의 빠른 기계. 등과 어깨에서 뻗어 나온 날붙이가 실루엣을 뾰족하게 만든다. 어둠 속에서 이 윤곽을 보면 도망쳐야 한다. 매크로늄이 짙은 액면섬에서만 관측되며, 접합부의 자홍빛은 그 섬의 액체층에서 온 것으로 보인다. 밝은 곳으로는 들어오지 않는다. 랜턴을 켠 사람에게 다가온 기록이 없다.",
-Creature,scythe.name,낫,
-Creature,wing.codex,몸통 양측의 커다란 팬으로 이동하는 잠자리 형태의 기계. 몸체 하부의 스캔 장치가 탐지기관이다. 박쥐와 생활방식이 비슷해 작은 열매를 통째로 담아 스크랩으로 전환한다. 주로 동굴에 서식한다.,
-Creature,wing.name,날개,
+Creature,ball.codex,동그란 구 형태의 기계. 눈과 비슷한 소형부터 사람만 한 대형까지 여러 크기가 발견되었으며 주로 굴러다닌다. 몸체 하부의 구멍으로 죽은 기계의 잔해를 회수해 스크랩을 모은다.,,
+Creature,ball.name,공,,
+Creature,eye.codex,작은 추진기로 공중에 부양하는 드론형 기계. 몸체 전방의 큰 눈이 주 탐지기관이며 다른 탐지기관은 발견되지 않았다. 죽은 식물에 레이저를 쏘아 스크랩으로 전환하고 역장으로 연료탱크에 옮긴다. 어느 지역에나 있지만 평야에 자주 보인다.,,
+Creature,eye.name,눈,,
+Creature,fruit_crab.codex,"다리가 4개 달린 소형 기계. 앞쪽으로 튀어나온 두 눈으로 주변을 감지하며, 먹이를 먹을 때는 위쪽을 덮쳐 몸통 아래의 입으로 담아 스크랩으로 전환한다. 주로 강가에 서식한다.",,
+Creature,fruit_crab.name,열매게,,
+Creature,scythe.codex,"이족보행의 빠른 기계. 등과 어깨에서 뻗어 나온 날붙이가 실루엣을 뾰족하게 만든다. 어둠 속에서 이 윤곽을 보면 도망쳐야 한다. 매크로늄이 짙은 액면섬에서만 관측되며, 접합부의 자홍빛은 그 섬의 액체층에서 온 것으로 보인다. 밝은 곳으로는 들어오지 않는다. 랜턴을 켠 사람에게 다가온 기록이 없다.",,
+Creature,scythe.name,낫,,
+Creature,wing.codex,몸통 양측의 커다란 팬으로 이동하는 잠자리 형태의 기계. 몸체 하부의 스캔 장치가 탐지기관이다. 박쥐와 생활방식이 비슷해 작은 열매를 통째로 담아 스크랩으로 전환한다. 주로 동굴에 서식한다.,,
+Creature,wing.name,날개,,
 #
 # ---- Discovery ----
 #   재료를 처음 손에 넣었을 때 AI가 하는 말(.line.text).
@@ -292,97 +292,97 @@ Creature,wing.name,날개,
 #     [관찰된 성질] 분석... [용도 판정, "~것으로 보입니다"]. [해금 정형구].
 #     아이템 이름을 되뇌지 않는다. 감탄/추측/이모지/물음 금지. 규격 원본은 DiscoverySO의 문서 주석.
 #   현장 발견의 마지막 문장: "해당 물질을 사용한 제작법이 있습니다."
-Discovery,disc_fern_fiber.line.speaker,우주복 AI,
+Discovery,disc_fern_fiber.line.speaker,우주복 AI,,
 #   재료를 처음 쥐었을 때의 대사. 대상 아이템: 양치 섬유 (fern_fiber)
-Discovery,disc_fern_fiber.line.text,유연 섬유질 분석... 결속재로 적합한 것으로 보입니다. 해당 물질을 사용한 제작법이 있습니다.,
-Discovery,disc_machine_part.line.speaker,우주복 AI,
+Discovery,disc_fern_fiber.line.text,유연 섬유질 분석... 결속재로 적합한 것으로 보입니다. 해당 물질을 사용한 제작법이 있습니다.,,
+Discovery,disc_machine_part.line.speaker,우주복 AI,,
 #   재료를 처음 쥐었을 때의 대사. 대상 아이템: 기계 부품 (machine_part)
-Discovery,disc_machine_part.line.text,회전 축계 구조물 분석... 공구로 전용 가능한 것으로 보입니다. 해당 물질을 사용한 제작법이 있습니다.,
-Discovery,disc_mushroom_cap.line.speaker,우주복 AI,
+Discovery,disc_machine_part.line.text,회전 축계 구조물 분석... 공구로 전용 가능한 것으로 보입니다. 해당 물질을 사용한 제작법이 있습니다.,,
+Discovery,disc_mushroom_cap.line.speaker,우주복 AI,,
 #   재료를 처음 쥐었을 때의 대사. 대상 아이템: 버섯 갓 (mushroom_cap)
-Discovery,disc_mushroom_cap.line.text,다공성 포자 조직 분석... 기체 여과재로 사용 가능한 것으로 보입니다. 해당 물질을 사용한 제작법이 있습니다.,
-Discovery,disc_scrap.line.speaker,우주복 AI,
+Discovery,disc_mushroom_cap.line.text,다공성 포자 조직 분석... 기체 여과재로 사용 가능한 것으로 보입니다. 해당 물질을 사용한 제작법이 있습니다.,,
+Discovery,disc_scrap.line.speaker,우주복 AI,,
 #   재료를 처음 쥐었을 때의 대사. 대상 아이템: 스크랩 (scrap)
-Discovery,disc_scrap.line.text,외계 금속물체 분석... 에너지로 사용가능한 것으로 보입니다. 해당 물질을 사용한 제작법이 있습니다.,
+Discovery,disc_scrap.line.text,외계 금속물체 분석... 에너지로 사용가능한 것으로 보입니다. 해당 물질을 사용한 제작법이 있습니다.,,
 #
 # ---- Harvest ----
 #   채집물 이름. 키는 에셋 이름에서 만든다(id 필드가 없다).
-Harvest,debris.name,기계 잔해,
-Harvest,loose_scrap.name,흩어진 잔해,
-Harvest,mushroom.name,발광 버섯,
-Harvest,ore_vein.name,매크로늄 광맥,
+Harvest,debris.name,기계 잔해,,
+Harvest,loose_scrap.name,흩어진 잔해,,
+Harvest,mushroom.name,발광 버섯,,
+Harvest,ore_vein.name,매크로늄 광맥,,
 #
 # ---- Item ----
 #   아이템 이름(.name)과 설명(.desc). 설명은 소지품 쪽지에 뜬다.
-Item,alien_alloy.desc,화성인이 만든 고강도 구조재. 매크로늄 광맥과 낫의 잔해에서 나온다. 쓸 데는 아직 밝혀지지 않았다.,
-Item,alien_alloy.name,외계 합금,
-Item,axe.desc,거대 버섯을 베는 도구. 돌은 이것으로 깨지지 않는다.,
-Item,axe.name,도끼,
-Item,battery_cell.desc,불의 열로 스크랩에 갇힌 에너지를 끌어내 담은 전지. 랜턴이 꺼지려 할 때 저절로 물린다.,
-Item,battery_cell.name,배터리 셀,
-Item,fern_fiber.desc,지하 양치류의 질긴 섬유.,
-Item,fern_fiber.name,양치 섬유,
-Item,lantern.desc,지하의 어둠을 밝힌다.,
-Item,lantern.name,랜턴,
-Item,machine_part.desc,죽은 기계에서 회수한 부품.,
-Item,machine_part.name,기계 부품,Machine Part
-Item,macronium.desc,"지각 아래를 강처럼 흐르는 인공 물질. 짙게 굳은 층은 맨몸으로 닿으면 죽지만, 같은 물질로 지은 껍데기라야 그 층을 지난다.",
-Item,macronium.name,매크로늄,
-Item,mushroom_cap.desc,발광 버섯의 갓. 산소를 머금고 있다.,
-Item,mushroom_cap.name,버섯 갓,
-Item,mushroom_wood.desc,거대 버섯의 단단한 대. 이 세계에서 유일하게 타는 것이다.,
-Item,mushroom_wood.name,버섯 목재,Mushroom Wood
-Item,oxygen_filter.desc,우주복 필터를 교체해 산소 소모를 줄인다.,
-Item,oxygen_filter.name,산소 필터,
-Item,part_ball.desc,구르는 몸을 감싸던 껍질 조각. 안쪽에 잔해를 빨아들이던 흠집이 촘촘하다. 두드리면 속이 빈 소리가 난다.,
-Item,part_ball.name,공의 껍질,
-Item,part_eye.desc,부양체 앞면에 박혀 있던 단안 렌즈. 초점이 아직 살아 있어 빛을 한 점으로 모은다. 뒷면 접점에서 탄 냄새가 난다.,
-Item,part_eye.name,눈의 렌즈,
-Item,part_fruit_crab.desc,네 다리 중 하나에서 빠진 관절 마디. 마디 안쪽이 아직 매끄럽게 돌아간다. 끝에 마른 열매 껍질이 눌어붙어 있다.,
-Item,part_fruit_crab.name,열매게의 다리마디,
-Item,part_scythe.desc,어깨에서 뻗어 있던 절단 부속 하나. 날 끝이 어둠 속에서 옅게 탄다. 잡는 쪽 접합면만 매끈하게 잘려 있다.,
-Item,part_scythe.name,낫의 날붙이,
-Item,part_wing.desc,몸통 양쪽 팬에서 떼어 낸 날 한 장. 두께가 종이만 한데 손으로는 휘어지지 않는다. 표면을 따라 미세한 홈이 결처럼 나 있다.,
-Item,part_wing.name,날개의 팬날,
-Item,pickaxe.desc,광부의 기본 도구. 기계 잔해와 광맥을 캘 수 있다.,
-Item,pickaxe.name,곡괭이,
-Item,relic_core.desc,낫의 안쪽에서 나온 굳은 덩어리. 매크로늄과 같은 빛을 띠면서도 짙은 층에 삼켜지지 않았다. 무게가 크기에 맞지 않는다.,
-Item,relic_core.name,낫의 핵,
-Item,relic_membrane.desc,낫의 몸을 감싸던 얇은 막 한 조각. 액면에 잠겨 있었는데도 젖은 자국이 없다. 손끝으로 눌러도 가라앉지 않고 되밀어 낸다.,
-Item,relic_membrane.name,낫의 막,
-Item,repair_kit.desc,우주복 손상을 응급 처치한다.,
-Item,repair_kit.name,수리 키트,
-Item,scrap.desc,화성인들이 만든 물질. 연료이자 화폐이자 제작재다.,
-Item,scrap.name,스크랩,Scrap
-Item,submersible.desc,매크로늄으로 지은 한 사람짜리 껍데기. 같은 물질만이 짙은 층을 지난다. 액면 위에서 하강 키(Ctrl)를 누르면 걷는 대신 가라앉아 아래로 내려간다.,
-Item,submersible.name,잠항구,
-Item,surface_walker.desc,매크로늄 액면은 표면장력이 강해 발이 빠지지 않는다. 외계 합금으로 접지면을 넓힌 부츠를 신으면 그 위를 걸어 건널 수 있다.,
-Item,surface_walker.name,액면 보행 장비,
+Item,alien_alloy.desc,화성인이 만든 고강도 구조재. 매크로늄 광맥과 낫의 잔해에서 나온다. 쓸 데는 아직 밝혀지지 않았다.,,
+Item,alien_alloy.name,외계 합금,,
+Item,axe.desc,거대 버섯을 베는 도구. 돌은 이것으로 깨지지 않는다.,,
+Item,axe.name,도끼,,
+Item,battery_cell.desc,불의 열로 스크랩에 갇힌 에너지를 끌어내 담은 전지. 랜턴이 꺼지려 할 때 저절로 물린다.,,
+Item,battery_cell.name,배터리 셀,,
+Item,breach_craft.desc,매크로늄으로 지은 한 사람짜리 껍데기. 같은 물질만이 짙은 층을 지난다. 액면 위에서 하강 키(Ctrl)를 누르면 걷는 대신 가라앉아 아래로 내려간다.,,
+Item,breach_craft.name,돌파정,,
+Item,fern_fiber.desc,지하 양치류의 질긴 섬유.,,
+Item,fern_fiber.name,양치 섬유,,
+Item,lantern.desc,지하의 어둠을 밝힌다.,,
+Item,lantern.name,랜턴,,
+Item,machine_part.desc,죽은 기계에서 회수한 부품.,,
+Item,machine_part.name,기계 부품,Machine Part,
+Item,macronium.desc,"지각 아래를 강처럼 흐르는 인공 물질. 짙게 굳은 층은 맨몸으로 닿으면 죽지만, 같은 물질로 지은 껍데기라야 그 층을 지난다.",,
+Item,macronium.name,매크로늄,,
+Item,mushroom_cap.desc,발광 버섯의 갓. 산소를 머금고 있다.,,
+Item,mushroom_cap.name,버섯 갓,,
+Item,mushroom_wood.desc,거대 버섯의 단단한 대. 이 세계에서 유일하게 타는 것이다.,,
+Item,mushroom_wood.name,버섯 목재,Mushroom Wood,
+Item,oxygen_filter.desc,우주복 필터를 교체해 산소 소모를 줄인다.,,
+Item,oxygen_filter.name,산소 필터,,
+Item,part_ball.desc,구르는 몸을 감싸던 껍질 조각. 안쪽에 잔해를 빨아들이던 흠집이 촘촘하다. 두드리면 속이 빈 소리가 난다.,,
+Item,part_ball.name,공의 껍질,,
+Item,part_eye.desc,부양체 앞면에 박혀 있던 단안 렌즈. 초점이 아직 살아 있어 빛을 한 점으로 모은다. 뒷면 접점에서 탄 냄새가 난다.,,
+Item,part_eye.name,눈의 렌즈,,
+Item,part_fruit_crab.desc,네 다리 중 하나에서 빠진 관절 마디. 마디 안쪽이 아직 매끄럽게 돌아간다. 끝에 마른 열매 껍질이 눌어붙어 있다.,,
+Item,part_fruit_crab.name,열매게의 다리마디,,
+Item,part_scythe.desc,어깨에서 뻗어 있던 절단 부속 하나. 날 끝이 어둠 속에서 옅게 탄다. 잡는 쪽 접합면만 매끈하게 잘려 있다.,,
+Item,part_scythe.name,낫의 날붙이,,
+Item,part_wing.desc,몸통 양쪽 팬에서 떼어 낸 날 한 장. 두께가 종이만 한데 손으로는 휘어지지 않는다. 표면을 따라 미세한 홈이 결처럼 나 있다.,,
+Item,part_wing.name,날개의 팬날,,
+Item,pickaxe.desc,광부의 기본 도구. 기계 잔해와 광맥을 캘 수 있다.,,
+Item,pickaxe.name,곡괭이,,
+Item,relic_core.desc,낫의 안쪽에서 나온 굳은 덩어리. 매크로늄과 같은 빛을 띠면서도 짙은 층에 삼켜지지 않았다. 무게가 크기에 맞지 않는다.,,
+Item,relic_core.name,낫의 핵,,
+Item,relic_membrane.desc,낫의 몸을 감싸던 얇은 막 한 조각. 액면에 잠겨 있었는데도 젖은 자국이 없다. 손끝으로 눌러도 가라앉지 않고 되밀어 낸다.,,
+Item,relic_membrane.name,낫의 막,,
+Item,repair_kit.desc,우주복 손상을 응급 처치한다.,,
+Item,repair_kit.name,수리 키트,,
+Item,scrap.desc,화성인들이 만든 물질. 연료이자 화폐이자 제작재다.,,
+Item,scrap.name,스크랩,Scrap,
+Item,surface_walker.desc,매크로늄 액면은 표면장력이 강해 발이 빠지지 않는다. 외계 합금으로 접지면을 넓힌 부츠를 신으면 그 위를 걸어 건널 수 있다.,,
+Item,surface_walker.name,액면 보행 장비,,
 #
 # ---- Objective ----
 #   목표 한 줄. 화면에서는 앞에 기호가 붙고 뒤에 진행률이 붙는다.
-Objective,ch1_01_survey.text,착지 지점을 벗어나 주변을 살핀다,
-Objective,ch1_02_grove.text,발광 버섯 군락을 찾는다,
-Objective,ch1_03_scrap.text,흩어진 잔해에서 스크랩 10개를 모은다,
-Objective,ch1_04_pickaxe.text,곡괭이를 제작한다,
-Objective,ch1_05_lantern.text,랜턴을 제작해 어둠에 대비한다,
-Objective,ch1_06_descent.text,잠항구를 만들어 내려간다,
+Objective,ch1_01_survey.text,착지 지점을 벗어나 주변을 살핀다,,
+Objective,ch1_02_grove.text,발광 버섯 군락을 찾는다,,
+Objective,ch1_03_scrap.text,흩어진 잔해에서 스크랩 10개를 모은다,,
+Objective,ch1_04_pickaxe.text,곡괭이를 제작한다,,
+Objective,ch1_05_lantern.text,랜턴을 제작해 어둠에 대비한다,,
+Objective,ch1_06_descent.text,돌파정을 만들어 내려간다,,
 #
 # ---- Plant ----
 #   식물 이름. 키는 에셋 이름에서 만든다(id 필드가 없다).
-Plant,ash_fern.name,재양치,
-Plant,ember_fungus.name,불씨버섯,
+Plant,ash_fern.name,재양치,,
+Plant,ember_fungus.name,불씨버섯,,
 #
 # ---- Recipe ----
 #   제작법 이름. 비워 두면 화면이 결과물 아이템 이름을 대신 쓴다.
-Recipe,axe.name,도끼,
-Recipe,battery_cell.name,스크랩 에너지 추출,
-Recipe,lantern.name,랜턴,
-Recipe,oxygen_filter.name,산소 필터,
-Recipe,pickaxe.name,곡괭이,
-Recipe,repair_kit.name,수리 키트,
-Recipe,submersible.name,잠항구,
-Recipe,surface_walker.name,액면 보행 장비,
+Recipe,axe.name,도끼,,
+Recipe,battery_cell.name,스크랩 에너지 추출,,
+Recipe,breach_craft.name,돌파정,,
+Recipe,lantern.name,랜턴,,
+Recipe,oxygen_filter.name,산소 필터,,
+Recipe,pickaxe.name,곡괭이,,
+Recipe,repair_kit.name,수리 키트,,
+Recipe,surface_walker.name,액면 보행 장비,,
 #
 # ---- Research ----
 #   연구 항목 이름(.name)과 끝냈을 때 AI가 하는 말(.line.text).
@@ -390,59 +390,59 @@ Recipe,surface_walker.name,액면 보행 장비,
 #     [관찰된 성질] 분석... [용도 판정, "~것으로 보입니다"]. [해금 정형구].
 #     아이템 이름을 되뇌지 않는다. 감탄/추측/이모지/물음 금지. 규격 원본은 DiscoverySO의 문서 주석.
 #   연구는 마지막 문장이 다르다: "해당 구조를 적용한 제작법을 확보했습니다."
-Research,res_codex_ball.line.speaker,우주복 AI,
-#   연구를 끝냈을 때의 대사. 대상: 공의 껍질 / 항목 이름: 공 개체 분석
-Research,res_codex_ball.line.text,구형 외피와 안쪽 흡입 흠집 분석... 죽은 기계의 잔해를 삼켜 에너지로 바꾸는 것으로 보입니다. 해당 개체의 정보가 정리되었습니다.,
-Research,res_codex_ball.name,공 개체 분석,
-Research,res_codex_eye.line.speaker,우주복 AI,
-#   연구를 끝냈을 때의 대사. 대상: 눈의 렌즈 / 항목 이름: 눈 개체 분석
-Research,res_codex_eye.line.text,단안 광학계와 부양 추진부 분석... 죽은 조직을 태워 에너지를 꺼내는 것으로 보입니다. 해당 개체의 정보가 정리되었습니다.,
-Research,res_codex_eye.name,눈 개체 분석,
-Research,res_codex_fruit_crab.line.speaker,우주복 AI,
-#   연구를 끝냈을 때의 대사. 대상: 열매게의 다리마디 / 항목 이름: 열매게 개체 분석
-Research,res_codex_fruit_crab.line.text,사족 관절과 상부 포획 구조 분석... 위에서 덮쳐 먹이를 가두는 것으로 보입니다. 해당 개체의 정보가 정리되었습니다.,
-Research,res_codex_fruit_crab.name,열매게 개체 분석,
-Research,res_codex_scythe.line.speaker,우주복 AI,
-#   연구를 끝냈을 때의 대사. 대상: 낫의 날붙이 / 항목 이름: 낫 개체 분석
-Research,res_codex_scythe.line.text,고속 이족 보행체의 절단 부속 분석... 밝은 곳을 피해 어둠에서만 움직이는 것으로 보입니다. 해당 개체의 정보가 정리되었습니다.,
-Research,res_codex_scythe.name,낫 개체 분석,
-Research,res_codex_wing.line.speaker,우주복 AI,
-#   연구를 끝냈을 때의 대사. 대상: 날개의 팬날 / 항목 이름: 날개 개체 분석
-Research,res_codex_wing.line.text,대형 팬면과 하부 주사 장치 분석... 작은 열매를 통째로 담아 옮기는 것으로 보입니다. 해당 개체의 정보가 정리되었습니다.,
-Research,res_codex_wing.name,날개 개체 분석,
-Research,res_submersible.line.speaker,우주복 AI,
+Research,res_breach_craft.line.speaker,우주복 AI,,
 #   연구를 끝냈을 때의 대사. 대상: 낫의 핵 / 항목 이름: 삼켜지지 않는 핵 분석
-Research,res_submersible.line.text,짙은 액체 속에서 형태를 유지한 결정 분석... 같은 물질로 이루어진 층을 갈라 통과하는 것으로 보입니다. 해당 구조를 적용한 제작법을 확보했습니다.,
-Research,res_submersible.name,삼켜지지 않는 핵 분석,
-Research,res_surface_walker.line.speaker,우주복 AI,
+Research,res_breach_craft.line.text,짙은 액체 속에서 형태를 유지한 결정 분석... 같은 물질로 이루어진 층을 갈라 통과하는 것으로 보입니다. 해당 구조를 적용한 제작법을 확보했습니다.,,
+Research,res_breach_craft.name,삼켜지지 않는 핵 분석,,
+Research,res_codex_ball.line.speaker,우주복 AI,,
+#   연구를 끝냈을 때의 대사. 대상: 공의 껍질 / 항목 이름: 공 개체 분석
+Research,res_codex_ball.line.text,구형 외피와 안쪽 흡입 흠집 분석... 죽은 기계의 잔해를 삼켜 에너지로 바꾸는 것으로 보입니다. 해당 개체의 정보가 정리되었습니다.,,
+Research,res_codex_ball.name,공 개체 분석,,
+Research,res_codex_eye.line.speaker,우주복 AI,,
+#   연구를 끝냈을 때의 대사. 대상: 눈의 렌즈 / 항목 이름: 눈 개체 분석
+Research,res_codex_eye.line.text,단안 광학계와 부양 추진부 분석... 죽은 조직을 태워 에너지를 꺼내는 것으로 보입니다. 해당 개체의 정보가 정리되었습니다.,,
+Research,res_codex_eye.name,눈 개체 분석,,
+Research,res_codex_fruit_crab.line.speaker,우주복 AI,,
+#   연구를 끝냈을 때의 대사. 대상: 열매게의 다리마디 / 항목 이름: 열매게 개체 분석
+Research,res_codex_fruit_crab.line.text,사족 관절과 상부 포획 구조 분석... 위에서 덮쳐 먹이를 가두는 것으로 보입니다. 해당 개체의 정보가 정리되었습니다.,,
+Research,res_codex_fruit_crab.name,열매게 개체 분석,,
+Research,res_codex_scythe.line.speaker,우주복 AI,,
+#   연구를 끝냈을 때의 대사. 대상: 낫의 날붙이 / 항목 이름: 낫 개체 분석
+Research,res_codex_scythe.line.text,고속 이족 보행체의 절단 부속 분석... 밝은 곳을 피해 어둠에서만 움직이는 것으로 보입니다. 해당 개체의 정보가 정리되었습니다.,,
+Research,res_codex_scythe.name,낫 개체 분석,,
+Research,res_codex_wing.line.speaker,우주복 AI,,
+#   연구를 끝냈을 때의 대사. 대상: 날개의 팬날 / 항목 이름: 날개 개체 분석
+Research,res_codex_wing.line.text,대형 팬면과 하부 주사 장치 분석... 작은 열매를 통째로 담아 옮기는 것으로 보입니다. 해당 개체의 정보가 정리되었습니다.,,
+Research,res_codex_wing.name,날개 개체 분석,,
+Research,res_surface_walker.line.speaker,우주복 AI,,
 #   연구를 끝냈을 때의 대사. 대상: 낫의 막 / 항목 이름: 젖지 않는 막 분석
-Research,res_surface_walker.line.text,액체를 밀어내는 표면 구조 분석... 하중을 면 전체로 흩어 가라앉지 않는 것으로 보입니다. 해당 구조를 적용한 제작법을 확보했습니다.,
-Research,res_surface_walker.name,젖지 않는 막 분석,
+Research,res_surface_walker.line.text,액체를 밀어내는 표면 구조 분석... 하중을 면 전체로 흩어 가라앉지 않는 것으로 보입니다. 해당 구조를 적용한 제작법을 확보했습니다.,,
+Research,res_surface_walker.name,젖지 않는 막 분석,,
 #
 # ---- Scene ----
 #   씬 표시 이름. 키는 Build Settings의 씬 이름에서 만든다.
-Scene,main_scene.name,챕터 1 · 부유섬,
-Scene,start_scene.name,프롤로그 · 화성 지표면,
+Scene,main_scene.name,챕터 1 · 부유섬,,
+Scene,start_scene.name,프롤로그 · 화성 지표면,,
 #
 # ---- Sequence ----
 #   연출 자막. .line1부터 <b>재생 순서대로</b>다. 순서가 곧 맥락이다.
-Sequence,prologue_intro.line1.speaker,우주복 AI,
+Sequence,prologue_intro.line1.speaker,우주복 AI,,
 #   1번째 자막
-Sequence,prologue_intro.line1.text,비상 착륙 완료. 기체는 회수 불가 상태입니다.,
-Sequence,prologue_intro.line2.speaker,우주복 AI,
+Sequence,prologue_intro.line1.text,비상 착륙 완료. 기체는 회수 불가 상태입니다.,,
+Sequence,prologue_intro.line2.speaker,우주복 AI,,
 #   2번째 자막 (앞 줄: 비상 착륙 완료. 기체는 회수 불가 상태입니...)
-Sequence,prologue_intro.line2.text,주의 : 현재 생명 유지 장치가 위험 상태입니다.,
-Sequence,prologue_intro.line3.speaker,우주복 AI,
+Sequence,prologue_intro.line2.text,주의 : 현재 생명 유지 장치가 위험 상태입니다.,,
+Sequence,prologue_intro.line3.speaker,우주복 AI,,
 #   3번째 자막 (앞 줄: 주의 : 현재 생명 유지 장치가 위험 상태입...)
-Sequence,prologue_intro.line3.text,"주의 : 행성에 현재 $#@%급 모래 폭풍 접근 중, 즉시 철수를 권고합니다.",
-Sequence,prologue_intro.line4.speaker,우주복 AI,
+Sequence,prologue_intro.line3.text,"주의 : 행성에 현재 $#@%급 모래 폭풍 접근 중, 즉시 철수를 권고합니다.",,
+Sequence,prologue_intro.line4.speaker,우주복 AI,,
 #   4번째 자막 (앞 줄: 주의 : 행성에 현재 $#@%급 모래 폭풍 ...)
-Sequence,prologue_intro.line4.text,파일럿의 생존을 위해 주변 탐색을 실시합니다...,
-Sequence,prologue_intro.line5.speaker,우주복 AI,
+Sequence,prologue_intro.line4.text,파일럿의 생존을 위해 주변 탐색을 실시합니다...,,
+Sequence,prologue_intro.line5.speaker,우주복 AI,,
 #   5번째 자막 (앞 줄: 파일럿의 생존을 위해 주변 탐색을 실시합니다...)
-Sequence,prologue_intro.line5.text,근처에 적절한 피난처 감지. 표시합니다...,
+Sequence,prologue_intro.line5.text,근처에 적절한 피난처 감지. 표시합니다...,,
 #
 # ---- Vital ----
 #   생명 수치 이름. HUD 게이지에 붙는다.
-Vital,health.name,체력,
-Vital,oxygen.name,산소,Oxygen
+Vital,health.name,체력,,
+Vital,oxygen.name,산소,Oxygen,
