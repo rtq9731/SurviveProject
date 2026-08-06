@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: Scene_StartScene
   m_EditorClassIdentifier: Survive.Domain::Survive.Core.SceneReferenceSO
   sceneName: StartScene
-  displayName: "\uD504\uB864\uB85C\uADF8 \u2014 \uD654\uC131 \uC9C0\uD45C\uBA74"
+  displayName: "\uD504\uB864\uB85C\uADF8 \u00B7 \uD654\uC131 \uC9C0\uD45C\uBA74"

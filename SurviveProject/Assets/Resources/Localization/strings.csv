@@ -53,7 +53,6 @@ Buildable,storage.name,보관함,
 #
 # ---- Chapter ----
 #   챕터 제목.
-#   글꼴(ChosunGu)에 없는 글자를 대치했다. 에셋 원문: 챕터 1 — 부유섬
 Chapter,chapter1.title,챕터 1 · 부유섬,
 #
 # ---- Creature ----
@@ -142,8 +141,7 @@ Item,repair_kit.desc,우주복 손상을 응급 처치한다.,
 Item,repair_kit.name,수리 키트,
 Item,scrap.desc,화성인들이 만든 물질. 연료이자 화폐이자 제작재다.,
 Item,scrap.name,스크랩,Scrap
-#   글꼴(ChosunGu)에 없는 글자를 대치했다. 에셋 원문: 매크로늄으로 지은 한 사람짜리 껍데기. 같은 물질만이 짙은 층을 지난다 — 액면 위에서 하강 키(Ctrl)를 누르면 걷는 대신 가라앉아 아래로 내려간다.
-Item,submersible.desc,매크로늄으로 지은 한 사람짜리 껍데기. 같은 물질만이 짙은 층을 지난다 · 액면 위에서 하강 키(Ctrl)를 누르면 걷는 대신 가라앉아 아래로 내려간다.,
+Item,submersible.desc,매크로늄으로 지은 한 사람짜리 껍데기. 같은 물질만이 짙은 층을 지난다. 액면 위에서 하강 키(Ctrl)를 누르면 걷는 대신 가라앉아 아래로 내려간다.,
 Item,submersible.name,잠항구,
 Item,surface_walker.desc,매크로늄 액면은 표면장력이 강해 발이 빠지지 않는다. 외계 합금으로 접지면을 넓힌 부츠를 신으면 그 위를 걸어 건널 수 있다.,
 Item,surface_walker.name,액면 보행 장비,
@@ -211,9 +209,7 @@ Research,res_surface_walker.name,젖지 않는 막 분석,
 #
 # ---- Scene ----
 #   씬 표시 이름. 키는 Build Settings의 씬 이름에서 만든다.
-#   글꼴(ChosunGu)에 없는 글자를 대치했다. 에셋 원문: 챕터 1 — 부유섬
 Scene,main_scene.name,챕터 1 · 부유섬,
-#   글꼴(ChosunGu)에 없는 글자를 대치했다. 에셋 원문: 프롤로그 — 화성 지표면
 Scene,start_scene.name,프롤로그 · 화성 지표면,
 #
 # ---- Sequence ----
