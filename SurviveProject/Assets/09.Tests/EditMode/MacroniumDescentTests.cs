@@ -22,14 +22,14 @@ public class MacroniumDescentTests
     static HazardZone 층(float 두께 = 12f) => new HazardZone(EnvironmentHazard.MacroniumLayer, 두께);
 
     static GearCapability 보행기(float 용량 = 36f) => new GearCapability(TraversalGear.SurfaceWalker, 용량);
-    static GearCapability 돌파정(float 용량 = 20f) => new GearCapability(TraversalGear.BreachCraft, 용량);
+    static GearCapability 돌파정(float 용량 = 20f) => new GearCapability(TraversalGear.BreachPod, 용량);
 
     // ── 장비표가 닫혀 있는가 ───────────────────────────────────────────────
 
     [Test]
     public void 층을_뚫는_것은_돌파정이다()
     {
-        Assert.AreEqual(TraversalGear.BreachCraft,
+        Assert.AreEqual(TraversalGear.BreachPod,
                         EnvironmentThreat.RequiredGear(EnvironmentHazard.MacroniumLayer));
     }
 
@@ -125,7 +125,7 @@ public class MacroniumDescentTests
     public void 껍데기를_걸쳤는가는_용량을_보지_않는다()
     {
         // 얼마나 깊은 층을 뚫는지는 층이 묻는다. 접촉은 걸쳤는가만 본다.
-        Assert.IsTrue(MacroniumContact.HasHull(장비(new GearCapability(TraversalGear.BreachCraft, 0f))));
+        Assert.IsTrue(MacroniumContact.HasHull(장비(new GearCapability(TraversalGear.BreachPod, 0f))));
         Assert.IsFalse(MacroniumContact.HasHull(장비(보행기())));
         Assert.IsFalse(MacroniumContact.HasHull(null));
     }
@@ -197,7 +197,7 @@ public class MacroniumDescentTests
     {
         var 결과 = MacroniumDescent.Evaluate(층(두께: 30f), 장비());
         Assert.AreEqual(PassageResult.MissingGear, 결과.Result);
-        Assert.AreEqual(TraversalGear.BreachCraft, 결과.RequiredGear);
+        Assert.AreEqual(TraversalGear.BreachPod, 결과.RequiredGear);
         Assert.AreEqual(EnvironmentHazard.MacroniumLayer, 결과.Hazard);
 
         var 모자람 = MacroniumDescent.Evaluate(층(두께: 30f), 장비(돌파정(용량: 12f)));

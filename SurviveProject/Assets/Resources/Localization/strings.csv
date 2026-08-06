@@ -243,8 +243,8 @@ World,storage_default,보관함,Storage,
 #
 # ---- Blueprint ----
 #   청사진 이름(.name)과 여는 방법(.hint). hint는 도감의 잠긴 줄에만 뜬다.
-Blueprint,bp_breach_craft.hint,낫의 핵을 연구대에서 분석하면 알게 된다,,
-Blueprint,bp_breach_craft.name,돌파 설계,,
+Blueprint,bp_breach_pod.hint,낫의 핵을 연구대에서 분석하면 알게 된다,,
+Blueprint,bp_breach_pod.name,돌파 설계,,
 Blueprint,bp_fibercraft.hint,양치 섬유를 손에 넣으면 알게 된다,,
 Blueprint,bp_fibercraft.name,섬유 세공,,
 Blueprint,bp_salvaged_mechanism.hint,기계 부품을 손에 넣으면 알게 된다,,
@@ -320,8 +320,8 @@ Item,axe.desc,거대 버섯을 베는 도구. 돌은 이것으로 깨지지 않�
 Item,axe.name,도끼,,
 Item,battery_cell.desc,불의 열로 스크랩에 갇힌 에너지를 끌어내 담은 전지. 랜턴이 꺼지려 할 때 저절로 물린다.,,
 Item,battery_cell.name,배터리 셀,,
-Item,breach_craft.desc,매크로늄으로 지은 한 사람짜리 껍데기. 같은 물질만이 짙은 층을 지난다. 액면 위에서 하강 키(Ctrl)를 누르면 걷는 대신 가라앉아 아래로 내려간다.,,
-Item,breach_craft.name,돌파정,,
+Item,breach_pod.desc,매크로늄으로 지은 한 사람짜리 껍데기. 같은 물질만이 짙은 층을 지난다. 액면 위에서 하강 키(Ctrl)를 누르면 걷는 대신 가라앉아 아래로 내려간다.,,
+Item,breach_pod.name,돌파정,,
 Item,fern_fiber.desc,지하 양치류의 질긴 섬유.,,
 Item,fern_fiber.name,양치 섬유,,
 Item,lantern.desc,지하의 어둠을 밝힌다.,,
@@ -377,7 +377,7 @@ Plant,ember_fungus.name,불씨버섯,,
 #   제작법 이름. 비워 두면 화면이 결과물 아이템 이름을 대신 쓴다.
 Recipe,axe.name,도끼,,
 Recipe,battery_cell.name,스크랩 에너지 추출,,
-Recipe,breach_craft.name,돌파정,,
+Recipe,breach_pod.name,돌파정,,
 Recipe,lantern.name,랜턴,,
 Recipe,oxygen_filter.name,산소 필터,,
 Recipe,pickaxe.name,곡괭이,,
@@ -390,10 +390,10 @@ Recipe,surface_walker.name,액면 보행 장비,,
 #     [관찰된 성질] 분석... [용도 판정, "~것으로 보입니다"]. [해금 정형구].
 #     아이템 이름을 되뇌지 않는다. 감탄/추측/이모지/물음 금지. 규격 원본은 DiscoverySO의 문서 주석.
 #   연구는 마지막 문장이 다르다: "해당 구조를 적용한 제작법을 확보했습니다."
-Research,res_breach_craft.line.speaker,우주복 AI,,
+Research,res_breach_pod.line.speaker,우주복 AI,,
 #   연구를 끝냈을 때의 대사. 대상: 낫의 핵 / 항목 이름: 삼켜지지 않는 핵 분석
-Research,res_breach_craft.line.text,짙은 액체 속에서 형태를 유지한 결정 분석... 같은 물질로 이루어진 층을 갈라 통과하는 것으로 보입니다. 해당 구조를 적용한 제작법을 확보했습니다.,,
-Research,res_breach_craft.name,삼켜지지 않는 핵 분석,,
+Research,res_breach_pod.line.text,짙은 액체 속에서 형태를 유지한 결정 분석... 같은 물질로 이루어진 층을 갈라 통과하는 것으로 보입니다. 해당 구조를 적용한 제작법을 확보했습니다.,,
+Research,res_breach_pod.name,삼켜지지 않는 핵 분석,,
 Research,res_codex_ball.line.speaker,우주복 AI,,
 #   연구를 끝냈을 때의 대사. 대상: 공의 껍질 / 항목 이름: 공 개체 분석
 Research,res_codex_ball.line.text,구형 외피와 안쪽 흡입 흠집 분석... 죽은 기계의 잔해를 삼켜 에너지로 바꾸는 것으로 보입니다. 해당 개체의 정보가 정리되었습니다.,,

@@ -21,7 +21,7 @@ public class RelicDropRuleTests
     const string 막 = "relic_membrane";
     const string 핵 = "relic_core";
     const string 보행설계 = "bp_surface_walker";
-    const string 돌파설계 = "bp_breach_craft";
+    const string 돌파설계 = "bp_breach_pod";
 
     List<RelicOption> _후보;
     Inventory _소지품;

@@ -163,7 +163,7 @@ namespace Survive.Testing
             yield return null;
 
             var recipe = Resources.FindObjectsOfTypeAll<RecipeSO>()
-                                  .FirstOrDefault(r => r != null && r.id == "breach_craft");
+                                  .FirstOrDefault(r => r != null && r.id == "breach_pod");
             E2EHarness.Assert(recipe != null, "돌파정 레시피가 있다");
             if (recipe == null) yield break;
 
@@ -176,7 +176,7 @@ namespace Survive.Testing
             // 있지 않아(§8-4는 사람과 함께 한다) 걸어서 닿을 수 있는 낫의 영역이
             // 세계에 없다. 그 자리에 낫을 소환해 세우면 그것은 이미 "동선"이 아니다.
             // §8-4에서 낫의 서식지가 놓이면 여기도 실제로 걸어가 줍도록 고친다.
-            E2EHarness.Assert(E2EResearchStation.원장에_적는다("bp_breach_craft", "bp_surface_walker"),
+            E2EHarness.Assert(E2EResearchStation.원장에_적는다("bp_breach_pod", "bp_surface_walker"),
                               "[연구 대행] 돌파·보행 설계를 원장에 적는다 (낫의 서식지 배치는 §8-4)");
 
             foreach (var need in recipe.ingredients)
@@ -189,8 +189,8 @@ namespace Survive.Testing
                 else yield return GatherMaterial(need.item.id, need.count, tool);
             }
 
-            yield return CraftRecipe("breach_craft");
-            E2EHarness.Assert(Inv.CountOf("breach_craft") > 0, "돌파정을 손에 넣었다");
+            yield return CraftRecipe("breach_pod");
+            E2EHarness.Assert(Inv.CountOf("breach_pod") > 0, "돌파정을 손에 넣었다");
 
             // 4번 섬에 닿으려면 이미 있었어야 하는 물건이다(§5.4의 사슬).
             if (Inv.CountOf("surface_walker") == 0) GrantItem("surface_walker", 1);

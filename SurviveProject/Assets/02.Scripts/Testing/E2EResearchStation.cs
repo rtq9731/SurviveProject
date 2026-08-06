@@ -32,10 +32,10 @@ namespace Survive.Testing
         const string 막 = "relic_membrane";
         const string 핵 = "relic_core";
         const string 막연구 = "res_surface_walker";
-        const string 핵연구 = "res_breach_craft";
-        const string 돌파설계 = "bp_breach_craft";
+        const string 핵연구 = "res_breach_pod";
+        const string 돌파설계 = "bp_breach_pod";
         const string 보행설계 = "bp_surface_walker";
-        const string 돌파정 = "breach_craft";
+        const string 돌파정 = "breach_pod";
 
         static Inventory Inv => E2EHarness.Player.Inventory.Inventory;
         static UnlockLedger Ledger => UnlockService.Instance.Ledger;

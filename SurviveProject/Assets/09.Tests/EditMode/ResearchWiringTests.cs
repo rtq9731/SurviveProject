@@ -241,7 +241,7 @@ public class ResearchWiringTests
     // ── 사슬: 유물 → 연구 → 청사진 → 레시피 ─────────────────
 
     [TestCase(Membrane, "res_surface_walker", "bp_surface_walker", "surface_walker")]
-    [TestCase(Core, "res_breach_craft", "bp_breach_craft", "breach_craft")]
+    [TestCase(Core, "res_breach_pod", "bp_breach_pod", "breach_pod")]
     public void 유물에서_장비까지_한_줄로_이어진다(string 유물, string 연구, string 청사진, string 장비)
     {
         var e = 항목(연구);
@@ -259,7 +259,7 @@ public class ResearchWiringTests
     }
 
     [TestCase("surface_walker")]
-    [TestCase("breach_craft")]
+    [TestCase("breach_pod")]
     public void 진행_장비는_원장이_비면_잠겨_있다(string 장비)
     {
         var r = 레시피(장비);
@@ -270,7 +270,7 @@ public class ResearchWiringTests
     }
 
     [TestCase("res_surface_walker", "surface_walker")]
-    [TestCase("res_breach_craft", "breach_craft")]
+    [TestCase("res_breach_pod", "breach_pod")]
     public void 연구를_마치면_그_장비가_열린다(string 연구, string 장비)
     {
         var e = 항목(연구);
@@ -527,7 +527,7 @@ public class ResearchWiringTests
     {
         // 부품은 걸어 다니는 것을 잡으면 나오고, 유물은 낫의 영역에 머물러야 나온다.
         // 대가가 뒤집히면 위험을 감수할 이유가 사라진다.
-        int 유물최소 = new[] { "res_surface_walker", "res_breach_craft" }
+        int 유물최소 = new[] { "res_surface_walker", "res_breach_pod" }
             .Select(id => 항목(id).energyCost).Min();
 
         foreach (var d in 생물들())
@@ -562,7 +562,7 @@ public class ResearchWiringTests
 
         var 짝 = 표.relics.ToDictionary(r => r.item.id, r => r.researchUnlock.id);
         Assert.AreEqual("bp_surface_walker", 짝[Membrane]);
-        Assert.AreEqual("bp_breach_craft", 짝[Core]);
+        Assert.AreEqual("bp_breach_pod", 짝[Core]);
 
         // pity가 "이미 밝혀낸 것"을 가진 것으로 치려면, 짝지은 열쇠가 실제로 그 연구가
         // 여는 것과 같아야 한다. 어긋나면 다 밝혀낸 유물이 영원히 다시 떨어진다.

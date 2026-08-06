@@ -45,9 +45,9 @@ namespace Survive.Testing
         const string 낫도감연구 = "res_codex_scythe";
         const string 낫도감열쇠 = "codex_scythe";
         const string 보행설계 = "bp_surface_walker";
-        const string 돌파설계 = "bp_breach_craft";
+        const string 돌파설계 = "bp_breach_pod";
         const string 막연구 = "res_surface_walker";
-        const string 핵연구 = "res_breach_craft";
+        const string 핵연구 = "res_breach_pod";
         const string 연구대 = "research_bench";
 
         /// <summary>
