@@ -22,20 +22,22 @@ namespace Survive.UI
         public static bool CanShow(ItemDataSO item) =>
             item != null && !string.IsNullOrWhiteSpace(Title(item));
 
-        /// <summary>이름. 표시 이름이 비어 있으면 id라도 보여 준다.</summary>
+        /// <summary>
+        /// 이름. 표시 이름이 비어 있으면 id라도 보여 준다.
+        ///
+        /// <see cref="DataText"/>를 거친다 — 에셋의 <c>displayName</c>을 직접 읽으면
+        /// 쪽지만 로케일을 안 따라오고, 그것은 이 쪽지를 그 로케일로 띄워 보기
+        /// 전까지 아무 신호도 내지 않는다. 표에 키가 없으면 원문이 그대로 나온다.
+        /// </summary>
         public static string Title(ItemDataSO item)
         {
             if (item == null) return "";
-            return string.IsNullOrWhiteSpace(item.displayName)
-                ? (item.id ?? "")
-                : item.displayName.Trim();
+            string name = DataText.Name(item);
+            return string.IsNullOrWhiteSpace(name) ? (item.id ?? "") : name;
         }
 
         /// <summary>본문. 이 한 덩어리를 읽히게 하려고 쪽지를 만든 것이다.</summary>
-        public static string Body(ItemDataSO item) =>
-            item == null || string.IsNullOrWhiteSpace(item.description)
-                ? ""
-                : item.description.Trim();
+        public static string Body(ItemDataSO item) => DataText.Desc(item);
 
         /// <summary>
         /// 아래 한 줄. 분류는 늘 적고, 겹쳐지는 물건만 묶음 수를 덧붙인다 —

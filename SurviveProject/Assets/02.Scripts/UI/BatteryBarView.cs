@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine.UI;
 using DG.Tweening;
 using Survive.Core;
+using Survive.Localization;
 using Survive.World;
 
 namespace Survive.UI
@@ -52,7 +53,8 @@ namespace Survive.UI
                 fill.fillAmount = n;
                 fill.color = Color.Lerp(emptyColor, fullColor, n);
             }
-            if (label != null) label.text = $"배터리 {Mathf.RoundToInt(current)}";
+            if (label != null)
+                label.text = Loc.F("UI", "battery_amount", Mathf.RoundToInt(current));
         }
 
         void SetVisible(bool visible)

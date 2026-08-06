@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using DG.Tweening;
 using Survive.Core;
 using Survive.Items;
+using Survive.Localization;
 using Survive.Progression;
 
 namespace Survive.UI
@@ -56,7 +57,7 @@ namespace Survive.UI
 
             _chapter = Object.FindAnyObjectByType<ChapterDirector>(FindObjectsInactive.Exclude);
 
-            Show("basics", "[WASD] 이동   [E] 상호작용   [Tab] 소지품   [J] 분석 기록");
+            Show("basics", Loc.T("UI", "hint_basics"));
 
             if (_inventory?.Inventory != null)
                 _inventory.Inventory.Changed += OnInventoryChanged;
@@ -76,15 +77,15 @@ namespace Survive.UI
 
             // 도구는 손에 들어야 쓸 수 있다. 만든 그 순간에 알려준다.
             if (inv.Has("pickaxe", 1))
-                Show("pickaxe", "[Q] 도구를 손에 든다 · 곡괭이로 광맥을 부순다");
+                Show("pickaxe", Loc.T("UI", "hint_pickaxe"));
 
             // 도구는 전용이다. 곡괭이를 쥔 채로 버섯을 때리다 고장으로 오해하지 않게,
             // 도끼가 손에 들어온 그 순간에 무엇을 베는 물건인지 말해 준다.
             if (inv.Has("axe", 1))
-                Show("axe", "[Q] 도구를 손에 든다 · 도끼로 거대 버섯을 벤다");
+                Show("axe", Loc.T("UI", "hint_axe"));
 
             if (inv.Has("lantern", 1))
-                Show("lantern", "[F] 랜턴 켜기 / 끄기");
+                Show("lantern", Loc.T("UI", "hint_lantern"));
         }
 
         /// <summary>같은 안내는 한 번만 띄운다.</summary>

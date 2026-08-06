@@ -77,6 +77,47 @@ UI,item_category_other,물품,Item,
 # │ 구역 A — 화면 (UI/, Domain/UI/, Art/)                     │
 # └──────────────────────────────────────────────────────────┘
 #
+# ---- 분석 기록 (도감) ----
+#   J 키로 여는 열람 화면의 껍데기 글자. 목록에 실리는 항목의 이름과 설명은
+#   데이터 에셋에서 오므로 아래 자동 생성 구역에 있다.
+UI,codex_title,분석 기록,Analysis Log,
+UI,codex_caption,우주복 AI가 지금까지 기록한 것,What the suit AI has logged so far,
+UI,codex_footer,[{0}] 닫기   [ESC] 닫기,[{0}] Close   [ESC] Close,{0}=여닫는 키 이름
+UI,codex_tab,{0}  {1}/{2},{0}  {1}/{2},{0}=갈래 이름 {1}=열람 가능한 수 {2}=그 갈래의 전체 수
+UI,codex_summary,열람 가능 {0} / 전체 {1},{0} of {1} unlocked,{0}=열람 가능한 수 {1}=전체 수
+UI,codex_empty_title,기록 없음,No records,
+UI,codex_empty_body,이 갈래에 등록된 항목이 없습니다.,Nothing is registered in this section.,
+#
+# ---- 조작 안내 ----
+#   그 키가 처음 필요해지는 순간에 한 번씩 뜨고 스스로 사라지는 한 줄.
+#   대괄호 안은 키 이름이라 번역하지 않는다.
+UI,hint_basics,[WASD] 이동   [E] 상호작용   [Tab] 소지품   [J] 분석 기록,[WASD] Move   [E] Interact   [Tab] Inventory   [J] Analysis Log,
+UI,hint_pickaxe,[Q] 도구를 손에 든다 · 곡괭이로 광맥을 부순다,[Q] Take a tool in hand · break ore veins with the pickaxe,
+UI,hint_axe,[Q] 도구를 손에 든다 · 도끼로 거대 버섯을 벤다,[Q] Take a tool in hand · fell giant mushrooms with the axe,
+UI,hint_lantern,[F] 랜턴 켜기 / 끄기,[F] Lantern on / off,
+#
+# ---- HUD ----
+UI,battery_amount,배터리 {0},Battery {0},{0}=남은 배터리 값
+UI,scrap_count,스크랩 {0},Scrap {0},{0}=가진 스크랩 수
+UI,objective_line,◆ {0},◆ {0},{0}=지금 목표 문구
+UI,objective_line_progress,◆ {0}  ({1}%),◆ {0}  ({1}%),{0}=지금 목표 문구 {1}=진행률(백분율 정수)
+#
+# ---- 제작 대기열 띠 ----
+#   칸 하나에 적히는 글자. 아이콘이 없는 아이템은 이름 첫 글자로 대신한다.
+UI,queue_slot_full,가득,Full,
+UI,queue_slot_initial_count,{0}x{1},{0}x{1},{0}=아이템 이름 첫 글자 {1}=남은 개수
+#
+# ---- 화면 밝기 맞추기 (첫 실행) ----
+UI,gamma_title,화면 밝기를 맞춘다,Set your screen brightness,
+UI,gamma_guide,"가운데 무늬가 <b>간신히 보일 때까지</b> 아래 막대를 옮긴다.
+왼쪽은 보이지 않아야 하고, 오른쪽은 분명히 보여야 한다.","Move the bar below until the middle patch is <b>barely visible</b>.
+The left one must stay invisible, the right one must be clearly visible.",
+UI,gamma_patch_hidden,보이면 안 된다,Must not be visible,
+UI,gamma_patch_barely,간신히 보여야 한다,Barely visible,
+UI,gamma_patch_clear,분명히 보여야 한다,Clearly visible,
+UI,gamma_confirm,이대로 시작,Start with this,
+UI,gamma_footer,나중에 다시 맞추려면 {0} 키를 누른다.,Press {0} to adjust it again later.,{0}=다시 여는 키 이름
+#
 # ┌──────────────────────────────────────────────────────────┐
 # │ 구역 B — 제작·건축·진행 (Crafting/, Building/, Progression/)│
 # └──────────────────────────────────────────────────────────┘
@@ -222,13 +263,13 @@ Item,fern_fiber.name,양치 섬유,
 Item,lantern.desc,지하의 어둠을 밝힌다.,
 Item,lantern.name,랜턴,
 Item,machine_part.desc,죽은 기계에서 회수한 부품.,
-Item,machine_part.name,기계 부품,
+Item,machine_part.name,기계 부품,Machine Part
 Item,macronium.desc,"지각 아래를 강처럼 흐르는 인공 물질. 짙게 굳은 층은 맨몸으로 닿으면 죽지만, 같은 물질로 지은 껍데기라야 그 층을 지난다.",
 Item,macronium.name,매크로늄,
 Item,mushroom_cap.desc,발광 버섯의 갓. 산소를 머금고 있다.,
 Item,mushroom_cap.name,버섯 갓,
 Item,mushroom_wood.desc,거대 버섯의 단단한 대. 이 세계에서 유일하게 타는 것이다.,
-Item,mushroom_wood.name,버섯 목재,
+Item,mushroom_wood.name,버섯 목재,Mushroom Wood
 Item,oxygen_filter.desc,우주복 필터를 교체해 산소 소모를 줄인다.,
 Item,oxygen_filter.name,산소 필터,
 Item,part_ball.desc,구르는 몸을 감싸던 껍질 조각. 안쪽에 잔해를 빨아들이던 흠집이 촘촘하다. 두드리면 속이 빈 소리가 난다.,
