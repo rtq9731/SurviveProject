@@ -120,7 +120,13 @@ namespace Survive.Creatures
     /// 경계 비교(&lt;= 인지 &lt; 인지)가 곧 게임의 감촉이라
     /// 그 부분이 테스트 가능한 곳에 있어야 한다.
     /// </summary>
-    public static class CreatureDecision
+    /// <remarks>
+    /// <b>partial인 이유.</b> 위협 「목록」을 받는 입구는
+    /// <c>CreatureDecision.Threats.cs</c>에 따로 있다. 코옵 사전 확인(스펙 §22)이
+    /// 여는 것은 입구뿐이고 판단의 내용은 하나도 건드리지 않으므로, 그 둘을
+    /// 다른 파일에 두면 여기서 무엇이 바뀌었는지 <b>보이지 않는다는 것이 곧 증명</b>이 된다.
+    /// </remarks>
+    public static partial class CreatureDecision
     {
         /// <summary>감지 반경 <b>안쪽 또는 경계 위</b>면 감지된 것으로 본다.</summary>
         public static bool IsDetected(float distance, float detectRadius) => distance <= detectRadius;

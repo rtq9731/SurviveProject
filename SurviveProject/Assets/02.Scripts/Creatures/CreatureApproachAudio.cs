@@ -32,6 +32,15 @@ namespace Survive.Creatures
         float _nextScan;
         float _nextCry;
 
+        /// <summary>
+        /// 기척을 들을 수 있는 것들. <b>간격은 「가장 가까운 귀」가 정한다</b> —
+        /// 기척은 이 개체가 내는 하나의 소리이고, 그 급함은 제일 가까운 사람에게
+        /// 맞춰져야 한다(스펙 §22). 지금은 언제나 하나뿐이라 예전과 답이 같다.
+        /// 목록을 들고 있는 것은 매 프레임 할당을 만들지 않기 위해서다.
+        /// </summary>
+        readonly System.Collections.Generic.List<ThreatSighting> _listeners =
+            new System.Collections.Generic.List<ThreatSighting>(1);
+
         /// <summary>지금까지 낸 기척의 수. 소리가 없어도 센다 — 리듬만 따로 볼 때 쓴다.</summary>
         public int CryCount { get; private set; }
 
@@ -67,7 +76,10 @@ namespace Survive.Creatures
 
             if (_player == null) return;
 
-            float distance = Vector3.Distance(transform.position, _player.position);
+            _listeners.Clear();
+            _listeners.Add(new ThreatSighting(Vector3.Distance(transform.position, _player.position)));
+
+            float distance = ThreatRoster.From(_listeners).NearestDistance;
             LastDistance = distance;
 
             float range = _definition.audibleRange;

@@ -88,7 +88,11 @@ namespace Survive.Creatures
     /// <b>왜 Domain에 있는가.</b> 자세가 곧 경고이므로 그 규칙은 씬 없이 전수 확인할 수
     /// 있어야 한다. 재는 일(거리·구역)은 몸이 하고, 잰 값으로 판정하는 일은 여기 있다.
     /// </summary>
-    public static class ScytheStance
+    /// <remarks>
+    /// 위협 「목록」을 받는 입구는 <c>ScytheStance.Threats.cs</c>에 따로 있다
+    /// (스펙 §22). 여기 있는 규칙은 그대로다.
+    /// </remarks>
+    public static partial class ScytheStance
     {
         /// <summary>
         /// 이번 프레임의 꼬리 자세.

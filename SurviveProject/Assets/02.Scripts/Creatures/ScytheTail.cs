@@ -175,14 +175,19 @@ namespace Survive.Creatures
         /// 판단은 <see cref="ScytheStance"/>에 묻는다. 여기서 하는 일은 값을 모으는 것뿐이고,
         /// 그 값들은 전부 <see cref="CreatureBrain"/>이 이미 재어 둔 것이다 —
         /// 거리를 여기서 다시 재면 두뇌가 보는 것과 꼬리가 보는 것이 갈린다.
+        ///
+        /// <b>위협 목록을 통째로 넘긴다</b>(스펙 §22). 거리 하나만 받으면 위협이 둘일 때
+        /// 꼬리가 누구를 보고 있는지 스스로 다시 골라야 하고, 그러면 두뇌와 다른 규칙을
+        /// 쓸 자리가 생긴다. 목록을 넘기면 고르는 일이 한 군데
+        /// (<see cref="ThreatSelection"/>)에만 있다.
         /// </summary>
         ScythePosture Decide()
         {
             if (_brain == null || _definition == null) return ScythePosture.Trailing;
 
             var traits = CreatureTraits.From(_definition);
-            var senses = new CreatureSenses(_brain.ThreatDistance, _brain.AggroLeft, 0f);
-            return ScytheStance.PostureFor(traits, senses, _brain.State, Zone, Alert);
+            return ScytheStance.PostureFor(traits, _brain.Threats, _brain.AggroLeft,
+                                           _brain.State, Zone, Alert);
         }
 
         float TargetPitch(ScythePosture posture)
