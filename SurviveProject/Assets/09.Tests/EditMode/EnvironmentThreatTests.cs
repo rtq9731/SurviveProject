@@ -16,7 +16,7 @@ public class EnvironmentThreatTests
     [TestCase(EnvironmentHazard.Darkness, TraversalGear.Lantern)]
     [TestCase(EnvironmentHazard.Depth, TraversalGear.Swimming)]
     [TestCase(EnvironmentHazard.MacroniumSurface, TraversalGear.SurfaceWalker)]
-    [TestCase(EnvironmentHazard.MacroniumLayer, TraversalGear.BreachCraft)]
+    [TestCase(EnvironmentHazard.MacroniumLayer, TraversalGear.BreachPod)]
     public void 위협마다_뚫는_장비가_하나씩_대응한다(EnvironmentHazard 위협, TraversalGear 장비종류)
     {
         Assert.AreEqual(장비종류, EnvironmentThreat.RequiredGear(위협));
@@ -42,7 +42,7 @@ public class EnvironmentThreatTests
     [TestCase(EnvironmentHazard.Darkness, TraversalGear.Lantern)]
     [TestCase(EnvironmentHazard.Depth, TraversalGear.Swimming)]
     [TestCase(EnvironmentHazard.MacroniumSurface, TraversalGear.SurfaceWalker)]
-    [TestCase(EnvironmentHazard.MacroniumLayer, TraversalGear.BreachCraft)]
+    [TestCase(EnvironmentHazard.MacroniumLayer, TraversalGear.BreachPod)]
     public void 맞는_장비를_충분히_갖추면_지난다(EnvironmentHazard 위협, TraversalGear 장비종류)
     {
         var 구간 = new HazardZone(위협, 10f);
@@ -71,7 +71,7 @@ public class EnvironmentThreatTests
         var 판정 = EnvironmentThreat.Evaluate(액면, 장비(
             new GearCapability(TraversalGear.Lantern, 999f),
             new GearCapability(TraversalGear.Swimming, 999f),
-            new GearCapability(TraversalGear.BreachCraft, 999f)));
+            new GearCapability(TraversalGear.BreachPod, 999f)));
 
         Assert.AreEqual(PassageResult.MissingGear, 판정.Result);
         Assert.AreEqual(TraversalGear.SurfaceWalker, 판정.RequiredGear);
@@ -233,7 +233,7 @@ public class EnvironmentThreatTests
         var 돌파정까지 = 장비(
             new GearCapability(TraversalGear.Swimming, 20f),
             new GearCapability(TraversalGear.SurfaceWalker, 30f),
-            new GearCapability(TraversalGear.BreachCraft, 18f));
+            new GearCapability(TraversalGear.BreachPod, 18f));
         Assert.IsTrue(EnvironmentThreat.CanPass(진한층, 돌파정까지));
     }
 

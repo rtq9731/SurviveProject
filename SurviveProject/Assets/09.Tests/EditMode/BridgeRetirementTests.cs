@@ -183,7 +183,7 @@ public class BridgeRetirementTests
         new Dictionary<string, TraversalGear>
         {
             { "surface_walker", TraversalGear.SurfaceWalker },
-            { "breach_craft", TraversalGear.BreachCraft },
+            { "breach_pod", TraversalGear.BreachPod },
         };
 
     static List<TraversalGearItemSO> 장비에셋들 =>
@@ -234,7 +234,7 @@ public class BridgeRetirementTests
         Assert.AreEqual(1, (int)TraversalGear.Lantern);
         Assert.AreEqual(2, (int)TraversalGear.Swimming);
         Assert.AreEqual(3, (int)TraversalGear.SurfaceWalker);
-        Assert.AreEqual(4, (int)TraversalGear.BreachCraft);
+        Assert.AreEqual(4, (int)TraversalGear.BreachPod);
         Assert.AreEqual(5, System.Enum.GetValues(typeof(TraversalGear)).Length,
                         "장비가 늘거나 줄었다 — 08.Data의 gear: 값을 대조해라");
     }
