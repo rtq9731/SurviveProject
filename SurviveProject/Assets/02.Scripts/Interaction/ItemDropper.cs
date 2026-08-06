@@ -250,12 +250,8 @@ namespace Survive.Interaction
             var dir = Random.insideUnitCircle.normalized * Random.Range(spread * 0.4f, spread);
             var target = origin + new Vector3(dir.x, 0f, dir.y);
 
-            // 착지면을 찾는다. 못 찾으면 원래 높이에 둔다.
-            if (Physics.Raycast(target + Vector3.up * 3f, Vector3.down, out var hit, 12f,
-                                ~0, QueryTriggerInteraction.Ignore))
-                target.y = hit.point.y + 0.18f;
-            else
-                target.y = origin.y;
+            if (TryFindGround(target, out float groundY)) target.y = groundY + RestHeight;
+            else target.y = origin.y;
 
             // SetLink: 착지 애니메이션 도중 주워지면(Destroy) 트윈이 갈 곳을 잃는다.
             // static 유틸이라 OnDestroy 훅이 없으니 DOTween이 대상 파괴를 직접 감시하게 한다.
@@ -266,6 +262,68 @@ namespace Survive.Interaction
             t.DORotate(new Vector3(0f, Random.Range(180f, 540f), 0f), 0.5f, RotateMode.LocalAxisAdd)
              .SetLink(t.gameObject);
         }
+
+        /// <summary>땅에서 이만큼 띄워 놓는다. 반쯤 박혀 있으면 무엇인지 안 읽힌다.</summary>
+        const float RestHeight = 0.18f;
+
+        /// <summary>
+        /// 떨어질 땅을 찾는다.
+        ///
+        /// <b>전에는 공중에 남았다.</b> 이유가 둘이었다.
+        ///
+        /// <b>하나, 너무 짧게 봤다.</b> 목표점 3m 위에서 12m만 내려다봤으니 그 아래
+        /// 9m 안에 땅이 없으면 못 찾았다. 날아다니는 것(눈·날개)을 잡거나 거대 버섯
+        /// 꼭대기의 갓을 따면 땅은 훨씬 아래에 있다. 그럴 때 원래 높이에 두었으니
+        /// 죽은 자리에 그대로 걸려 있었다.
+        ///
+        /// <b>둘, 시체를 땅으로 쳤다.</b> 모든 레이어를 봤기 때문에 방금 죽은 생물의
+        /// 몸(<see cref="Survive.Combat.CreatureHealth"/>는 0.1초 뒤에 사라진다)이나
+        /// 플레이어의 몸이 먼저 맞았다. 그 위에 내려놓고 나면 몸이 사라지면서
+        /// 아이템만 허공에 남는다.
+        ///
+        /// 그래서 멀리 보고, 맞은 것을 하나씩 살펴 <b>몸이 아닌 첫 번째</b>를 고른다.
+        /// </summary>
+        static bool TryFindGround(Vector3 target, out float groundY)
+        {
+            groundY = 0f;
+
+            int count = Physics.RaycastNonAlloc(target + Vector3.up * CastAbove, Vector3.down,
+                                                _hits, CastDistance, ~0, QueryTriggerInteraction.Ignore);
+            if (count == 0) return false;
+
+            // 가까운 것부터 본다. RaycastNonAlloc은 순서를 보장하지 않는다.
+            float best = float.NegativeInfinity;
+            bool found = false;
+            for (int i = 0; i < count; i++)
+            {
+                if (IsBody(_hits[i].collider)) continue;
+                if (_hits[i].point.y > best) { best = _hits[i].point.y; found = true; }
+            }
+
+            if (found) groundY = best;
+            return found;
+        }
+
+        /// <summary>
+        /// 땅으로 쳐서는 안 되는 것. 곧 사라지거나 돌아다니는 몸들이다.
+        /// 떨어진 물건 자신은 트리거라 애초에 걸리지 않는다.
+        /// </summary>
+        static bool IsBody(Collider c) =>
+            c == null
+            || c.GetComponentInParent<Survive.Combat.CreatureHealth>() != null
+            || c.GetComponentInParent<CharacterController>() != null;
+
+        /// <summary>목표점보다 이만큼 위에서 내려다본다. 살짝 파묻힌 자리에서도 찾게.</summary>
+        const float CastAbove = 2f;
+
+        /// <summary>
+        /// 내려다보는 거리. 부유섬 하나의 높이와 그 위 구조물을 넉넉히 덮는다.
+        /// 이보다 아래라면 섬과 섬 사이의 허공이고, 그때는 찾지 못하는 것이 맞다 —
+        /// 바다 밑바닥까지 떨어뜨려 봐야 주우러 갈 수 없다.
+        /// </summary>
+        const float CastDistance = 60f;
+
+        static readonly RaycastHit[] _hits = new RaycastHit[16];
 
         /// <summary>착지 후 계속 떠다니며 돈다. 움직이는 것에 눈이 간다.</summary>
         static void Idle(Transform t, Vector3 restAt)
