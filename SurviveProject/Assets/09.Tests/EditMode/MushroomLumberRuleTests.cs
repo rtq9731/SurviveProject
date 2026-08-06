@@ -77,7 +77,7 @@ public class MushroomLumberRuleTests
     public void 그루터기_재생은_기존_재생보다_느리다()
     {
         // 발광 버섯 노드 90초, 군락 갓 180초. 나무 한 그루가 다시 서는 데는
-        // 그보다 오래 걸려야 "다리 하나 = 거대 버섯 몇 그루"가 성립한다.
+        // 그보다 오래 걸려야 "벌목량 = 세울 수 있는 것과 지킬 수 있는 불"이 성립한다.
         Assert.Greater(MushroomLumberRule.RegrowSeconds, Survive.World.GlowGroveRule.RegrowSeconds);
     }
 

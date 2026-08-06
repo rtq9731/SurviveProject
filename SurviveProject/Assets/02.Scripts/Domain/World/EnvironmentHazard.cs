@@ -9,6 +9,10 @@ namespace Survive.World
     /// 섬 사이 바다가 살을 깎는 것(<see cref="MacroniumSea"/>)은 이 목록에 없다.
     /// 그것은 지날 수 있는 곳에 값을 매기는 규칙이지 길을 막는 위협이 아니라서,
     /// "지날 수 있는가"를 묻는 이 열거형과는 물음 자체가 다르다.
+    ///
+    /// <b>"폭"도 없다.</b> 건너야 하는 거리는 세워 둔 것으로 메우는 것이고,
+    /// 그것은 장비가 아니라 노동이다(기획서 §6.4). 위협이 되려면 그것을 뚫는 수단이
+    /// <see cref="TraversalGear"/>에 자리를 가져야 하는데, 그 목록은 장비만 받는다.
     /// </summary>
     public enum EnvironmentHazard
     {
@@ -20,9 +24,6 @@ namespace Survive.World
 
         /// <summary>수심 — 산소가 다하면 익사한다.</summary>
         Depth,
-
-        /// <summary>폭 — 물리적으로 건널 수 없다.</summary>
-        Gap,
 
         /// <summary>매크로늄 액면 — 표면장력이 강해 뚫고 갈 수 없다.</summary>
         MacroniumSurface,
@@ -49,7 +50,6 @@ namespace Survive.World
     /// <list type="bullet">
     /// <item><see cref="EnvironmentHazard.Darkness"/> — 광원 없이 지나야 하는 거리(m)</item>
     /// <item><see cref="EnvironmentHazard.Depth"/> — 물속에 머물러야 하는 시간(초)</item>
-    /// <item><see cref="EnvironmentHazard.Gap"/> — 건너야 하는 폭(m)</item>
     /// <item><see cref="EnvironmentHazard.MacroniumSurface"/> — 액면 위로 지나야 하는 폭(m)</item>
     /// <item><see cref="EnvironmentHazard.MacroniumLayer"/> — 뚫고 내려가야 하는 층의 두께(m)</item>
     /// <item><see cref="EnvironmentHazard.None"/> — 쓰이지 않는다</item>

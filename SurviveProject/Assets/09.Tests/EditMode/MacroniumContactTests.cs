@@ -84,7 +84,9 @@ public class MacroniumContactTests
         var 다른것들 = 장비(
             new GearCapability(TraversalGear.Lantern, 999f),
             new GearCapability(TraversalGear.Swimming, 999f),
-            new GearCapability(TraversalGear.Bridge, 999f));
+            // 돌파정은 여기 넣지 않는다 — 그것을 들고 액면에 서면 죽는 대신 내려간다
+            // (MacroniumContact.Resolve). "받쳐 주지 못한다"를 보는 자리라 섞으면 물음이 바뀐다.
+            new GearCapability(TraversalGear.None, 999f));
 
         Assert.AreEqual(MacroniumContactOutcome.Lethal,
                         MacroniumContact.Resolve(true, 액면(), 다른것들));
@@ -111,10 +113,11 @@ public class MacroniumContactTests
     [TestCase(EnvironmentHazard.None)]
     [TestCase(EnvironmentHazard.Darkness)]
     [TestCase(EnvironmentHazard.Depth)]
-    [TestCase(EnvironmentHazard.Gap)]
+    [TestCase(EnvironmentHazard.MacroniumLayer)]
     public void 액면이_아닌_위협은_밟아도_대가가_없다(EnvironmentHazard 위협)
     {
-        // 어둠도 수심도 폭도 "밟으면 죽는" 종류가 아니다(스펙 §4 — 위협은 막는 것이다).
+        // 어둠도 수심도 진한 층도 "밟으면 죽는" 종류가 아니다 — 위협은 막는 것이다.
+        // 진한 층은 액면 아래에 있으므로 "밟는" 판정의 대상이 아예 아니다.
         var 구간 = new HazardZone(위협, 30f);
 
         Assert.AreEqual(MacroniumContactOutcome.None, MacroniumContact.Resolve(true, 구간, 장비()));

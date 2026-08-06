@@ -101,7 +101,7 @@ public class TraversalLoadoutTests
     [Test]
     public void Collect는_기존_목록을_비우지_않는다()
     {
-        // 수영·다리·랜턴은 출처가 인벤토리가 아니다. 다른 시스템이 얹은 것을 지우면 안 된다.
+        // 수영과 랜턴은 출처가 인벤토리가 아니다. 다른 시스템이 얹은 것을 지우면 안 된다.
         var into = new List<GearCapability> { new GearCapability(TraversalGear.Swimming, 40f) };
         TraversalLoadout.Collect(인벤토리(장비("sw", TraversalGear.SurfaceWalker, 36f)), into);
 

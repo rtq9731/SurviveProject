@@ -15,7 +15,7 @@ namespace Survive.World
     /// <see cref="TraversalGearItemSO"/>의 주석에 적어 두었다.
     ///
     /// 여기서 나오는 것은 <b>아이템에서 오는 장비뿐</b>이다. 수영은 몸에 딸린 능력이고,
-    /// 다리는 세워 둔 건축물이며, 랜턴의 용량은 남은 배터리에서 나온다 —
+    /// 랜턴의 용량은 남은 배터리에서 나온다 —
     /// 출처가 인벤토리가 아니므로 각 시스템이 자기 몫을 따로 얹는다
     /// (<c>Survive.Player.PlayerTraversalGear</c> 참고).
     /// </summary>

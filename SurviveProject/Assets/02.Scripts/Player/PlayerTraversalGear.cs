@@ -44,8 +44,8 @@ namespace Survive.Player
             {
                 _loadout.Clear();
                 TraversalLoadout.Collect(inventory?.Inventory, _loadout);
-                // 수영·다리·랜턴은 출처가 인벤토리가 아니다(각각 산소·건축물·배터리).
-                // 그 셋을 관문으로 배치하는 것은 스펙 §8-4·§8-5의 일이라 여기서는 얹지 않는다.
+                // 수영과 랜턴은 출처가 인벤토리가 아니다(각각 산소·배터리).
+                // 그 둘을 관문으로 배치하는 것은 씬 배치의 일이라 여기서는 얹지 않는다.
                 return _loadout;
             }
         }
