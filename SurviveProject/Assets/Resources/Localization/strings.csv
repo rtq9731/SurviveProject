@@ -116,7 +116,7 @@ UI,gamma_patch_hidden,보이면 안 된다,Must not be visible,
 UI,gamma_patch_barely,간신히 보여야 한다,Barely visible,
 UI,gamma_patch_clear,분명히 보여야 한다,Clearly visible,
 UI,gamma_confirm,이대로 시작,Start with this,
-UI,gamma_footer,나중에 다시 맞추려면 {0} 키를 누른다.,Press {0} to adjust it again later.,{0}=다시 여는 키 이름
+UI,gamma_footer,"방향키로도 옮길 수 있고 Enter로 넘어간다. 나중에 다시 맞추려면 {0} 키를 누른다.","Arrow keys also move the bar, Enter continues. Press {0} to adjust it again later.",{0}=다시 여는 키 이름
 #
 # ┌──────────────────────────────────────────────────────────┐
 # │ 구역 B — 제작·건축·진행 (Crafting/, Building/, Progression/)│

@@ -95,6 +95,11 @@ namespace Survive.Art
             // 무엇을 본 것인지 알 수 없다.
             if (IsOpen && E2ERunner.Status == E2ERunner.RunStatus.Running) { Hide(false); return; }
 
+            // 커서를 매 프레임 다시 붙든다. 이 화면은 스스로 서기 때문에
+            // PlayerCameraRig의 Start와 어느 쪽이 먼저 도는지 정해져 있지 않고,
+            // 그쪽이 나중이면 커서가 도로 잠긴다. 열려 있는 동안만이라 값싸다.
+            if (IsOpen && Cursor.lockState != CursorLockMode.None) GrabCursor();
+
             var keyboard = Keyboard.current;
             if (keyboard == null) return;
 
@@ -103,25 +108,104 @@ namespace Survive.Art
                 if (IsOpen) Hide();
                 else Show();
             }
-            else if (IsOpen && keyboard[Key.Escape].wasPressedThisFrame)
+            else if (IsOpen)
             {
-                Hide();
+                if (keyboard[Key.Escape].wasPressedThisFrame) { Hide(); return; }
+                HandleKeyboard(keyboard);
             }
         }
+
+        /// <summary>
+        /// 키보드로도 맞추고 넘어갈 수 있게 한다.
+        ///
+        /// 마우스 하나에만 기대면 커서가 잡히는 순간 이 화면에 갇힌다 —
+        /// 실제로 그렇게 갇혔다. 게임의 첫 화면에 빠져나갈 길이 하나뿐이면 안 된다.
+        /// </summary>
+        void HandleKeyboard(Keyboard keyboard)
+        {
+            if (_slider == null) return;
+
+            if (keyboard[Key.Enter].wasPressedThisFrame ||
+                keyboard[Key.NumpadEnter].wasPressedThisFrame ||
+                keyboard[Key.Space].wasPressedThisFrame)
+            {
+                Hide();
+                return;
+            }
+
+            float step = 0f;
+            if (keyboard[Key.LeftArrow].wasPressedThisFrame || keyboard[Key.A].wasPressedThisFrame) step = -KeyStep;
+            if (keyboard[Key.RightArrow].wasPressedThisFrame || keyboard[Key.D].wasPressedThisFrame) step = KeyStep;
+            if (step == 0f) return;
+
+            _slider.value = Mathf.Clamp(_slider.value + step, _slider.minValue, _slider.maxValue);
+        }
+
+        /// <summary>
+        /// 화살표 한 번에 움직이는 폭. 슬라이더 전체를 스무 칸으로 나눈 값이다 —
+        /// 한 번 눌러 변화가 안 보이면 사람은 키가 안 먹는다고 생각한다.
+        /// </summary>
+        const float KeyStep = 0.05f;
 
         void Show()
         {
             if (_root == null) Build();
             _slider.SetValueWithoutNotify(GammaSettings.Value);
             _root.SetActive(true);
+            GrabCursor();
         }
 
         void Hide(bool remember = true)
         {
             if (_root == null) return;
             _root.SetActive(false);
+            ReleaseCursor();
             if (remember) GammaSettings.Calibrated = true;
         }
+
+        // ── 커서 ─────────────────────────────────────────────────
+
+        /// <summary>
+        /// 커서를 놓아 준다. <b>이것이 없으면 이 화면의 어떤 것도 눌리지 않는다.</b>
+        ///
+        /// <see cref="Survive.Player.PlayerCameraRig"/>가 <c>Start</c>에서 커서를 잠그고
+        /// 숨기는데, 잠긴 커서는 화면 한가운데에 고정된다. 그래서 마우스를 어디로
+        /// 옮겨 클릭하든 판정은 언제나 화면 중앙으로 가고, 슬라이더도 확인 단추도
+        /// 거기 없으니 아무 일도 일어나지 않았다.
+        ///
+        /// <see cref="Survive.Player.PlayerCameraRig.SetLookLocked"/>를 쓰는 이유는
+        /// 커서만 풀면 시점이 마우스를 따라 계속 돌기 때문이다 — 밝기를 맞추는 동안
+        /// 배경이 휙휙 돌아가면 무늬를 견줄 수가 없다. (그쪽 이름의 <c>locked</c>는
+        /// "시점을 잠근다"는 뜻이라 커서는 반대로 풀린다.)
+        /// </summary>
+        void GrabCursor()
+        {
+            _rig = FindRig();
+            if (_rig != null) _rig.SetLookLocked(true);
+
+            // 리그를 못 찾아도 커서는 풀어야 한다. 이 화면이 못 눌리는 것보다
+            // 시점이 도는 편이 낫다.
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
+        void ReleaseCursor()
+        {
+            if (_rig != null) { _rig.SetLookLocked(false); _rig = null; return; }
+
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+
+        /// <summary>
+        /// 시점 리그를 찾는다. 이 화면은 씬을 모르는 채로 스스로 서기 때문에
+        /// 인스펙터로 물릴 자리가 없다. 화면이 열려 있는 동안만, 그것도
+        /// 놓쳤을 때만 다시 찾는다.
+        /// </summary>
+        static Survive.Player.PlayerCameraRig FindRig() =>
+            Object.FindAnyObjectByType<Survive.Player.PlayerCameraRig>(FindObjectsInactive.Exclude);
+
+        Survive.Player.PlayerCameraRig _rig;
 
         // ── 화면 조립 ────────────────────────────────────────────
         void Build()
