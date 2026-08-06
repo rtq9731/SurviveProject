@@ -22,7 +22,7 @@ namespace Survive.World
     /// 화톳불 곁(무료, 거점), 배터리 셀(현장, 대가).
     /// </summary>
     [DisallowMultipleComponent]
-    public class LanternController : MonoBehaviour, ILitZoneSource
+    public class LanternController : MonoBehaviour, IOffsetLitSource
     {
         [SerializeField] Light lampLight;
         [SerializeField] PlayerInventory inventory;
@@ -48,6 +48,13 @@ namespace Survive.World
         bool _warning;
         Tween _flicker;
 
+        // 램프를 매 프레임 앞으로 옮기므로, 밀기 전의 자리를 따로 기억해 둔다.
+        // 램프 자신의 위치를 기준으로 다시 밀면 프레임마다 오프셋이 누적되어
+        // 빛이 지평선까지 달아난다.
+        Transform _lampPivot;
+        Vector3 _lampRestLocal;
+        Transform _body;
+
         public float Battery => _battery;
         public float BatteryNormalized => MaxBattery <= 0f ? 0f : _battery / MaxBattery;
 
@@ -70,7 +77,7 @@ namespace Survive.World
 
         public event Action<float, float> BatteryChanged;   // (현재, 최대)
 
-        // ── ILitZoneSource ───────────────────────────────────────
+        // ── IOffsetLitSource ─────────────────────────────────────
         // 화톳불(Survive.Building.Campfire)이 이미 같은 방식으로 자신을 내놓는다.
         // 랜턴도 광원이므로 같은 창구로 조회되어야 한다 — 그래야 "여기가 밝은가"를
         // 묻는 쪽이 화톳불인지 랜턴인지 알 필요가 없다. 지금 이것을 묻는 것은
@@ -81,12 +88,38 @@ namespace Survive.World
         // 요동치면 포식자가 깜빡임 주기로 붙었다 떨어졌다 하고, 플레이어는
         // 무엇이 자신을 지켜 주는지 읽을 수 없게 된다. 켜졌는가/꺼졌는가만 본다.
         //
-        // 중심은 램프의 자리다. 실제 Light 컴포넌트는 프리팹에서 Spot이지만
-        // (Player.prefab의 lampLight, m_Type 0), 판정은 방향을 보지 않는 구(球)다 —
-        // 이 게임의 랜턴은 전방위 빛 웅덩이로 다루기로 확정됐다.
-        public Vector3 LitZoneCenter => lampLight != null ? lampLight.transform.position : transform.position;
+        // 판정은 여전히 방향을 보지 않는 구(球)다. 달라진 것은 그 구의 중심이
+        // 사람이 아니라 사람보다 조금 앞에 있다는 것뿐이다(LanternRule.LitCenter).
+
+        /// <summary>
+        /// 빛 웅덩이가 매달린 자리. 램프를 앞으로 밀기 <b>전</b>의 자리다.
+        ///
+        /// 램프의 현재 위치를 읽지 않는다 — 그것은 이미 밀려 있는 값이라,
+        /// 그 위에 또 밀면 프레임마다 오프셋이 쌓인다.
+        /// </summary>
+        public Vector3 LitAnchor =>
+            _lampPivot != null ? _lampPivot.TransformPoint(_lampRestLocal)
+                               : (lampLight != null ? lampLight.transform.position : transform.position);
+
+        /// <summary>
+        /// 빛을 미는 쪽. <b>몸의 정면을 수평으로 눕힌 것</b>이다 — 자세한 근거는
+        /// <see cref="ResolveBody"/>에 있다.
+        /// </summary>
+        public Vector3 LitForward =>
+            LanternRule.Facing(_body != null ? _body.forward : transform.forward);
+
+        public Vector3 LitZoneCenter =>
+            LanternRule.LitCenter(LitAnchor, LitForward, LanternRule.OffsetForTier(_tier));
+
         public float LitZoneRadius => LanternRule.RadiusForTier(_tier);
         bool ILitZoneSource.IsLit => IsOn;
+
+        /// <summary>
+        /// 실제 광원. <b>검증이 화면과 판정이 같은 말을 하는지 보려고 읽는다.</b>
+        /// 램프는 이 컴포넌트의 자식이 아니라 몸에 매달려 있어서(Player.prefab),
+        /// 밖에서 이름으로 찾아다니게 두면 프리팹을 손볼 때 조용히 끊어진다.
+        /// </summary>
+        public Light Lamp => lampLight;
 
         void Awake()
         {
@@ -94,8 +127,48 @@ namespace Survive.World
             if (inventory == null) inventory = GetComponentInParent<PlayerInventory>();
             if (lampLight == null) lampLight = GetComponentInChildren<Light>(true);
 
+            if (lampLight != null)
+            {
+                _lampPivot = lampLight.transform.parent;
+                _lampRestLocal = lampLight.transform.localPosition;
+            }
+            ResolveBody();
+
             RefreshTier();
             ApplyLight();
+        }
+
+        /// <summary>
+        /// 빛이 <b>무엇을 따라 도는가</b>를 정한다. 이 게임 감각이 갈리는 자리다.
+        ///
+        /// <b>몸을 따르게 했다. 정확히는 몸의 yaw만 따르고 고개의 위아래는 버린다.</b>
+        ///
+        /// <b>1) 이 리그에서는 시점과 몸이 애초에 같이 돈다.</b>
+        /// <see cref="Survive.Player.PlayerCameraRig"/>는 좌우(yaw)를 <b>몸</b>에 쓰고
+        /// 위아래(pitch)만 카메라에 쓴다. 그러니 "고개를 돌려 지킨다"와 "몸을 돌려야
+        /// 한다"는 좌우로는 같은 동작이고, 실제로 갈리는 것은 <b>위아래를 반영할
+        /// 것인가</b> 하나뿐이다.
+        ///
+        /// <b>2) 위아래를 반영하면 설계가 거꾸로 뒤집힌다.</b> 기획서 §9는
+        /// <b>채집·제작이 위험 행동</b>이 되기를 바란다 — 멈춰서 대상을 봐야 하기
+        /// 때문이다. 그런데 pitch를 따르게 하면 <b>발밑을 내려다보는 순간 빛 웅덩이가
+        /// 제 발치로 끌려와 등 뒤 사각이 사라진다.</b> 위험해야 할 자세가 가장 안전한
+        /// 자세가 된다. 반대로 하늘을 보면 웅덩이가 앞으로 달아나 제 발밑이 캄캄해진다.
+        /// 둘 다 플레이어가 배울 수 없는 규칙이다.
+        ///
+        /// <b>3) 사각은 발로 도망치는 것이지 눈으로 도망치는 것이 아니다.</b> 사각의
+        /// 크기가 시선의 각도마다 달라지면 낫이 언제 파고들 수 있는지 읽을 수 없고,
+        /// 그러면 "뒤를 확인한다"가 기술이 아니라 운이 된다.
+        ///
+        /// 램프가 <b>몸의 자식</b>으로 매달려 있는 것(Player.prefab의 LampLight)도 같은
+        /// 말을 이미 하고 있다. 우리는 그 결에 오프셋만 얹는다.
+        /// </summary>
+        void ResolveBody()
+        {
+            // 이 컴포넌트는 카메라 아래에 달려 있어 제 transform이 위아래로 기운다.
+            // 몸은 PlayerContext가 붙은 뿌리이고, 램프가 매달린 곳과 같은 자리다.
+            var context = GetComponentInParent<Survive.Player.PlayerContext>();
+            _body = context != null ? context.transform : _lampPivot;
         }
 
         void OnEnable()
@@ -174,7 +247,7 @@ namespace Survive.World
             }
         }
 
-        /// <summary>램프를 지금 상태에 맞춘다. 켜짐 여부·반경·밝기가 전부 여기서 나온다.</summary>
+        /// <summary>램프를 지금 상태에 맞춘다. 켜짐 여부·자리·반경·밝기가 전부 여기서 나온다.</summary>
         void ApplyLight()
         {
             if (lampLight == null) return;
@@ -183,11 +256,20 @@ namespace Survive.World
             lampLight.enabled = on;
             if (!on)
             {
+                // 꺼졌으면 제자리로 되돌린다. 밀린 채로 남겨 두면 다시 켜지는
+                // 프레임에 빛이 엉뚱한 데서 시작한다.
+                lampLight.transform.localPosition = _lampRestLocal;
                 _flicker?.Kill();
                 _flicker = null;
                 _warning = false;
                 return;
             }
+
+            // <b>실제 광원도 함께 민다.</b> 판정만 옮기고 보이는 빛을 두면 화면과
+            // 규칙이 다른 말을 하게 되고, 그러면 플레이어는 등 뒤가 어둡다는 것을
+            // 눈으로 배울 길이 없다 — 맞고 나서야 알게 되는데 그것이 곧 억울함이다.
+            if (_body != null || _lampPivot != null)
+                lampLight.transform.position = LitZoneCenter;
 
             lampLight.range = LanternRule.RadiusForTier(_tier);
             if (_warning) return;                     // 깜빡이는 동안 밝기는 트윈에 맡긴다

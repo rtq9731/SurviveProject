@@ -77,6 +77,88 @@ namespace Survive.World
             return found;
         }
 
+        /// <summary>
+        /// 이 자리가 누군가가 <b>내준 쪽</b>인가 — 곧 등 뒤 사각이다 (기획서 §9).
+        ///
+        /// <b>낫이 읽을 창구다.</b> 낫 쪽에서 "랜턴이 어디 있고 사람이 어디를 보는가"를
+        /// 조립하게 두면 규칙이 두 군데로 갈라진다. 물어볼 것은 하나다 —
+        /// 여기로 파고들 수 있는가.
+        ///
+        /// <b>어둡기만 하면 되는 것이 아니라 「내준 쪽」이어야 한다.</b> 처음에는
+        /// "뒤이면서 어두운 자리"로 두었는데, 그러면 등 뒤 5m 안쪽은 랜턴 불빛이
+        /// 조금 닿는다는 이유로 다시 지켜지는 자리가 되어, 낫이 5m 언저리에서
+        /// 영원히 오르내리기만 하고 <b>끝내 닿지 못했다</b>(실측 2.77m에서 정체).
+        /// 기획서 §5는 그렇게 적혀 있지 않다 — <b>랜턴은 앞쪽만 지키므로 등 뒤를
+        /// 내주고, 붙어 있는 개체를 떼어내지 못한다.</b> 뒤쪽으로 새는 빛은 사람이
+        /// <b>보기</b> 위한 것이지 지키는 것이 아니다.
+        ///
+        /// <b>다만 고정 조명은 메운다.</b> 화톳불은 앞뒤가 없고 사람과 함께 돌지도
+        /// 않으므로, 그 안에 들어온 자리는 누구의 등 뒤라도 내준 쪽이 아니다.
+        /// 기획서 §3의 <b>Beware → Patrol 전이가 고정 조명 접근</b>인 것과 같은 말이다.
+        ///
+        /// <b>밀린 것이 없으면 내준 쪽도 없다.</b> 오프셋 0이면 원이 사람을 가운데
+        /// 두므로 사방이 대칭이고, 그때 등 뒤가 어두운 것은 그냥 <b>먼 것</b>이다.
+        /// 그 가지가 이 규칙 전체의 회귀선이다.
+        /// </summary>
+        public static bool IsBlindSide(Vector3 position)
+        {
+            if (LitByFixed(position)) return false;
+
+            for (int i = 0; i < _sources.Count; i++)
+            {
+                if (!(_sources[i] is IOffsetLitSource offset)) continue;
+                if (!offset.IsLit) continue;
+                if ((offset.LitZoneCenter - offset.LitAnchor).sqrMagnitude < 1e-6f) continue;
+
+                if (LanternRule.IsBehind(offset.LitAnchor, offset.LitForward, position))
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 앞뒤가 없는 광원(화톳불·발광 군락)이 이 자리를 밝히고 있는가.
+        /// 사람을 따라다니는 광원은 세지 않는다 — 그쪽은 내주는 쪽이 있기 때문이다.
+        /// </summary>
+        static bool LitByFixed(Vector3 position)
+        {
+            for (int i = 0; i < _sources.Count; i++)
+            {
+                var source = _sources[i];
+                if (source == null || !source.IsLit) continue;
+                if (source is IOffsetLitSource) continue;
+
+                float r = source.LitZoneRadius;
+                if ((position - source.LitZoneCenter).sqrMagnitude <= r * r) return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 지금 사각을 만들고 있는 광원의 <b>선 자리와 바라보는 쪽</b>.
+        /// 사각이 어디인지 <b>찾아가야</b> 하는 쪽(낫의 재등장 위치 선정, 기획서 §3)이
+        /// 쓴다. 판정만 필요하면 <see cref="IsBlindSpot"/>이면 된다.
+        /// </summary>
+        public static bool TryGetOffsetSource(out Vector3 anchor, out Vector3 forward)
+        {
+            for (int i = 0; i < _sources.Count; i++)
+            {
+                if (!(_sources[i] is IOffsetLitSource offset)) continue;
+                if (!offset.IsLit) continue;
+
+                var f = LanternRule.Facing(offset.LitForward);
+                if (f == Vector3.zero) continue;
+
+                anchor = offset.LitAnchor;
+                forward = f;
+                return true;
+            }
+
+            anchor = Vector3.zero;
+            forward = Vector3.zero;
+            return false;
+        }
+
         /// <summary>테스트·씬 전환 사이에 상태를 비운다.</summary>
         public static void Clear() => _sources.Clear();
     }

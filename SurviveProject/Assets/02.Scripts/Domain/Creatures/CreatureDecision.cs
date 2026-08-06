@@ -60,19 +60,50 @@ namespace Survive.Creatures
         /// <summary>위협이 지금 밝은 구역 안에 서 있는가. 위협이 없으면 false다.</summary>
         public readonly bool ThreatInLight;
 
+        /// <summary>
+        /// 내가 지금 위협의 <b>내준 쪽</b>에 있는가 — 곧 등 뒤 사각이다 (기획서 §9).
+        ///
+        /// <b>왜 이 값이 따로 필요한가.</b> <see cref="ThreatInLight"/>는 방향이 없는
+        /// 물음이다. 랜턴이 상시 점등이 되자 그 답은 언제나 참이 되었고, 그러면 빛을
+        /// 꺼리는 개체는 <b>원리적으로</b> 사람에게 닿을 수 없다 — 어느 방향에서 와도
+        /// 막히므로 배터리만 관리하면 죽지 않는 게임이 된다.
+        ///
+        /// 그래서 방향을 아는 물음을 하나 더 둔다. 빛 웅덩이가 사람보다 조금 앞에
+        /// 있으므로 <b>랜턴은 앞쪽만 지키고 등 뒤를 내준다</b>(기획서 §5). 그 내준
+        /// 쪽에 서 있는 개체에게 랜턴은 벽이 아니다 — 다가올 수도 있고, 붙어 있는
+        /// 것을 떼어내지도 못한다. 떼어내는 일은 조명탄의 몫이고, 랜턴이 그것까지
+        /// 하면 조명탄이 존재할 이유가 사라진다.
+        ///
+        /// <b>고정 조명은 이 쪽을 메운다.</b> 화톳불을 등지고 서 있으면 등 뒤도 이미
+        /// 차 있으므로 내준 쪽이 없다 — 기획서 §3의 "Beware → Patrol 전이는 고정 조명
+        /// 접근"과 같은 말이다.
+        ///
+        /// 재는 일은 몸이 하고(<see cref="Survive.World.LitZoneRegistry.IsBlindSide"/>),
+        /// 판단은 여기서 한다. <b>오프셋이 0이면 언제나 false</b>라, 그때 이 파일의
+        /// 판단은 글자 그대로 예전과 같아진다.
+        /// </summary>
+        public readonly bool ThreatBlindSide;
+
         public CreatureSenses(float distanceToThreat, float aggroLeft, float stateTimer)
-            : this(distanceToThreat, aggroLeft, stateTimer, false, false)
+            : this(distanceToThreat, aggroLeft, stateTimer, false, false, false)
         {
         }
 
         public CreatureSenses(float distanceToThreat, float aggroLeft, float stateTimer,
                               bool selfInLight, bool threatInLight)
+            : this(distanceToThreat, aggroLeft, stateTimer, selfInLight, threatInLight, false)
+        {
+        }
+
+        public CreatureSenses(float distanceToThreat, float aggroLeft, float stateTimer,
+                              bool selfInLight, bool threatInLight, bool threatBlindSide)
         {
             DistanceToThreat = distanceToThreat;
             AggroLeft = aggroLeft;
             StateTimer = stateTimer;
             SelfInLight = selfInLight;
             ThreatInLight = threatInLight;
+            ThreatBlindSide = threatBlindSide;
         }
 
         /// <summary>위협이 하나도 없는 상황.</summary>
@@ -189,6 +220,18 @@ namespace Survive.Creatures
         public static LightVerdict JudgeLight(in CreatureTraits traits, in CreatureSenses senses)
         {
             if (!traits.AvoidsLight) return LightVerdict.Clear;
+
+            // <b>내준 쪽에 서 있으면 빛은 나를 막지 못한다</b> (기획서 §5:
+            // "랜턴은 앞쪽만 지키므로 등 뒤를 내주고, 붙어 있는 개체를 떼어내지 못한다").
+            //
+            // 이 한 줄이 없으면 랜턴이 켜져 있는 동안 어떤 경로로도 사람에게 닿을 수
+            // 없고, 등 뒤 사각은 화면에만 있고 규칙에는 없는 것이 된다.
+            // <b>플레이어의 방어는 몸을 돌리는 것</b>이다 — 돌아서는 순간 이 값이
+            // 거짓이 되고 아래 두 줄이 되살아난다. 붙어 있는 것을 떼어내는 일은
+            // 조명탄의 몫이고, 랜턴이 그것까지 하면 조명탄이 존재할 이유가 사라진다.
+            //
+            // 오프셋이 0이면 내준 쪽이 없으므로 이 가지는 아예 지나가지 않는다.
+            if (senses.ThreatBlindSide) return LightVerdict.Clear;
 
             // 내가 빛 안이면 무엇을 하던 중이든 물러난다. 화톳불 옆을 지나던 중일 수도,
             // 코앞에서 플레이어가 랜턴을 켠 것일 수도 있다 — 둘 다 결과는 같다.

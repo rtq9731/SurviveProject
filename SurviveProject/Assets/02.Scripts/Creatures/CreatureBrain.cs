@@ -205,7 +205,8 @@ namespace Survive.Creatures
             var traits = CreatureTraits.From(definition);
             var senses = new CreatureSenses(distance, _aggroLeft, _stateTimer,
                                             Lit(transform.position),
-                                            _player != null && Lit(_player.position));
+                                            _player != null && Lit(_player.position),
+                                            BlindSide());
 
             // 선공 성향은 위협을 보고 있는 동안 어그로를 계속 채운다. 그래야 놓친 뒤에
             // 곧바로 흥미를 잃지 않고, 그 시간이 다하면 거처로 돌아간다.
@@ -249,6 +250,21 @@ namespace Survive.Creatures
         /// </summary>
         bool Lit(Vector3 position) =>
             definition != null && definition.avoidsLight && LitZoneRegistry.IsLit(position);
+
+        /// <summary>
+        /// 내가 지금 사람이 <b>내준 쪽</b>(등 뒤 사각)에 서 있는가.
+        ///
+        /// <b>재는 것만 여기서 한다.</b> 판단은 여전히
+        /// <see cref="CreatureDecision.JudgeLight"/>에 있고, 기하는
+        /// <see cref="LitZoneRegistry.IsBlindSide"/>에 있다.
+        ///
+        /// 빛을 꺼리지 않는 기존 4종에게는 묻지도 않는다 — 그들에게 빛은 애초에
+        /// 아무것도 막지 않으므로, 내준 쪽이라는 개념도 값을 하지 않는다.
+        /// 그래서 여기를 지나고 나면 그들의 판단 입력은 글자 그대로 예전과 같다.
+        /// </summary>
+        bool BlindSide() =>
+            definition != null && definition.avoidsLight &&
+            LitZoneRegistry.IsBlindSide(transform.position);
 
         /// <summary>
         /// 위협이 없을 때 무엇을 할지. 우선순위 판단은 Domain에 있고,
