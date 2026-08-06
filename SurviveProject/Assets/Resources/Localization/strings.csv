@@ -122,6 +122,70 @@ UI,gamma_footer,나중에 다시 맞추려면 {0} 키를 누른다.,Press {0} to
 # │ 구역 B — 제작·건축·진행 (Crafting/, Building/, Progression/)│
 # └──────────────────────────────────────────────────────────┘
 #
+# ── 도감 (Domain/Progression/CodexCatalog) ─────────────────
+Codex,section_discovery,물질 분석,Material analysis,
+Codex,section_blueprint,확보 제작법,Known recipes,
+Codex,section_research,정밀 분석,Deep analysis,
+Codex,section_creature,개체 관측,Specimen log,
+Codex,section_other,기록,Records,
+Codex,unknown_discovery,미확인 · 해당 물질을 직접 확보해야 분석이 시작됩니다.,Unidentified · analysis begins once you hold the material yourself.,
+Codex,unknown_blueprint,미확보 · 확보 경로가 아직 확인되지 않았습니다.,Not acquired · no route to it has been confirmed yet.,
+Codex,unknown_research,미분석 · 연구대에서 대상을 들여다봐야 합니다.,Not analyzed · the subject must be studied at the bench.,
+Codex,unknown_creature,미관측 · 개체 기록이 없습니다.,Unobserved · no record of this specimen.,
+Codex,source_field,현장 분석: {0},Field analysis: {0},{0}=발견한 물질 이름
+Codex,source_research,정밀 분석: {0},Deep analysis: {0},{0}=연구 항목 이름
+Codex,acquired,확보됨 · {0},Acquired · {0},{0}=알게 된 경로
+# 관측 보고는 눈에 보이는 줄마다 한 칸이다. 줄과 줄을 잇는 것은 말이 아니라 배치라 코드가 넣는다.
+Codex,creature_traits,{0} · {1} · {2},{0} · {1} · {2},{0}=영양 단계 {1}=이동 방식 {2}=성향
+Codex,creature_stats,내구 {0} · 이동 {1} · 탐지 {2}m · 타격 {3},HP {0} · Speed {1} · Detect {2}m · Damage {3},{0}=내구 {1}=이동 속도 {2}=탐지 거리 {3}=타격력
+Codex,creature_shy,광원 기피 확인 · 빛 안에서는 접근하지 않습니다.,Avoids light · will not approach anything lit.,
+Codex,tier_decomposer,분해자,Decomposer,
+Codex,tier_producer,생산자,Producer,
+Codex,tier_consumer1,1차 소비자,Primary consumer,
+Codex,tier_consumer2,2차 소비자,Secondary consumer,
+Codex,tier_consumer3,3차 소비자,Tertiary consumer,
+Codex,tier_unknown,미분류,Unclassified,
+Codex,locomotion_flying,비행,Flying,
+Codex,locomotion_ground,지상,Ground,
+Codex,behavior_passive,무반응,Passive,
+Codex,behavior_skittish,회피,Skittish,
+Codex,behavior_defensive,방어,Defensive,
+Codex,behavior_aggressive,적대,Aggressive,
+Codex,behavior_unknown,미상,Unknown,
+#
+# ── 제작대 (Crafting/CraftingBench) ─────────────────────
+Craft,bench_default_name,제작대,Crafting bench,씬·프리합이 이름을 적지 않았을 때 쓰는 이름
+Craft,bench_prompt_collect,[E] {0}에서 {1}개 회수,[E] Collect {1} from {0},{0}=제작대 이름 {1}=회수할 개수
+Craft,bench_prompt_busy,[E] {0} 사용 (제작 중 {1}),[E] Use {0} (crafting {1}),{0}=제작대 이름 {1}=남은 시간
+Craft,bench_prompt_idle,[E] {0} 사용,[E] Use {0},{0}=제작대 이름
+#
+# ── 화톳불 (Building/Campfire) ────────────────────────
+Build,campfire_name,화톳불,Campfire,
+Build,campfire_paused,불이 꺼져 에너지 추출이 멈췄다,Extraction stopped: the fire is out,
+Build,campfire_refuel,연료 넣기 (버섯 목재 {0})  ·  연료 {1}%,Add fuel ({0} mushroom wood)  ·  fuel {1}%,{0}=한 번에 넣는 목재 수 {1}=남은 연료 백분율
+Build,campfire_prompt_collect,[E] 화톳불에서 {0}개 회수,[E] Collect {0} from the campfire,{0}=회수할 개수
+Build,campfire_prompt_ignite,[E] 화톳불 지피기,[E] Light the campfire,
+Build,campfire_prompt_busy,"[E] 화톳불 (에너지 추출 중 {0}, 연료 {1}%)",[E] Campfire (extracting {0} · fuel {1}%),{0}=남은 시간 {1}=남은 연료 백분율
+Build,campfire_prompt_idle,[E] 화톳불 (연료 {0}%),[E] Campfire (fuel {0}%),{0}=남은 연료 백분율
+#
+# ── 배치 판정 (Domain/Building/PlacementCheck) ──────────────
+Build,reject_no_surface,놓을 자리가 없다,No surface to place on,
+Build,reject_too_steep,너무 가파르다,Too steep,
+Build,reject_blocked,다른 것과 겹친다,Something is in the way,
+Build,reject_not_enough,재료가 모자라다,Not enough materials,
+Build,reject_wrong_surface,여기엔 놓을 수 없다,Cannot place it here,
+Build,reject_no_anchor,붙일 곳이 없다: 토대부터 놓아라,Nothing to attach to: place a foundation first,
+Build,reject_slot_taken,그 자리엔 이미 있다,That slot is already taken,
+Build,reject_not_researched,지을 줄 모른다: 청사진이 없다,You do not know how: no blueprint,
+Build,structure_default_name,구조물,Structure,에셋이 이름을 적지 않았을 때 쓰는 이름
+#
+# ── 연구대 (Progression/ResearchStation) ──────────────────
+Progress,research_prompt_idle,[E] {0} 사용,[E] Use {0},{0}=연구대 이름
+Progress,research_prompt_busy,[E] {0} 사용 (분석 중 {1}),[E] Use {0} (analyzing {1}),{0}=연구대 이름 {1}=남은 시간
+#
+# ── 남긴 것 (Inventory/DeathDropBag) ───────────────────
+Inv,deathbag_prompt,[E] 남긴 것 회수,[E] Recover what you left,
+#
 # ┌──────────────────────────────────────────────────────────┐
 # │ 구역 C — 세계·상호작용 (World/, Harvesting/, Interaction/) │
 # └──────────────────────────────────────────────────────────┘

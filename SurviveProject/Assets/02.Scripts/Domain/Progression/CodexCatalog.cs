@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 using Survive.Creatures;
 using Survive.Localization;
 
@@ -62,13 +63,18 @@ namespace Survive.Progression
         /// </summary>
         public const string CreatureKeyPrefix = "codex_";
 
-        /// <summary>잠긴 항목의 이름 자리. 실루엣만 남긴다.</summary>
+        /// <summary>
+        /// 잠긴 항목의 이름 자리. 실루엣만 남긴다.
+        /// 글자가 아니라 기호라서 번역할 것이 없다 — 그래서 여기만 <c>const</c>다.
+        /// </summary>
         public const string UnknownTitle = "???";
 
-        public const string UnknownDiscoveryBody = "미확인 · 해당 물질을 직접 확보해야 분석이 시작됩니다.";
-        public const string UnknownBlueprintBody = "미확보 · 확보 경로가 아직 확인되지 않았습니다.";
-        public const string UnknownResearchBody = "미분석 · 연구대에서 대상을 들여다봐야 합니다.";
-        public const string UnknownCreatureBody = "미관측 · 개체 기록이 없습니다.";
+        // 아래 넷은 화면에 그대로 나가는 글이라 표에서 꺼낸다.
+        // const이면 컴파일할 때 값이 박혀 로케일을 영영 따라오지 못한다.
+        public static string UnknownDiscoveryBody => Loc.T("Codex", "unknown_discovery");
+        public static string UnknownBlueprintBody => Loc.T("Codex", "unknown_blueprint");
+        public static string UnknownResearchBody => Loc.T("Codex", "unknown_research");
+        public static string UnknownCreatureBody => Loc.T("Codex", "unknown_creature");
 
         /// <summary>생물 하나의 관측 기록 열쇠. id가 없으면 null.</summary>
         public static string CreatureKey(string creatureId) =>
@@ -82,11 +88,11 @@ namespace Survive.Progression
         {
             switch (section)
             {
-                case CodexSection.Discovery: return "물질 분석";
-                case CodexSection.Blueprint: return "확보 제작법";
-                case CodexSection.Research:  return "정밀 분석";
-                case CodexSection.Creature:  return "개체 관측";
-                default:                     return "기록";
+                case CodexSection.Discovery: return Loc.T("Codex", "section_discovery");
+                case CodexSection.Blueprint: return Loc.T("Codex", "section_blueprint");
+                case CodexSection.Research:  return Loc.T("Codex", "section_research");
+                case CodexSection.Creature:  return Loc.T("Codex", "section_creature");
+                default:                     return Loc.T("Codex", "section_other");
             }
         }
 
@@ -167,7 +173,7 @@ namespace Survive.Progression
                 {
                     if (d?.unlocks == null) continue;
                     foreach (var bp in d.unlocks)
-                        Add(bp, "현장 분석: " + NameOf(d));
+                        Add(bp, Loc.F("Codex", "source_field", NameOf(d)));
                 }
             }
 
@@ -177,7 +183,7 @@ namespace Survive.Progression
                 {
                     if (e?.unlocks == null) continue;
                     foreach (var bp in e.unlocks)
-                        Add(bp, "정밀 분석: " + NameOf(e));
+                        Add(bp, Loc.F("Codex", "source_research", NameOf(e)));
                 }
             }
 
@@ -194,7 +200,7 @@ namespace Survive.Progression
                     Unlocked = known,
                     Title = known ? NameOf(bp) : UnknownTitle,
                     Body = known
-                        ? "확보됨 · " + source
+                        ? Loc.F("Codex", "acquired", source)
                         : HintOf(bp),
                 });
             }
@@ -280,26 +286,43 @@ namespace Survive.Progression
             }
         }
 
+        /// <summary>수치를 적는 꼴. 인자 자리에 두면 게이트가 이것을 말로 오해한다.</summary>
+        const string NumberFormat = "0.#";
+
         /// <summary>
         /// 생물 한 마리를 관측 보고 한 편으로 적는다.
         /// 관측된 성질(설명문)이 먼저 오고, 잰 값이 뒤따른다.
+        ///
+        /// <b>줄바꿈은 코드가 넣는다.</b> 보고는 눈에 보이는 줄마다 표의 한 칸이고,
+        /// 줄과 줄을 잇는 것은 말이 아니라 배치다. 표의 한 칸 안에 줄바꿈을 넣지
+        /// 않는 이유는 <c>strings.csv</c>가 CRLF라서 그 값에 <c>\r</c>가 딸려
+        /// 들어가고, TMP가 그것을 빈 줄 하나로 더 세기 때문이다.
         /// </summary>
         public static string DescribeCreature(CreatureDefinitionSO c)
         {
             if (c == null) return "";
 
             var culture = CultureInfo.InvariantCulture;
-            string stats =
-                $"{TierName(c.tier)} · {LocomotionName(c.locomotion)} · {BehaviorName(c.behavior)}" +
-                $"\n내구 {c.maxHealth.ToString("0.#", culture)}" +
-                $" · 이동 {c.moveSpeed.ToString("0.#", culture)}" +
-                $" · 탐지 {c.detectRadius.ToString("0.#", culture)}m" +
-                $" · 타격 {c.attackDamage.ToString("0.#", culture)}";
+            string health = c.maxHealth.ToString(NumberFormat, culture);
+            string speed = c.moveSpeed.ToString(NumberFormat, culture);
+            string detect = c.detectRadius.ToString(NumberFormat, culture);
+            string damage = c.attackDamage.ToString(NumberFormat, culture);
 
-            if (c.avoidsLight) stats += "\n광원 기피 확인 · 빛 안에서는 접근하지 않습니다.";
+            var report = new StringBuilder();
 
             var described = DataText.Codex(c);
-            return string.IsNullOrWhiteSpace(described) ? stats : described + "\n\n" + stats;
+            if (!string.IsNullOrWhiteSpace(described))
+                report.Append(described).Append('\n').Append('\n');
+
+            report.Append(Loc.F("Codex", "creature_traits",
+                                TierName(c.tier), LocomotionName(c.locomotion),
+                                BehaviorName(c.behavior)));
+            report.Append('\n');
+            report.Append(Loc.F("Codex", "creature_stats", health, speed, detect, damage));
+
+            if (c.avoidsLight) report.Append('\n').Append(Loc.T("Codex", "creature_shy"));
+
+            return report.ToString();
         }
 
         static string NameOf(CreatureDefinitionSO c)
@@ -312,27 +335,29 @@ namespace Survive.Progression
         {
             switch (tier)
             {
-                case TrophicTier.Decomposer: return "분해자";
-                case TrophicTier.Producer:   return "생산자";
-                case TrophicTier.Consumer1:  return "1차 소비자";
-                case TrophicTier.Consumer2:  return "2차 소비자";
-                case TrophicTier.Consumer3:  return "3차 소비자";
-                default:                     return "미분류";
+                case TrophicTier.Decomposer: return Loc.T("Codex", "tier_decomposer");
+                case TrophicTier.Producer:   return Loc.T("Codex", "tier_producer");
+                case TrophicTier.Consumer1:  return Loc.T("Codex", "tier_consumer1");
+                case TrophicTier.Consumer2:  return Loc.T("Codex", "tier_consumer2");
+                case TrophicTier.Consumer3:  return Loc.T("Codex", "tier_consumer3");
+                default:                     return Loc.T("Codex", "tier_unknown");
             }
         }
 
         public static string LocomotionName(LocomotionType type) =>
-            type == LocomotionType.Flying ? "비행" : "지상";
+            type == LocomotionType.Flying
+                ? Loc.T("Codex", "locomotion_flying")
+                : Loc.T("Codex", "locomotion_ground");
 
         public static string BehaviorName(BehaviorProfile profile)
         {
             switch (profile)
             {
-                case BehaviorProfile.Passive:   return "무반응";
-                case BehaviorProfile.Skittish:  return "회피";
-                case BehaviorProfile.Defensive: return "방어";
-                case BehaviorProfile.Aggressive: return "적대";
-                default:                        return "미상";
+                case BehaviorProfile.Passive:   return Loc.T("Codex", "behavior_passive");
+                case BehaviorProfile.Skittish:  return Loc.T("Codex", "behavior_skittish");
+                case BehaviorProfile.Defensive: return Loc.T("Codex", "behavior_defensive");
+                case BehaviorProfile.Aggressive: return Loc.T("Codex", "behavior_aggressive");
+                default:                        return Loc.T("Codex", "behavior_unknown");
             }
         }
     }

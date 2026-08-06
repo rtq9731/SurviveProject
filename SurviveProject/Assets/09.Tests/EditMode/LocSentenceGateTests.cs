@@ -62,6 +62,16 @@ public class LocSentenceGateTests
         // ①③(Loc 인자·조각 이어 붙이기)의 면제이고, Domain/Art/는 Loc을 아예
         // 부르지 않으므로 넣어 봐야 검사만 약해진다.
         "Assets/02.Scripts/Art/",
+
+        // 제작·건축·진행. 도감이 내놓는 글이 이 안에 있다.
+        "Assets/02.Scripts/Crafting/",
+        "Assets/02.Scripts/Domain/Crafting/",
+        "Assets/02.Scripts/Building/",
+        "Assets/02.Scripts/Domain/Building/",
+        "Assets/02.Scripts/Progression/",
+        "Assets/02.Scripts/Domain/Progression/",
+        "Assets/02.Scripts/Inventory/",
+        "Assets/02.Scripts/Domain/Items/",
     };
 
     /// <summary>
@@ -84,7 +94,7 @@ public class LocSentenceGateTests
         "Assets/02.Scripts/Testing/",
     };
 
-    // UI/ 다섯 파일은 다 옮겨 목록에서 빠졌다. 남은 둘은 성격이 다르다.
+    // UI/ 다섯 파일은 다 옮겨 목록에서 빠졌다. 남은 넷은 성격이 다르다.
     static readonly string[] NotYetMoved =
     {
         // 데이터 에셋의 인스펙터 기본값. 08.Data의 에셋이 하나도 빠짐없이 덮어쓰고
@@ -92,6 +102,17 @@ public class LocSentenceGateTests
         // 옮기려면 DataText의 폴백(원문)이 빈 글자를 어떻게 다룰지부터 정해야 한다.
         "Assets/02.Scripts/Domain/Harvesting/HarvestNodeSO.cs",   // 기본값 "채집물"
         "Assets/02.Scripts/Domain/Harvesting/PlantNodeSO.cs",     // 기본값 "식물"
+
+        // 아래 둘은 "아직 못 옮긴" 것이 아니라 옮기지 않기로 한 것이다.
+        // 화면이 아니라서 표에 넣으면 오히려 손해다 — 이유를 적어 둔다.
+        "Assets/02.Scripts/Domain/Items/ItemDatabaseSO.cs",
+        // 에디터 콘솔 진단문(OnValidate → Debug.LogError). 사람 눈이 아니라
+        // 개발자 눈에 닿는 글이고, 번역하면 문제를 찾기 더 어려워진다.
+
+        "Assets/02.Scripts/Domain/Progression/ResearchService.cs",
+        // ResearchService.Describe. 화면은 이것을 쓰지 않는다 —
+        // MenuListing.ReadinessText가 UI/research_state_* 를 꺼낸다.
+        // 규칙을 담은 파일에 화면 문구를 섞지 않기로 한 결정(docs/번역-체계.md §9).
     };
 
     static readonly List<(string Path, string Source)> Files = new List<(string, string)>();

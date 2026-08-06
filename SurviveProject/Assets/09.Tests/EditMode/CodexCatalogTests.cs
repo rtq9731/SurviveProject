@@ -99,12 +99,18 @@ public class CodexCatalogTests
     [SetUp]
     public void SetUp()
     {
-        // 도감이 짓는 규칙은 번역 표와 무관해야 한다. 여기 세우는 가짜 에셋들은
-        // 진짜와 같은 id를 쓰는데(bp_surface_walker 등), 표가 실려 있으면 DataText가
-        // 그 id로 진짜 게임의 문장을 꺼내 와 가짜 문장을 덮는다. 그것은 조회 경로가
-        // 제대로 돈다는 증거이지 도감의 규칙이 아니므로, 여기서는 표를 비우고
-        // 에셋에 적힌 것만 보게 한다 (표가 없을 때의 폴백은 DataTextGateTests가 지킨다).
-        Loc.Load(StringCatalog.Empty);
+        // 표를 절반만 싣는다.
+        //
+        // 여기 세우는 가짜 에셋들은 진짜와 같은 id를 쓰는데(bp_surface_walker 등),
+        // 데이터 에셋 구역이 실려 있으면 DataText가 그 id로 진짜 게임의 문장을 꺼내 와
+        // 가짜 문장을 덮는다. 그것은 조회 경로가 제대로 돈다는 증거이지 도감의 규칙이
+        // 아니다 (표가 없을 때의 폴백은 DataTextGateTests가 지킨다).
+        //
+        // 그렇다고 표를 통째로 비울 수는 없다. 도감이 자기 목소리로 쓰는 말
+        // (갈래 이름, 미확인 안내, 관측 보고 틀)은 이제 Codex/* 로 표에 있고,
+        // 표가 비면 그 자리에 키가 그대로 뜬다.
+        Loc.Load(손으로_지은_구역만());
+        Loc.SetLocale(StringCatalog.DefaultLocale);
 
         _ledger = new UnlockLedger();
 
@@ -135,9 +141,23 @@ public class CodexCatalogTests
     [TearDown]
     public void TearDown()
     {
-        // 다음 파일의 검사가 빈 표를 물려받으면 영문 모를 이유로 무너진다.
+        // 다음 파일의 검사가 반쪽 표를 물려받으면 영문 모를 이유로 무너진다.
         Loc.Load(LocalizationTestBootstrap.LoadCatalogFromDisk());
         Loc.SetLocale(StringCatalog.DefaultLocale);
+    }
+
+    /// <summary>
+    /// 표에서 <b>손으로 지은 구역</b>(경계선 위쪽)만 잘라 싣는다.
+    /// 경계선은 초안 생성 도구가 쓰는 것과 같은 한 줄이라, 구역이 옮겨 다녀도
+    /// 여기가 따라간다.
+    /// </summary>
+    static StringCatalog 손으로_지은_구역만()
+    {
+        string text = System.IO.File.ReadAllText(LocalizationTestBootstrap.CsvPath);
+        int cut = text.IndexOf(DataTextDraft.Marker, System.StringComparison.Ordinal);
+
+        Assert.Greater(cut, 0, "표에서 데이터 에셋 구역의 경계선을 못 찾았다");
+        return StringCatalog.Parse(text.Substring(0, cut));
     }
 
     CodexEntry 줄(string key)
@@ -377,6 +397,64 @@ public class CodexCatalogTests
     {
         foreach (CodexSection s in System.Enum.GetValues(typeof(CodexSection)))
             Assert.IsNotEmpty(CodexCatalog.SectionTitle(s), $"{s}의 탭 이름이 비었다");
+    }
+
+    /// <summary>
+    /// 도감이 <b>자기 목소리로</b> 쓰는 말이 표를 거치는지.
+    ///
+    /// 이 검사가 없으면 누가 <c>const string</c>으로 되돌려 놓아도 아무 신호가 없다 —
+    /// const는 컴파일할 때 값이 박혀 로케일을 영영 따라오지 못하는데,
+    /// 한국어로 도는 동안에는 화면이 멀쩡해 보인다.
+    /// </summary>
+    [Test]
+    public void 도감이_짓는_말은_로케일을_따라온다()
+    {
+        string 갈래_ko = CodexCatalog.SectionTitle(CodexSection.Discovery);
+        string 안내_ko = CodexCatalog.UnknownDiscoveryBody;
+        string 성향_ko = CodexCatalog.BehaviorName(BehaviorProfile.Aggressive);
+
+        try
+        {
+            Loc.SetLocale("en");
+
+            Assert.AreNotEqual(갈래_ko, CodexCatalog.SectionTitle(CodexSection.Discovery),
+                "갈래 이름이 로케일을 안 따라온다");
+            Assert.AreNotEqual(안내_ko, CodexCatalog.UnknownDiscoveryBody,
+                "잠긴 항목의 안내가 로케일을 안 따라온다 — const로 박혀 있지 않은지 보라");
+            Assert.AreNotEqual(성향_ko, CodexCatalog.BehaviorName(BehaviorProfile.Aggressive),
+                "성향 이름이 로케일을 안 따라온다");
+        }
+        finally { Loc.SetLocale(StringCatalog.DefaultLocale); }
+    }
+
+    /// <summary>
+    /// 관측 보고는 줄마다 표의 한 칸이다. 줄바꿈은 코드가 넣되,
+    /// <b>말은 하나도 코드에 남아 있지 않아야</b> 한다.
+    /// </summary>
+    [Test]
+    public void 관측_보고도_로케일을_따라온다()
+    {
+        var 낫 = _creatureBook.creatures[0];
+        낫.avoidsLight = true;
+
+        string ko = CodexCatalog.DescribeCreature(낫);
+        StringAssert.Contains("내구", ko);
+        StringAssert.Contains("광원 기피", ko);
+
+        try
+        {
+            Loc.SetLocale("en");
+            string en = CodexCatalog.DescribeCreature(낫);
+
+            Assert.IsFalse(en.Contains("내구"), $"잰 값 줄이 한국어로 남았다: {en}");
+            Assert.IsFalse(en.Contains("광원 기피"), $"광원 기피 줄이 한국어로 남았다: {en}");
+            StringAssert.Contains("6.2", en, "수치는 로케일이 바뀌어도 그대로여야 한다");
+
+            // 줄 수는 언어와 무관하다. 설명문 + 빈 줄 + 성질 + 잰 값 + 광원 기피.
+            Assert.AreEqual(ko.Split('\n').Length, en.Split('\n').Length,
+                "줄바꿈은 배치라서 언어에 따라 달라지면 안 된다");
+        }
+        finally { Loc.SetLocale(StringCatalog.DefaultLocale); }
     }
 
     [Test]

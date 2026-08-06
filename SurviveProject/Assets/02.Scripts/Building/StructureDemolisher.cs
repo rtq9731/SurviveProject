@@ -38,7 +38,7 @@ namespace Survive.Building
             {
                 if (_structure == null) _structure = GetComponent<BuiltStructure>();
                 var d = _structure != null ? _structure.Definition : null;
-                return d != null ? DataText.Name(d) : "구조물";
+                return d != null ? DataText.Name(d) : Loc.T("Build", "structure_default_name");
             }
         }
 
