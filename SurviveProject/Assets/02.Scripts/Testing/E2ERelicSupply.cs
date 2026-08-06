@@ -45,9 +45,9 @@ namespace Survive.Testing
         const string 낫도감연구 = "res_codex_scythe";
         const string 낫도감열쇠 = "codex_scythe";
         const string 보행설계 = "bp_surface_walker";
-        const string 잠항설계 = "bp_submersible";
+        const string 돌파설계 = "bp_breach_craft";
         const string 막연구 = "res_surface_walker";
-        const string 핵연구 = "res_submersible";
+        const string 핵연구 = "res_breach_craft";
         const string 연구대 = "research_bench";
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace Survive.Testing
         /// <summary>
         /// <b>다른 시나리오가 쓰는 창구</b> — 유물을 실제로 주워 진행 설계 둘을 얻는다.
         ///
-        /// 종막을 지나려면 액면 보행 장비와 잠항구가 필요하고, 그 둘은 이제 연구대의
+        /// 종막을 지나려면 액면 보행 장비와 돌파정이 필요하고, 그 둘은 이제 연구대의
         /// 산출물 뒤에 선다(백로그 38). 38 시점에는 유물이 세계에 없어 원장에 직접
         /// 적는 우회로를 두었는데, 이제 낫이 실제로 떨구므로 그 우회로가 필요 없다.
         /// <c>E2EDescent</c>가 이것을 부른다.
@@ -112,9 +112,9 @@ namespace Survive.Testing
 
             yield return 연구대를_세운다();
             yield return 분석한다(막연구, 보행설계);
-            yield return 분석한다(핵연구, 잠항설계);
+            yield return 분석한다(핵연구, 돌파설계);
 
-            E2EHarness.Assert(Ledger.IsUnlocked(보행설계) && Ledger.IsUnlocked(잠항설계),
+            E2EHarness.Assert(Ledger.IsUnlocked(보행설계) && Ledger.IsUnlocked(돌파설계),
                               "낫에게서 주워 온 것으로 진행 설계 둘을 밝혀냈다");
 
             yield return 치운다();
@@ -618,7 +618,7 @@ namespace Survive.Testing
             if (entry == null) yield break;
 
             // 태울 것을 채워 둔다. 연구대를 짓느라 스크랩이 줄고 앞 연구가 또 태워서,
-            // 두 번째 항목이 에너지 부족으로 거절되는 일이 있었다(실측: 잠항 분석이
+            // 두 번째 항목이 에너지 부족으로 거절되는 일이 있었다(실측: 돌파 분석이
             // 걸리지 않았다). <b>모자랄 때 거절하는가</b>는 E2EResearchStation이 보는
             // 것이고, 여기서 볼 것은 유물에서 앎까지 이어지는 사슬이다.
             준다("scrap", entry.energyCost + 20 - Inv.CountOf("scrap"));

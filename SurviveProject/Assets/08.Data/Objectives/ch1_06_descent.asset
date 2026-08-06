@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: ch1_06_descent
   m_EditorClassIdentifier: Survive.Domain::Survive.Progression.FlagObjective
   id: ch1_06_descent
-  displayText: "\uC7A0\uD56D\uAD6C\uB97C \uB9CC\uB4E4\uC5B4 \uB0B4\uB824\uAC04\uB2E4"
+  displayText: "\uB3CC\uD30C\uC815\uC744 \uB9CC\uB4E4\uC5B4 \uB0B4\uB824\uAC04\uB2E4"
   flagKey: ch1_descended
   requiredCount: 1

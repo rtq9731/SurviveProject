@@ -16,7 +16,7 @@ namespace Survive.World
     ///
     /// <b>판정은 새로 만들지 않는다.</b> "이 층을 뚫을 수단이 있는가"는 다른 관문과 똑같이
     /// <see cref="EnvironmentThreat"/>가 답한다 — 위협은 <see cref="EnvironmentHazard.MacroniumLayer"/>,
-    /// 크기는 층의 두께(m), 장비는 <see cref="TraversalGear.Submersible"/>, 용량은 뚫을 수 있는
+    /// 크기는 층의 두께(m), 장비는 <see cref="TraversalGear.BreachCraft"/>, 용량은 뚫을 수 있는
     /// 두께(m). 위협이 늘어도 규칙이 늘지 않는다는 원칙이 종막에서도 그대로 선다.
     ///
     /// Unity를 모른다 — 층이 어디에 깔렸는지는 <c>DescentZone</c>이 알고,

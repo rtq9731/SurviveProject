@@ -21,7 +21,7 @@ public class RelicDropRuleTests
     const string 막 = "relic_membrane";
     const string 핵 = "relic_core";
     const string 보행설계 = "bp_surface_walker";
-    const string 잠항설계 = "bp_submersible";
+    const string 돌파설계 = "bp_breach_craft";
 
     List<RelicOption> _후보;
     Inventory _소지품;
@@ -42,7 +42,7 @@ public class RelicDropRuleTests
         _후보 = new List<RelicOption>
         {
             new RelicOption(막, 보행설계),
-            new RelicOption(핵, 잠항설계),
+            new RelicOption(핵, 돌파설계),
         };
         _소지품 = new Inventory(12);
         _원장 = new UnlockLedger();
@@ -120,7 +120,7 @@ public class RelicDropRuleTests
     [Test]
     public void 손에_있는_것과_밝혀낸_것을_섞어도_남은_하나를_찾는다()
     {
-        _원장.Unlock(잠항설계);
+        _원장.Unlock(돌파설계);
         Assert.AreEqual(막, 뽑은것(0.7f));
     }
 
@@ -140,7 +140,7 @@ public class RelicDropRuleTests
     public void 둘_다_밝혀냈으면_아무것도_떨구지_않는다()
     {
         _원장.Unlock(보행설계);
-        _원장.Unlock(잠항설계);
+        _원장.Unlock(돌파설계);
 
         Assert.AreEqual(RelicDropRule.Nothing, 뽑는다(0.3f),
             "다 밝혀낸 뒤로도 계속 떨구면 바닥에 쓰레기만 쌓인다");
@@ -151,7 +151,7 @@ public class RelicDropRuleTests
     public void 하나는_손에_하나는_원장에_있어도_멈춘다()
     {
         _소지품.TryAdd(아이템(막), 1);
-        _원장.Unlock(잠항설계);
+        _원장.Unlock(돌파설계);
 
         Assert.AreEqual(RelicDropRule.Nothing, 뽑는다(0.9f));
     }
@@ -184,7 +184,7 @@ public class RelicDropRuleTests
 
         _소지품.TryAdd(아이템(핵), 1);
         _소지품.TryRemove(핵, 1);
-        _원장.Unlock(잠항설계);
+        _원장.Unlock(돌파설계);
 
         Assert.AreEqual(RelicDropRule.Nothing, 뽑는다(0f), "둘 다 밝혀냈으니 그만이다");
     }
@@ -202,7 +202,7 @@ public class RelicDropRuleTests
     [Test]
     public void 아이템_id가_빈_후보는_없는_것으로_친다()
     {
-        var 망가진것 = new List<RelicOption> { new RelicOption("", 보행설계), new RelicOption(핵, 잠항설계) };
+        var 망가진것 = new List<RelicOption> { new RelicOption("", 보행설계), new RelicOption(핵, 돌파설계) };
         Assert.AreEqual(1, RelicDropRule.Pick(망가진것, _소지품, _원장, 0f),
             "id가 없으면 떨굴 수가 없다 — 건너뛴다");
     }

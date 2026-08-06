@@ -38,7 +38,7 @@ public class ResearchGatingTests
     [Test]
     public void 가져_본_적_없는_재료의_항목은_목록에_실리지_않는다()
     {
-        var e = 항목("res_submersible", 소재("relic_core", "낫의 핵", 1));
+        var e = 항목("res_breach_craft", 소재("relic_core", "낫의 핵", 1));
         Assert.IsFalse(MenuListing.ShouldList(e, _ledger),
             "있는지도 모르는 물체를 가져오라고 할 수는 없다");
     }
@@ -59,7 +59,7 @@ public class ResearchGatingTests
     [Test]
     public void 다른_것을_가져_봤다고_옆_항목까지_열리지는_않는다()
     {
-        var 핵 = 항목("res_submersible", 소재("relic_core", "낫의 핵", 1));
+        var 핵 = 항목("res_breach_craft", 소재("relic_core", "낫의 핵", 1));
         var 막 = 항목("res_surface_walker", 소재("relic_membrane", "낫의 막", 1));
 
         HeldRecord.Record(_ledger, "relic_core");
@@ -74,7 +74,7 @@ public class ResearchGatingTests
     [Test]
     public void 하나라도_가지면_그_자리에서_목록에_나타난다()
     {
-        var e = 항목("res_submersible", 소재("relic_core", "낫의 핵", 1));
+        var e = 항목("res_breach_craft", 소재("relic_core", "낫의 핵", 1));
         Assert.IsFalse(MenuListing.ShouldList(e, _ledger));
 
         HeldRecord.Record(_ledger, "relic_core");
@@ -100,7 +100,7 @@ public class ResearchGatingTests
         {
             항목("res_codex_ball",  소재("part_ball",  "공의 껍질", 3)),
             항목("res_codex_eye",   소재("part_eye",   "눈의 렌즈", 3)),
-            항목("res_submersible", 소재("relic_core", "낫의 핵",   1)),
+            항목("res_breach_craft", 소재("relic_core", "낫의 핵",   1)),
         };
 
         Assert.AreEqual(0, 실린수(책), "처음에는 아무것도 없다");
@@ -119,7 +119,7 @@ public class ResearchGatingTests
     {
         var inv = new Inventory(8);
         var 핵 = 아이템("relic_core", "낫의 핵");
-        var e = 항목("res_submersible", 소재(핵, 1));
+        var e = 항목("res_breach_craft", 소재(핵, 1));
 
         inv.TryAdd(핵, 1);
         HeldRecord.RecordAll(_ledger, inv);
@@ -135,14 +135,14 @@ public class ResearchGatingTests
     [Test]
     public void 이미_밝혀낸_항목은_소재를_겪은_기록이_없어도_보인다()
     {
-        var bp = 청사진("bp_submersible");
-        var e = 항목("res_submersible", 소재("relic_core", "낫의 핵", 1));
+        var bp = 청사진("bp_breach_craft");
+        var e = 항목("res_breach_craft", 소재("relic_core", "낫의 핵", 1));
         e.unlocks = new[] { bp };
         e.unlockKeys = new string[0];   // 이 항목이 여는 것은 청사진 하나뿐이다
 
         Assert.IsFalse(MenuListing.ShouldList(e, _ledger));
 
-        _ledger.Unlock("bp_submersible");
+        _ledger.Unlock("bp_breach_craft");
 
         Assert.IsTrue(MenuListing.ShouldList(e, _ledger),
             "아는 것을 감출 이유는 없다 — 도감의 답과 연구대의 답이 어긋나면 안 된다");
@@ -155,7 +155,7 @@ public class ResearchGatingTests
     [Test]
     public void 원장이_서기_전에는_감추지_않는다()
     {
-        var e = 항목("res_submersible", 소재("relic_core", "낫의 핵", 1));
+        var e = 항목("res_breach_craft", 소재("relic_core", "낫의 핵", 1));
         Assert.IsTrue(MenuListing.ShouldList(e, null),
             "원장이 없을 때 감추면 판이 통째로 빈 목록이 된다 — 실패는 개방 쪽으로");
     }
@@ -192,7 +192,7 @@ public class ResearchGatingTests
         다시.Restore(_ledger.Capture());
 
         Assert.IsTrue(HeldRecord.Has(다시, "relic_core"), "세이브에 실려 나가고 돌아온다");
-        Assert.IsTrue(MenuListing.ShouldList(항목("res_submersible", 소재("relic_core", "낫의 핵", 1)), 다시));
+        Assert.IsTrue(MenuListing.ShouldList(항목("res_breach_craft", 소재("relic_core", "낫의 핵", 1)), 다시));
     }
 
     [Test]
@@ -216,10 +216,10 @@ public class ResearchGatingTests
     {
         // 원장은 하나뿐이다. 이름이 겹치면 물건을 주웠다고 청사진이 조용히 열린다.
         Assert.AreEqual("held/relic_core", HeldRecord.KeyFor("relic_core"));
-        StringAssert.StartsWith(HeldRecord.Prefix, HeldRecord.KeyFor("bp_submersible"));
+        StringAssert.StartsWith(HeldRecord.Prefix, HeldRecord.KeyFor("bp_breach_craft"));
 
-        HeldRecord.Record(_ledger, "bp_submersible");
-        Assert.IsFalse(_ledger.IsUnlocked("bp_submersible"),
+        HeldRecord.Record(_ledger, "bp_breach_craft");
+        Assert.IsFalse(_ledger.IsUnlocked("bp_breach_craft"),
             "아이템 id가 청사진 id와 같아도 청사진이 열리지는 않는다");
         Assert.IsFalse(_ledger.IsUnlocked(CodexCatalog.CreatureKeyPrefix + "scythe"));
     }
@@ -277,14 +277,14 @@ public class ResearchGatingTests
     public void 실제_에셋에서_부위_하나를_쥐면_그_항목_하나만_늘어난다()
     {
         var book = 연구목록();
-        var 핵항목 = book.entries.First(e => e != null && e.id == "res_submersible");
+        var 핵항목 = book.entries.First(e => e != null && e.id == "res_breach_craft");
         var 핵 = 핵항목.materials[0].item;
 
         HeldRecord.Record(_ledger, 핵.id);
 
         var 실린것 = book.entries.Where(e => e != null && MenuListing.ShouldList(e, _ledger))
                                  .Select(e => e.id).ToList();
-        CollectionAssert.AreEquivalent(new[] { "res_submersible" }, 실린것);
+        CollectionAssert.AreEquivalent(new[] { "res_breach_craft" }, 실린것);
 
         // 다른 항목들의 이름은 여전히 화면 어디에도 없다.
         var 남은이름 = 감출이름들(제외: 핵항목);

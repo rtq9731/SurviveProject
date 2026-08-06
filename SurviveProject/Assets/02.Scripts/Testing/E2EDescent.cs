@@ -19,11 +19,11 @@ namespace Survive.Testing
     ///
     /// 세 가지를 이어서 본다.
     /// <list type="number">
-    /// <item><b>잠항구가 없으면 짙은 층은 여전히 즉사다.</b> 종막이 생겼다고 액면이
+    /// <item><b>돌파정이 없으면 짙은 층은 여전히 즉사다.</b> 종막이 생겼다고 액면이
     ///       순해지면 세계의 규칙이 무너진다 (기획서 §6.2)</item>
-    /// <item><b>잠항구를 실제로 만든다.</b> 제작대에 걸고, 시간을 채우고, 회수한다 —
+    /// <item><b>돌파정을 실제로 만든다.</b> 제작대에 걸고, 시간을 채우고, 회수한다 —
     ///       재료가 빠지고 시간이 흐르는 것을 건너뛰지 않는다</item>
-    /// <item><b>걸을 수 있어도 스스로 내려가야 끝난다.</b> 액면 보행 장비와 잠항구를
+    /// <item><b>걸을 수 있어도 스스로 내려가야 끝난다.</b> 액면 보행 장비와 돌파정을
     ///       둘 다 걸친 상태가 종막의 정상 상태다. 기본은 위를 걷는 것이고,
     ///       하강 키를 눌러야 가라앉는다</item>
     /// </list>
@@ -43,7 +43,7 @@ namespace Survive.Testing
         static ChapterDirector Director =>
             Object.FindAnyObjectByType<ChapterDirector>(FindObjectsInactive.Exclude);
 
-        const string 잠항구 = "submersible";
+        const string 돌파정 = "breach_craft";
         const string 보행장비 = "surface_walker";
         const string 매크로늄 = "macronium";
         const string 하강플래그 = "ch1_descended";
@@ -57,8 +57,8 @@ namespace Survive.Testing
         {
             yield return Prepare();
 
-            yield return 잠항구_없이는_여전히_즉사다();
-            yield return 잠항구를_제작한다();
+            yield return 돌파정_없이는_여전히_즉사다();
+            yield return 돌파정을_제작한다();
             yield return 걸을_수_있어도_스스로_내려가야_끝난다();
 
             yield return 치운다();
@@ -89,24 +89,24 @@ namespace Survive.Testing
             if (db == null) yield break;
 
             E2EHarness.Assert(db.GetById(매크로늄) != null, $"아이템 정의를 찾았다: {매크로늄}");
-            E2EHarness.Assert(db.GetById(잠항구) != null, $"아이템 정의를 찾았다: {잠항구}");
+            E2EHarness.Assert(db.GetById(돌파정) != null, $"아이템 정의를 찾았다: {돌파정}");
             E2EHarness.Assert(db.GetById(보행장비) != null, $"아이템 정의를 찾았다: {보행장비}");
 
-            var 레시피 = 레시피찾기(잠항구);
-            E2EHarness.Assert(레시피 != null, "잠항구 레시피가 제작 목록에 있다");
+            var 레시피 = 레시피찾기(돌파정);
+            E2EHarness.Assert(레시피 != null, "돌파정 레시피가 제작 목록에 있다");
             if (레시피 != null)
             {
                 E2EHarness.AssertEqual(레시피.requiredStation, StationType.Bench,
-                                       "잠항구는 제작대에서 만든다");
+                                       "돌파정은 제작대에서 만든다");
                 E2EHarness.Assert(레시피.craftSeconds > 0f,
-                                  $"잠항구 제작에 시간이 든다 ({레시피.craftSeconds:F0}초)");
+                                  $"돌파정 제작에 시간이 든다 ({레시피.craftSeconds:F0}초)");
                 E2EHarness.Assert(
                     레시피.ingredients != null &&
                     레시피.ingredients.Any(i => i?.item != null && i.item.id == 매크로늄),
-                    "잠항구는 매크로늄을 요구한다 — 마지막 섬의 자원이 출구가 된다");
+                    "돌파정은 매크로늄을 요구한다 — 마지막 섬의 자원이 출구가 된다");
             }
 
-            // 잠항 설계는 연구대의 산출물이고(백로그 38), 그 연구의 소재인 유물은
+            // 돌파 설계는 연구대의 산출물이고(백로그 38), 그 연구의 소재인 유물은
             // 낫이 순찰하다 흘린다(백로그 39). 38 시점에는 유물이 세계에 없어 원장에
             // 직접 적는 우회로를 지나갔지만, 이제 실제로 떨구므로 그럴 이유가 없다.
             //
@@ -116,9 +116,9 @@ namespace Survive.Testing
             // 실제로 종막의 열쇠가 되는지만 확인한다.
             yield return E2ERelicSupply.유물로_진행_설계를_얻는다();
             E2EHarness.Assert(BlueprintGate.Active != null &&
-                              BlueprintGate.Active.IsUnlocked("bp_submersible") &&
+                              BlueprintGate.Active.IsUnlocked("bp_breach_craft") &&
                               BlueprintGate.Active.IsUnlocked("bp_surface_walker"),
-                              "낫에게서 주워 온 것으로 잠항·보행 설계를 밝혀냈다");
+                              "낫에게서 주워 온 것으로 돌파·보행 설계를 밝혀냈다");
 
             DescentZone.ResetCounters();
             _chapterEndedFired = false;
@@ -140,7 +140,7 @@ namespace Survive.Testing
         /// <summary>이동 장비를 전부 내려놓는다. 보유가 곧 장착이므로 지니고 있으면 안 된다.</summary>
         static void 벗는다()
         {
-            foreach (var id in new[] { 보행장비, 잠항구 })
+            foreach (var id in new[] { 보행장비, 돌파정 })
             {
                 int 있는것 = Inv.CountOf(id);
                 if (있는것 > 0) Inv.TryRemove(id, 있는것);
@@ -155,14 +155,14 @@ namespace Survive.Testing
             if (item != null) Inv.TryAdd(item, 개수);
         }
 
-        // ── 1. 잠항구 없이 닿으면 여전히 죽는다 ─────────────────
+        // ── 1. 돌파정 없이 닿으면 여전히 죽는다 ─────────────────
 
-        static IEnumerator 잠항구_없이는_여전히_즉사다()
+        static IEnumerator 돌파정_없이는_여전히_즉사다()
         {
-            E2EHarness.Log("— 잠항구 없이 짙은 층에 닿는다 —");
+            E2EHarness.Log("— 돌파정 없이 짙은 층에 닿는다 —");
 
             벗는다();
-            E2EHarness.AssertEqual(Inv.CountOf(잠항구), 0, "잠항구를 지니지 않았다");
+            E2EHarness.AssertEqual(Inv.CountOf(돌파정), 0, "돌파정을 지니지 않았다");
             E2EHarness.AssertEqual(Inv.CountOf(보행장비), 0, "액면 보행 장비도 지니지 않았다");
 
             int 이전치사 = MacroniumContactService.LethalContacts;
@@ -188,13 +188,13 @@ namespace Survive.Testing
             E2EHarness.Assert(!Vitals.Health.IsEmpty, "체력이 돌아왔다");
         }
 
-        // ── 2. 잠항구를 제작한다 ────────────────────────────────
+        // ── 2. 돌파정을 제작한다 ────────────────────────────────
 
-        static IEnumerator 잠항구를_제작한다()
+        static IEnumerator 돌파정을_제작한다()
         {
-            E2EHarness.Log("— 매크로늄으로 잠항구를 만든다 —");
+            E2EHarness.Log("— 매크로늄으로 돌파정을 만든다 —");
 
-            var r = 레시피찾기(잠항구);
+            var r = 레시피찾기(돌파정);
             if (r == null) yield break;
 
             // 재료를 넉넉히 채운다. 매크로늄 광맥의 배치는 §8-4의 일이라 아직 캘 곳이 없다 —
@@ -213,30 +213,30 @@ namespace Survive.Testing
             E2EHarness.Assert(_bench != null, "제작대를 세웠다");
             if (_bench == null) yield break;
 
-            int 결과전 = Inv.CountOf(잠항구);
+            int 결과전 = Inv.CountOf(돌파정);
 
             UI.Open(_bench);
             yield return null;
             yield return null;
 
             var row = UI.GetComponentsInChildren<Button>(true)
-                        .FirstOrDefault(b => b.gameObject.name == "Row_" + 잠항구);
-            E2EHarness.Assert(row != null, "잠항구 행이 제작대 목록에 뜬다");
+                        .FirstOrDefault(b => b.gameObject.name == "Row_" + 돌파정);
+            E2EHarness.Assert(row != null, "돌파정 행이 제작대 목록에 뜬다");
             if (row == null) yield break;
 
-            E2EHarness.Assert(row.interactable, "재료를 모아 잠항구를 걸 수 있다");
+            E2EHarness.Assert(row.interactable, "재료를 모아 돌파정을 걸 수 있다");
             누른다(row);
             yield return null;
             yield return null;
 
-            E2EHarness.AssertEqual(_bench.Work.Queue.Count, 1, "잠항구가 제작대에 걸렸다");
+            E2EHarness.AssertEqual(_bench.Work.Queue.Count, 1, "돌파정이 제작대에 걸렸다");
             foreach (var (id, before) in 재료전)
             {
                 int need = r.ingredients.First(i => i.item.id == id).count;
                 E2EHarness.AssertEqual(Inv.CountOf(id), before - need,
                                        $"{id}가 걸리는 순간 빠졌다");
             }
-            E2EHarness.AssertEqual(Inv.CountOf(잠항구), 결과전,
+            E2EHarness.AssertEqual(Inv.CountOf(돌파정), 결과전,
                                    "누르자마자 손에 들어오지는 않는다");
 
             UI.Close();
@@ -250,7 +250,7 @@ namespace Survive.Testing
             _bench.Interact(E2EHarness.Player);
             yield return null;
 
-            E2EHarness.AssertEqual(Inv.CountOf(잠항구), 결과전 + 1, "잠항구를 손에 넣었다");
+            E2EHarness.AssertEqual(Inv.CountOf(돌파정), 결과전 + 1, "돌파정을 손에 넣었다");
         }
 
         static CraftingBench 제작대를_세운다()
@@ -294,15 +294,15 @@ namespace Survive.Testing
         /// 아직 씬에 없다. 여기까지 걸어온 것을 확인하는 것은 앞 구간들이 이미 했고,
         /// 종막에서 볼 것은 "무엇을 걸쳤을 때 무슨 일이 벌어지는가"다.
         ///
-        /// 부르기 전에 잠항구를 지니고 있어야 한다. 액면 보행 장비는 없으면 채운다 —
+        /// 부르기 전에 돌파정을 지니고 있어야 한다. 액면 보행 장비는 없으면 채운다 —
         /// 4번 섬에 닿으려면 필요했으므로 종막에 이른 사람은 반드시 지니고 있고(§5.4의 사슬),
         /// 둘 다 걸친 상태가 종막의 정상 상태다.
         /// </summary>
         public static IEnumerator 여기서_내려간다()
         {
-            E2EHarness.Log("— 액면 보행 장비와 잠항구를 둘 다 걸치고 액면에 선다 —");
+            E2EHarness.Log("— 액면 보행 장비와 돌파정을 둘 다 걸치고 액면에 선다 —");
 
-            E2EHarness.Assert(Inv.CountOf(잠항구) > 0, "잠항구를 지녔다");
+            E2EHarness.Assert(Inv.CountOf(돌파정) > 0, "돌파정을 지녔다");
             if (Inv.CountOf(보행장비) == 0) 준다(보행장비, 1);
             E2EHarness.Assert(Inv.CountOf(보행장비) > 0, "액면 보행 장비를 지녔다");
             Vitals.Health.Modify(Vitals.Health.Max);
@@ -377,7 +377,7 @@ namespace Survive.Testing
 
             E2EHarness.Assert(가라앉은적있다, "하강 키를 누르자 받침이 걷히고 가라앉는다");
             E2EHarness.Assert(MacroniumContactService.DescentContacts > 이전하강,
-                              "잠항구를 걸치고 액면을 통과한 것으로 기록된다");
+                              "돌파정을 걸치고 액면을 통과한 것으로 기록된다");
             E2EHarness.AssertEqual(DescentZone.Breaches, 이전돌파 + 1,
                                    $"층을 뚫었다 (하강 {눌린시간:F1}초)");
             E2EHarness.Assert(_layer.HasBreached, "그 층이 뚫린 것으로 표시된다");

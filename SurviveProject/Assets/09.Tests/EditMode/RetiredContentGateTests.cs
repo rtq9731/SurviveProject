@@ -1,8 +1,5 @@
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -16,7 +13,7 @@ using Survive.UI;
 /// 폐기한 것이 정말로 폐기됐는지 못 박는 게이트.
 ///
 /// <b>왜 필요한가.</b> 챕터 1의 종막은 2026-08-05에 바뀌었다 — 남이 놔둔 장치를
-/// 켜고 떠나는 것이 아니라, 스스로 지은 잠항구로 짙은 매크로늄층을 뚫고 내려간다
+/// 켜고 떠나는 것이 아니라, 스스로 지은 돌파정으로 짙은 매크로늄층을 뚫고 내려간다
 /// (기획서 §6.2). 그런데 옛 종막의 데이터와 코드는 그대로 살아 있었고, 그 결과
 /// <b>플레이어가 처음 배우는 제작법이 죽은 분기 하나뿐</b>이었다. 지운 것을 지웠다고
 /// 적어 두지 않으면 다음 사람이 "옛날에 이런 게 있었지" 하며 되살린다.
@@ -43,74 +40,18 @@ public class RetiredContentGateTests
     /// </summary>
     static readonly string[] 금지어 = { "port" + "al", "포" + "탈" };
 
-    /// <summary>
-    /// 훑는 자리. <b>우리가 쓴 것만</b> 본다.
-    ///
-    /// <c>Assets/polyperfect</c>는 사 온 아트 팩이고 그 안에 같은 이름의 Fantasy 소품이
-    /// 들어 있다. 우리 게임은 그것을 한 군데도 쓰지 않으며(씬·프리팹 어디에도
-    /// 참조가 없다), 남의 팩을 손대면 다음 갱신 때 되돌아온다. 그래서 검사 밖에 둔다.
-    ///
-    /// <c>Plan/</c>·<c>docs/</c>의 서술도 밖이다. 거기 남은 것은 "예전에는 이랬다"는
-    /// 역사이고, 역사를 지우면 왜 바뀌었는지가 사라진다.
-    /// </summary>
-    static readonly (string 폴더, string 무늬)[] 검사범위 =
-    {
-        ("Assets/02.Scripts", "*.cs"),
-        ("Assets/09.Tests",   "*.cs"),
-        ("Assets/08.Data",    "*.asset"),
-        ("Assets/01.Scenes",  "*.unity"),
-        ("Assets/05.Prefabs", "*.prefab"),
-        ("Assets/Resources/Localization", "*.csv"),
-    };
-
     [Test]
     public void 폐기한_종막_장치가_코드에도_데이터에도_씬에도_없다()
     {
-        var 걸린것 = new List<string>();
-
-        foreach (var (폴더, 무늬) in 검사범위)
-        {
-            string 절대경로 = Path.Combine(Directory.GetCurrentDirectory(), 폴더);
-            if (!Directory.Exists(절대경로))
-            {
-                Assert.Fail($"검사 범위에 적힌 폴더가 없다: {폴더}");
-                continue;
-            }
-
-            foreach (var 파일 in Directory.GetFiles(절대경로, 무늬, SearchOption.AllDirectories))
-            {
-                string 본문 = 유니코드를_푼다(File.ReadAllText(파일));
-                foreach (var 말 in 금지어)
-                {
-                    int 줄 = 몇번째_줄인가(본문, 말);
-                    if (줄 > 0) 걸린것.Add($"{상대경로(파일)}:{줄}");
-                }
-            }
-        }
+        // 훑는 자리와 유니코드 푸는 규칙은 AssetTextScan이 든다 — 같은 훑개를
+        // 옛 이름 게이트도 쓰므로, 목록이 하나여야 어느 쪽을 고쳐도 둘 다 강해진다.
+        var 걸린것 = AssetTextScan.찾는다(금지어);
 
         Assert.IsEmpty(걸린것,
             $"폐기한 종막 장치의 흔적이 {걸린것.Count}군데 남아 있다. " +
             "코드·데이터·씬에서는 전부 사라져야 한다 (문서의 역사 서술은 예외다):\n  " +
             string.Join("\n  ", 걸린것));
     }
-
-    /// <summary>
-    /// 에셋 YAML은 한글을 <c>포</c> 꼴로 적는다. 그대로 찾으면 데이터 쪽을
-    /// 통째로 놓친다 — 실제로 아이템 설명문이 그렇게 숨어 있었다.
-    /// </summary>
-    static string 유니코드를_푼다(string s) =>
-        Regex.Replace(s, @"\\u([0-9a-fA-F]{4})",
-                      m => ((char)System.Convert.ToInt32(m.Groups[1].Value, 16)).ToString());
-
-    static int 몇번째_줄인가(string 본문, string 말)
-    {
-        int i = 본문.IndexOf(말, System.StringComparison.OrdinalIgnoreCase);
-        if (i < 0) return 0;
-        return 본문.Take(i).Count(c => c == '\n') + 1;
-    }
-
-    static string 상대경로(string 절대) =>
-        절대.Substring(Directory.GetCurrentDirectory().Length + 1).Replace('\\', '/');
 
     [Test]
     public void 아이템_설명문이_폐기한_장치를_가리키지_않는다()

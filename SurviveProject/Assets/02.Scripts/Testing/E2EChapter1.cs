@@ -141,12 +141,12 @@ namespace Survive.Testing
             E2EHarness.Log("목표[5] " + dir.Current.displayText);
         }
 
-        // ── 목표 6: 잠항구를 만들어 내려간다 ─────────────────────
+        // ── 목표 6: 돌파정을 만들어 내려간다 ─────────────────────
 
         /// <summary>
         /// 종막 (백로그 36). 예전에는 남이 놔둔 외계 장치를 켜고 떠나는
         /// 이야기였고, 4번 섬에서 캔 매크로늄은 쓸 데가 없었다. 지금은 그 매크로늄으로
-        /// 잠항구를 만들어 여태 닿으면 죽던 층으로 걸어 들어간다 (기획서 §6.2).
+        /// 돌파정을 만들어 여태 닿으면 죽던 층으로 걸어 들어간다 (기획서 §6.2).
         ///
         /// <b>매크로늄과 짙은 층은 아직 씬에 없다.</b> 4번 섬의 광맥도 액면도 배치는
         /// §8-4의 일이라 이번 작업에서 씬을 건드리지 않았다. 그래서 재료는 주입하고
@@ -155,7 +155,7 @@ namespace Survive.Testing
         /// </summary>
         static IEnumerator Objective6Descent(ChapterDirector dir)
         {
-            E2EHarness.Log("목표6: 매크로늄으로 잠항구를 만들어 짙은 층을 뚫고 내려간다");
+            E2EHarness.Log("목표6: 매크로늄으로 돌파정을 만들어 짙은 층을 뚫고 내려간다");
 
             // 곡괭이가 있어야 광맥을 캘 수 있다
             var user = E2EHarness.Player.GetComponent<Survive.Player.PlayerToolUser>();
@@ -163,11 +163,11 @@ namespace Survive.Testing
             yield return null;
 
             var recipe = Resources.FindObjectsOfTypeAll<RecipeSO>()
-                                  .FirstOrDefault(r => r != null && r.id == "submersible");
-            E2EHarness.Assert(recipe != null, "잠항구 레시피가 있다");
+                                  .FirstOrDefault(r => r != null && r.id == "breach_craft");
+            E2EHarness.Assert(recipe != null, "돌파정 레시피가 있다");
             if (recipe == null) yield break;
 
-            // 잠항 설계는 연구대의 산출물이고(백로그 38) 그 소재인 유물은 낫이
+            // 돌파 설계는 연구대의 산출물이고(백로그 38) 그 소재인 유물은 낫이
             // 순찰하다 흘린다(백로그 39). 배선은 이제 다 있다 — 실제로 주워 연구하는
             // 전 과정은 E2ERelicSupply가 보고, 종막 직전 구간은 E2EDescent가 그
             // 실제 경로로 지난다.
@@ -176,8 +176,8 @@ namespace Survive.Testing
             // 있지 않아(§8-4는 사람과 함께 한다) 걸어서 닿을 수 있는 낫의 영역이
             // 세계에 없다. 그 자리에 낫을 소환해 세우면 그것은 이미 "동선"이 아니다.
             // §8-4에서 낫의 서식지가 놓이면 여기도 실제로 걸어가 줍도록 고친다.
-            E2EHarness.Assert(E2EResearchStation.원장에_적는다("bp_submersible", "bp_surface_walker"),
-                              "[연구 대행] 잠항·보행 설계를 원장에 적는다 (낫의 서식지 배치는 §8-4)");
+            E2EHarness.Assert(E2EResearchStation.원장에_적는다("bp_breach_craft", "bp_surface_walker"),
+                              "[연구 대행] 돌파·보행 설계를 원장에 적는다 (낫의 서식지 배치는 §8-4)");
 
             foreach (var need in recipe.ingredients)
             {
@@ -189,8 +189,8 @@ namespace Survive.Testing
                 else yield return GatherMaterial(need.item.id, need.count, tool);
             }
 
-            yield return CraftRecipe("submersible");
-            E2EHarness.Assert(Inv.CountOf("submersible") > 0, "잠항구를 손에 넣었다");
+            yield return CraftRecipe("breach_craft");
+            E2EHarness.Assert(Inv.CountOf("breach_craft") > 0, "돌파정을 손에 넣었다");
 
             // 4번 섬에 닿으려면 이미 있었어야 하는 물건이다(§5.4의 사슬).
             if (Inv.CountOf("surface_walker") == 0) GrantItem("surface_walker", 1);
@@ -198,7 +198,7 @@ namespace Survive.Testing
             yield return E2EDescent.여기서_내려간다();
 
             yield return E2EHarness.WaitUntil(
-                () => dir.CurrentIndex >= 6, "목표6 완료 (잠항구 제작·하강)", 6f);
+                () => dir.CurrentIndex >= 6, "목표6 완료 (돌파정 제작·하강)", 6f);
         }
 
         // ── 공통 동작 ────────────────────────────────────────────

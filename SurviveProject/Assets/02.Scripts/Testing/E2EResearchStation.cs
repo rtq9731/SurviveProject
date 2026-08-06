@@ -32,10 +32,10 @@ namespace Survive.Testing
         const string 막 = "relic_membrane";
         const string 핵 = "relic_core";
         const string 막연구 = "res_surface_walker";
-        const string 핵연구 = "res_submersible";
-        const string 잠항설계 = "bp_submersible";
+        const string 핵연구 = "res_breach_craft";
+        const string 돌파설계 = "bp_breach_craft";
         const string 보행설계 = "bp_surface_walker";
-        const string 잠항구 = "submersible";
+        const string 돌파정 = "breach_craft";
 
         static Inventory Inv => E2EHarness.Player.Inventory.Inventory;
         static UnlockLedger Ledger => UnlockService.Instance.Ledger;
@@ -53,13 +53,13 @@ namespace Survive.Testing
             yield return Prepare();
 
             yield return 연구대를_짓는다();
-            yield return 잠항구는_아직_잠겨_있다();
+            yield return 돌파정은_아직_잠겨_있다();
             yield return 가져_본_적_없는_것은_목록에_없다();
             yield return 소재가_없으면_분석할_수_없다();
             yield return 스크랩이_모자라면_거절한다();
             yield return 물리면_유물과_스크랩이_전부_돌아온다();
             yield return 시간이_지나야_알게_된다();
-            yield return 잠겼던_잠항구를_만들_수_있게_된다();
+            yield return 잠겼던_돌파정을_만들_수_있게_된다();
 
             yield return 치운다();
             E2EHarness.Log("=== 연구대 완주 ===");
@@ -96,7 +96,7 @@ namespace Survive.Testing
             E2EHarness.Assert(Ledger.IsUnlocked("bp_salvaged_mechanism"),
                               "부품을 쥐자 '부품 재조립'이 열렸다 — 연구대는 그 뒤에 선다");
 
-            // 연구대·제작대를 짓고 잠항구를 만들 재료를 채운다. 목록을 손으로 적으면
+            // 연구대·제작대를 짓고 돌파정을 만들 재료를 채운다. 목록을 손으로 적으면
             // 비용이 바뀔 때마다 낡으므로 카탈로그가 요구하는 것을 그대로 채운다.
             var needed = new HashSet<string> { "scrap", "machine_part" };
             var placer = Placer;
@@ -110,8 +110,8 @@ namespace Survive.Testing
             }
             placer.Cancel();
 
-            var sub = 레시피(잠항구);
-            E2EHarness.Assert(sub != null, "잠항구 레시피가 있다");
+            var sub = 레시피(돌파정);
+            E2EHarness.Assert(sub != null, "돌파정 레시피가 있다");
             if (sub?.ingredients != null)
                 foreach (var need in sub.ingredients) if (need?.item != null) needed.Add(need.item.id);
 
@@ -142,7 +142,7 @@ namespace Survive.Testing
         /// </summary>
         static void 앞선것을_치운다()
         {
-            var ids = new HashSet<string> { 막, 핵, 잠항구, "surface_walker" };
+            var ids = new HashSet<string> { 막, 핵, 돌파정, "surface_walker" };
 
             var book = Resources.Load<ResearchBookSO>("ResearchBook");
             if (book?.entries != null)
@@ -192,7 +192,7 @@ namespace Survive.Testing
 
         // ── 2. 아직 잠겨 있다 ───────────────────────────────────
 
-        static IEnumerator 잠항구는_아직_잠겨_있다()
+        static IEnumerator 돌파정은_아직_잠겨_있다()
         {
             E2EHarness.Log("— 알기 전에는 만들 수 없다 —");
 
@@ -205,21 +205,21 @@ namespace Survive.Testing
             E2EHarness.Assert(_bench != null, "제작대 부품이 붙어 있다");
             if (_bench == null) yield break;
 
-            E2EHarness.Assert(!Ledger.IsUnlocked(잠항설계), "잠항 설계를 아직 모른다");
+            E2EHarness.Assert(!Ledger.IsUnlocked(돌파설계), "돌파 설계를 아직 모른다");
 
             UI.Open(_bench);
             yield return null;
             yield return null;
 
             // 모르는 것은 회색으로 남기지 않고 <b>목록에서 지운다</b>.
-            // 잠긴 줄을 남겨 두던 시절에는 그 자리에 "잠항 설계 청사진이 필요하다:
+            // 잠긴 줄을 남겨 두던 시절에는 그 자리에 "돌파 설계 청사진이 필요하다:
             // 낫의 핵을 연구대에서 분석하면 알게 된다"가 통째로 적혔다.
-            var row = 줄(잠항구);
+            var row = 줄(돌파정);
             E2EHarness.Assert(row == null || !row.gameObject.activeInHierarchy,
-                              "잠항구 줄이 제작대 목록에 아예 없다");
+                              "돌파정 줄이 제작대 목록에 아예 없다");
             E2EHarness.Assert(!보이는줄().Any(s => s.Contains("잠김") || s.Contains("청사진")),
                               "목록 어디에도 자물쇠도 청사진 이야기도 없다");
-            E2EHarness.Assert(!CraftingService.CanCraft(레시피(잠항구), Inv, StationType.Bench, Ledger),
+            E2EHarness.Assert(!CraftingService.CanCraft(레시피(돌파정), Inv, StationType.Bench, Ledger),
                               "재료가 가득해도 몰라서 만들 수 없다");
 
             UI.Close();
@@ -393,7 +393,7 @@ namespace Survive.Testing
                               "연구 대기열 줄이 화면에 있다");
 
             // 제작 줄은 접혀 있다 — 만드는 자리와 알아내는 자리는 다른 자리다.
-            var 제작줄 = 줄(잠항구);
+            var 제작줄 = 줄(돌파정);
             E2EHarness.Assert(제작줄 == null || !제작줄.gameObject.activeInHierarchy,
                               "연구대 앞에서는 제작 줄이 뜨지 않는다");
 
@@ -549,8 +549,8 @@ namespace Survive.Testing
 
             E2EHarness.Assert(_station.Work.IsEmpty, "다 본 항목은 줄에서 빠진다");
             E2EHarness.Assert(_station.LastCompleted == entry, "끝난 것이 그 항목이다");
-            E2EHarness.Assert(Ledger.IsUnlocked(잠항설계),
-                              "잠항 설계가 원장에 적혔다 — 산출물은 물건이 아니라 앎이다");
+            E2EHarness.Assert(Ledger.IsUnlocked(돌파설계),
+                              "돌파 설계가 원장에 적혔다 — 산출물은 물건이 아니라 앎이다");
 
             yield return E2EHarness.WaitUntil(
                 () => UnlockService.Instance.LinesSpoken > 말한줄수,
@@ -573,24 +573,24 @@ namespace Survive.Testing
 
         // ── 7. 잠겼던 것이 열린다 ───────────────────────────────
 
-        static IEnumerator 잠겼던_잠항구를_만들_수_있게_된다()
+        static IEnumerator 잠겼던_돌파정을_만들_수_있게_된다()
         {
-            E2EHarness.Log("— 알고 나니 잠항구를 만들 수 있다 —");
+            E2EHarness.Log("— 알고 나니 돌파정을 만들 수 있다 —");
             if (_bench == null) yield break;
 
-            var r = 레시피(잠항구);
+            var r = 레시피(돌파정);
             if (r == null) yield break;
 
             foreach (var need in r.ingredients)
                 if (need?.item != null) 준다(need.item.id, need.count - Inv.CountOf(need.item.id));
 
-            int 결과전 = Inv.CountOf(잠항구);
+            int 결과전 = Inv.CountOf(돌파정);
 
             UI.Open(_bench);
             yield return null;
             yield return null;
 
-            var row = 줄(잠항구);
+            var row = 줄(돌파정);
             E2EHarness.Assert(row != null && row.gameObject.activeInHierarchy,
                               "없던 줄이 목록에 새로 생겼다 — 알게 되자 목록이 자랐다");
             E2EHarness.Assert(row != null && row.interactable, "그 줄을 누를 수 있다");
@@ -600,18 +600,18 @@ namespace Survive.Testing
             누른다(row);
             yield return null;
             yield return null;
-            E2EHarness.AssertEqual(_bench.Work.Queue.Count, 1, "잠항구가 제작대에 걸렸다");
+            E2EHarness.AssertEqual(_bench.Work.Queue.Count, 1, "돌파정이 제작대에 걸렸다");
 
             UI.Close();
             yield return null;
 
             yield return 시간을_접고_기다린다(() => _bench.Work.HasOutput,
-                                              "제작대가 잠항구를 다 만들었다",
+                                              "제작대가 돌파정을 다 만들었다",
                                               r.craftSeconds + 10f);
 
             _bench.Interact(E2EHarness.Player);
             yield return null;
-            E2EHarness.AssertEqual(Inv.CountOf(잠항구), 결과전 + 1,
+            E2EHarness.AssertEqual(Inv.CountOf(돌파정), 결과전 + 1,
                                    "연구 하나가 종막의 열쇠를 손에 쥐게 했다");
         }
 
@@ -620,7 +620,7 @@ namespace Survive.Testing
         /// <summary>
         /// 청사진을 원장에 직접 적는다.
         ///
-        /// <b>왜 이런 것이 필요한가.</b> 진행 장비(액면 보행 장비·잠항구)는 연구대의
+        /// <b>왜 이런 것이 필요한가.</b> 진행 장비(액면 보행 장비·돌파정)는 연구대의
         /// 산출물 뒤에 서고, 그 연구의 소재인 유물은 낫이 순찰하다 흘린다(백로그 39).
         /// 배선은 이제 다 있다 — <c>E2EDescent</c>는 이 창구를 쓰지 않고
         /// <c>E2ERelicSupply</c>를 통해 실제로 주워 연구한다.

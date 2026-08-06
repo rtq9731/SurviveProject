@@ -87,7 +87,7 @@ namespace Survive.Testing
         {
             var cam = E2EHarness.Eye;
 
-            // 코앞(1.2m)에 놓는다. 시작 지점 둘레에 포탈 장치와 버섯이 서 있고
+            // 코앞(1.2m)에 놓는다. 시작 지점 둘레에 주울 수 있는 것들이 서 있고
             // PlayerInteractor는 가장 가까운 것을 고른다 — 이 검사는 조준 실력이
             // 아니라 글자를 보는 것이므로 아무것도 끼어들 수 없는 거리에 둔다.
             _drop = GameObject.CreatePrimitive(PrimitiveType.Cube);

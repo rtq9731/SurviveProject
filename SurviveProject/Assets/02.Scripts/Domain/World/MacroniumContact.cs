@@ -15,7 +15,7 @@ namespace Survive.World
         Lethal,
 
         /// <summary>
-        /// 잠항구를 걸치고 닿았고, 가라앉는 쪽을 택했다. 죽지 않고 <b>통과해 내려간다</b>.
+        /// 돌파정을 걸치고 닿았고, 가라앉는 쪽을 택했다. 죽지 않고 <b>통과해 내려간다</b>.
         ///
         /// 기획서 §6.2 — "여태 닿으면 죽던 그 층으로 걸어 들어간다.
         /// 바뀌는 것은 플레이어가 무엇을 걸쳤는가뿐이다".
@@ -37,11 +37,11 @@ namespace Survive.World
     /// 장비는 있는데 용량이 모자란 경우도 죽는 쪽으로 친다 — 판정이 "못 지난다"고 답한
     /// 이상 액면이 몸을 받쳐 주지 못한다는 뜻이고, 반쯤 받쳐 주는 상태는 없다.
     ///
-    /// <b>잠항구가 붙으면서 결과가 셋이 됐다</b> (기획서 §6.2). 같은 액면 앞에서 사람은
+    /// <b>돌파정이 붙으면서 결과가 셋이 됐다</b> (기획서 §6.2). 같은 액면 앞에서 사람은
     /// 셋 중 하나가 된다 — 죽거나, 위를 걷거나, 뚫고 내려가거나. 무엇이 되는지는
     /// 무엇을 걸쳤는가로 갈리고, 둘 다 걸쳤을 때만 <b>어느 쪽을 원하는가</b>가 더해진다.
     ///
-    /// <b>왜 둘 다 있을 때 기본이 "걷기"인가.</b> 잠항구를 만들려면 4번 섬의 매크로늄이
+    /// <b>왜 둘 다 있을 때 기본이 "걷기"인가.</b> 돌파정을 만들려면 4번 섬의 매크로늄이
     /// 필요하고, 4번 섬에 닿으려면 액면 보행 장비가 필요하다(§5.4의 사슬). 즉 종막에
     /// 이른 사람은 <b>반드시 둘 다</b> 지니고 있다. 여기서 가라앉기를 기본으로 두면
     /// 4번 섬으로 돌아가려고 액면에 발을 얹는 순간 챕터가 끝나 버린다 —
@@ -71,14 +71,14 @@ namespace Survive.World
         public static bool Touches(float feetY, float surfaceY) => feetY <= surfaceY + ContactSkin;
 
         /// <summary>
-        /// 잠항구를 걸치고 있는가. 용량은 보지 않는다 —
+        /// 돌파정을 걸치고 있는가. 용량은 보지 않는다 —
         /// 얼마나 깊은 층을 뚫는지는 층이 묻는다(클래스 주석 참고).
         /// </summary>
         public static bool HasHull(IReadOnlyList<GearCapability> loadout)
         {
             if (loadout == null) return false;
             for (int i = 0; i < loadout.Count; i++)
-                if (loadout[i].Gear == TraversalGear.Submersible) return true;
+                if (loadout[i].Gear == TraversalGear.BreachCraft) return true;
             return false;
         }
 
