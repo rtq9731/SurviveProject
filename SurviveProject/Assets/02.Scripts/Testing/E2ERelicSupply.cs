@@ -217,7 +217,7 @@ namespace Survive.Testing
         // ── 낫을 세운다 ─────────────────────────────────────────
 
         /// <summary>
-        /// 감지 반경 밖, 관측 반경 안, <b>어두운 곳</b>에 세운다.
+        /// 감지 반경 밖, 관측 반경 안, <b>어두운 제 서식지</b>에 세운다.
         ///
         /// <b>앞의 두 숫자 사이가 이 기능이 사는 자리다.</b> 안쪽이면 낫이 쫓아와서
         /// 순찰이 성립하지 않고(쫓는 중에는 흘리지 않는다), 바깥이면 흘려 봐야
@@ -228,6 +228,12 @@ namespace Survive.Testing
         /// 빛을 꺼리는 이 생물은 거기서 영원히 물러나기만 한다(실측: 상태 Flee 고정,
         /// 흘린 것 0개). 그것은 결함이 아니라 규칙이 제대로 도는 모습이므로,
         /// 고칠 곳은 규칙이 아니라 세우는 자리다.
+        ///
+        /// <b>서식지 조건은 2026-08-06 낫 재정의로 붙었다.</b> 낫은 액면과 해안선에
+        /// 산다(<see cref="ScytheHabitat"/>). 예전처럼 걸을 수 있는 NavMesh 위에
+        /// 세우면 그것이 섬 안쪽이라 곧바로 물가로 돌아가고, 그 사이 관측 반경을
+        /// 벗어나 아무것도 흘리지 않는다. <b>여기서 세우는 자리가 곧 "낫의 영역"이고,
+        /// 사람이 그 가장자리에서 기다린다는 것이 이 시나리오의 내용이 된다.</b>
         /// </summary>
         static IEnumerator 낫을_세운다()
         {
@@ -239,28 +245,18 @@ namespace Survive.Testing
                               $"쫓기지 않는 거리({_def.detectRadius + 12f:F0}m)가 관측 반경 " +
                               $"{_def.relicShed.witnessRadius:F0}m 안에 있다");
 
-            bool 놓았다 = false;
-            for (int ring = 0; ring < 3 && !놓았다; ring++)
+            bool 놓았다 = E2EScytheHabitat.서식지를_찾는다(
+                _기다리는자리, _def.detectRadius + 4f, _def.relicShed.witnessRadius - 6f,
+                true, out var 자리);
+
+            if (놓았다)
             {
-                float 거리 = _def.detectRadius + 12f + ring * 6f;
-                if (거리 > _def.relicShed.witnessRadius - 4f) break;
-
-                for (int a = 0; a < 12 && !놓았다; a++)
-                {
-                    var dir = Quaternion.Euler(0f, a * 30f, 0f) * Vector3.forward;
-                    if (!NavMesh.SamplePosition(_기다리는자리 + dir * 거리, out var hit, 10f, NavMesh.AllAreas))
-                        continue;
-                    if (Vector3.Distance(hit.position, _기다리는자리) < _def.detectRadius + 4f) continue;
-                    if (!어둡다(hit.position)) continue;
-
-                    var go = Object.Instantiate(prefab, hit.position, Quaternion.identity);
-                    go.name = "E2E_낫";
-                    _낫 = go.GetComponent<CreatureBrain>();
-                    놓았다 = true;
-                }
+                var go = Object.Instantiate(prefab, 자리, Quaternion.identity);
+                go.name = "E2E_낫";
+                _낫 = go.GetComponent<CreatureBrain>();
             }
 
-            E2EHarness.Assert(놓았다, "감지 반경 밖 어두운 NavMesh 위에 낫을 세웠다");
+            E2EHarness.Assert(놓았다, "감지 반경 밖 어두운 서식지(액면·해안선)에 낫을 세웠다");
             if (!놓았다) yield break;
 
             yield return null;
@@ -270,22 +266,6 @@ namespace Survive.Testing
                               "프리팹을 고치지 않았는데도 유물 흘리기가 붙어 있다");
             E2EHarness.Log($"  낫 {_낫.transform.position.ToString("F0")}, " +
                            $"사람과 {Vector3.Distance(_낫.transform.position, 사람자리):F1}m");
-        }
-
-        /// <summary>
-        /// 이 자리도, 배회하다 닿을 만한 둘레도 어두운가. 중심만 보면 발광 군락
-        /// 가장자리에 세워 놓고 곧 빛 속으로 걸어 들어가게 된다.
-        /// </summary>
-        static bool 어둡다(Vector3 자리)
-        {
-            if (LitZoneRegistry.IsLit(자리)) return false;
-
-            for (int i = 0; i < 4; i++)
-            {
-                var 옆 = 자리 + Quaternion.Euler(0f, i * 90f, 0f) * Vector3.forward * 7f;
-                if (LitZoneRegistry.IsLit(옆)) return false;
-            }
-            return true;
         }
 
         // ── 순찰 중 흘린 것을 줍는다 ────────────────────────────
@@ -491,9 +471,26 @@ namespace Survive.Testing
                               $"잡아서 부품 {모아야할것}개를 모았다 (실제 {Inv.CountOf(낫부품)})");
         }
 
+        /// <summary>
+        /// 곡괭이로 잡는다.
+        ///
+        /// <b>태세를 발령으로 세우고 시작한다.</b> 평시의 낫은 육지로 올라오지 않으므로
+        /// (<see cref="ScytheHabitat"/>) 물가에 선 사람이 곡괭이로 때려 잡으려면 낫이
+        /// 물 위에 떠 있는 동안 사람이 물에 들어가야 하는데, 그러면 재려는 것(부품이
+        /// 나오는가)이 아니라 바다에 살이 깎이는 것을 재게 된다. 육지에서 낫과 붙는
+        /// 자리는 설계상 하나뿐이다 — 코어를 훔친 뒤의 거점 포위(기획서 §6.2 11단계).
+        /// <c>E2EConsumer</c>가 같은 이유로 같은 상태를 세운다.
+        /// </summary>
         static IEnumerator 때려_죽인다()
         {
             var 체력 = _낫.GetComponent<CreatureHealth>();
+
+            if (_낫.Motor is HoverDrifter 몸)
+            {
+                몸.Alert = ScytheAlert.Alarmed;
+                E2EHarness.Log("  태세: 발령 — 육지 교전은 코어를 훔친 뒤의 상황이다");
+            }
+
             yield return 랜턴(false);
 
             int 필요타수 = Mathf.CeilToInt(_def.maxHealth / 12f);

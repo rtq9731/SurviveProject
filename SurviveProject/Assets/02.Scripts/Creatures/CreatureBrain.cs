@@ -7,7 +7,9 @@ using Survive.World;
 namespace Survive.Creatures
 {
     /// <summary>
-    /// 생물의 상태머신. 지상은 NavMeshAgent, 비행은 FlyerMotor가 실제 이동을 맡는다.
+    /// 생물의 상태머신. 실제 이동은 <see cref="CreatureDefinitionSO.locomotion"/>에 따라
+    /// 셋 중 하나가 맡는다 — 지상은 NavMeshAgent, 비행은 <see cref="FlyerMotor"/>,
+    /// 부유는 <see cref="HoverDrifter"/>.
     /// 챕터 1의 4종(눈·공·날개·열매게)은 전부 Skittish 또는 Defensive다.
     ///
     /// <b>판단은 여기에 없다.</b> 무엇으로 전이할지, 그 상태에서 몸이 무엇을 할지는
@@ -32,6 +34,13 @@ namespace Survive.Creatures
         CreatureHealth _health;
         CreatureFeeding _feeding;
         ScavengerBehavior _scavenger;
+
+        /// <summary>
+        /// NavMeshAgent가 아닌 몸. 비행(<see cref="FlyerMotor"/>)과
+        /// 부유(<see cref="HoverDrifter"/>)가 같은 창구로 들어온다.
+        /// </summary>
+        ICreatureMotor _motor;
+
         Transform _player;
         CreatureState _state = CreatureState.Idle;
         float _stateTimer;
@@ -57,6 +66,12 @@ namespace Survive.Creatures
         /// <summary>남은 어그로 시간. 추격을 언제 포기하는지 확인할 때 쓴다.</summary>
         public float AggroLeft => _aggroLeft;
 
+        /// <summary>
+        /// NavMeshAgent가 아닌 몸. 검증이 "무엇으로 움직이는 개체인가"를 값으로
+        /// 확인하고, 부유체의 서식 범위를 집어 보라고 연다.
+        /// </summary>
+        public ICreatureMotor Motor => _motor;
+
         void Awake()
         {
             _health = GetComponent<CreatureHealth>();
@@ -71,8 +86,29 @@ namespace Survive.Creatures
             _feedProbe = TryGetFeedTarget;
             _scavengeProbe = TryGetScavengeTarget;
 
+            _motor = flyer;
+
+            // 부유체는 NavMesh 위를 걷지 않는다. 프리팹을 고치지 않고 여기서 갈아 끼우는
+            // 것은 CreatureCollisionGuard·RelicShedder와 같은 이유다 — 씬과 프리팹은
+            // 병합할 수 없는 단일 파일이고, 이동 방식은 이미 정의(SO)에 적혀 있다.
+            //
+            // 에이전트를 <b>끄기만 하고 지우지 않는다.</b> 프리팹에 물려 있는 참조를
+            // 끊으면 다음에 정의를 되돌려도 걷는 몸이 살아나지 않는다.
+            if (definition != null && definition.locomotion == LocomotionType.Hovering)
+            {
+                if (agent != null)
+                {
+                    agent.enabled = false;
+                    agent = null;
+                }
+
+                var drifter = GetComponent<HoverDrifter>();
+                if (drifter == null) drifter = gameObject.AddComponent<HoverDrifter>();
+                _motor = drifter;
+            }
+
             if (agent != null && definition != null) agent.speed = definition.moveSpeed;
-            if (flyer != null && definition != null) flyer.Speed = definition.moveSpeed;
+            if (_motor != null && definition != null) _motor.Speed = definition.moveSpeed;
 
             // NavMeshAgent도 FlyerMotor도 물리를 보지 않는다. 벽 앞에서 멈추는 일은
             // 이동이 끝난 뒤에 따로 처리한다. 씬·프리팹을 고치지 않으려고 여기서 붙인다.
@@ -301,13 +337,13 @@ namespace Survive.Creatures
                 agent.isStopped = false;
                 agent.SetDestination(destination);
             }
-            else if (flyer != null) flyer.MoveTowards(destination);
+            else _motor?.MoveTowards(destination);
         }
 
         void StopMoving()
         {
             if (agent != null && agent.isOnNavMesh) agent.isStopped = true;
-            else flyer?.Stop();
+            else _motor?.Stop();
         }
 
         void Attack()
