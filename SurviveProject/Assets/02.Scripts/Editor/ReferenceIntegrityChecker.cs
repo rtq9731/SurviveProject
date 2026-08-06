@@ -100,9 +100,6 @@ namespace Survive.EditorTools
             ["CreatureHealth.pickupPrefab"] = "비움이 기본. 아이템의 worldPrefab을 쓴다",
             ["HarvestNode.dropPrefab"] = "비움이 기본. 아이템의 worldPrefab을 쓴다",
 
-            // 구간의 마지막 포탈은 다음 씬이 없다. PortalDevice가 이 경우를 정상 종료로 다룬다.
-            ["PortalDevice.destination"] = "챕터 2 씬이 아직 없다. 빈 값이 구간 종료를 뜻한다",
-
             // 비우면 런타임에 Camera.main / 자기 컴포넌트로 대체된다.
             ["PlayerInteractor.rayOrigin"] = "비우면 Camera.main으로 대체",
             ["MeleeSwing.swingOrigin"] = "비우면 Camera.main으로 대체",

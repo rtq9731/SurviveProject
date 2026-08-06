@@ -71,11 +71,11 @@ public class ObjectiveTests
     public void 플래그목표는_필요_횟수를_반영한다()
     {
         var o = ScriptableObject.CreateInstance<FlagObjective>();
-        o.flagKey = "portal_parts";
+        o.flagKey = "salvaged_parts";
         o.requiredCount = 4;
 
         var ctx = new 가짜상태();
-        ctx.flags["portal_parts"] = 2;
+        ctx.flags["salvaged_parts"] = 2;
         Assert.AreEqual(0.5f, o.Evaluate(ctx), 0.001f);
     }
 

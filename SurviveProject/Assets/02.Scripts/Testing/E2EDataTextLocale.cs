@@ -85,9 +85,9 @@ namespace Survive.Testing
         {
             var cam = E2EHarness.Eye;
 
-            // 코앞(1.2m)에 놓는 이유: 시작 지점 둘레에 포탈 장치와 버섯이 서 있고
+            // 코앞(1.2m)에 놓는 이유: 시작 지점 둘레에 버섯 기둥이 빽빽하고
             // PlayerInteractor는 <b>가장 가까운</b> 것을 고른다. 2.5m에 놓으면
-            // 1.7m에 있는 포탈이 이긴다 — 이 검사는 조준 실력이 아니라 글자를 보는 것이므로
+            // 그보다 앞에 선 소품이 이긴다 — 이 검사는 조준 실력이 아니라 글자를 보는 것이므로
             // 아무것도 끼어들 수 없는 거리에 둔다.
             _drop = GameObject.CreatePrimitive(PrimitiveType.Cube);
             _drop.name = "E2E_LocaleDrop";

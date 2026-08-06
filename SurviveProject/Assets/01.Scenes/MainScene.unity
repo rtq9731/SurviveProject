@@ -905,644 +905,6 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 5765595947210396658, guid: 2a05f6de0ba450b4183ecbf5198b2065, type: 3}
---- !u!1 &24586801
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 24586802}
-  - component: {fileID: 24586803}
-  m_Layer: 0
-  m_Name: FB_activateFeedback
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &24586802
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 24586801}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 334176944}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &24586803
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 24586801}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6da43522623d4704e979466dc7650b65, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: MoreMountains.Tools::MoreMountains.Feedbacks.MMF_Player
-  Feedbacks: []
-  InitializationMode: 2
-  AutoInitialization: 1
-  SafeMode: 3
-  Direction: 0
-  AutoChangeDirectionOnEnd: 0
-  AutoPlayOnStart: 0
-  AutoPlayOnEnable: 0
-  LogMissingTargets: 1
-  ForceTimescaleMode: 0
-  ForcedTimescaleMode: 1
-  DurationMultiplier: 1
-  TimescaleMultiplier: 1
-  RandomizeDuration: 0
-  RandomDurationMultiplier: {x: 0.5, y: 1.5}
-  DisplayFullDurationDetails: 0
-  PlayerTimescaleMode: 0
-  OnlyPlayIfWithinRange: 0
-  RangeCenter: {fileID: 0}
-  RangeDistance: 5
-  UseRangeFalloff: 0
-  RangeFalloff:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  RemapRangeFalloff: {x: 0, y: 1}
-  IgnoreRangeEvents: 0
-  CooldownDuration: 0
-  InitialDelay: 0
-  CanPlay: 1
-  CanPlayWhileAlreadyPlaying: 1
-  ChanceToPlay: 100
-  FeedbacksIntensity: 1
-  Events:
-    TriggerMMFeedbacksEvents: 0
-    TriggerUnityEvents: 1
-    OnPlay:
-      m_PersistentCalls:
-        m_Calls: []
-    OnPause:
-      m_PersistentCalls:
-        m_Calls: []
-    OnStop:
-      m_PersistentCalls:
-        m_Calls: []
-    OnResume:
-      m_PersistentCalls:
-        m_Calls: []
-    OnChangeDirection:
-      m_PersistentCalls:
-        m_Calls: []
-    OnComplete:
-      m_PersistentCalls:
-        m_Calls: []
-    OnRestoreInitialValues:
-      m_PersistentCalls:
-        m_Calls: []
-    OnSkipToTheEnd:
-      m_PersistentCalls:
-        m_Calls: []
-    OnInitializationComplete:
-      m_PersistentCalls:
-        m_Calls: []
-    OnEnable:
-      m_PersistentCalls:
-        m_Calls: []
-    OnDisable:
-      m_PersistentCalls:
-        m_Calls: []
-  DebugActive: 0
-  InScriptDrivenPause: 0
-  FeedbacksList:
-  - rid: 8808081052650963333
-  - rid: 8808081052650963334
-  - rid: 8808081052650963335
-  PlayMode: 0
-  SequentialDelay: 0
-  KeepPlayModeChanges: 0
-  PerformanceMode: 0
-  RestoreInitialValuesOnDisable: 0
-  StopFeedbacksOnDisable: 0
-  PlayCount: 0
-  InPreviewMode: 0
-  MMF_ChannelMode: 0
-  MMF_Channel: 0
-  MMF_ChannelDefinition: {fileID: 0}
-  references:
-    version: 2
-    RefIds:
-    - rid: 8808081052650963333
-      type: {class: MMF_ParticlesInstantiation, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
-      data:
-        Active: 1
-        UniqueID: -972601614
-        Label: Particles Instantiation
-        OriginalLabel: Particles Instantiation
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: 
-        Owner: {fileID: 24586803}
-        DebugActive: 0
-        Mode: 0
-        ObjectPoolSize: 5
-        MutualizePools: 0
-        ParentTransform: {fileID: 0}
-        CachedRecycle: 1
-        ParticlesPrefab: {fileID: 3558094578418112918, guid: 59b62ff5208f31a4c8d56fcc1eacbe7c, type: 3}
-        RandomParticlePrefabs: []
-        MainParticlesPrefabWeight: 1
-        RandomParticleWeights: 
-        ForceSetActiveOnPlay: 1
-        StopOnReset: 0
-        DeclaredDuration: 0
-        ForceStopAction: 0
-        StopAction: 0
-        PositionMode: 0
-        InstantiateParticlesPosition: {fileID: 0}
-        ParentParticleSystemOnPlay: 0
-        TargetWorldPosition: {x: 0, y: 0, z: 0}
-        Offset: {x: 0, y: 0, z: 0}
-        NestParticles: 0
-        ApplyRotation: 0
-        ApplyScale: 0
-        ForceSimulationSpeed: 0
-        ForcedSimulationSpeed: {x: 0.1, y: 1}
-    - rid: 8808081052650963334
-      type: {class: MMF_Flash, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
-      data:
-        Active: 1
-        UniqueID: 228934746
-        Label: Flash
-        OriginalLabel: Flash
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: Automatic Shaker Setup
-        Owner: {fileID: 24586803}
-        DebugActive: 0
-        FlashColor: {r: 0.6, g: 0.95, b: 1, a: 1}
-        FlashDuration: 1
-        FlashAlpha: 0.5
-        FlashID: 0
-        TargetFlash: {fileID: 1511897229}
-    - rid: 8808081052650963335
-      type: {class: MMF_Scale, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
-      data:
-        Active: 1
-        UniqueID: -1371466580
-        Label: Scale
-        OriginalLabel: Scale
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: 
-        Owner: {fileID: 24586803}
-        DebugActive: 0
-        Mode: 0
-        AnimateScaleTarget: {fileID: 334176944}
-        MovementMode: 0
-        AnimateScaleDuration: 0.6
-        AnimatePositionSpeed: 1
-        RemapCurveZero: 1
-        RemapCurveOne: 2
-        Offset: 0
-        AnimateX: 1
-        AnimateScaleTweenX:
-          MMTweenDefinitionType: 1
-          MMTweenCurve: 4
-          Curve:
-            serializedVersion: 2
-            m_Curve:
-            - serializedVersion: 3
-              time: 0
-              value: 1
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            - serializedVersion: 3
-              time: 0.35
-              value: 1.12
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            - serializedVersion: 3
-              time: 1
-              value: 1
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            m_PreInfinity: 2
-            m_PostInfinity: 2
-            m_RotationOrder: 4
-          Initialized: 1
-          ConditionPropertyName: AnimateX
-          EnumConditionPropertyName: 
-          EnumConditions: 0000000000000000000000000000000000000000000000000000000000000000
-        AnimateY: 1
-        AnimateScaleTweenY:
-          MMTweenDefinitionType: 1
-          MMTweenCurve: 4
-          Curve:
-            serializedVersion: 2
-            m_Curve:
-            - serializedVersion: 3
-              time: 0
-              value: 1
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            - serializedVersion: 3
-              time: 0.35
-              value: 1.12
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            - serializedVersion: 3
-              time: 1
-              value: 1
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            m_PreInfinity: 2
-            m_PostInfinity: 2
-            m_RotationOrder: 4
-          Initialized: 1
-          ConditionPropertyName: AnimateY
-          EnumConditionPropertyName: 
-          EnumConditions: 0000000000000000000000000000000000000000000000000000000000000000
-        AnimateZ: 1
-        AnimateScaleTweenZ:
-          MMTweenDefinitionType: 1
-          MMTweenCurve: 4
-          Curve:
-            serializedVersion: 2
-            m_Curve:
-            - serializedVersion: 3
-              time: 0
-              value: 1
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            - serializedVersion: 3
-              time: 0.35
-              value: 1.12
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            - serializedVersion: 3
-              time: 1
-              value: 1
-              inSlope: 0
-              outSlope: 0
-              tangentMode: 0
-              weightedMode: 0
-              inWeight: 0
-              outWeight: 0
-            m_PreInfinity: 2
-            m_PostInfinity: 2
-            m_RotationOrder: 4
-          Initialized: 1
-          ConditionPropertyName: AnimateZ
-          EnumConditionPropertyName: 
-          EnumConditions: 0000000000000000000000000000000000000000000000000000000000000000
-        UniformScaling: 1
-        AllowAdditivePlays: 0
-        DetermineScaleOnPlay: 0
-        DestinationScale: {x: 0.5, y: 0.5, z: 0.5}
-        AnimateScaleX:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 0.35
-            value: 1.12
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        AnimateScaleY:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 0.35
-            value: 1.12
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        AnimateScaleZ:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 0.35
-            value: 1.12
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
 --- !u!1 &24651114
 GameObject:
   m_ObjectHideFlags: 0
@@ -2132,6 +1494,9 @@ MonoBehaviour:
   startFeedback: {fileID: 906891770}
   completeFeedback: {fileID: 514372386}
   hitFeedback: {fileID: 1049342372}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!64 &42731295
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -2242,7 +1607,6 @@ Transform:
   - {fileID: 1527406056}
   - {fileID: 587998115}
   - {fileID: 2047913995}
-  - {fileID: 334176944}
   - {fileID: 1505804623}
   - {fileID: 1368874900}
   - {fileID: 217474635}
@@ -2494,6 +1858,8 @@ MonoBehaviour:
   visual: {fileID: 0}
   harvestFeedback: {fileID: 1230951900}
   witherFeedback: {fileID: 796977928}
+  harvestCue: {fileID: 0}
+  witherCue: {fileID: 0}
 --- !u!1 &56871713
 GameObject:
   m_ObjectHideFlags: 0
@@ -2812,6 +2178,9 @@ MonoBehaviour:
   startFeedback: {fileID: 813951874}
   completeFeedback: {fileID: 1402763112}
   hitFeedback: {fileID: 680290184}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &62165556
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3851,6 +3220,9 @@ MonoBehaviour:
   startFeedback: {fileID: 862813796}
   completeFeedback: {fileID: 1767871084}
   hitFeedback: {fileID: 510811496}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &80292993
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -4461,6 +3833,9 @@ MonoBehaviour:
   startFeedback: {fileID: 906891770}
   completeFeedback: {fileID: 514372386}
   hitFeedback: {fileID: 1049342372}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!64 &92304577
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -5010,6 +4385,9 @@ MonoBehaviour:
   startFeedback: {fileID: 1205896206}
   completeFeedback: {fileID: 399203556}
   hitFeedback: {fileID: 1484585380}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &105227387
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -5992,6 +5370,9 @@ MonoBehaviour:
   startFeedback: {fileID: 906891770}
   completeFeedback: {fileID: 514372386}
   hitFeedback: {fileID: 1049342372}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!64 &151973267
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -8434,6 +7815,9 @@ MonoBehaviour:
   startFeedback: {fileID: 2113952456}
   completeFeedback: {fileID: 2019051052}
   hitFeedback: {fileID: 799079486}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &190023092
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -10452,6 +9836,9 @@ MonoBehaviour:
   startFeedback: {fileID: 1049701373}
   completeFeedback: {fileID: 164965079}
   hitFeedback: {fileID: 1771844147}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &217474638
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -12347,7 +11734,6 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 8808081052650963472
   - rid: 8808081052650963473
   PlayMode: 0
   SequentialDelay: 0
@@ -12363,85 +11749,6 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 8808081052650963472
-      type: {class: MMF_Flash, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
-      data:
-        Active: 1
-        UniqueID: -1705278696
-        Label: Flash
-        OriginalLabel: Flash
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: Automatic Shaker Setup
-        Owner: {fileID: 278579747}
-        DebugActive: 0
-        FlashColor: {r: 0.85, g: 0.15, b: 0.15, a: 1}
-        FlashDuration: 0.3
-        FlashAlpha: 0.4
-        FlashID: 0
-        TargetFlash: {fileID: 1511897229}
     - rid: 8808081052650963473
       type: {class: MMF_FreezeFrame, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
@@ -13082,6 +12389,8 @@ MonoBehaviour:
   definition: {fileID: 11400000, guid: ca66b80396e3519499bcd25e8efe3f74, type: 2}
   hitFeedback: {fileID: 1865662707}
   deathFeedback: {fileID: 19375122}
+  hitCue: {fileID: 0}
+  deathCue: {fileID: 0}
   pickupPrefab: {fileID: 0}
   _scrapItem: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}
 --- !u!136 &289337979
@@ -13288,6 +12597,9 @@ MonoBehaviour:
   startFeedback: {fileID: 2009267525}
   completeFeedback: {fileID: 86887436}
   hitFeedback: {fileID: 1212984323}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &296537870
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -15141,6 +14453,9 @@ MonoBehaviour:
   startFeedback: {fileID: 1435190123}
   completeFeedback: {fileID: 207577281}
   hitFeedback: {fileID: 790647386}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &332920388
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -15162,144 +14477,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.6658942, y: 0.310652, z: 0.559728}
   m_Center: {x: 0.04371956, y: 0.155326, z: 0.01112695}
---- !u!1001 &334176943
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 44676548}
-    m_Modifications:
-    - target: {fileID: 7489420763876559333, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 1.088144
-      objectReference: {fileID: 0}
-    - target: {fileID: 7489420763876559333, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 52.161022
-      objectReference: {fileID: 0}
-    - target: {fileID: 7489420763876559333, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 3.3732448
-      objectReference: {fileID: 0}
-    - target: {fileID: 7489420763876559333, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: -0.00000004371139
-      objectReference: {fileID: 0}
-    - target: {fileID: 7489420763876559333, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7489420763876559333, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7489420763876559333, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7489420763876559333, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7489420763876559333, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7489420763876559333, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7828404238315967327, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
-      propertyPath: m_Name
-      value: PortalDevice
-      objectReference: {fileID: 0}
-    - target: {fileID: 7828404238315967327, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 8
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 7489420763876559333, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 24586802}
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 7828404238315967327, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 334176948}
-    - targetCorrespondingSourceObject: {fileID: 7828404238315967327, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 334176947}
-    - targetCorrespondingSourceObject: {fileID: 7828404238315967327, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 334176946}
-  m_SourcePrefab: {fileID: 100100000, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
---- !u!4 &334176944 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 7489420763876559333, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
-  m_PrefabInstance: {fileID: 334176943}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &334176945 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7828404238315967327, guid: a4f5d4b2af55e4e4d8637b2a8848162f, type: 3}
-  m_PrefabInstance: {fileID: 334176943}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &334176946
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 334176945}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c8becae1c6e79994f83da3fe714e55f0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Survive.Progression.FlagOnInteract
-  flagKey: ch1_portal_activated
---- !u!114 &334176947
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 334176945}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4611a1984a2b61441a1169df41bc7712, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Survive.World.PortalDevice
-  displayName: "\uC678\uACC4 \uAD6C\uC870\uBB3C"
-  requiredItems:
-  - item: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}
-    count: 15
-  - item: {fileID: 11400000, guid: 4e8d21caad266464d96dec179244ae88, type: 2}
-    count: 2
-  destination: {fileID: 0}
-  activateFeedback: {fileID: 24586803}
-  activateSeconds: 2.5
---- !u!65 &334176948
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 334176945}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 4, y: 6, z: 2}
-  m_Center: {x: 0, y: 3, z: 0}
 --- !u!1001 &337674864
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -16389,6 +15566,9 @@ MonoBehaviour:
   startFeedback: {fileID: 1907779383}
   completeFeedback: {fileID: 1342435176}
   hitFeedback: {fileID: 1965901254}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &397217789
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -16770,6 +15950,8 @@ MonoBehaviour:
   visual: {fileID: 0}
   harvestFeedback: {fileID: 1768024897}
   witherFeedback: {fileID: 310582343}
+  harvestCue: {fileID: 0}
+  witherCue: {fileID: 0}
 --- !u!1 &410840738
 GameObject:
   m_ObjectHideFlags: 0
@@ -16926,6 +16108,9 @@ MonoBehaviour:
   startFeedback: {fileID: 325012769}
   completeFeedback: {fileID: 1984640848}
   hitFeedback: {fileID: 170039746}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &416758701
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -17559,7 +16744,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.01
+  near clip plane: 0.001
   far clip plane: 3000
   field of view: 60
   orthographic: 0
@@ -18099,6 +17284,9 @@ MonoBehaviour:
   startFeedback: {fileID: 87652412}
   completeFeedback: {fileID: 1873131908}
   hitFeedback: {fileID: 1152813007}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &457089300
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -18696,6 +17884,8 @@ MonoBehaviour:
   visual: {fileID: 0}
   harvestFeedback: {fileID: 1642052862}
   witherFeedback: {fileID: 1567278758}
+  harvestCue: {fileID: 0}
+  witherCue: {fileID: 0}
 --- !u!1 &502150790
 GameObject:
   m_ObjectHideFlags: 0
@@ -20104,6 +19294,9 @@ MonoBehaviour:
   startFeedback: {fileID: 997075108}
   completeFeedback: {fileID: 1149898767}
   hitFeedback: {fileID: 1393160608}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &537084766
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -20477,6 +19670,9 @@ MonoBehaviour:
   startFeedback: {fileID: 1502238484}
   completeFeedback: {fileID: 65346466}
   hitFeedback: {fileID: 1652844874}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &540607591
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -20804,6 +20000,9 @@ MonoBehaviour:
   startFeedback: {fileID: 187200801}
   completeFeedback: {fileID: 758785524}
   hitFeedback: {fileID: 1986912556}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &554911229
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -21177,6 +20376,9 @@ MonoBehaviour:
   startFeedback: {fileID: 502150792}
   completeFeedback: {fileID: 1194538308}
   hitFeedback: {fileID: 518322822}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &564995393
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -21842,6 +21044,8 @@ MonoBehaviour:
   definition: {fileID: 11400000, guid: 0e03e4cf3d28bdd49ab2f7e64f7e9e53, type: 2}
   hitFeedback: {fileID: 1892667680}
   deathFeedback: {fileID: 1193400496}
+  hitCue: {fileID: 0}
+  deathCue: {fileID: 0}
   pickupPrefab: {fileID: 0}
   _scrapItem: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}
 --- !u!136 &587998122
@@ -23055,8 +22259,7 @@ MonoBehaviour:
         m_Calls: []
   DebugActive: 0
   InScriptDrivenPause: 0
-  FeedbacksList:
-  - rid: 8808081052650963471
+  FeedbacksList: []
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -23070,86 +22273,7 @@ MonoBehaviour:
   MMF_ChannelDefinition: {fileID: 0}
   references:
     version: 2
-    RefIds:
-    - rid: 8808081052650963471
-      type: {class: MMF_Flash, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
-      data:
-        Active: 1
-        UniqueID: 2132355113
-        Label: Flash
-        OriginalLabel: Flash
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: Automatic Shaker Setup
-        Owner: {fileID: 633093428}
-        DebugActive: 0
-        FlashColor: {r: 1, g: 0.6, b: 0.25, a: 1}
-        FlashDuration: 0.4
-        FlashAlpha: 0.22
-        FlashID: 0
-        TargetFlash: {fileID: 1511897229}
+    RefIds: []
 --- !u!1 &633215845
 GameObject:
   m_ObjectHideFlags: 0
@@ -23874,6 +22998,8 @@ MonoBehaviour:
   definition: {fileID: 11400000, guid: ad67b0b425a2c3e4c8ee1867cf40fb63, type: 2}
   hitFeedback: {fileID: 868056514}
   deathFeedback: {fileID: 1129809634}
+  hitCue: {fileID: 0}
+  deathCue: {fileID: 0}
   pickupPrefab: {fileID: 0}
   _scrapItem: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}
 --- !u!136 &636369647
@@ -24409,6 +23535,9 @@ MonoBehaviour:
   startFeedback: {fileID: 1851644340}
   completeFeedback: {fileID: 1919247646}
   hitFeedback: {fileID: 2013646023}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &640245534
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -26098,7 +25227,6 @@ MonoBehaviour:
   InScriptDrivenPause: 0
   FeedbacksList:
   - rid: 8808081052650963469
-  - rid: 8808081052650963470
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -26211,85 +25339,6 @@ MonoBehaviour:
         ApplyScale: 0
         ForceSimulationSpeed: 0
         ForcedSimulationSpeed: {x: 0.1, y: 1}
-    - rid: 8808081052650963470
-      type: {class: MMF_Flash, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
-      data:
-        Active: 1
-        UniqueID: -698218908
-        Label: Flash
-        OriginalLabel: Flash
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: Automatic Shaker Setup
-        Owner: {fileID: 681673937}
-        DebugActive: 0
-        FlashColor: {r: 1, g: 0.9, b: 0.6, a: 1}
-        FlashDuration: 0.25
-        FlashAlpha: 0.15
-        FlashID: 0
-        TargetFlash: {fileID: 1511897229}
 --- !u!1 &686814903
 GameObject:
   m_ObjectHideFlags: 0
@@ -29268,6 +28317,8 @@ MonoBehaviour:
   definition: {fileID: 11400000, guid: 4350542341a84bc4a97543c54359b8c0, type: 2}
   hitFeedback: {fileID: 431711291}
   deathFeedback: {fileID: 1796436261}
+  hitCue: {fileID: 0}
+  deathCue: {fileID: 0}
   pickupPrefab: {fileID: 0}
   _scrapItem: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}
 --- !u!136 &738377709
@@ -29698,6 +28749,9 @@ MonoBehaviour:
   startFeedback: {fileID: 749291105}
   completeFeedback: {fileID: 1049850651}
   hitFeedback: {fileID: 71310329}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &743551996
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -30391,8 +29445,7 @@ MonoBehaviour:
         m_Calls: []
   DebugActive: 0
   InScriptDrivenPause: 0
-  FeedbacksList:
-  - rid: 8808081052650963479
+  FeedbacksList: []
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -30406,86 +29459,7 @@ MonoBehaviour:
   MMF_ChannelDefinition: {fileID: 0}
   references:
     version: 2
-    RefIds:
-    - rid: 8808081052650963479
-      type: {class: MMF_Flash, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
-      data:
-        Active: 1
-        UniqueID: -1303394036
-        Label: Flash
-        OriginalLabel: Flash
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: Automatic Shaker Setup
-        Owner: {fileID: 755826529}
-        DebugActive: 0
-        FlashColor: {r: 0.6, g: 0.95, b: 0.85, a: 1}
-        FlashDuration: 0.35
-        FlashAlpha: 0.16
-        FlashID: 0
-        TargetFlash: {fileID: 1511897229}
+    RefIds: []
 --- !u!4 &755826530
 Transform:
   m_ObjectHideFlags: 0
@@ -34161,6 +33135,8 @@ MonoBehaviour:
   visual: {fileID: 0}
   harvestFeedback: {fileID: 1649849944}
   witherFeedback: {fileID: 1561937964}
+  harvestCue: {fileID: 0}
+  witherCue: {fileID: 0}
 --- !u!1 &862813794
 GameObject:
   m_ObjectHideFlags: 0
@@ -35375,6 +34351,9 @@ MonoBehaviour:
   startFeedback: {fileID: 560636732}
   completeFeedback: {fileID: 695027525}
   hitFeedback: {fileID: 1039347741}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &878689368
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -37619,6 +36598,8 @@ MonoBehaviour:
   visual: {fileID: 0}
   harvestFeedback: {fileID: 2009164675}
   witherFeedback: {fileID: 3499293}
+  harvestCue: {fileID: 0}
+  witherCue: {fileID: 0}
 --- !u!1001 &951585468
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -37963,8 +36944,7 @@ MonoBehaviour:
         m_Calls: []
   DebugActive: 0
   InScriptDrivenPause: 0
-  FeedbacksList:
-  - rid: 8808081052650963336
+  FeedbacksList: []
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -37978,86 +36958,7 @@ MonoBehaviour:
   MMF_ChannelDefinition: {fileID: 0}
   references:
     version: 2
-    RefIds:
-    - rid: 8808081052650963336
-      type: {class: MMF_Flash, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
-      data:
-        Active: 1
-        UniqueID: 808922960
-        Label: Flash
-        OriginalLabel: Flash
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: Automatic Shaker Setup
-        Owner: {fileID: 972555470}
-        DebugActive: 0
-        FlashColor: {r: 0.8, g: 0.95, b: 0.7, a: 1}
-        FlashDuration: 0.22
-        FlashAlpha: 0.14
-        FlashID: 0
-        TargetFlash: {fileID: 1511897229}
+    RefIds: []
 --- !u!1001 &974119619
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -38149,6 +37050,9 @@ MonoBehaviour:
   startFeedback: {fileID: 906891770}
   completeFeedback: {fileID: 514372386}
   hitFeedback: {fileID: 1049342372}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!64 &974119623
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -38274,6 +37178,9 @@ MonoBehaviour:
   startFeedback: {fileID: 1020469782}
   completeFeedback: {fileID: 243309898}
   hitFeedback: {fileID: 1277910197}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &974506929
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -39721,6 +38628,9 @@ MonoBehaviour:
   startFeedback: {fileID: 634098263}
   completeFeedback: {fileID: 1588003769}
   hitFeedback: {fileID: 1848670276}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &1030805241
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -39862,8 +38772,7 @@ MonoBehaviour:
         m_Calls: []
   DebugActive: 0
   InScriptDrivenPause: 0
-  FeedbacksList:
-  - rid: 8808081052650963480
+  FeedbacksList: []
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -39877,86 +38786,7 @@ MonoBehaviour:
   MMF_ChannelDefinition: {fileID: 0}
   references:
     version: 2
-    RefIds:
-    - rid: 8808081052650963480
-      type: {class: MMF_Flash, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
-      data:
-        Active: 1
-        UniqueID: -1932482501
-        Label: Flash
-        OriginalLabel: Flash
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: Automatic Shaker Setup
-        Owner: {fileID: 1032424422}
-        DebugActive: 0
-        FlashColor: {r: 0.35, g: 0.55, b: 0.95, a: 1}
-        FlashDuration: 0.55
-        FlashAlpha: 0.35
-        FlashID: 0
-        TargetFlash: {fileID: 1511897229}
+    RefIds: []
 --- !u!4 &1032424423
 Transform:
   m_ObjectHideFlags: 0
@@ -40092,8 +38922,7 @@ MonoBehaviour:
         m_Calls: []
   DebugActive: 0
   InScriptDrivenPause: 0
-  FeedbacksList:
-  - rid: 8808081052650963466
+  FeedbacksList: []
   PlayMode: 0
   SequentialDelay: 0
   KeepPlayModeChanges: 0
@@ -40107,86 +38936,7 @@ MonoBehaviour:
   MMF_ChannelDefinition: {fileID: 0}
   references:
     version: 2
-    RefIds:
-    - rid: 8808081052650963466
-      type: {class: MMF_Flash, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
-      data:
-        Active: 1
-        UniqueID: -25631605
-        Label: Flash
-        OriginalLabel: Flash
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: Automatic Shaker Setup
-        Owner: {fileID: 1035338950}
-        DebugActive: 0
-        FlashColor: {r: 0.35, g: 0.65, b: 0.95, a: 1}
-        FlashDuration: 0.4
-        FlashAlpha: 0.25
-        FlashID: 0
-        TargetFlash: {fileID: 1511897229}
+    RefIds: []
 --- !u!4 &1035338951
 Transform:
   m_ObjectHideFlags: 0
@@ -40321,6 +39071,9 @@ MonoBehaviour:
   startFeedback: {fileID: 1919320838}
   completeFeedback: {fileID: 876730197}
   hitFeedback: {fileID: 1600585807}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &1038088135
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -42038,6 +40791,8 @@ MonoBehaviour:
   visual: {fileID: 0}
   harvestFeedback: {fileID: 724276483}
   witherFeedback: {fileID: 728248607}
+  harvestCue: {fileID: 0}
+  witherCue: {fileID: 0}
 --- !u!1 &1059732483
 GameObject:
   m_ObjectHideFlags: 0
@@ -43242,6 +41997,9 @@ MonoBehaviour:
   startFeedback: {fileID: 540394283}
   completeFeedback: {fileID: 2113470432}
   hitFeedback: {fileID: 1455030937}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &1073991087
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -43654,6 +42412,8 @@ MonoBehaviour:
   visual: {fileID: 0}
   harvestFeedback: {fileID: 697662988}
   witherFeedback: {fileID: 821922069}
+  harvestCue: {fileID: 0}
+  witherCue: {fileID: 0}
 --- !u!1 &1118890475
 GameObject:
   m_ObjectHideFlags: 0
@@ -43924,6 +42684,8 @@ MonoBehaviour:
   definition: {fileID: 11400000, guid: ad67b0b425a2c3e4c8ee1867cf40fb63, type: 2}
   hitFeedback: {fileID: 1974535675}
   deathFeedback: {fileID: 170848988}
+  hitCue: {fileID: 0}
+  deathCue: {fileID: 0}
   pickupPrefab: {fileID: 0}
   _scrapItem: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}
 --- !u!136 &1126562123
@@ -44941,6 +43703,9 @@ MonoBehaviour:
   startFeedback: {fileID: 906891770}
   completeFeedback: {fileID: 514372386}
   hitFeedback: {fileID: 1049342372}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!64 &1150489244
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -46733,6 +45498,8 @@ MonoBehaviour:
   visual: {fileID: 0}
   harvestFeedback: {fileID: 1955135519}
   witherFeedback: {fileID: 591062572}
+  harvestCue: {fileID: 0}
+  witherCue: {fileID: 0}
 --- !u!1001 &1196176963
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -47054,6 +45821,8 @@ MonoBehaviour:
   visual: {fileID: 0}
   harvestFeedback: {fileID: 627817180}
   witherFeedback: {fileID: 37274073}
+  harvestCue: {fileID: 0}
+  witherCue: {fileID: 0}
 --- !u!1001 &1204878552
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -47145,6 +45914,9 @@ MonoBehaviour:
   startFeedback: {fileID: 906891770}
   completeFeedback: {fileID: 514372386}
   hitFeedback: {fileID: 1049342372}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!64 &1204878556
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -49917,6 +48689,9 @@ MonoBehaviour:
   startFeedback: {fileID: 462645765}
   completeFeedback: {fileID: 2018459346}
   hitFeedback: {fileID: 1322664602}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &1279296687
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -50041,6 +48816,9 @@ MonoBehaviour:
   startFeedback: {fileID: 1782285391}
   completeFeedback: {fileID: 1528251112}
   hitFeedback: {fileID: 1959391119}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &1287263066
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -50607,6 +49385,9 @@ MonoBehaviour:
   startFeedback: {fileID: 1150992743}
   completeFeedback: {fileID: 1270584817}
   hitFeedback: {fileID: 305091587}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &1314606500
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -52784,6 +51565,9 @@ MonoBehaviour:
   startFeedback: {fileID: 906891770}
   completeFeedback: {fileID: 514372386}
   hitFeedback: {fileID: 1049342372}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &1368874903
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -52949,6 +51733,9 @@ MonoBehaviour:
   startFeedback: {fileID: 906891770}
   completeFeedback: {fileID: 514372386}
   hitFeedback: {fileID: 1049342372}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!64 &1383232543
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -54040,6 +52827,8 @@ MonoBehaviour:
   visual: {fileID: 0}
   harvestFeedback: {fileID: 740997313}
   witherFeedback: {fileID: 1347116118}
+  harvestCue: {fileID: 0}
+  witherCue: {fileID: 0}
 --- !u!1001 &1423076011
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -55416,6 +54205,8 @@ MonoBehaviour:
   visual: {fileID: 0}
   harvestFeedback: {fileID: 2071847839}
   witherFeedback: {fileID: 1801374977}
+  harvestCue: {fileID: 0}
+  witherCue: {fileID: 0}
 --- !u!1 &1455030935
 GameObject:
   m_ObjectHideFlags: 0
@@ -56670,6 +55461,9 @@ MonoBehaviour:
   startFeedback: {fileID: 214449922}
   completeFeedback: {fileID: 1804313743}
   hitFeedback: {fileID: 681550306}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &1482880078
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -58019,183 +56813,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.0999999, y: 1.1, z: 1.0999999}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!1 &1511897228
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1511897233}
-  - component: {fileID: 1511897232}
-  - component: {fileID: 1511897231}
-  - component: {fileID: 1511897230}
-  - component: {fileID: 1511897229}
-  m_Layer: 0
-  m_Name: ScreenFlash
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1511897229
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1511897228}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5463d50a0cd9b2449a50f538278303d2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: MoreMountains.Tools::MoreMountains.Feedbacks.MMFlash
-  ChannelMode: 0
-  Channel: 0
-  MMChannelDefinition: {fileID: 0}
-  FlashID: 0
-  Interruptable: 0
-  FlashInTween:
-    MMTweenDefinitionType: 0
-    MMTweenCurve: 0
-    Curve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    Initialized: 0
-    ConditionPropertyName: 
-    EnumConditionPropertyName: 
-    EnumConditions: 0000000000000000000000000000000000000000000000000000000000000000
-  FlashOutTween:
-    MMTweenDefinitionType: 0
-    MMTweenCurve: 0
-    Curve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    Initialized: 0
-    ConditionPropertyName: 
-    EnumConditionPropertyName: 
-    EnumConditions: 0000000000000000000000000000000000000000000000000000000000000000
-  DebugSettings:
-    ChannelMode: 0
-    Channel: 0
-    MMChannelDefinition: {fileID: 0}
-    FlashColor: {r: 1, g: 1, b: 1, a: 1}
-    FlashDuration: 0.2
-    FlashAlpha: 1
-    FlashID: 0
-  DebugTestButton: 0
---- !u!114 &1511897230
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1511897228}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0}
-  m_RaycastTarget: 0
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &1511897231
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1511897228}
-  m_CullTransparentMesh: 1
---- !u!225 &1511897232
-CanvasGroup:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1511897228}
-  m_Enabled: 1
-  m_Alpha: 1
-  m_Interactable: 1
-  m_BlocksRaycasts: 1
-  m_IgnoreParentGroups: 0
---- !u!224 &1511897233
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1511897228}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 301521547171322061}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1511910875 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8715805473330190300, guid: c8ae7b6853a701641863857dbf481ee2, type: 3}
@@ -58408,6 +57025,8 @@ MonoBehaviour:
   definition: {fileID: 11400000, guid: ca66b80396e3519499bcd25e8efe3f74, type: 2}
   hitFeedback: {fileID: 1163991894}
   deathFeedback: {fileID: 214718157}
+  hitCue: {fileID: 0}
+  deathCue: {fileID: 0}
   pickupPrefab: {fileID: 0}
   _scrapItem: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}
 --- !u!136 &1527406063
@@ -59762,6 +58381,9 @@ MonoBehaviour:
   startFeedback: {fileID: 1059732485}
   completeFeedback: {fileID: 1482973668}
   hitFeedback: {fileID: 111400587}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &1560568498
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -59894,6 +58516,8 @@ MonoBehaviour:
   visual: {fileID: 0}
   harvestFeedback: {fileID: 888516744}
   witherFeedback: {fileID: 193591082}
+  harvestCue: {fileID: 0}
+  witherCue: {fileID: 0}
 --- !u!1 &1561937962
 GameObject:
   m_ObjectHideFlags: 0
@@ -61205,6 +59829,9 @@ MonoBehaviour:
   startFeedback: {fileID: 906891770}
   completeFeedback: {fileID: 514372386}
   hitFeedback: {fileID: 1049342372}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!64 &1591198212
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -61907,6 +60534,9 @@ MonoBehaviour:
   startFeedback: {fileID: 906891770}
   completeFeedback: {fileID: 514372386}
   hitFeedback: {fileID: 1049342372}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!64 &1636066003
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -62973,6 +61603,8 @@ MonoBehaviour:
   visual: {fileID: 0}
   harvestFeedback: {fileID: 637258840}
   witherFeedback: {fileID: 831434995}
+  harvestCue: {fileID: 0}
+  witherCue: {fileID: 0}
 --- !u!1001 &1675745240
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -63242,6 +61874,8 @@ MonoBehaviour:
   visual: {fileID: 0}
   harvestFeedback: {fileID: 1969837404}
   witherFeedback: {fileID: 229413729}
+  harvestCue: {fileID: 0}
+  witherCue: {fileID: 0}
 --- !u!1001 &1685963015
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -63361,6 +61995,9 @@ MonoBehaviour:
   startFeedback: {fileID: 1340997265}
   completeFeedback: {fileID: 305021168}
   hitFeedback: {fileID: 686814905}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &1685963019
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -67948,7 +66585,6 @@ MonoBehaviour:
   DebugActive: 0
   InScriptDrivenPause: 0
   FeedbacksList:
-  - rid: 8808081052650963477
   - rid: 8808081052650963478
   PlayMode: 0
   SequentialDelay: 0
@@ -67964,85 +66600,6 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 8808081052650963477
-      type: {class: MMF_Flash, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
-      data:
-        Active: 1
-        UniqueID: -742280412
-        Label: Flash
-        OriginalLabel: Flash
-        ChannelMode: 0
-        Channel: 0
-        MMChannelDefinition: {fileID: 0}
-        Chance: 100
-        Timing:
-          TimescaleMode: 0
-          ExcludeFromHoldingPauses: 0
-          ContributeToTotalDuration: 1
-          InitialDelay: 0
-          CooldownDuration: 0
-          InterruptsOnStop: 1
-          NumberOfRepeats: 0
-          RepeatForever: 0
-          DelayBetweenRepeats: 1
-          PlayCount: 0
-          LimitPlayCount: 0
-          MaxPlayCount: 3
-          SetPlayCountToZeroOnReset: 0
-          MMFeedbacksDirectionCondition: 0
-          PlayDirection: 0
-          ConstantIntensity: 0
-          UseIntensityInterval: 0
-          IntensityIntervalMin: 0
-          IntensityIntervalMax: 0
-          Sequence: {fileID: 0}
-          TrackID: 0
-          Quantized: 0
-          TargetBPM: 120
-        AutomatedTargetAcquisition:
-          Mode: 0
-          ChildIndex: 0
-        RandomizeOutput: 0
-        RandomMultiplier: {x: 0.8, y: 1}
-        RandomizeDuration: 0
-        RandomDurationMultiplier: {x: 0.5, y: 2}
-        UseRange: 0
-        RangeDistance: 5
-        UseRangeFalloff: 0
-        RangeFalloff:
-          serializedVersion: 2
-          m_Curve:
-          - serializedVersion: 3
-            time: 0
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 1
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          m_PreInfinity: 2
-          m_PostInfinity: 2
-          m_RotationOrder: 4
-        RemapRangeFalloff: {x: 0, y: 1}
-        AutomaticShakerSetupButton:
-          ButtonText: Automatic Shaker Setup
-        Owner: {fileID: 1803678697}
-        DebugActive: 0
-        FlashColor: {r: 0.75, g: 0.1, b: 0.12, a: 1}
-        FlashDuration: 1.2
-        FlashAlpha: 0.85
-        FlashID: 0
-        TargetFlash: {fileID: 1511897229}
     - rid: 8808081052650963478
       type: {class: MMF_FreezeFrame, ns: MoreMountains.Feedbacks, asm: MoreMountains.Tools}
       data:
@@ -69026,6 +67583,9 @@ MonoBehaviour:
   startFeedback: {fileID: 1234279380}
   completeFeedback: {fileID: 1963299195}
   hitFeedback: {fileID: 1337562634}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &1825195553
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -69549,6 +68109,8 @@ MonoBehaviour:
   definition: {fileID: 11400000, guid: 4350542341a84bc4a97543c54359b8c0, type: 2}
   hitFeedback: {fileID: 384840793}
   deathFeedback: {fileID: 709558828}
+  hitCue: {fileID: 0}
+  deathCue: {fileID: 0}
   pickupPrefab: {fileID: 0}
   _scrapItem: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}
 --- !u!136 &1850839238
@@ -70888,6 +69450,8 @@ MonoBehaviour:
   visual: {fileID: 0}
   harvestFeedback: {fileID: 1782534554}
   witherFeedback: {fileID: 248666686}
+  harvestCue: {fileID: 0}
+  witherCue: {fileID: 0}
 --- !u!1 &1892667678
 GameObject:
   m_ObjectHideFlags: 0
@@ -71606,6 +70170,8 @@ MonoBehaviour:
   visual: {fileID: 0}
   harvestFeedback: {fileID: 1447962439}
   witherFeedback: {fileID: 802721091}
+  harvestCue: {fileID: 0}
+  witherCue: {fileID: 0}
 --- !u!1 &1907779381
 GameObject:
   m_ObjectHideFlags: 0
@@ -74515,6 +73081,9 @@ MonoBehaviour:
   startFeedback: {fileID: 24651116}
   completeFeedback: {fileID: 171680393}
   hitFeedback: {fileID: 1818731214}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &1966901423
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -76088,6 +74657,8 @@ MonoBehaviour:
   visual: {fileID: 0}
   harvestFeedback: {fileID: 1473670143}
   witherFeedback: {fileID: 1458464336}
+  harvestCue: {fileID: 0}
+  witherCue: {fileID: 0}
 --- !u!1 &1996728508
 GameObject:
   m_ObjectHideFlags: 0
@@ -79148,6 +77719,9 @@ MonoBehaviour:
   startFeedback: {fileID: 633215847}
   completeFeedback: {fileID: 1022554991}
   hitFeedback: {fileID: 699132509}
+  hitCue: {fileID: 0}
+  breakCue: {fileID: 0}
+  wrongToolCue: {fileID: 0}
 --- !u!65 &2086667940
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -80548,7 +79122,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 301521547391049822, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -16
+      value: -26
       objectReference: {fileID: 0}
     - target: {fileID: 5003207709077232889, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
       propertyPath: percentLabel
@@ -80569,9 +79143,6 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 301521547292152600, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1511897233}
     - targetCorrespondingSourceObject: {fileID: 301521547292152600, guid: 222dccb44d03fd548bdbfbadad8f37d7, type: 3}
       insertIndex: -1
       addedObject: {fileID: 680587633}

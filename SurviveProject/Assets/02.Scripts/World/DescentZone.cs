@@ -15,8 +15,8 @@ namespace Survive.World
     /// 짙은 매크로늄 층 하나. 잠항구를 걸치고 여기를 <b>끝까지 내려가면 챕터가 끝난다</b>
     /// (기획서 §6.2 "종막 — 뚫고 내려간다").
     ///
-    /// <b>무엇이 새로운가.</b> 예전 종막은 <see cref="PortalDevice"/>였다 — 남이 놔둔 장치를
-    /// 켜고 떠나는 이야기였고, 4번 섬에서 캔 매크로늄은 쓸 데가 없었다. 지금은 그 매크로늄으로
+    /// <b>무엇이 새로운가.</b> 예전 종막은 남이 놔둔 외계 장치를 켜고 떠나는 이야기였고,
+    /// 4번 섬에서 캔 매크로늄은 쓸 데가 없었다. 지금은 그 매크로늄으로
     /// 만든 껍데기가 열쇠이고, 문은 놓여 있는 것이 아니라 여태 닿으면 죽던 액면 그 자체다.
     ///
     /// <b>판정은 여기 없다.</b> "다 내려갔는가"는 <see cref="MacroniumDescent.Breached"/>가
@@ -27,7 +27,7 @@ namespace Survive.World
     /// <see cref="SceneFlowService"/>가 다음 씬을 올린다 —
     /// <see cref="SceneTransitionTrigger"/>가 프롤로그에서 쓰는 그 길이다.
     /// 다음 구역이 아직 없으면 <see cref="destination"/>을 비워 두고, 그것이 곧
-    /// "구간의 끝"을 뜻한다(<see cref="PortalDevice"/>가 잡아 둔 규약 그대로).
+    /// "구간의 끝"을 뜻한다 — 예전 종막 장치가 잡아 둔 규약을 그대로 물려받았다.
     ///
     /// <b>씬에는 아직 놓여 있지 않다.</b> 액면섬과 그 아래 층의 배치는 기획서 §8-4의 일이고,
     /// 씬은 병합할 수 없는 단일 파일이라 여기서 건드리지 않는다. 그때까지 이 컴포넌트는
@@ -58,7 +58,7 @@ namespace Survive.World
 
         /// <summary>
         /// 목적지 없이 하강이 끝났을 때. 구간의 마지막 층이라는 뜻이다.
-        /// <see cref="PortalDevice.ChapterEnded"/>와 같은 자리의 신호다.
+        /// 예전 종막 장치가 내던 신호와 같은 자리다.
         /// </summary>
         public static event Action<DescentZone> ChapterEnded;
 
@@ -199,7 +199,7 @@ namespace Survive.World
         {
             // 목적지를 비워 두는 것은 오류가 아니다. 다음 구역이 아직 없는 구간의
             // 마지막 층이 그렇다 — 하강은 성립하고 챕터는 여기서 끝난다.
-            // PortalDevice가 잡아 둔 규약을 그대로 따른다.
+            // 예전 종막 장치가 잡아 둔 규약을 그대로 따른다.
             // 화면은 GameServices에 등록된 것을 쓴다. ScreenFader가 OnEnable에서 스스로
             // 등록하므로 씬을 뒤질 이유가 없다.
             GameServices.TryGet<ScreenFader>(out var fader);

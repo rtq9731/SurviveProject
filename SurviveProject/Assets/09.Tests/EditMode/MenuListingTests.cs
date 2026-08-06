@@ -69,10 +69,10 @@ public class MenuListingTests
     [Test]
     public void 다른_자리에서만_만드는_것은_아는_것이라도_실리지_않는다()
     {
-        var bp = 청사진("bp_alloy_shaping");
-        _ledger.Unlock("bp_alloy_shaping");
+        var bp = 청사진("bp_surface_walker");
+        _ledger.Unlock("bp_surface_walker");
 
-        var r = 레시피("portal_key", bp, StationType.Bench);
+        var r = 레시피("surface_walker", bp, StationType.Bench);
         Assert.IsFalse(MenuListing.ShouldList(r, StationType.None, _ledger), "손에서는 안 보인다");
         Assert.IsTrue(MenuListing.ShouldList(r, StationType.Bench, _ledger), "제작대에서는 보인다");
         Assert.IsFalse(MenuListing.ShouldList(r, StationType.Campfire, _ledger),

@@ -24,7 +24,9 @@ namespace Survive.Testing
 
         // 떨궈야 하는 것 / 남아야 하는 것
         static readonly string[] 떨굴것 = { "scrap", "alien_alloy", "oxygen_filter" };
-        static readonly string[] 남을것 = { "pickaxe", "lantern", "portal_key" };
+        // 남을것에 진행(Quest) 아이템이 없는 것은 지금 그런 아이템이 하나도 없기 때문이다.
+        // 규칙 자체는 DeathDropTests가 순수 문맥에서 지킨다.
+        static readonly string[] 남을것 = { "pickaxe", "lantern" };
 
         public static IEnumerator FullRun()
         {

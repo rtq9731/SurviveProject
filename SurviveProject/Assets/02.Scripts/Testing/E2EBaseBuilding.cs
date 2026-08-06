@@ -36,6 +36,10 @@ namespace Survive.Testing
         /// <summary>SubmergedOxygenDrain의 기본값. 로그에 여유 시간을 적기 위한 것뿐이다.</summary>
         const float drainPerSecondGuess = 6f;
 
+        /// <summary>자리 구분을 보기 위해 쓰는 제작대 전용 제작법과 그 청사진.</summary>
+        const string BenchOnlyRecipe = "surface_walker";
+        const string BenchOnlyBlueprint = "bp_surface_walker";
+
         static BuildPlacer Placer =>
             Object.FindAnyObjectByType<BuildPlacer>(FindObjectsInactive.Exclude);
 
@@ -138,6 +142,17 @@ namespace Survive.Testing
             E2EHarness.Log("  재료 주입: " +
                 string.Join(", ", needed.Select(id => $"{id} {Inv.CountOf(id)}")));
 
+            // 제작대 전용 제작법을 하나 열어 둔다.
+            //
+            // 이 시나리오가 보려는 것은 <b>자리 구분</b>이다 — 손에서는 안 보이고
+            // 제작대에서는 보이는 것이 실제로 있는가. 그러려면 제작대 전용이면서
+            // 아는 제작법이 하나는 있어야 한다. 지금 제작대 전용은 액면 보행 장비와
+            // 잠항구 둘뿐이고 둘 다 연구 뒤에 서 있는데, 연구 채널을 실제로 도는 것은
+            // <see cref="E2EResearchStation"/>의 몫이다. 여기서 그것까지 굴리면
+            // 자리 구분이 아니라 연구를 재검증하게 된다.
+            E2EHarness.Assert(E2EResearchStation.원장에_적는다(BenchOnlyBlueprint),
+                              "제작대 전용 청사진을 원장에 적었다");
+
             // 랜턴을 지금 켜 둔다. 뒤의 화톳불 검사는 배터리가 <b>줄어 있어야</b>
             // 차오르는 것을 볼 수 있는데, Recharge는 음수를 받지 않는다.
             // 시나리오를 도는 동안 자연히 닳게 두는 것이 실제 플레이와도 같다.
@@ -168,7 +183,7 @@ namespace Survive.Testing
             var rows = VisibleRows(ui);
 
             E2EHarness.Assert(rows.Count > 0, "손 제작 목록이 비어 있지 않다");
-            E2EHarness.Assert(!rows.Contains("portal_key"), "포탈 기동 키는 손으로 만들 수 없다");
+            E2EHarness.Assert(!rows.Contains(BenchOnlyRecipe), "액면 보행 장비는 손으로 만들 수 없다");
 
             E2EHarness.Log($"  손 제작 가능: {string.Join(", ", rows)}");
 
@@ -369,8 +384,8 @@ namespace Survive.Testing
             E2EHarness.AssertEqual(ui.CurrentStation, StationType.Bench, "제작대 목록이 뜬다");
 
             var shown = VisibleRows(ui);
-            E2EHarness.Assert(shown.Contains("portal_key"),
-                              "세운 제작대에서 포탈 기동 키가 보인다 — 손에서는 숨어 있던 것이다");
+            E2EHarness.Assert(shown.Contains(BenchOnlyRecipe),
+                              "세운 제작대에서 액면 보행 장비가 보인다 — 손에서는 숨어 있던 것이다");
             E2EHarness.Log($"  제작대 목록: {string.Join(", ", shown)}");
 
             // 실제로 하나 만들어 본다. 목록에 뜨는 것과 만들어지는 것은 다르다.

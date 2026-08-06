@@ -58,14 +58,15 @@ public class DeathDropTests
         inv.TryAdd(자원("scrap"), 30);
         inv.TryAdd(아이템("repair_kit", ItemCategory.Consumable, 5), 2);
         inv.TryAdd(도구("lantern"), 1);
-        inv.TryAdd(아이템("portal_key", ItemCategory.Quest, 1), 1);
+        // 지금 판에 Quest 아이템은 하나도 없다. 규칙은 남아 있으므로 여기서 지어 확인한다.
+        inv.TryAdd(아이템("quest_token", ItemCategory.Quest, 1), 1);
 
         var 떨군것 = DeathDrop.Extract(inv);
 
         Assert.AreEqual(0, inv.CountOf("scrap"));
         Assert.AreEqual(0, inv.CountOf("repair_kit"));
         Assert.AreEqual(1, inv.CountOf("lantern"), "도구는 그대로 있어야 한다");
-        Assert.AreEqual(1, inv.CountOf("portal_key"), "진행 아이템은 그대로 있어야 한다");
+        Assert.AreEqual(1, inv.CountOf("quest_token"), "진행 아이템은 그대로 있어야 한다");
         Assert.AreEqual(2, 떨군것.Count);
     }
 

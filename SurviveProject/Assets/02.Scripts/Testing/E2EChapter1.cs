@@ -67,7 +67,7 @@ namespace Survive.Testing
             var trigger = GameObject.Find("Trigger_Surveyed");
             E2EHarness.Assert(trigger != null, "탐색 트리거가 있다");
 
-            // 중심이 아니라 판 안으로 들어간다. 중심은 포탈 장치 너머 바위 위이고,
+            // 중심이 아니라 판 안으로 들어간다. 중심은 스폰에서 한참 떨어진 바위 위이고,
             // 목표가 요구하는 것은 착지 지점을 벗어나 판을 밟는 것뿐이다.
             E2EHarness.Log("목표1: 트리거 안으로 걸어 들어간다");
             yield return E2EHarness.WalkInto(trigger, 60f);
@@ -144,7 +144,7 @@ namespace Survive.Testing
         // ── 목표 6: 잠항구를 만들어 내려간다 ─────────────────────
 
         /// <summary>
-        /// 종막 (백로그 36). 예전에는 포탈을 기동했다 — 남이 놔둔 장치를 켜고 떠나는
+        /// 종막 (백로그 36). 예전에는 남이 놔둔 외계 장치를 켜고 떠나는
         /// 이야기였고, 4번 섬에서 캔 매크로늄은 쓸 데가 없었다. 지금은 그 매크로늄으로
         /// 잠항구를 만들어 여태 닿으면 죽던 층으로 걸어 들어간다 (기획서 §6.2).
         ///
