@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using Survive.Creatures;
+using Survive.Localization;
 
 namespace Survive.Progression
 {
@@ -130,13 +131,17 @@ namespace Survive.Progression
             }
         }
 
-        static string NameOf(DiscoverySO d) =>
-            d.item != null && !string.IsNullOrWhiteSpace(d.item.displayName)
-                ? d.item.displayName
-                : (d.item != null ? d.item.id : d.id);
+        // 아래 이름·문장은 전부 DataText를 거친다. 도감은 아는 것을 <b>말로</b> 보여 주는
+        // 화면이라, 여기서 SO를 직접 읽으면 게임의 절반이 로케일을 안 따라온다.
 
-        static string TextOf(DiscoverySO d) =>
-            d.line != null && !string.IsNullOrWhiteSpace(d.line.text) ? d.line.text : "";
+        static string NameOf(DiscoverySO d)
+        {
+            if (d.item == null) return d.id;
+            var name = DataText.Name(d.item);
+            return string.IsNullOrWhiteSpace(name) ? d.item.id : name;
+        }
+
+        static string TextOf(DiscoverySO d) => d.line == null ? "" : DataText.Line(d);
 
         // ── 확보 제작법 ──────────────────────────────────────────────
 
@@ -187,12 +192,10 @@ namespace Survive.Progression
                     Section = CodexSection.Blueprint,
                     Key = bp.id,
                     Unlocked = known,
-                    Title = known
-                        ? (string.IsNullOrWhiteSpace(bp.displayName) ? bp.id : bp.displayName)
-                        : UnknownTitle,
+                    Title = known ? NameOf(bp) : UnknownTitle,
                     Body = known
                         ? "확보됨 · " + source
-                        : (string.IsNullOrWhiteSpace(bp.hint) ? UnknownBlueprintBody : bp.hint),
+                        : HintOf(bp),
                 });
             }
         }
@@ -227,11 +230,25 @@ namespace Survive.Progression
             }
         }
 
-        static string NameOf(ResearchEntrySO e) =>
-            string.IsNullOrWhiteSpace(e.displayName) ? e.id : e.displayName;
+        static string NameOf(BlueprintSO bp)
+        {
+            var name = DataText.Name(bp);
+            return string.IsNullOrWhiteSpace(name) ? bp.id : name;
+        }
 
-        static string TextOf(ResearchEntrySO e) =>
-            e.line != null && !string.IsNullOrWhiteSpace(e.line.text) ? e.line.text : "";
+        static string HintOf(BlueprintSO bp)
+        {
+            var hint = DataText.Hint(bp);
+            return string.IsNullOrWhiteSpace(hint) ? UnknownBlueprintBody : hint;
+        }
+
+        static string NameOf(ResearchEntrySO e)
+        {
+            var name = DataText.Name(e);
+            return string.IsNullOrWhiteSpace(name) ? e.id : name;
+        }
+
+        static string TextOf(ResearchEntrySO e) => e.line == null ? "" : DataText.Line(e);
 
         // ── 개체 관측 ────────────────────────────────────────────────
 
@@ -257,9 +274,7 @@ namespace Survive.Progression
                     Section = CodexSection.Creature,
                     Key = key,
                     Unlocked = known,
-                    Title = known
-                        ? (string.IsNullOrWhiteSpace(c.displayName) ? c.id : c.displayName)
-                        : UnknownTitle,
+                    Title = known ? NameOf(c) : UnknownTitle,
                     Body = known ? DescribeCreature(c) : UnknownCreatureBody,
                 });
             }
@@ -283,9 +298,14 @@ namespace Survive.Progression
 
             if (c.avoidsLight) stats += "\n광원 기피 확인 · 빛 안에서는 접근하지 않습니다.";
 
-            return string.IsNullOrWhiteSpace(c.codexDescription)
-                ? stats
-                : c.codexDescription.Trim() + "\n\n" + stats;
+            var described = DataText.Codex(c);
+            return string.IsNullOrWhiteSpace(described) ? stats : described + "\n\n" + stats;
+        }
+
+        static string NameOf(CreatureDefinitionSO c)
+        {
+            var name = DataText.Name(c);
+            return string.IsNullOrWhiteSpace(name) ? c.id : name;
         }
 
         public static string TierName(TrophicTier tier)

@@ -5,6 +5,7 @@ using NUnit.Framework;
 using UnityEngine;
 using Survive.Creatures;
 using Survive.Items;
+using Survive.Localization;
 using Survive.Narrative;
 using Survive.Progression;
 
@@ -98,6 +99,13 @@ public class CodexCatalogTests
     [SetUp]
     public void SetUp()
     {
+        // 도감이 짓는 규칙은 번역 표와 무관해야 한다. 여기 세우는 가짜 에셋들은
+        // 진짜와 같은 id를 쓰는데(bp_surface_walker 등), 표가 실려 있으면 DataText가
+        // 그 id로 진짜 게임의 문장을 꺼내 와 가짜 문장을 덮는다. 그것은 조회 경로가
+        // 제대로 돈다는 증거이지 도감의 규칙이 아니므로, 여기서는 표를 비우고
+        // 에셋에 적힌 것만 보게 한다 (표가 없을 때의 폴백은 DataTextGateTests가 지킨다).
+        Loc.Load(StringCatalog.Empty);
+
         _ledger = new UnlockLedger();
 
         _mechanism = 청사진("bp_salvaged_mechanism", "부품 재조립", "기계 부품을 손에 넣으면 알게 된다");
@@ -122,6 +130,14 @@ public class CodexCatalogTests
 
         _creatureBook = ScriptableObject.CreateInstance<CreatureBookSO>();
         _creatureBook.creatures = new[] { 생물("scythe", "낫", "이족보행의 빠른 기계.") };
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        // 다음 파일의 검사가 빈 표를 물려받으면 영문 모를 이유로 무너진다.
+        Loc.Load(LocalizationTestBootstrap.LoadCatalogFromDisk());
+        Loc.SetLocale(StringCatalog.DefaultLocale);
     }
 
     CodexEntry 줄(string key)

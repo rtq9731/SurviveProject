@@ -4,6 +4,7 @@ using MoreMountains.Feedbacks;
 using Survive.Audio;
 using Survive.Domain.Audio;
 using Survive.Interaction;
+using Survive.Localization;
 using Survive.Player;
 
 namespace Survive.Harvesting
@@ -121,8 +122,8 @@ namespace Survive.Harvesting
             get
             {
                 if (definition == null || _gone) return "";
-                if (_stage <= 0) return $"{definition.displayName} · 아직 자라지 않았다";
-                return $"[E] 길게 눌러 {definition.displayName} 채집";
+                if (_stage <= 0) return $"{DataText.Name(definition)} · 아직 자라지 않았다";
+                return $"[E] 길게 눌러 {DataText.Name(definition)} 채집";
             }
         }
 
@@ -151,7 +152,7 @@ namespace Survive.Harvesting
                 {
                     int remaining = player.Inventory.Add(stack.item, stack.count);
                     if (remaining > 0)
-                        Debug.LogWarning($"[PlantNode] 인벤토리가 가득 차 {stack.item.displayName} {remaining}개를 넣지 못했습니다.", this);
+                        Debug.LogWarning($"[PlantNode] 인벤토리가 가득 차 {DataText.Name(stack.item)} {remaining}개를 넣지 못했습니다.", this);
                 }
             }
 

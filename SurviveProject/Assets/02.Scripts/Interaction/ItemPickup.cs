@@ -3,6 +3,7 @@ using MoreMountains.Feedbacks;
 using Survive.Audio;
 using Survive.Domain.Audio;
 using Survive.Items;
+using Survive.Localization;
 using Survive.Player;
 
 namespace Survive.Interaction
@@ -20,7 +21,7 @@ namespace Survive.Interaction
         [SerializeField] AudioCueSO pickupCue;
 
         public string InteractionPrompt =>
-            item == null ? "" : $"[E] {item.displayName} 줍기" + (count > 1 ? $" ×{count}" : "");
+            item == null ? "" : $"[E] {DataText.Name(item)} 줍기" + (count > 1 ? $" ×{count}" : "");
 
         public bool CanInteract(PlayerContext player) => item != null && player?.Inventory != null;
 

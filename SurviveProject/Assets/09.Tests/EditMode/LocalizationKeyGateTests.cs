@@ -127,7 +127,9 @@ public class LocalizationKeyGateTests
     public void 표의_값에_글꼴에_없는_글자가_없다()
     {
         // 본문 글꼴 ChosunGu에 없어 화면에서 두부(□)로 뜨는 것들. 실측으로 확인했다.
-        const string 금지 = "—«»‹›⟦⟧ÀÉÜŽĐ−";
+        // 목록은 Domain(FontSafe)에 있다 — 데이터 에셋 초안 생성기도 같은 목록을 보고
+        // 원문의 두부 글자를 대치한다. 두 군데 적어 두면 언젠가 한쪽만 늘어난다.
+        const string 금지 = FontSafe.Missing;
 
         foreach (var locale in _catalog.Locales)
         {
