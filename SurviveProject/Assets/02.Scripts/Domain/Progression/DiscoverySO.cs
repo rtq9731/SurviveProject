@@ -5,8 +5,15 @@ using Survive.Narrative;
 namespace Survive.Progression
 {
     /// <summary>
-    /// 현장 발견 하나 — "이 재료를 처음 손에 넣으면 AI가 이렇게 말하고
-    /// 이것들이 열린다".
+    /// 현장 발견 하나 — "이것을 처음 겪으면 AI가 이렇게 말하고 이것들이 열린다".
+    ///
+    /// <b>계기는 둘이다.</b> <see cref="item"/>을 처음 손에 넣거나
+    /// (<see cref="FieldDiscovery"/>), <see cref="locationId"/>가 가리키는 자리에 처음
+    /// 닿거나(<see cref="LocationDiscovery"/>). 뒤에 일어나는 일은 하나도 다르지 않다 —
+    /// 그래서 SO도 하나다. 계기마다 SO를 나누면 자막·청사진 배선이 두 벌이 된다.
+    ///
+    /// 하나의 발견에 계기를 둘 다 채우지 않는다. 그러면 어느 쪽으로 열렸는지 알 수
+    /// 없고, 둘 다 겪은 사람에게는 둘째가 조용히 무시된다.
     ///
     /// 대사는 새 자료형을 만들지 않고 시퀀스 자막 한 줄(<see cref="SequenceSO.Line"/>)을
     /// 그대로 쓴다. 프롤로그와 같은 목소리로 같은 자막판에 뜨는 것이 맞다.
@@ -35,8 +42,11 @@ namespace Survive.Progression
         [Tooltip("원장에 남는 열쇠. 이게 있으면 '이미 겪은 발견'이라 다시 울리지 않는다")]
         public string id;
 
-        [Tooltip("처음 손에 넣었을 때 이 발견이 일어나는 재료")]
+        [Tooltip("처음 손에 넣었을 때 이 발견이 일어나는 재료. 장소 계기면 비운다")]
         public ItemDataSO item;
+
+        [Tooltip("처음 닿았을 때 이 발견이 일어나는 자리의 id. 재료 계기면 비운다")]
+        public string locationId;
 
         [Tooltip("이때 열리는 청사진들")]
         public BlueprintSO[] unlocks = new BlueprintSO[0];

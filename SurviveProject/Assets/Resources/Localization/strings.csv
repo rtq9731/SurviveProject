@@ -195,6 +195,27 @@ Inv,equip_light,조명,Light,비어 있는 조명 장비 슬롯에 적히는 이
 Feed,pickup_one,{0} 획득,Picked up {0},{0}=아이템 이름
 Feed,pickup_many,{0} {1}개 획득,Picked up {0} ×{1},{0}=아이템 이름 {1}=얻은 개수
 #
+# ── 레이더 (Domain/Instruments/RadarText) ──────────────────
+# G를 누르면 그 자리에 서서 전자파를 쌓는다. 쌓는 동안 무방비이고 배터리가 준다.
+# 움직이면 위상 기준을 잃어 끊긴다 — 규칙이 아니라 저주파의 성질이다.
+# 결과 한 줄은 종류·방위·거리 셋으로 이루어진다. 방위는 북쪽이 0, 시계 방향이다.
+Radar,scanning,전자파 관측 중. 제자리에 서 있어야 한다,Observing. You must stand still,
+Radar,progress,{0}%,{0}%,{0}=진행률 백분율
+Radar,result_title,관측 결과,Observation result,
+Radar,result_empty,닿는 거리 안에 잡히는 것이 없다,Nothing within range,
+Radar,reading,{0} · 방위 {1}도 · 거리 {2}미터,{0} · bearing {1} · range {2}m,{0}=잡힌 것의 종류 이름 {1}=방위(도) {2}=거리(미터)
+Radar,cancel_moved,움직여서 관측이 끊겼다,You moved and the observation broke off,
+Radar,cancel_power,전원이 다해 관측이 끊겼다,Power ran out and the observation broke off,
+Radar,cancel_aborted,관측을 껐다,Observation switched off,
+Radar,spent,쓴 배터리 {0},Battery spent {0},{0}=끊기기까지 쓴 배터리 양. 숫자라 조사를 붙이지 않는다
+Radar,kind_island,큰 육지,Large landmass,결과 화면에 적히는 이름. 다른 섬이 여기 걸린다
+Radar,kind_cavity,빈 공동,Cavity,결과 화면에 적히는 이름. 바다 아래 빈 곳
+Radar,kind_deep_layer,깊은 층,Dense layer,결과 화면에 적히는 이름. 지하의 하늘
+Radar,kind_structure,지하 구조물,Underground structure,결과 화면에 적히는 이름
+Radar,kind_creature,움직이는 것,Moving mass,결과 화면에 적히는 이름. 큰 개체가 잡혔을 때
+Radar,kind_fissure,갈라진 틈,Fissure,결과 화면에 적히는 이름
+Radar,kind_unknown,미상 윤곽,Unidentified outline,결과 화면에 적히는 이름. 종류를 모를 때
+#
 # ┌──────────────────────────────────────────────────────────┐
 # │ 구역 C — 세계·상호작용 (World/, Harvesting/, Interaction/) │
 # └──────────────────────────────────────────────────────────┘
@@ -248,6 +269,8 @@ Blueprint,bp_breach_pod.hint,낫의 핵을 연구대에서 분석하면 알게 �
 Blueprint,bp_breach_pod.name,돌파 설계,,
 Blueprint,bp_fibercraft.hint,양치 섬유를 손에 넣으면 알게 된다,,
 Blueprint,bp_fibercraft.name,섬유 세공,,
+Blueprint,bp_radar.hint,강 건너 작은 섬에서 본 것,,
+Blueprint,bp_radar.name,전파 관측,,
 Blueprint,bp_salvaged_mechanism.hint,기계 부품을 손에 넣으면 알게 된다,,
 Blueprint,bp_salvaged_mechanism.name,부품 재조립,,
 Blueprint,bp_scrapworks.hint,스크랩을 손에 넣으면 알게 된다,,
@@ -302,6 +325,9 @@ Discovery,disc_machine_part.line.text,회전 축계 구조물 분석... 공구�
 Discovery,disc_mushroom_cap.line.speaker,우주복 AI,,
 #   재료를 처음 쥐었을 때의 대사. 대상 아이템: 버섯 갓 (mushroom_cap)
 Discovery,disc_mushroom_cap.line.text,다공성 포자 조직 분석... 기체 여과재로 사용 가능한 것으로 보입니다. 해당 물질을 사용한 제작법이 있습니다.,,
+Discovery,disc_radar_islet.line.speaker,우주복 AI,,
+#   그 자리에 처음 닿았을 때의 대사. 대상 자리: a_islet
+Discovery,disc_radar_islet.line.text,"지각 아래 밀도 이상 분석... 추가 지하 구조물이 존재하는 것으로 보입니다. 전자파 관측을 통한 탐색을 권장하며, 해당 장비의 제작법이 있습니다.",,
 Discovery,disc_scrap.line.speaker,우주복 AI,,
 #   재료를 처음 쥐었을 때의 대사. 대상 아이템: 스크랩 (scrap)
 Discovery,disc_scrap.line.text,외계 금속물체 분석... 에너지로 사용가능한 것으로 보입니다. 해당 물질을 사용한 제작법이 있습니다.,,
@@ -355,6 +381,8 @@ Item,part_wing.desc,몸통 양쪽 팬에서 떼어 낸 날 한 장. 두께가 �
 Item,part_wing.name,날개의 팬날,,
 Item,pickaxe.desc,광부의 기본 도구. 기계 잔해와 광맥을 캘 수 있다.,,
 Item,pickaxe.name,곡괭이,,
+Item,radar.desc,낮은 주파수의 전자파를 쏘아 되돌아오는 것을 쌓아 읽는다. 큰 것과 깊은 것은 잡히고 작은 것은 뭉개진다. 쌓는 동안 제자리에 서 있어야 한다.,,
+Item,radar.name,레이더,,
 Item,relic_core.desc,낫의 안쪽에서 나온 굳은 덩어리. 매크로늄과 같은 빛을 띠면서도 짙은 층에 삼켜지지 않았다. 무게가 크기에 맞지 않는다.,,
 Item,relic_core.name,낫의 핵,,
 Item,relic_membrane.desc,낫의 몸을 감싸던 얇은 막 한 조각. 액면에 잠겨 있었는데도 젖은 자국이 없다. 손끝으로 눌러도 가라앉지 않고 되밀어 낸다.,,
@@ -388,6 +416,7 @@ Recipe,breach_pod.name,돌파정,,
 Recipe,lantern.name,랜턴,,
 Recipe,oxygen_filter.name,산소 필터,,
 Recipe,pickaxe.name,곡괭이,,
+Recipe,radar.name,레이더,,
 Recipe,repair_kit.name,수리 키트,,
 Recipe,surface_walker.name,액면 보행 장비,,
 #
