@@ -169,9 +169,9 @@ namespace Survive.Localization
 
                 case DiscoverySO a:
                     Add(into, a, DataText.SpeakerKey(a), a.line?.speaker, null, () => DataText.Speaker(a));
-                    Add(into, a, DataText.LineKey(a), a.line?.text,
-                        "재료를 처음 쥐었을 때의 대사. 대상 아이템: " +
-                        (a.item != null ? Blank(a.item.displayName) + " (" + a.item.id + ")" : "(없음)"),
+                    // 계기가 둘이다(재료·자리). 번역가에게는 무엇을 겪은 순간의 말인지가
+                    // 문맥의 전부라, 계기를 가리지 않으면 자리 발견의 설명이 "(없음)"이 된다.
+                    Add(into, a, DataText.LineKey(a), a.line?.text, DiscoveryTrigger(a),
                         () => DataText.Line(a));
                     break;
 
@@ -256,6 +256,19 @@ namespace Survive.Localization
         }
 
         static string Blank(string s) => string.IsNullOrWhiteSpace(s) ? "(이름 없음)" : s.Trim();
+
+        /// <summary>이 발견이 무엇을 겪은 순간의 말인지. 번역가에게는 이것이 문맥의 전부다.</summary>
+        static string DiscoveryTrigger(DiscoverySO a)
+        {
+            if (a.item != null)
+                return "재료를 처음 쥐었을 때의 대사. 대상 아이템: " +
+                       Blank(a.item.displayName) + " (" + a.item.id + ")";
+
+            if (!string.IsNullOrWhiteSpace(a.locationId))
+                return "그 자리에 처음 닿았을 때의 대사. 대상 자리: " + a.locationId.Trim();
+
+            return "계기가 지정되지 않은 발견. 이 대사는 게임에서 뜨지 않는다";
+        }
 
         static string Snippet(string s)
         {

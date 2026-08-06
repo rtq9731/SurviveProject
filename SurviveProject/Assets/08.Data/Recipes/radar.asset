@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1b123bdcba02194dba421f19571e2a5, type: 3}
+  m_Name: radar
+  m_EditorClassIdentifier: Survive.Domain::Survive.Crafting.RecipeSO
+  id: radar
+  displayName: "\uB808\uC774\uB354"
+  ingredients:
+  - item: {fileID: 11400000, guid: 3d9bc419063ef82428e8bcf31044d8f9, type: 2}
+    count: 10
+  - item: {fileID: 11400000, guid: 920a6043919ea1043985803e52162d69, type: 2}
+    count: 2
+  - item: {fileID: 11400000, guid: f801b5b2e91c30f4d969f66750b4c304, type: 2}
+    count: 6
+  result:
+    item: {fileID: 11400000, guid: 613840072b8a67b468bb6310ece6ea4d, type: 2}
+    count: 1
+  craftSeconds: 5
+  requiredStation: 0
+  requiredBlueprint: {fileID: 11400000, guid: f6ab16f5379de0e40b204ba6a3b8d11a, type: 2}
