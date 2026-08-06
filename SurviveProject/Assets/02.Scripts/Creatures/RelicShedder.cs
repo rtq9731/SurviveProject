@@ -57,6 +57,9 @@ namespace Survive.Creatures
         readonly List<RelicOption> _options = new List<RelicOption>();
         readonly List<ItemDataSO> _items = new List<ItemDataSO>();
 
+        /// <summary>목격 판정에 넘길 목록. 재사용해 할당을 만들지 않는다.</summary>
+        readonly List<ThreatSighting> _목격자 = new List<ThreatSighting>(1);
+
         float _nextRollTime;
 
         /// <summary>지금 이 개체가 흘릴 수 있는 것들. 검증이 데이터 배선을 확인할 때 본다.</summary>
@@ -112,13 +115,21 @@ namespace Survive.Creatures
         /// <summary>
         /// 아무도 없는 곳에 떨궈 봐야 아무도 못 본다. 감지 반경 밖이어도 좋으니
         /// 사람이 이 영역 안에 있을 때만 굴린다 — "머물면 하나 본다"의 내용이 이것이다.
+        ///
+        /// <b>묻는 것은 「하나라도 안에 있는가」다</b>(스펙 §22). 목격은 고르는 판정이
+        /// 아니라 있고 없음의 판정이라, 여럿이 되어도 규칙이 그대로다. 지금은 언제나
+        /// 하나뿐이므로 답도 예전과 같다.
         /// </summary>
         bool 사람이_보는_거리인가()
         {
             if (_player == null) GameServices.TryGet(out _player);
             if (_player == null) return false;
 
-            return Vector3.Distance(transform.position, _player.transform.position) <= _rule.witnessRadius;
+            _목격자.Clear();
+            _목격자.Add(new ThreatSighting(
+                Vector3.Distance(transform.position, _player.transform.position)));
+
+            return ThreatRoster.From(_목격자).AnyWithin(_rule.witnessRadius);
         }
 
         Inventory 소지품()

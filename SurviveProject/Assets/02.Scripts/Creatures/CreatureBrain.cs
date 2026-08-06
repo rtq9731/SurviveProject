@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using Survive.Combat;
@@ -54,6 +55,19 @@ namespace Survive.Creatures
         TryGetDestination _scavengeProbe;
 
         /// <summary>
+        /// 이번 프레임에 잰 위협들과 그 몸. <b>두 목록의 같은 자리가 같은 위협이다.</b>
+        ///
+        /// <b>지금 담기는 것은 언제나 하나 아니면 없음이다</b> — 두 번째 플레이어를
+        /// 만드는 것은 스펙 §22가 명시적으로 범위 밖에 둔 일이다. 여기서 여는 것은
+        /// <b>담는 그릇</b>뿐이고, 그래서 길이 1일 때 판단의 입력이 예전과 필드
+        /// 하나까지 같다. 목록을 들고 있는 것은 매 프레임 할당을 만들지 않기 위해서다.
+        /// </summary>
+        readonly List<ThreatSighting> _threats = new List<ThreatSighting>(1);
+        readonly List<Transform> _threatBodies = new List<Transform>(1);
+
+        ThreatRoster _roster = ThreatRoster.Empty;
+
+        /// <summary>
         /// 지금 무엇을 하고 있는가. 읽기 전용이다 — 상태를 바꾸는 것은 여전히
         /// <see cref="CreatureDecision"/>의 답뿐이다.
         ///
@@ -75,6 +89,16 @@ namespace Survive.Creatures
         /// 프레임이 그렇게 생긴다. 재는 곳은 한 군데여야 한다.
         /// </summary>
         public float ThreatDistance { get; private set; } = float.MaxValue;
+
+        /// <summary>
+        /// 이번 프레임에 이 개체가 아는 위협 목록. <b>이 프레임 안에서만 유효하다</b> —
+        /// 안쪽 목록을 재사용하기 때문이다.
+        ///
+        /// 표현하는 쪽(<see cref="ScytheTail"/>)이 같은 판단을 다시 하려면 두뇌가 본
+        /// 것과 <b>같은 목록</b>을 봐야 한다. 거리 하나만 넘기면 "빛 안인가"를 위협마다
+        /// 물을 수 없어, 등 뒤 사각(스펙 §19)이 붙는 순간 둘의 답이 갈린다.
+        /// </summary>
+        public ThreatRoster Threats => _roster;
 
         /// <summary>
         /// NavMeshAgent가 아닌 몸. 검증이 "무엇으로 움직이는 개체인가"를 값으로
@@ -191,29 +215,68 @@ namespace Survive.Creatures
             _stateTimer -= Time.deltaTime;
             if (_aggroLeft > 0f) _aggroLeft -= Time.deltaTime;
 
-            float distance = _player != null
-                ? Vector3.Distance(transform.position, _player.position)
-                : float.MaxValue;
-            ThreatDistance = distance;
+            SenseThreats();
 
-            UpdateState(distance);
+            UpdateState();
             RunState();
         }
 
-        void UpdateState(float distance)
+        /// <summary>
+        /// 이번 프레임의 위협 목록을 채운다.
+        ///
+        /// <b>찾는 방식은 예전 그대로다</b> — 플레이어 하나를 찾아 캐시한다. 바뀐 것은
+        /// 그 하나를 <b>길이 1짜리 목록</b>으로 넘긴다는 것뿐이고, 그래서 만들어지는
+        /// 감각(<see cref="CreatureSenses"/>)이 예전에 손으로 만들던 것과 같다.
+        /// 여럿을 실제로 모으는 일은 코옵 구현의 몫이고, 그때 고칠 곳은 이 함수 하나다.
+        /// </summary>
+        void SenseThreats()
+        {
+            _threats.Clear();
+            _threatBodies.Clear();
+
+            if (_player != null)
+            {
+                _threats.Add(new ThreatSighting(
+                    Vector3.Distance(transform.position, _player.position),
+                    Lit(_player.position),
+                    BlindSide()));
+                _threatBodies.Add(_player);
+            }
+
+            _roster = ThreatRoster.From(_threats);
+            ThreatDistance = _roster.NearestDistance;
+        }
+
+        /// <summary>
+        /// 규칙이 고른 위협의 몸. <b>고르는 일은 Domain이 하고 여기서는 자리만 되돌려
+        /// 받는다</b> — 지금까지 이 함수가 아예 없던 것은 고를 것이 하나뿐이었기
+        /// 때문이다(스펙 §0-2 ⑧ "타겟 선정 로직이 아예 없다").
+        /// </summary>
+        Transform Target
+        {
+            get
+            {
+                int i = CreatureDecision.SelectThreat(_roster);
+                return i >= 0 && i < _threatBodies.Count ? _threatBodies[i] : null;
+            }
+        }
+
+        void UpdateState()
         {
             var traits = CreatureTraits.From(definition);
-            var senses = new CreatureSenses(distance, _aggroLeft, _stateTimer,
-                                            Lit(transform.position),
-                                            _player != null && Lit(_player.position),
-                                            BlindSide());
+            bool selfInLight = Lit(transform.position);
+
+            // 어그로를 갱신하기 <b>전</b>의 값. 두 물음이 같은 프레임의 같은 입력을
+            // 봐야 한다 — 갱신한 값으로 전이를 물으면 그 프레임부터 어그로가 살아
+            // 있는 것으로 보여, 예전 코드가 감각 하나를 두 번 쓰던 것과 답이 갈린다.
+            float aggro = _aggroLeft;
 
             // 선공 성향은 위협을 보고 있는 동안 어그로를 계속 채운다. 그래야 놓친 뒤에
             // 곧바로 흥미를 잃지 않고, 그 시간이 다하면 거처로 돌아간다.
-            if (CreatureDecision.ShouldRenewAggro(traits, senses))
+            if (CreatureDecision.ShouldRenewAggro(traits, _roster, aggro, _stateTimer, selfInLight))
                 _aggroLeft = definition.aggroSeconds;
 
-            switch (CreatureDecision.NextIntent(traits, senses))
+            switch (CreatureDecision.NextIntent(traits, _roster, aggro, _stateTimer, selfInLight))
             {
                 case CreatureIntent.Ecology:
                     TransitionTo(PickEcologyState());
@@ -316,9 +379,9 @@ namespace Survive.Creatures
                         LitZoneRegistry.TryGetLitCenter(transform.position, out var litCenter))
                         _destination = CreatureNavigation.FleeDestination(
                             transform.position, litCenter, fleeDistance, _homePosition.y);
-                    else if (_player != null)
+                    else if (Target != null)
                         _destination = CreatureNavigation.FleeDestination(
-                            transform.position, _player.position, fleeDistance, _homePosition.y);
+                            transform.position, Target.position, fleeDistance, _homePosition.y);
                     break;
 
                     // Feed·Scavenge의 목표는 PickEcologyState()에서 이미 잡았다.
@@ -336,7 +399,8 @@ namespace Survive.Creatures
                     break;
 
                 case CreatureAction.PursueThreat:
-                    if (_player != null) MoveTo(_player.position);
+                    var pursued = Target;
+                    if (pursued != null) MoveTo(pursued.position);
                     break;
 
                 case CreatureAction.AttackThreat:
@@ -380,13 +444,15 @@ namespace Survive.Creatures
 
         void Attack()
         {
-            if (_player == null || !CreatureDecision.IsReady(Time.time, _nextAttackTime)) return;
+            // 때리는 상대도 규칙이 고른다. 지금은 목록이 하나뿐이라 예전과 같은 몸이다.
+            var victim = Target;
+            if (victim == null || !CreatureDecision.IsReady(Time.time, _nextAttackTime)) return;
             _nextAttackTime = Time.time + definition.attackCooldown;
 
-            var target = _player.GetComponentInChildren<IDamageable>();
+            var target = victim.GetComponentInChildren<IDamageable>();
             if (target == null || target.IsDead) return;
 
-            Vector3 dir = (_player.position - transform.position).normalized;
+            Vector3 dir = (victim.position - transform.position).normalized;
             target.TakeDamage(new DamageInfo(definition.attackDamage, gameObject,
                                           transform.position + dir, -dir));
         }
