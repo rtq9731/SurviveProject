@@ -15,10 +15,13 @@ using Survive.Items;
 /// 직접 열어 본다.
 ///
 /// <b>밸런스 축.</b> 건축은 더 이상 관문이 아니다(기획서 §6.4 — 게이트는 장비여야
-/// 하고 노동이면 안 된다). 그래도 값어치는 남아야 하므로 축은 <b>규모</b>로 옮겼다:
-/// 4m 격자·3m 층고(E2EModularBuild.Cell, Piece_Wall/Ramp 프리팹) 기준으로
-/// 토대 1 + 바닥 5 + 경사로 3 = 아홉 조각짜리 구조물 하나가 거대 버섯 몇 그루인지가
-/// 이 게임의 벌목 압력이다. 강 위에 놓는 통로든 전진 기지든 아홉 조각은 아홉 조각이다.
+/// 하고 노동이면 안 된다). 그래서 <b>목재의 주 소비처가 화톳불 연료로 옮겨 갔다</b>
+/// (기획서 §5.3, 상세기획서 §5.3). 건축은 값어치를 잃지 않을 만큼만 남기고
+/// 노동량을 내렸다 — 원하는 사람만 짓는 것에 필수 관문만큼의 값을 매길 수 없다.
+///
+/// 그러므로 이 파일이 지키는 것은 둘이다.
+/// <b>건축에 목재가 여전히 든다</b>(빠지면 벌목이 무의미해진다),
+/// <b>그러나 불이 더 많이 먹는다</b>(안 그러면 축이 옮겨 가지 않은 것이다).
 /// </summary>
 public class MushroomWoodDataTests
 {
@@ -84,23 +87,57 @@ public class MushroomWoodDataTests
         }
     }
 
-    [Test]
-    public void 아홉_조각짜리_구조물은_거대_버섯_열_그루_안쪽이다()
+    /// <summary>
+    /// 20m를 4m 격자로 잇는 바닥 5장, 6.6m를 3m 층고로 오르는 경사로 3개,
+    /// 그리고 한쪽 끝의 발판이 될 토대 1개 — 이 게임에서 사람이 짓는 한 채의 크기다.
+    /// (4m 격자·3m 층고는 E2EModularBuild.Cell과 Piece_Wall/Ramp 프리팹 기준.)
+    /// </summary>
+    static int 한채목재()
     {
         var catalog = Catalog;
         int 토대 = CostOf(catalog.GetById("piece_foundation"), MushroomLumberRule.WoodItemId);
         int 바닥 = CostOf(catalog.GetById("piece_floor"), MushroomLumberRule.WoodItemId);
         int 경사로 = CostOf(catalog.GetById("piece_ramp"), MushroomLumberRule.WoodItemId);
+        return 토대 + 바닥 * 5 + 경사로 * 3;
+    }
 
-        // 20m를 4m 격자로 잇는 바닥 5장, 6.6m를 3m 층고로 오르는 경사로 3개,
-        // 그리고 한쪽 끝의 발판이 될 토대 1개 — 이 게임에서 사람이 짓는 한 채의 크기다.
-        int 한채목재 = 토대 + 바닥 * 5 + 경사로 * 3;
+    static float 한그루평균 =>
+        (MushroomLumberRule.MinYield + MushroomLumberRule.MaxYield) / 2f;
 
-        float 한그루평균 = (MushroomLumberRule.MinYield + MushroomLumberRule.MaxYield) / 2f;
-        float 그루수 = 한채목재 / 한그루평균;
+    [Test]
+    public void 아홉_조각짜리_구조물은_거대_버섯_여섯_그루_안쪽이다()
+    {
+        // 다리가 관문이던 시절의 축은 "다리 하나 = 아홉 그루"였다. 건축이 진행에서
+        // 떨어져 나왔으므로 그 절반쯤으로 내린다 — 짓고 싶은 사람만 짓는 것에
+        // 필수 관문만큼의 값을 매길 수 없다(상세기획서 §5.3).
+        float 그루수 = 한채목재() / 한그루평균;
 
-        Assert.Greater(그루수, 5f, $"한 채가 {그루수:F1}그루면 벌목이 값어치를 잃는다");
-        Assert.LessOrEqual(그루수, 10f, $"한 채가 {그루수:F1}그루면 노동이다");
+        Assert.Greater(그루수, 2f, $"한 채가 {그루수:F1}그루면 벌목이 값어치를 잃는다");
+        Assert.LessOrEqual(그루수, 6f, $"한 채가 {그루수:F1}그루면 노동이다");
+    }
+
+    [Test]
+    public void 목재의_주_소비처는_건축이_아니라_불이다()
+    {
+        // 축이 실제로 옮겨 갔는지 보는 자리. 건축은 한 번 내는 값이고 연료는
+        // 계속 내는 값이므로, 비교는 시간을 두고 해야 한다 —
+        // <b>불 하나를 한 시간 지키는 목재</b>가 구조물 한 채보다 커야
+        // "주 소비처가 불"이라는 말이 참이 된다.
+        float 시간당연료 = 3600f / CampfireFuelRule.SecondsPerLog;
+
+        Assert.Greater(시간당연료, 한채목재(),
+            $"불 한 시간 {시간당연료:F0}개 vs 구조물 한 채 {한채목재()}개 — " +
+            "건축이 여전히 주 소비처다");
+    }
+
+    [Test]
+    public void 그래도_건축이_공짜는_아니다()
+    {
+        // 반대편 안전장치. 소비처를 옮긴다는 것이 건축에서 목재를 빼라는 뜻은 아니다.
+        // 전진 기지 한 채가 가득 채운 불 하나보다 싸면, 지어 놓고 불은 안 지키는 것이
+        // 최적해가 된다.
+        Assert.Greater(한채목재(), CampfireFuelRule.CapacityLogs,
+            $"구조물 한 채 {한채목재()}개가 불 한 통 {CampfireFuelRule.CapacityLogs}개보다 싸다");
     }
 
     // ── 레시피 ───────────────────────────────────────────────

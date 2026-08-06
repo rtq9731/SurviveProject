@@ -3,6 +3,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Survive.Building;
+using Survive.Creatures;
 using Survive.Harvesting;
 using Survive.Interaction;
 using Survive.Items;
@@ -15,10 +16,15 @@ namespace Survive.Testing
     /// <summary>
     /// 버섯 목재 벌목 (백로그 35번).
     ///
-    /// 세 가지를 실제 조작으로 통과시킨다.
+    /// 네 가지를 실제 조작으로 통과시킨다.
     /// <b>거대 버섯을 베면 목재가 떨어지고 그루터기에서 다시 자란다</b>,
     /// <b>그 목재로 조립 조각을 세운다</b>,
-    /// <b>그 목재로만 불이 살고, 불이 살아야 에너지 추출이 진행된다.</b>
+    /// <b>그 목재로만 불이 살고, 불이 살아야 에너지 추출이 진행된다</b>,
+    /// <b>그리고 불이 꺼지면 밝은 구역이 사라져 낫이 그 자리로 들어온다.</b>
+    ///
+    /// 넷째가 "목재 재고가 곧 안전 재고"(기획서 §5.3)의 증명이다. 셋째까지는
+    /// 목재가 <b>생산</b>을 지킨다는 이야기이고, 넷째라야 목재가 <b>안전</b>을
+    /// 지킨다는 이야기가 된다 — 다리 관문이 빠지며 옮겨 온 밸런스 축이 그쪽이다.
     ///
     /// 둘째 항목을 예전에는 "다리 조각"이라 불렀다. 다리가 관문에서 빠지면서
     /// (기획서 §6.4) 그 이름은 없는 관문을 가리키게 됐다 — 이 시나리오가 보는 것은
@@ -50,6 +56,7 @@ namespace Survive.Testing
             yield return 거대_버섯을_벤다();
             yield return 목재로_짓는다();
             yield return 목재라야_불이_산다();
+            yield return 불이_꺼지면_안전지대가_사라진다();
 
             E2EHarness.Log("=== 벌목 완주 ===");
         }
@@ -641,6 +648,91 @@ namespace Survive.Testing
             yield return null;
         }
 
+        // ── 4. 목재 재고가 곧 안전 재고다 ───────────────────────
+
+        /// <summary>
+        /// <b>불이 꺼지면 밝은 구역이 사라지고, 빛을 꺼리는 것이 그 자리로 들어온다.</b>
+        ///
+        /// 이것이 "목재 재고 = 안전 재고"(기획서 §5.3)가 말이 되는 유일한 이유다.
+        /// 앞 단계(<see cref="목재라야_불이_산다"/>)는 불이 꺼지면 <b>생산</b>이 멈추는
+        /// 것을 봤다. 여기서 보는 것은 불이 꺼지면 <b>안전</b>이 사라지는 것이다.
+        ///
+        /// 낫을 실제로 불러 세우지 않는다. 판단은 전부
+        /// <see cref="CreatureDecision.JudgeLight"/>가 하고
+        /// <c>CreatureBrain</c>은 <see cref="LitZoneRegistry"/>에 물어 그 입력을
+        /// 채워 넣기만 한다 — 그래서 <b>레지스트리의 실제 답</b>을 그 함수에 그대로
+        /// 먹이면 몸을 세우지 않고도 같은 결론을 얻는다. 개체를 소환하면 이 시나리오가
+        /// 낫의 서식 범위·이동 능력까지 함께 재게 되어, 그쪽이 바뀔 때마다
+        /// 목재와 무관한 이유로 깨진다.
+        /// </summary>
+        static IEnumerator 불이_꺼지면_안전지대가_사라진다()
+        {
+            E2EHarness.Log("— 불이 꺼지면 안전지대가 사라진다 —");
+
+            // 씬의 발광 군락이 불 자리를 이미 덮고 있으면 아무것도 재지 못한다.
+            int 끈광원 = E2EHarness.MuteAmbientLitZones();
+            var lantern = Object.FindAnyObjectByType<LanternController>(FindObjectsInactive.Exclude);
+            if (lantern != null && lantern.IsOn) lantern.SetOn(false);
+            E2EHarness.Log($"  무대 정리: 주변 광원 {끈광원}곳을 뺐고 랜턴을 껐다");
+
+            var fire = 화톳불을_세운다();
+            E2EHarness.Assert(fire != null, "화톳불을 세웠다");
+            if (fire == null) { E2EHarness.RestoreWorld(); yield break; }
+
+            var 자리 = fire.LitZoneCenter;
+
+            E2EHarness.Assert(fire.IsBurning, "세우자마자 타고 있다");
+            E2EHarness.Assert(LitZoneRegistry.IsLit(자리), "불 자리가 밝은 구역이다");
+            E2EHarness.AssertEqual(낫의_판단(자리), LightVerdict.Blocked,
+                                   "밝은 동안에는 낫이 그 자리로 다가오지 못한다");
+
+            // 연료를 바닥낸다. 여기부터가 이 시나리오의 본론이다.
+            연료를_바닥낸다(fire);
+            yield return E2EHarness.WaitUntil(() => !fire.IsBurning, "연료가 떨어졌다", 4f);
+
+            E2EHarness.Assert(!LitZoneRegistry.IsLit(자리),
+                              "불이 꺼지자 밝은 구역이 사라졌다");
+            E2EHarness.AssertEqual(낫의_판단(자리), LightVerdict.Clear,
+                                   "이제 낫이 그 자리로 접근할 수 있다");
+
+            // 되돌릴 수 있어야 재고가 재고다. 목재를 넣으면 안전지대가 돌아온다.
+            준다(WoodId, CampfireFuelRule.LogsPerRefuel);
+            E2EHarness.Assert(fire.Refuel(Inv), "목재를 넣었다");
+            yield return null;
+
+            E2EHarness.Assert(fire.IsBurning,
+                              $"불이 살아났다 (연료 {fire.FuelSeconds:F0}초)");
+            E2EHarness.Assert(LitZoneRegistry.IsLit(자리), "밝은 구역이 돌아왔다");
+            E2EHarness.AssertEqual(낫의_판단(자리), LightVerdict.Blocked,
+                                   "낫이 다시 막혔다");
+
+            E2EHarness.Log($"  실측: 목재 {CampfireFuelRule.CapacityLogs}개 = " +
+                           $"{CampfireFuelRule.MaxFuelSeconds:F0}초, " +
+                           $"목재 1개 = {CampfireFuelRule.SecondsPerLog:F0}초");
+
+            Object.Destroy(fire.gameObject);
+            yield return null;
+            E2EHarness.RestoreWorld();
+            yield return null;
+        }
+
+        /// <summary>
+        /// 이 자리를 노리는 낫이 지금 무엇으로 판정받는가.
+        ///
+        /// 낫의 성질 중 이 판정에 쓰이는 것은 <c>avoidsLight</c>뿐이다. 감지 반경·
+        /// 공격 거리는 <see cref="CreatureDecision.JudgeLight"/>가 보지 않으므로
+        /// 에셋을 열지 않는다 — 클론 A가 낫의 수치를 고치는 중이라도 이 판정은
+        /// 흔들리지 않아야 한다.
+        /// </summary>
+        static LightVerdict 낫의_판단(Vector3 자리)
+        {
+            var 낫 = new CreatureTraits(BehaviorProfile.Aggressive, 20f, 2f, avoidsLight: true);
+            var 감각 = new CreatureSenses(distanceToThreat: 5f, aggroLeft: 0f, stateTimer: 0f,
+                                          selfInLight: false,
+                                          threatInLight: LitZoneRegistry.IsLit(자리));
+            return CreatureDecision.JudgeLight(낫, 감각);
+        }
+
         static Campfire 화톳불을_세운다()
         {
             var catalog = Resources.FindObjectsOfTypeAll<BuildCatalogSO>().FirstOrDefault();
@@ -655,7 +747,7 @@ namespace Survive.Testing
         }
 
         /// <summary>
-        /// 연료를 한 프레임분만 남긴다. 180초를 실시간으로 태울 수는 없고,
+        /// 연료를 한 프레임분만 남긴다. 가득 찬 불을 실시간으로 태울 수는 없고,
         /// 불을 끄는 공개 창구는 게임에 필요 없는 것이라 만들지 않았다.
         /// 남은 한 방울은 Campfire의 Update가 정상 경로로 소진시킨다 —
         /// 값을 0으로 밀어 넣고 끝내면 소등 처리를 건너뛴다.
