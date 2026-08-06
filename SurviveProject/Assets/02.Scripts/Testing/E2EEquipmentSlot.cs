@@ -41,7 +41,7 @@ namespace Survive.Testing
         {
             yield return 판을_비운다();
             yield return 바닥에서_주운_랜턴이_장비_자리로_간다();
-            yield return 불을_켠다();
+            yield return 불은_저절로_들어온다();
             yield return 소지품을_끝까지_채운다();
             yield return 저장_왕복();
             yield return 되돌린다();
@@ -68,8 +68,12 @@ namespace Survive.Testing
                 foreach (var id in ids) Inv.TryRemove(id, Inv.CountInSlots(id));
             }
             Equip.Clear();
-            _lantern.SetOn(false);
             yield return null;
+
+            // 랜턴을 가진 것이 없으니 불도 없다. 끄는 조작이 없는데도 꺼져 있는
+            // 이유는 그것뿐이어야 한다(스펙 §12).
+            E2EHarness.Assert(!_lantern.IsOn, "랜턴이 없으니 불도 없다");
+            E2EHarness.AssertEqual(_lantern.Tier, 0, "랜턴 티어");
 
             E2EHarness.AssertEqual(Inv.Slots.Count(s => s.IsEmpty), 15, "출발선의 빈 칸 수");
             E2EHarness.Assert(Equip.IsEmpty(EquipmentSlotKind.Light), "장비 자리가 비어 있다");
@@ -111,19 +115,23 @@ namespace Survive.Testing
             E2EHarness.AssertEqual(Inv.SlotCount, 15, "칸 수는 줄지 않는다");
         }
 
-        // ── 3. 불을 켠다 ─────────────────────────────────────────
+        // ── 3. 불은 저절로 들어온다 ──────────────────────────────
 
-        static IEnumerator 불을_켠다()
+        /// <summary>
+        /// <b>아무것도 누르지 않는다.</b> 스펙 §12로 랜턴에는 스위치가 없어졌고,
+        /// 자리에 걸린 것을 점등 판정이 못 보면 여기서 불이 안 들어온다.
+        /// </summary>
+        static IEnumerator 불은_저절로_들어온다()
         {
-            _lantern.Recharge(9999f);
+            _lantern.Recharge(LanternRule.MaxBattery);
             E2EHarness.Assert(_lantern.BatteryNormalized > 0.5f,
                               $"배터리가 차 있다 ({_lantern.BatteryNormalized:P0})");
 
-            // F는 "랜턴을 가지고 있는가"를 묻고 켠다. 자리에 걸린 랜턴을
-            // 그 판정이 못 보면 여기서 불이 안 들어온다.
-            yield return E2EHarness.TapKey(Key.F);
-            yield return null;
-            yield return E2EHarness.WaitUntil(() => _lantern.IsOn, "F로 불이 들어왔다", 3f);
+            yield return E2EHarness.WaitUntil(() => _lantern.IsOn,
+                                              "누른 것 없이 불이 들어왔다", 3f);
+            E2EHarness.AssertEqual(_lantern.Tier, 1, "걸린 랜턴의 티어");
+            E2EHarness.AssertEqual(_lantern.LitZoneRadius, LanternRule.RadiusForTier(1),
+                                   "밝은 구역 반경(m)");
         }
 
         // ── 4. 소지품을 끝까지 채운다 ────────────────────────────

@@ -757,17 +757,16 @@ namespace Survive.Testing
             }
         }
 
+        /// <summary>
+        /// 랜턴에 불이 들어오게 하거나 꺼지게 한다. 끄는 입력이 없으므로(스펙 §12)
+        /// 어둠에 이르는 길은 배터리를 다 쓰는 것 하나뿐이다.
+        /// </summary>
         static IEnumerator 랜턴(bool 켜기)
         {
             if (_lantern == null) yield break;
 
-            for (int i = 0; i < 3 && _lantern.IsOn != 켜기; i++)
-            {
-                yield return E2EHarness.TapKey(Key.F);
-                yield return null;
-            }
-
-            if (켜기) _lantern.Recharge(100f);
+            if (켜기) E2EHarness.LightLantern();
+            else E2EHarness.DarkenLantern();
             yield return null;
         }
 
