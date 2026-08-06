@@ -186,6 +186,7 @@ public class ConsumerDecisionTests
             var 옛감각 = new CreatureSenses(5f, 1f, 1f);
             Assert.IsFalse(옛감각.SelfInLight);
             Assert.IsFalse(옛감각.ThreatInLight);
+            Assert.IsFalse(옛감각.ThreatBlindSide);
             Assert.AreEqual(LightVerdict.Clear, CreatureDecision.JudgeLight(옛것, 옛감각));
         }
     }

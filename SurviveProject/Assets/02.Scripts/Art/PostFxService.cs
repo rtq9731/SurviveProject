@@ -80,6 +80,7 @@ namespace Survive.Art
         LanternController _lantern;
 
         float _hurt;
+        float _hurtBearing;
         float _macronium;
         float _reaper;
         float _nextCreatureScan;
@@ -119,6 +120,9 @@ namespace Survive.Art
             _vignette.intensity.overrideState = true;
             _vignette.smoothness.overrideState = true;
             _vignette.smoothness.value = 0.4f;
+            // 중심을 옮겨 피격 방향을 말한다. 밝히는 것이 아니라 가리는 것이라
+            // 어둠을 깨지 않는다 (PostFxGrade의 "피격 방향 신호").
+            _vignette.center.overrideState = true;
 
             _grain = _profile.Add<FilmGrain>(false);
             _grain.type.overrideState = true;
@@ -160,7 +164,7 @@ namespace Survive.Art
             var state = new PostFxState(
                 _lantern != null && _lantern.IsOn,
                 _body != null && LitZoneRegistry.IsLit(_body.position),
-                _macronium, _reaper, _hurt, GammaSettings.Value);
+                _macronium, _reaper, _hurt, GammaSettings.Value, _hurtBearing);
 
             LastState = state;
             Apply(PostFxGrade.Evaluate(state));
@@ -172,6 +176,7 @@ namespace Survive.Art
             if (_vignette == null) return;
 
             _vignette.intensity.value = look.Vignette;
+            _vignette.center.value = new Vector2(0.5f, 0.5f) + look.VignetteCenterOffset;
             _grain.intensity.value = look.FilmGrain;
             _chromatic.intensity.value = look.ChromaticAberration;
             _grade.postExposure.value = look.PostExposure;
@@ -215,9 +220,39 @@ namespace Survive.Art
 
         void OnHealthChanged(float current, float max)
         {
-            if (current < _lastHealth - 0.001f) _hurt = 1f;
+            if (current < _lastHealth - 0.001f)
+            {
+                _hurt = 1f;
+                // 방향을 말해 주는 쪽이 없으면 정면으로 둔다. 추락·질식처럼
+                // 돌아설 방향이 없는 피해가 여기 걸린다.
+                _hurtBearing = Survive.Combat.HurtBearing.Unknown;
+            }
             _lastHealth = current;
         }
+
+        /// <summary>
+        /// 때린 것이 <b>어디 있었는지</b>를 화면에 알린다.
+        ///
+        /// <see cref="OnHealthChanged"/>가 이미 잔향을 세우지만 그쪽은 방향을 모른다 —
+        /// 체력이 줄었다는 사실만 온다. 가해자를 아는 쪽(<c>PlayerDamageReceiver</c>)이
+        /// 곧이어 이것을 불러 방향을 얹는다. <b>순서가 중요하다</b>: 체력을 깎은
+        /// <i>다음에</i> 불러야 하고, 그래야 잔향이 방금 세워진 그 프레임의 방향이 된다.
+        ///
+        /// 등 뒤 사각이 생긴 뒤로 이 신호가 없으면 플레이어는 무엇에 맞았는지도
+        /// 어느 쪽으로 돌아야 하는지도 모른다 (기획서 §9).
+        /// </summary>
+        public static void ReportHurtFrom(Vector3 sourcePosition)
+        {
+            var self = _instance;
+            if (self == null || self._body == null) return;
+
+            self._hurt = 1f;
+            self._hurtBearing = Survive.Combat.HurtBearing.Degrees(
+                self._body.forward, self._body.position, sourcePosition);
+        }
+
+        /// <summary>가장 최근 피격의 방향(도). 검증이 눈이 아니라 값으로 보기 위한 것이다.</summary>
+        public static float LastHurtBearing => _instance != null ? _instance._hurtBearing : 0f;
 
         /// <summary>
         /// 액면에 얼마나 붙었는가. 수평으로 구역 안이고 액면 높이에 가까울수록 1.

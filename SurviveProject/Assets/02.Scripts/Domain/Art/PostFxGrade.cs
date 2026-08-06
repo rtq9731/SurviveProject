@@ -27,8 +27,18 @@ namespace Survive.Domain.Art
         /// <summary>감마 조절 화면에서 사람이 정한 값(0~1, 0.5가 기본).</summary>
         public readonly float Gamma;
 
+        /// <summary>
+        /// 때린 것이 어느 쪽에 있었는가(도). 0이 정면, 오른쪽이 양수, 등 뒤가 ±180.
+        /// 판단은 <see cref="Survive.Combat.HurtBearing"/>이 한다.
+        ///
+        /// <b>기본값이 0(정면)인 것은 뜻이 있다.</b> 추락·질식처럼 방향이 없는 피해는
+        /// 좌우로 쏠리지 않아야 한다 — 없는 방향을 가리키면 신호가 거짓말이 된다.
+        /// </summary>
+        public readonly float HurtBearingDegrees;
+
         public PostFxState(bool lanternOn, bool inLitZone, float macroniumProximity,
-                           float reaperProximity, float hurtPulse, float gamma)
+                           float reaperProximity, float hurtPulse, float gamma,
+                           float hurtBearingDegrees = 0f)
         {
             LanternOn = lanternOn;
             InLitZone = inLitZone;
@@ -36,6 +46,7 @@ namespace Survive.Domain.Art
             ReaperProximity = Mathf.Clamp01(reaperProximity);
             HurtPulse = Mathf.Clamp01(hurtPulse);
             Gamma = Mathf.Clamp01(gamma);
+            HurtBearingDegrees = Mathf.Clamp(hurtBearingDegrees, -180f, 180f);
         }
 
         public static PostFxState Default => new PostFxState(false, false, 0f, 0f, 0f, GammaGrade.Neutral);
@@ -54,14 +65,27 @@ namespace Survive.Domain.Art
         /// <summary>색 필터. 액면 근처에서만 자홍 쪽으로 아주 조금 기운다.</summary>
         public readonly Color ColorFilter;
 
+        /// <summary>
+        /// 비네트 중심을 화면 한가운데에서 얼마나 옮길 것인가(화면 비율).
+        /// 평소에는 (0,0)이고, 맞은 직후에만 잠깐 쏠린다.
+        ///
+        /// <b>부호에 주의.</b> 비네트는 중심에서 <b>먼</b> 곳을 어둡게 하므로,
+        /// 오른쪽을 어둡게 하려면 중심을 <b>왼쪽</b>으로 옮겨야 한다.
+        /// 그 뒤집기는 <see cref="PostFxGrade.Evaluate"/> 안에서 이미 끝나 있다 —
+        /// 여기 값은 볼륨에 그대로 더하면 되는 값이다.
+        /// </summary>
+        public readonly Vector2 VignetteCenterOffset;
+
         public PostFxLook(float vignette, float filmGrain, float chromaticAberration,
-                          float postExposure, Color colorFilter)
+                          float postExposure, Color colorFilter,
+                          Vector2 vignetteCenterOffset = default)
         {
             Vignette = vignette;
             FilmGrain = filmGrain;
             ChromaticAberration = chromaticAberration;
             PostExposure = postExposure;
             ColorFilter = colorFilter;
+            VignetteCenterOffset = vignetteCenterOffset;
         }
     }
 
@@ -89,6 +113,23 @@ namespace Survive.Domain.Art
         public const float VignetteBase = 0.26f;
         public const float VignetteDarkBonus = 0.06f;
 
+        // ── 피격 방향 신호 ────────────────────────────────────
+        // 랜턴이 앞으로 밀린 뒤로 사람은 대개 <b>안 보이는 데서</b> 맞는다.
+        // 방향을 말해 주지 않으면 그것은 난이도가 아니라 억울함이 된다(기획서 §9).
+        //
+        // 신호는 <b>가리는 쪽으로만</b> 낸다. 이 게임에서 어둠은 지켜야 할 것이므로
+        // 무엇을 밝혀서 알리는 길은 애초에 없고, 비네트를 한쪽으로 쏠리게 하는 것은
+        // 검은 화면에서 유일하게 공짜인 표현이다.
+
+        /// <summary>정면에서 맞았을 때 더해지는 비네트. 이미 봤으니 작게.</summary>
+        public const float VignetteHurtFront = 0.08f;
+
+        /// <summary>등 뒤에서 맞았을 때까지 더해지는 몫. 못 본 것일수록 크게 말한다.</summary>
+        public const float VignetteHurtRear = 0.20f;
+
+        /// <summary>비네트 중심이 옆으로 쏠리는 폭(화면 비율). 크게 두면 화면이 기운다.</summary>
+        public const float VignetteHurtShift = 0.22f;
+
         // ── 필름 그레인 ───────────────────────────────────────
         // 저폴리 면이 넓게 깔릴 때 생기는 밴딩을 부순다. 세게 넣으면
         // 검정이 회색으로 들리므로 아주 약하게.
@@ -109,6 +150,15 @@ namespace Survive.Domain.Art
             bool dark = !s.LanternOn && !s.InLitZone;
             float vignette = VignetteBase + (dark ? VignetteDarkBonus : 0f);
 
+            // 맞은 방향. 뒤일수록 세게 조이고, 짧게 도는 쪽 가장자리를 어둡게 한다.
+            float behind = Survive.Combat.HurtBearing.Behindness(s.HurtBearingDegrees);
+            vignette += s.HurtPulse * Mathf.Lerp(VignetteHurtFront, VignetteHurtRear, behind);
+
+            // 비네트는 중심에서 먼 쪽을 어둡게 하므로 부호를 뒤집어 옮긴다 —
+            // 오른쪽에서 맞았으면 중심이 왼쪽으로 가야 오른쪽이 어두워진다.
+            float side = Survive.Combat.HurtBearing.ScreenSide(s.HurtBearingDegrees);
+            var center = new Vector2(-side * VignetteHurtShift * s.HurtPulse, 0f);
+
             float grain = GrainBase + GrainReaperBonus * s.ReaperProximity;
 
             // 둘 다 걸릴 수 있지만 더하지 않는다. 겹쳐서 화면이 무너지느니
@@ -120,7 +170,7 @@ namespace Survive.Domain.Art
                                     MacroniumTintMax * s.MacroniumProximity);
 
             return new PostFxLook(vignette, grain, chromatic,
-                                  GammaGrade.Exposure(s.Gamma), filter);
+                                  GammaGrade.Exposure(s.Gamma), filter, center);
         }
     }
 }
