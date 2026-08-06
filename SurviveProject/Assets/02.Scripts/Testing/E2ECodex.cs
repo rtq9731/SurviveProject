@@ -204,8 +204,17 @@ namespace Survive.Testing
 
             string body = Detail();
             E2EHarness.Log($"  기록: {body.Replace("\n", " / ")}");
-            E2EHarness.Assert(body.Contains("분해자"), "영양 단계가 적힌다");
+            // 예전에는 이 자리에 영양 단계("분해자")가 찍혔고, 이 검사도 그것을
+            // 요구했다. 규칙이 뒤집혔다 — 도감은 계층을 알려 주지 않는다 (기획서 §4.7).
+            // AI는 관찰한 것만 기록하고 무엇인지는 판정하지 않으므로, 여기 실릴 수 있는
+            // 것은 눈으로 본 것(어떻게 움직였는가·어떻게 굴었는가)과 잰 값까지다.
+            // 계층을 알려 주지 않아야 "다리 개수 = 포식 차수" 같은 규칙을 플레이어가
+            // 관찰로 발견하고, 낫이 규칙 밖 존재라는 사실도 분류표의 예외가 아니라
+            // 그냥 알 수 없는 것으로 남는다.
+            E2EHarness.Assert(body.IndexOf("분해" + "자", System.StringComparison.Ordinal) < 0,
+                              "영양 단계를 적지 않는다");
             E2EHarness.Assert(body.Contains("비행"), "이동 방식이 적힌다");
+            E2EHarness.Assert(body.Contains("회피"), "성향이 적힌다");
             E2EHarness.Assert(body.Contains("탐지"), "잰 값이 적힌다");
             E2EHarness.Assert(!body.Contains("—") && !body.Contains("−"),
                               "본문 글꼴에 없는 줄표가 화면에 나가지 않는다");

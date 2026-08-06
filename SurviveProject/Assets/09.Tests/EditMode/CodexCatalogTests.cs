@@ -335,8 +335,11 @@ public class CodexCatalogTests
         Assert.IsTrue(row.Unlocked);
         Assert.AreEqual("낫", row.Title);
         StringAssert.Contains("이족보행의 빠른 기계.", row.Body, "서사를 새로 쓰지 않는다");
-        StringAssert.Contains("1차 소비자", row.Body);
+        StringAssert.Contains("지상", row.Body, "어떻게 움직였는가는 눈으로 본 것이다");
         StringAssert.Contains("적대", row.Body);
+        StringAssert.DoesNotContain("소비자", row.Body,
+            "도감은 계층을 알려 주지 않는다 (기획서 §4.7) — " +
+            "무엇인지 판정하는 순간 관찰로 발견할 것이 없어진다");
         StringAssert.Contains("60", row.Body);
         StringAssert.Contains("6.2", row.Body);
         StringAssert.Contains("14", row.Body);
@@ -350,7 +353,7 @@ public class CodexCatalogTests
         _ledger.Unlock("codex_blank");
 
         CodexCatalog.BuildCreatures(_creatureBook, _ledger, _rows);
-        StringAssert.Contains("1차 소비자", _rows[0].Body);
+        StringAssert.Contains("지상", _rows[0].Body);
         Assert.IsFalse(_rows[0].Body.StartsWith("\n"), "빈 설명 자리에 빈 줄만 남으면 안 된다");
     }
 
@@ -457,11 +460,13 @@ public class CodexCatalogTests
         finally { Loc.SetLocale(StringCatalog.DefaultLocale); }
     }
 
+    /// <summary>
+    /// 영양 단계는 여기 없다. 도감이 계층을 말로 옮기는 길을 아예 없앴기 때문이다
+    /// (기획서 §4.7) — <see cref="CodexUnclassifiedGateTests"/>가 그것을 지킨다.
+    /// </summary>
     [Test]
-    public void 성향과_영양단계는_enum_전수에_이름이_있다()
+    public void 성향과_이동방식은_enum_전수에_이름이_있다()
     {
-        foreach (TrophicTier t in System.Enum.GetValues(typeof(TrophicTier)))
-            Assert.IsNotEmpty(CodexCatalog.TierName(t));
         foreach (BehaviorProfile b in System.Enum.GetValues(typeof(BehaviorProfile)))
             Assert.IsNotEmpty(CodexCatalog.BehaviorName(b));
         foreach (LocomotionType l in System.Enum.GetValues(typeof(LocomotionType)))

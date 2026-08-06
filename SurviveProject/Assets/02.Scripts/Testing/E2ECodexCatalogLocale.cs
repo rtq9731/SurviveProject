@@ -184,6 +184,36 @@ namespace Survive.Testing
             E2EHarness.Assert(en != ko, "관측 보고가 로케일을 따라왔다");
             E2EHarness.AssertEqual(en.Split('\n').Length, ko.Split('\n').Length,
                                    "줄 수는 언어와 무관하다 (줄바꿈은 배치다)");
+
+            계층을_말하지_않는다(ko, "ko");
+            계층을_말하지_않는다(en, "en");
+        }
+
+        /// <summary>
+        /// 도감은 계층을 알려 주지 않는다 (기획서 §4.7). AI는 관찰한 것만 기록하고
+        /// 무엇인지는 판정하지 않는다 — 그래야 <b>다리 개수 = 포식 차수</b> 같은 규칙을
+        /// 플레이어가 관찰로 발견하고, 낫이 규칙 밖 존재라는 사실이 분류표의 예외가
+        /// 아니라 그냥 알 수 없는 것으로 남는다.
+        ///
+        /// EditMode(<c>CodexUnclassifiedGateTests</c>)가 같은 것을 순수부에서 본다.
+        /// 여기서 한 번 더 보는 이유는, 진짜 화면에 실제로 선 글자를 읽어야
+        /// "표 → 규칙 → 화면"이 끝까지 이어졌다고 말할 수 있기 때문이다.
+        ///
+        /// 찾을 말은 <b>조각으로 짓는다</b> — 이 파일에 계층명이 통째로 박혀 있으면
+        /// 그것을 복사해 화면으로 되돌리기가 너무 쉬워진다.
+        /// </summary>
+        static void 계층을_말하지_않는다(string 보고, string 로케일)
+        {
+            string[] 계층어 =
+            {
+                "분해" + "자", "생산" + "자", "소비" + "자", "미분" + "류",
+                "decompo" + "ser", "produ" + "cer", "consu" + "mer", "unclassi" + "fied",
+            };
+
+            foreach (var 말 in 계층어)
+                E2EHarness.Assert(
+                    보고.IndexOf(말, System.StringComparison.OrdinalIgnoreCase) < 0,
+                    $"{로케일} 관측 보고가 계층을 말하지 않는다 ({말})");
         }
 
         // ── 6. 되돌리기 ──────────────────────────────────────────

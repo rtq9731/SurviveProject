@@ -293,6 +293,26 @@ namespace Survive.Progression
         /// 생물 한 마리를 관측 보고 한 편으로 적는다.
         /// 관측된 성질(설명문)이 먼저 오고, 잰 값이 뒤따른다.
         ///
+        /// <b>계층을 적지 않는다 (기획서 §4.7).</b> 예전에는 이 보고의 첫 칸이
+        /// 영양 단계(분해자·생산자·1차 소비자…)였다. 그것을 뺀 이유는 셋이다.
+        /// <list type="number">
+        /// <item>계층을 도감이 알려 주지 않아야 <b>"다리 개수 = 포식 차수"</b> 같은
+        ///       규칙을 플레이어가 관찰로 발견한다. 생태계를 읽으면 이득을 본다는
+        ///       차별화 축이 필드에서만이 아니라 열람 화면에서도 성립한다.</item>
+        /// <item>낫이 규칙 밖 존재라는 사실이 <b>분류표의 예외가 아니라 그냥 알 수
+        ///       없는 것</b>으로 처리된다. 분류표를 두고 거기에 "생태계 밖" 칸을
+        ///       새로 만들면 그것 자체가 답을 알려 주는 것이 된다.</item>
+        /// <item>「모르는 것은 보여 주지 않는다」(§5.12)와 같은 문법이다. 라벨을
+        ///       모르는 분석기가 계층표를 갖고 있을 리 없다.</item>
+        /// </list>
+        /// 그래서 이 화면에 실릴 수 있는 것은 <b>눈으로 본 것</b>까지다 —
+        /// 어떻게 움직였는가(이동 방식), 어떻게 굴었는가(성향), 그리고 잰 값.
+        /// 무엇인지는 판정하지 않는다.
+        ///
+        /// <b><see cref="CreatureDefinitionSO.tier"/>는 그대로 둔다.</b> 보여 주지
+        /// 않는 것과 없는 것은 다르다 — 그 값은 여전히 포식 차수 규칙과 연구·드롭이
+        /// 읽는다. 화면에서만 사라진다.
+        ///
         /// <b>줄바꿈은 코드가 넣는다.</b> 보고는 눈에 보이는 줄마다 표의 한 칸이고,
         /// 줄과 줄을 잇는 것은 말이 아니라 배치다. 표의 한 칸 안에 줄바꿈을 넣지
         /// 않는 이유는 <c>strings.csv</c>가 CRLF라서 그 값에 <c>\r</c>가 딸려
@@ -314,9 +334,12 @@ namespace Survive.Progression
             if (!string.IsNullOrWhiteSpace(described))
                 report.Append(described).Append('\n').Append('\n');
 
-            report.Append(Loc.F("Codex", "creature_traits",
-                                TierName(c.tier), LocomotionName(c.locomotion),
-                                BehaviorName(c.behavior)));
+            // 자리가 둘뿐인 새 열쇠를 쓴다. 옛 열쇠(세 칸)를 그대로 두고 첫 칸에
+            // 빈 문자열을 넘기는 길도 있었지만, 그러면 화면에 "· 지상 · 방어"처럼
+            // 앞이 빈 줄이 서고 무엇보다 <b>첫 칸이 아직 거기 있다</b> — 다음 사람이
+            // 계층을 도로 끼워 넣기까지 한 줄이면 된다. 자리를 없애야 못 되돌린다.
+            report.Append(Loc.F("Codex", "creature_observed",
+                                LocomotionName(c.locomotion), BehaviorName(c.behavior)));
             report.Append('\n');
             report.Append(Loc.F("Codex", "creature_stats", health, speed, detect, damage));
 
@@ -331,18 +354,11 @@ namespace Survive.Progression
             return string.IsNullOrWhiteSpace(name) ? c.id : name;
         }
 
-        public static string TierName(TrophicTier tier)
-        {
-            switch (tier)
-            {
-                case TrophicTier.Decomposer: return Loc.T("Codex", "tier_decomposer");
-                case TrophicTier.Producer:   return Loc.T("Codex", "tier_producer");
-                case TrophicTier.Consumer1:  return Loc.T("Codex", "tier_consumer1");
-                case TrophicTier.Consumer2:  return Loc.T("Codex", "tier_consumer2");
-                case TrophicTier.Consumer3:  return Loc.T("Codex", "tier_consumer3");
-                default:                     return Loc.T("Codex", "tier_unknown");
-            }
-        }
+        // 여기에 TierName은 없다. 일부러 없다 — 기획서 §4.7.
+        // 영양 단계를 말로 옮기는 함수가 하나라도 있으면 그것을 부르는 화면이
+        // 언젠가 다시 생긴다. 도감이 계층을 모르게 하려면 <b>옮길 방법 자체가
+        // 없어야</b> 한다. 계층이 필요한 규칙(포식 차수·연구·드롭)은 말이 아니라
+        // <see cref="TrophicTier"/> 값을 그대로 쓴다.
 
         public static string LocomotionName(LocomotionType type) =>
             type == LocomotionType.Flying
