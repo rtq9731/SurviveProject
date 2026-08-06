@@ -93,6 +93,14 @@ namespace Survive.Progression
                 if (slot == null || slot.IsEmpty) continue;
                 if (Record(ledger, slot.item)) n++;
             }
+
+            // 걸어 둔 장비도 손에 있는 것이다. 칸을 훑는 것만으로는 안 보인다.
+            var equipment = inventory.Equipment;
+            if (equipment != null)
+            {
+                for (int i = 0; i < equipment.SlotCount; i++)
+                    if (Record(ledger, equipment.GetAt(i))) n++;
+            }
             return n;
         }
     }

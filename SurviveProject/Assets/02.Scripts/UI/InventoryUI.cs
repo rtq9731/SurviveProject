@@ -28,6 +28,7 @@ namespace Survive.UI
         [SerializeField] bool openHandCrafting = true;
 
         readonly List<InventorySlotView> _slots = new List<InventorySlotView>();
+        EquipmentSlotsView _equipmentView;
         PlayerInventory _inventory;
         Survive.Player.PlayerContext _player;
         bool _isOpen;
@@ -42,7 +43,23 @@ namespace Survive.UI
                     if (v != null) _slots.Add(v);
                 }
             }
+
+            // 장비 자리는 격자 밖에 세운다. 격자 안에 넣으면 16번째 칸이 되어
+            // "일반 칸을 먹지 않는다"가 화면에서 거짓말이 된다.
+            _equipmentView = EquipmentSlotsView.Build(panel, BorrowSlotSprite());
+
             CloseImmediate();
+        }
+
+        /// <summary>장비 자리도 소지품 칸과 같은 테를 쓴다. 혼자 다르게 생기면 남의 UI로 보인다.</summary>
+        Sprite BorrowSlotSprite()
+        {
+            foreach (var s in _slots)
+            {
+                var img = s != null ? s.GetComponent<UnityEngine.UI.Image>() : null;
+                if (img != null && img.sprite != null) return img.sprite;
+            }
+            return UISkin.Panel;
         }
 
         void OnEnable()
@@ -87,6 +104,8 @@ namespace Survive.UI
             var slots = _inventory.Inventory.Slots;
             for (int i = 0; i < _slots.Count; i++)
                 _slots[i].Render(i < slots.Count ? slots[i] : null);
+
+            _equipmentView?.Render(_inventory.Equipment);
         }
 
         public bool IsOpen => _isOpen;

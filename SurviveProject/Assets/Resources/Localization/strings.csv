@@ -185,6 +185,8 @@ Progress,research_prompt_busy,[E] {0} 사용 (분석 중 {1}),[E] Use {0} (analy
 #
 # ── 남긴 것 (Inventory/DeathDropBag) ───────────────────
 Inv,deathbag_prompt,[E] 남긴 것 회수,[E] Recover what you left,
+Inv,equip_title,장비,Gear,소지품 화면에서 장비 슬롯 위에 붙는 이름표
+Inv,equip_light,조명,Light,비어 있는 조명 장비 슬롯에 적히는 이름
 #
 # ── 획득 알림 (Domain/UI/PickupFeedText) ──────────────────
 # 무언가 손에 들어온 순간 화면 왼쪽 아래에 잠깐 떴다 사라지는 한 줄이다.
