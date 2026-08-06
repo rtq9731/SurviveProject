@@ -10,9 +10,15 @@ using Survive.Progression;
 /// 옛 이름이 저장소에 남아 있지 않은지 못 박는 게이트.
 ///
 /// <b>왜 필요한가.</b> 2026-08-06에 짙은 매크로늄 층을 뚫고 내려가는 탈것의 이름을
-/// <b>돌파정</b>으로 바꾸면서 id까지 함께 바꿨다(<c>breach_craft</c>). 이름만 바꾸고
+/// <b>돌파정</b>으로 바꾸면서 id까지 함께 바꿨다(<c>breach_pod</c>). 이름만 바꾸고
 /// id를 옛것으로 두면 표·에셋·코드가 서로 다른 말을 하게 되고, 그 어긋남은
 /// 화면에 아무 오류도 내지 않는다 — 이름은 새것인데 저장된 것은 옛것이다.
+///
+/// <b>이 물건은 이름을 두 번 버렸다.</b> 처음 잡았던 새 id에는 <c>craft</c>가 들어
+/// 있었는데, 이 저장소에서 <c>craft</c>는 이미 "제작"이다(<c>CraftingService</c>·
+/// <c>craftSeconds</c>·<c>CanCraft</c>). 레시피 파일 이름이 "돌파 제작법"으로도
+/// 읽히는 자리가 생겨 하루 만에 다시 바꿨다. 그래서 <see cref="옛이름"/>은
+/// <b>쌓이는 목록</b>이다 — 한 번 버린 이름은 다시 들어오면 안 된다.
 ///
 /// <b>왜 이름 검사가 게이트일 만한가.</b> 개명은 스무 군데를 한꺼번에 건드린다.
 /// 한 군데를 빠뜨리면 그 자리만 조용히 옛 이름으로 남고, 다음 사람은 그것이
@@ -26,16 +32,24 @@ using Survive.Progression;
 public class RenamedNameGateTests
 {
     /// <summary>
-    /// 찾을 말. <b>조각으로 짓는다</b> — 이 파일 자신이 검사에 걸리면 안 되기 때문이다.
-    /// 파일 하나를 예외 목록에 넣는 편이 읽기는 쉽지만, 그 예외가 곧 구멍이 된다.
+    /// 버린 이름들. <b>목록은 쌓이기만 한다</b> — 여기서 이름을 빼는 순간 그것은
+    /// 다시 들어와도 되는 이름이 된다.
     ///
-    /// 옛 영문 id 하나와 옛 한국어 이름의 앞 두 글자다. 두 글자만 보는 이유는
-    /// 파생 낱말(옛 이름의 "…설계", "…구")까지 한 번에 걸리기 때문이다.
+    /// <b>조각으로 짓는 이유.</b> 이 파일 자신이 검사에 걸리면 안 된다. 파일 하나를
+    /// 예외 목록에 넣는 편이 읽기는 쉽지만, 그 예외가 곧 구멍이 된다.
+    ///
+    /// 한국어 이름은 앞 두 글자만 본다. 파생 낱말(그 이름의 "…설계", "…구")까지
+    /// 한 번에 걸리기 때문이다.
     /// </summary>
-    static readonly string[] 옛이름 = { "submer" + "sible", "잠" + "항" };
+    static readonly string[] 옛이름 =
+    {
+        "submer" + "sible",   // 첫 id
+        "잠" + "항",           // 첫 한국어 이름
+        "breach_" + "craft",  // 두 번째 id. craft가 이 저장소에서 "제작"과 부딪혔다
+    };
 
     /// <summary>새 이름. 훑개가 눈을 뜨고 있는지 확인하는 데 쓴다.</summary>
-    const string 새id = "breach_craft";
+    const string 새id = "breach_pod";
 
     [Test]
     public void 옛_이름이_코드에도_데이터에도_표에도_없다()
@@ -78,17 +92,17 @@ public class RenamedNameGateTests
         var 아이템 = AssetDatabase.LoadAssetAtPath<ItemDataSO>(
             "Assets/08.Data/Items/돌파정.asset");
         var 레시피 = AssetDatabase.LoadAssetAtPath<RecipeSO>(
-            "Assets/08.Data/Recipes/breach_craft.asset");
+            "Assets/08.Data/Recipes/breach_pod.asset");
         var 청사진 = AssetDatabase.LoadAssetAtPath<BlueprintSO>(
-            "Assets/08.Data/Progression/Blueprints/bp_breach_craft.asset");
+            "Assets/08.Data/Progression/Blueprints/bp_breach_pod.asset");
         var 연구 = AssetDatabase.LoadAssetAtPath<ResearchEntrySO>(
-            "Assets/08.Data/Progression/Research/res_breach_craft.asset");
+            "Assets/08.Data/Progression/Research/res_breach_pod.asset");
 
         var 없는것 = new List<string>();
         if (아이템 == null) 없는것.Add("Assets/08.Data/Items/돌파정.asset");
-        if (레시피 == null) 없는것.Add("Assets/08.Data/Recipes/breach_craft.asset");
-        if (청사진 == null) 없는것.Add("Assets/08.Data/Progression/Blueprints/bp_breach_craft.asset");
-        if (연구 == null) 없는것.Add("Assets/08.Data/Progression/Research/res_breach_craft.asset");
+        if (레시피 == null) 없는것.Add("Assets/08.Data/Recipes/breach_pod.asset");
+        if (청사진 == null) 없는것.Add("Assets/08.Data/Progression/Blueprints/bp_breach_pod.asset");
+        if (연구 == null) 없는것.Add("Assets/08.Data/Progression/Research/res_breach_pod.asset");
         Assert.IsEmpty(없는것, "새 이름의 에셋을 못 읽었다 (파일 이름을 같이 바꿨는가):\n  " +
                               string.Join("\n  ", 없는것));
 

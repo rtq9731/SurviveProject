@@ -34,7 +34,7 @@ namespace Survive.World
         ///
         /// 티어의 끝이자 챕터 1의 출구다 — 4번 섬에서만 나오는 매크로늄으로 만든다.
         /// </summary>
-        BreachCraft,
+        BreachPod,
     }
 
     /// <summary>

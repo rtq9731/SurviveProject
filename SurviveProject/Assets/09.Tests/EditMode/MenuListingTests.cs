@@ -39,7 +39,7 @@ public class MenuListingTests
     [Test]
     public void 모르는_레시피는_목록에_실리지_않는다()
     {
-        var r = 레시피("breach_craft", 청사진("bp_breach_craft"));
+        var r = 레시피("breach_pod", 청사진("bp_breach_pod"));
         Assert.IsFalse(MenuListing.ShouldList(r, StationType.None, _ledger));
     }
 
@@ -61,7 +61,7 @@ public class MenuListingTests
     [Test]
     public void 원장이_서기_전에는_감추지_않는다()
     {
-        var r = 레시피("breach_craft", 청사진("bp_breach_craft"));
+        var r = 레시피("breach_pod", 청사진("bp_breach_pod"));
         Assert.IsTrue(MenuListing.ShouldList(r, StationType.None, null),
             "원장이 없을 때 감추면 판이 통째로 빈 목록이 된다 — 실패는 개방 쪽으로");
     }
@@ -99,10 +99,10 @@ public class MenuListingTests
     [Test]
     public void 해금하면_그_자리에서_목록에_나타난다()
     {
-        var r = 레시피("breach_craft", 청사진("bp_breach_craft"), StationType.Bench);
+        var r = 레시피("breach_pod", 청사진("bp_breach_pod"), StationType.Bench);
         Assert.IsFalse(MenuListing.ShouldList(r, StationType.Bench, _ledger));
 
-        _ledger.Unlock("bp_breach_craft");
+        _ledger.Unlock("bp_breach_pod");
 
         Assert.IsTrue(MenuListing.ShouldList(r, StationType.Bench, _ledger),
             "원장이 열렸는데 창을 다시 열어야 보이면 실패다");
@@ -111,10 +111,10 @@ public class MenuListingTests
     [Test]
     public void 해금은_그_청사진을_요구하는_것만_연다()
     {
-        var 돌파 = 레시피("breach_craft", 청사진("bp_breach_craft"), StationType.Bench);
+        var 돌파 = 레시피("breach_pod", 청사진("bp_breach_pod"), StationType.Bench);
         var 액면 = 레시피("surface_walker", 청사진("bp_surface_walker"), StationType.Bench);
 
-        _ledger.Unlock("bp_breach_craft");
+        _ledger.Unlock("bp_breach_pod");
 
         Assert.IsTrue(MenuListing.ShouldList(돌파, StationType.Bench, _ledger));
         Assert.IsFalse(MenuListing.ShouldList(액면, StationType.Bench, _ledger),

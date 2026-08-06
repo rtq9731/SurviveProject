@@ -78,7 +78,7 @@ namespace Survive.World
         {
             if (loadout == null) return false;
             for (int i = 0; i < loadout.Count; i++)
-                if (loadout[i].Gear == TraversalGear.BreachCraft) return true;
+                if (loadout[i].Gear == TraversalGear.BreachPod) return true;
             return false;
         }
 

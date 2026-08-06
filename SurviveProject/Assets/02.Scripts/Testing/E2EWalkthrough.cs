@@ -106,7 +106,7 @@ namespace Survive.Testing
             yield return null;
 
             var 돌파정레시피 = Resources.FindObjectsOfTypeAll<RecipeSO>()
-                                       .FirstOrDefault(r => r != null && r.id == "breach_craft");
+                                       .FirstOrDefault(r => r != null && r.id == "breach_pod");
             E2EHarness.Assert(돌파정레시피 != null, "돌파정 레시피가 있다");
             if (돌파정레시피 == null) yield break;
 
@@ -116,7 +116,7 @@ namespace Survive.Testing
             // 방식으로 넘어간다. 실제로 주워 연구하는 전 과정은 E2ERelicSupply가,
             // 종막 직전 구간의 실제 경로는 E2EDescent가 본다.
             E2EHarness.Log("  [미배치] 돌파·보행 설계를 원장에 적는다 — 낫의 서식지 배치는 §8-4");
-            E2EResearchStation.원장에_적는다("bp_breach_craft", "bp_surface_walker");
+            E2EResearchStation.원장에_적는다("bp_breach_pod", "bp_surface_walker");
 
             foreach (var need in 돌파정레시피.ingredients)
             {
@@ -136,8 +136,8 @@ namespace Survive.Testing
             }
             Lap("목표6 재료 수집");
 
-            yield return CraftAtBench("breach_craft");
-            E2EHarness.Assert(Inv.CountOf("breach_craft") > 0, "돌파정을 손에 넣었다");
+            yield return CraftAtBench("breach_pod");
+            E2EHarness.Assert(Inv.CountOf("breach_pod") > 0, "돌파정을 손에 넣었다");
             Lap("목표6 돌파정 제작");
 
             // 4번 섬에 닿으려면 이미 있었어야 하는 물건이다(§5.4의 사슬).

@@ -43,7 +43,7 @@ namespace Survive.Testing
         static ChapterDirector Director =>
             Object.FindAnyObjectByType<ChapterDirector>(FindObjectsInactive.Exclude);
 
-        const string 돌파정 = "breach_craft";
+        const string 돌파정 = "breach_pod";
         const string 보행장비 = "surface_walker";
         const string 매크로늄 = "macronium";
         const string 하강플래그 = "ch1_descended";
@@ -116,7 +116,7 @@ namespace Survive.Testing
             // 실제로 종막의 열쇠가 되는지만 확인한다.
             yield return E2ERelicSupply.유물로_진행_설계를_얻는다();
             E2EHarness.Assert(BlueprintGate.Active != null &&
-                              BlueprintGate.Active.IsUnlocked("bp_breach_craft") &&
+                              BlueprintGate.Active.IsUnlocked("bp_breach_pod") &&
                               BlueprintGate.Active.IsUnlocked("bp_surface_walker"),
                               "낫에게서 주워 온 것으로 돌파·보행 설계를 밝혀냈다");
 
