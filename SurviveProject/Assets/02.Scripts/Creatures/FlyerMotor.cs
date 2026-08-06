@@ -8,7 +8,7 @@ namespace Survive.Creatures
     /// 눈·날개·하늘 가오리처럼 떠다니는 기계가 쓴다.
     /// </summary>
     [DisallowMultipleComponent]
-    public class FlyerMotor : MonoBehaviour
+    public class FlyerMotor : MonoBehaviour, ICreatureMotor
     {
         [Tooltip("지면으로부터 유지할 높이")]
         [SerializeField] float hoverHeight = 2.5f;

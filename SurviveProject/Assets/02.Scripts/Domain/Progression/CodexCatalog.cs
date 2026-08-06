@@ -360,10 +360,20 @@ namespace Survive.Progression
         // 없어야</b> 한다. 계층이 필요한 규칙(포식 차수·연구·드롭)은 말이 아니라
         // <see cref="TrophicTier"/> 값을 그대로 쓴다.
 
-        public static string LocomotionName(LocomotionType type) =>
-            type == LocomotionType.Flying
-                ? Loc.T("Codex", "locomotion_flying")
-                : Loc.T("Codex", "locomotion_ground");
+        /// <summary>
+        /// 어떻게 움직였는가. <b>계층이 아니라 관측이다</b> — 걷는 것과 미끄러지는
+        /// 것은 실루엣이 보이지 않는 거리에서도 눈으로 갈린다. 그래서 계층을 걷어낸
+        /// 뒤에도 이 줄은 남는다.
+        /// </summary>
+        public static string LocomotionName(LocomotionType type)
+        {
+            switch (type)
+            {
+                case LocomotionType.Flying:   return Loc.T("Codex", "locomotion_flying");
+                case LocomotionType.Hovering: return Loc.T("Codex", "locomotion_hovering");
+                default:                      return Loc.T("Codex", "locomotion_ground");
+            }
+        }
 
         public static string BehaviorName(BehaviorProfile profile)
         {

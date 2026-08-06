@@ -14,13 +14,22 @@ using Survive.World;
 namespace Survive.Testing
 {
     /// <summary>
-    /// 소비자 1종 — 먼저 덤비고, 빛을 피한다 (백로그 30, P2 스펙 §3·§8-5).
+    /// 낫의 교전 계약 — 먼저 덤비고, 빛을 피한다 (백로그 30, P2 스펙 §3·§8-5).
     ///
     /// 이 생물이 게임에 무엇을 더하는지는 문장 두 개로 요약된다.
-    /// <b>"뾰족하다 = 도망쳐라"</b>와 <b>"랜턴을 켜면 다가오지 못한다"</b>.
+    /// <b>"쫓기면 뿌리칠 수 있다"</b>와 <b>"랜턴을 켜면 다가오지 못한다"</b>.
     /// 둘 다 "그럴듯해 보인다"로는 확인할 수 없다 — 도망이 성립하려면 실제로
     /// 걷기보다 빠르고 달리기보다 느려야 하고, 빛이 방어 수단이려면 켜는 순간
     /// 실제로 거리가 벌어져야 한다. 그래서 전부 <b>수치</b>로 확인한다.
+    ///
+    /// <b>왜 발령 태세로 재는가 (2026-08-06 낫 재정의).</b> 낫은 평시에 육지로
+    /// 올라오지 않는다(<see cref="ScytheHabitat"/>). 그것이 A섬 내륙을 안전하게
+    /// 만드는 규칙 <i>자체</i>이므로, 육지에서 벌어지는 교전을 평시로 재려 들면
+    /// 규칙이 제대로 도는 모습을 고장으로 읽게 된다. 낫과 육지에서 붙는 자리는
+    /// 설계상 하나뿐이다 — <b>기획서 §6.2 11단계, 코어를 훔친 뒤의 거점 포위</b>.
+    /// 그래서 이 시나리오는 그 상태를 세워 놓고 교전 계약만 잰다.
+    /// <b>평시의 서식 범위는 <see cref="E2EScytheHabitat"/>가 따로 본다</b> —
+    /// 무르게 만든 것이 아니라 두 물음을 각자의 무대로 나눈 것이다.
     ///
     /// 기존 4종(눈·공·날개·열매게)이 그대로인지도 마지막에 함께 본다.
     /// 판단을 공유하는 이상 여기서 한 번 보는 것이 싸다.
@@ -79,7 +88,13 @@ namespace Survive.Testing
 
             E2EHarness.AssertEqual(_def.behavior, BehaviorProfile.Aggressive, "성향이 선공이다");
             E2EHarness.Assert(_def.avoidsLight, "빛을 꺼린다고 정의돼 있다");
-            E2EHarness.Assert(_def.tier == TrophicTier.Consumer1, "1차 소비자로 분류돼 있다");
+
+            // 정체가 바뀌었다 — 포식자가 아니라 MARSO의 유지보수 유닛이고,
+            // 다리가 없으므로 포식 차수 0이다 (기획서 §4.5).
+            E2EHarness.Assert(_def.tier == TrophicTier.Outside,
+                              "생태계 밖으로 분류돼 있다 — 먹이사슬 어디에도 서지 않는다");
+            E2EHarness.AssertEqual(_def.locomotion, LocomotionType.Hovering,
+                                   "걷지 않고 액면 위를 부유한다고 정의돼 있다");
 
             // 도망이 성립하는 속도인가 — 이 수치가 곧 "도망쳐라"라는 규칙의 내용이다.
             E2EHarness.Assert(_def.moveSpeed > 5f && _def.moveSpeed < 7f,
@@ -217,20 +232,33 @@ namespace Survive.Testing
             var brain = go.GetComponent<CreatureBrain>();
             E2EHarness.Assert(brain != null, "두뇌가 붙어 있다");
 
+            // 걷는 몸이 아니다. 프리팹을 고치지 않았는데도 정의만 보고 갈아 끼워진다.
             var agent = go.GetComponent<NavMeshAgent>();
-            E2EHarness.Assert(agent != null && agent.isOnNavMesh, "NavMesh 위에 섰다");
-            E2EHarness.AssertEqual(Mathf.Round(agent.speed * 10f) / 10f, _def.moveSpeed,
+            E2EHarness.Assert(agent == null || !agent.enabled,
+                              "NavMeshAgent가 꺼져 있다 — 다리로 걷지 않는다");
+
+            var drifter = brain.Motor as HoverDrifter;
+            E2EHarness.Assert(drifter != null, "부유하는 몸이 스스로 붙었다");
+            if (drifter == null) { result(null); yield break; }
+
+            E2EHarness.AssertEqual(Mathf.Round(drifter.Speed * 10f) / 10f, _def.moveSpeed,
                                    "정의의 속도가 실제 이동에 들어갔다");
 
-            // 실루엣이 뾰족한가 — 블록아웃이라도 규칙은 지켜야 한다.
-            // 발광 부속(날붙이)이 몸통 윤곽 밖으로 뻗어 나와 있는지 본다.
+            // 육지에서 붙는 것은 발령 상태뿐이다. 클래스 주석 참고.
+            drifter.Alert = ScytheAlert.Alarmed;
+            E2EHarness.Log("  태세: 발령 — 육지 교전은 코어를 훔친 뒤의 상황이다 (기획서 §6.2 11단계)");
+
+            // 몸에 붙은 발광 부속이 여럿인가 — 광원 없이 에미션만으로 보여야 하므로
+            // 라인이 하나뿐이면 어둠 속에서 형태가 읽히지 않는다.
             var 발광 = go.GetComponentsInChildren<MeshRenderer>()
                         .Count(r => r.sharedMaterial != null &&
                                     r.sharedMaterial.IsKeywordEnabled("_EMISSION"));
-            E2EHarness.Assert(발광 >= 8, $"날붙이 부속이 여럿이다 ({발광}개)");
+            E2EHarness.Assert(발광 >= 8, $"발광 부속이 여럿이다 ({발광}개)");
 
-            E2EHarness.Log($"  소환: {hit.position.ToString("F1")}, " +
-                           $"플레이어와 {Vector3.Distance(hit.position, PlayerPos):F1}m");
+            yield return null;
+            E2EHarness.Log($"  소환: {go.transform.position.ToString("F1")}, " +
+                           $"플레이어와 {Vector3.Distance(go.transform.position, PlayerPos):F1}m, " +
+                           $"구역 {drifter.Zone}");
             result(brain);
         }
 
