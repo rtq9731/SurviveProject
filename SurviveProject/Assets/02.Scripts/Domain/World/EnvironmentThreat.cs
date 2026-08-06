@@ -21,7 +21,6 @@ namespace Survive.World
         {
             EnvironmentHazard.Darkness => TraversalGear.Lantern,
             EnvironmentHazard.Depth => TraversalGear.Swimming,
-            EnvironmentHazard.Gap => TraversalGear.Bridge,
             EnvironmentHazard.MacroniumSurface => TraversalGear.SurfaceWalker,
             EnvironmentHazard.MacroniumLayer => TraversalGear.BreachPod,
             _ => TraversalGear.None,

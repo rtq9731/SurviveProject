@@ -116,7 +116,7 @@ public class HazardZoneRegistryTests
         {
             HazardZoneCenter = Vector3.zero,
             HazardZoneRadius = 5f,
-            Hazard = EnvironmentHazard.Gap,
+            Hazard = EnvironmentHazard.MacroniumSurface,
             Magnitude = 18f
         };
         HazardZoneRegistry.Register(구역);
@@ -133,7 +133,7 @@ public class HazardZoneRegistryTests
         {
             HazardZoneCenter = Vector3.zero,
             HazardZoneRadius = 5f,
-            Hazard = EnvironmentHazard.Gap,
+            Hazard = EnvironmentHazard.MacroniumSurface,
             Magnitude = 18f
         };
         HazardZoneRegistry.Register(구역);

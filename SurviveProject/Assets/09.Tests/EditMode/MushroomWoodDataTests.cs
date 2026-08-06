@@ -10,14 +10,15 @@ using Survive.Items;
 /// 버섯 목재가 실제로 게임 데이터에 들어가 있는가.
 ///
 /// 규칙 상수만 맞아도 소용이 없다. 목재가 <see cref="ItemDatabaseSO"/>에 없으면
-/// 벌목 노드는 세워지지도 않고, 건축 비용이 여전히 스크랩뿐이면 "다리가 벌목을
-/// 요구한다"는 설계가 데이터에서 사라진 채 코드에만 남는다. 그래서 에셋을
+/// 벌목 노드는 세워지지도 않고, 건축 비용이 여전히 스크랩뿐이면 "짓는 데 목재가
+/// 든다"는 설계가 데이터에서 사라진 채 코드에만 남는다. 그래서 에셋을
 /// 직접 열어 본다.
 ///
-/// <b>밸런스 축.</b> 관문 2→3의 18m 간격과 +6.6m 높이차(HANDOFF §2.2)를
-/// 4m 격자·3m 층고(E2EModularBuild.Cell, Piece_Wall/Ramp 프리팹)로 나누면
-/// 토대 1 + 바닥 5 + 경사로 3 = 아홉 조각이다. 그 목재 값이 거대 버섯
-/// 몇 그루인지가 이 게임의 벌목 압력이다.
+/// <b>밸런스 축.</b> 건축은 더 이상 관문이 아니다(기획서 §6.4 — 게이트는 장비여야
+/// 하고 노동이면 안 된다). 그래도 값어치는 남아야 하므로 축은 <b>규모</b>로 옮겼다:
+/// 4m 격자·3m 층고(E2EModularBuild.Cell, Piece_Wall/Ramp 프리팹) 기준으로
+/// 토대 1 + 바닥 5 + 경사로 3 = 아홉 조각짜리 구조물 하나가 거대 버섯 몇 그루인지가
+/// 이 게임의 벌목 압력이다. 강 위에 놓는 통로든 전진 기지든 아홉 조각은 아홉 조각이다.
 /// </summary>
 public class MushroomWoodDataTests
 {
@@ -52,7 +53,7 @@ public class MushroomWoodDataTests
         Assert.IsNotNull(wood,
             "목재가 목록에 없으면 벌목 노드가 세워지지 않는다 (MushroomLumberService)");
         Assert.AreEqual(ItemCategory.Resource, wood.category);
-        Assert.Greater(wood.maxStack, 1, "다리 한 채분을 지고 다녀야 한다");
+        Assert.Greater(wood.maxStack, 1, "구조물 한 채분을 지고 다녀야 한다");
     }
 
     // ── 건축 ─────────────────────────────────────────────────
@@ -84,22 +85,22 @@ public class MushroomWoodDataTests
     }
 
     [Test]
-    public void 다리_하나는_거대_버섯_열_그루_안쪽이다()
+    public void 아홉_조각짜리_구조물은_거대_버섯_열_그루_안쪽이다()
     {
         var catalog = Catalog;
         int 토대 = CostOf(catalog.GetById("piece_foundation"), MushroomLumberRule.WoodItemId);
         int 바닥 = CostOf(catalog.GetById("piece_floor"), MushroomLumberRule.WoodItemId);
         int 경사로 = CostOf(catalog.GetById("piece_ramp"), MushroomLumberRule.WoodItemId);
 
-        // 18m ÷ 4m 격자 = 바닥 5장(20m, 2m는 물림), +6.6m ÷ 3m 층고 = 경사로 3개,
-        // 그리고 섬2 쪽 발판이 될 토대 1개.
-        int 다리목재 = 토대 + 바닥 * 5 + 경사로 * 3;
+        // 20m를 4m 격자로 잇는 바닥 5장, 6.6m를 3m 층고로 오르는 경사로 3개,
+        // 그리고 한쪽 끝의 발판이 될 토대 1개 — 이 게임에서 사람이 짓는 한 채의 크기다.
+        int 한채목재 = 토대 + 바닥 * 5 + 경사로 * 3;
 
         float 한그루평균 = (MushroomLumberRule.MinYield + MushroomLumberRule.MaxYield) / 2f;
-        float 그루수 = 다리목재 / 한그루평균;
+        float 그루수 = 한채목재 / 한그루평균;
 
-        Assert.Greater(그루수, 5f, $"다리 하나가 {그루수:F1}그루면 벌목이 관문이 되지 않는다");
-        Assert.LessOrEqual(그루수, 10f, $"다리 하나가 {그루수:F1}그루면 노동이다");
+        Assert.Greater(그루수, 5f, $"한 채가 {그루수:F1}그루면 벌목이 값어치를 잃는다");
+        Assert.LessOrEqual(그루수, 10f, $"한 채가 {그루수:F1}그루면 노동이다");
     }
 
     // ── 레시피 ───────────────────────────────────────────────

@@ -17,8 +17,12 @@ namespace Survive.Testing
     ///
     /// 세 가지를 실제 조작으로 통과시킨다.
     /// <b>거대 버섯을 베면 목재가 떨어지고 그루터기에서 다시 자란다</b>,
-    /// <b>그 목재로 다리 조각을 세운다</b>,
+    /// <b>그 목재로 조립 조각을 세운다</b>,
     /// <b>그 목재로만 불이 살고, 불이 살아야 에너지 추출이 진행된다.</b>
+    ///
+    /// 둘째 항목을 예전에는 "다리 조각"이라 불렀다. 다리가 관문에서 빠지면서
+    /// (기획서 §6.4) 그 이름은 없는 관문을 가리키게 됐다 — 이 시나리오가 보는 것은
+    /// 처음부터 <b>벌목한 목재가 건축 비용으로 실제로 빠지는가</b>이지 관문이 아니다.
     ///
     /// 마지막이 이 라운드의 세계관이다 — 스크랩은 태우는 물건이 아니다.
     /// 그래서 "스크랩으로는 불이 붙지 않는다"까지 확인한다. 되는 것만 보면
@@ -475,7 +479,7 @@ namespace Survive.Testing
 
         static IEnumerator 목재로_짓는다()
         {
-            E2EHarness.Log("— 다리 조각은 목재를 먹는다 —");
+            E2EHarness.Log("— 조립 조각은 목재를 먹는다 —");
 
             var placer = Object.FindAnyObjectByType<BuildPlacer>(FindObjectsInactive.Exclude);
             E2EHarness.Assert(placer != null, "BuildPlacer가 있다");

@@ -19,5 +19,5 @@ MonoBehaviour:
   maxStack: 1
   category: 1
   worldPrefab: {fileID: 0}
-  gear: 5
+  gear: 4
   capacity: 20
