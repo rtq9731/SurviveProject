@@ -136,15 +136,11 @@ Codex,source_field,현장 분석: {0},Field analysis: {0},{0}=발견한 물질 �
 Codex,source_research,정밀 분석: {0},Deep analysis: {0},{0}=연구 항목 이름
 Codex,acquired,확보됨 · {0},Acquired · {0},{0}=알게 된 경로
 # 관측 보고는 눈에 보이는 줄마다 한 칸이다. 줄과 줄을 잇는 것은 말이 아니라 배치라 코드가 넣는다.
-Codex,creature_traits,{0} · {1} · {2},{0} · {1} · {2},{0}=영양 단계 {1}=이동 방식 {2}=성향
+# 이 줄에 영양 단계 칸은 없다. 도감은 계층을 알려 주지 않는다 (기획서 §4.7) —
+# 실릴 수 있는 것은 눈으로 본 것까지다. 계층 낱말을 이 구역에 되살리면 게이트가 잡는다.
+Codex,creature_observed,{0} · {1},{0} · {1},{0}=이동 방식 {1}=성향
 Codex,creature_stats,내구 {0} · 이동 {1} · 탐지 {2}m · 타격 {3},HP {0} · Speed {1} · Detect {2}m · Damage {3},{0}=내구 {1}=이동 속도 {2}=탐지 거리 {3}=타격력
 Codex,creature_shy,광원 기피 확인 · 빛 안에서는 접근하지 않습니다.,Avoids light · will not approach anything lit.,
-Codex,tier_decomposer,분해자,Decomposer,
-Codex,tier_producer,생산자,Producer,
-Codex,tier_consumer1,1차 소비자,Primary consumer,
-Codex,tier_consumer2,2차 소비자,Secondary consumer,
-Codex,tier_consumer3,3차 소비자,Tertiary consumer,
-Codex,tier_unknown,미분류,Unclassified,
 Codex,locomotion_flying,비행,Flying,
 Codex,locomotion_ground,지상,Ground,
 Codex,behavior_passive,무반응,Passive,
