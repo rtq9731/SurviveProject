@@ -34,6 +34,16 @@ namespace Survive.Localization
         static IReadOnlyDictionary<LocKey, string> _fallback;
 
         /// <summary>
+        /// 지금 표의 글이 한국어인가. 조사 처리를 켤지 말지가 여기에 달렸다.
+        /// 로케일 이름이 아니라 <b>값이 어느 표에서 나왔는가</b>로 정한다 —
+        /// en 표에 없는 키는 ko로 폴백하고, 그 문장에는 조사가 붙어 있다.
+        /// </summary>
+        static bool _currentIsKorean;
+
+        static readonly bool FallbackIsKorean =
+            KoreanParticles.IsKoreanLocale(StringCatalog.DefaultLocale);
+
+        /// <summary>
         /// 로케일이 바뀌었거나 표를 새로 읽었다. 이미 그려 둔 글자를 다시 쓰라는 신호다.
         /// 매 프레임 다시 그리는 화면은 구독할 필요가 없고, 한 번 쓰고 마는
         /// 정적 캡션(버튼 글자 등)만 이것을 듣는다.
@@ -95,18 +105,37 @@ namespace Survive.Localization
             _current = IsPseudo
                 ? PseudoLocalizer.BuildTable(_fallback)
                 : _catalog.TableFor(_locale);
+
+            // 의사 번역은 기본 로케일 값을 부풀린 것이라 글의 언어는 그쪽을 따른다.
+            _currentIsKorean = IsPseudo ? FallbackIsKorean : KoreanParticles.IsKoreanLocale(_locale);
         }
 
         // ── 조회 ────────────────────────────────────────────────
 
         public static string T(string category, string key) => T(new LocKey(category, key));
 
-        public static string T(LocKey key)
+        public static string T(LocKey key) => Lookup(key, out _);
+
+        /// <summary>
+        /// 표에서 글을 꺼내면서 <b>그 글이 한국어인가</b>를 함께 알린다.
+        /// 조사 처리를 켤지 말지가 그 한 가지에 달렸다.
+        /// </summary>
+        static string Lookup(LocKey key, out bool korean)
         {
-            if (_current != null && _current.TryGetValue(key, out var value)) return value;
-            if (_fallback != null && _fallback.TryGetValue(key, out value)) return value;
+            if (_current != null && _current.TryGetValue(key, out var value))
+            {
+                korean = _currentIsKorean;
+                return value;
+            }
+            if (_fallback != null && _fallback.TryGetValue(key, out value))
+            {
+                korean = FallbackIsKorean;
+                return value;
+            }
 
             // 마지막 자리. 빈 문자열은 절대 돌려주지 않는다.
+            // 키를 그대로 내는 자리라 조사를 붙일 글이 아니다.
+            korean = false;
             if (key.Key.Length > 0) return key.Key;
             if (key.Category.Length > 0) return key.Category;
             return "?";
@@ -129,36 +158,44 @@ namespace Survive.Localization
         }
 
         /// <summary>
-        /// 서식 인자를 끼운다. 서식이 번역과 어긋나 <c>FormatException</c>이 나면
-        /// 번역문을 그대로 낸다 — 화면이 비거나 게임이 멈추는 것보다 낫다.
+        /// 자리표 <c>{0} {1} {2}</c>에 값을 끼운다.
+        ///
+        /// <b>값만 넘길 수 있다.</b> 숫자, 데이터에서 온 이름, 서식된 시간 같은 것.
+        /// 코드에 적은 문자열 리터럴(<c>"개"</c>, <c>", "</c>)을 넘기면 안 된다 —
+        /// 그것은 값이 아니라 말이고, 말은 표 안에 있어야 번역가가 어순을 바꿀 수 있다.
+        /// EditMode 게이트(<c>LocSentenceRules</c>)가 이것을 막는다.
+        ///
+        /// <b>절대 예외를 던지지 않는다.</b> 인자가 모자라도 남아도 마찬가지다
+        /// (<see cref="LocFormat"/>).
         /// </summary>
         public static string F(string category, string key, object arg0)
         {
-            string format = T(category, key);
-            try { return string.Format(format, arg0); }
-            catch (FormatException) { return format; }
+            string format = Lookup(new LocKey(category, key), out bool korean);
+            return LocFormat.Apply(format, LocArgs.Of(arg0), Particles(korean));
         }
 
         public static string F(string category, string key, object arg0, object arg1)
         {
-            string format = T(category, key);
-            try { return string.Format(format, arg0, arg1); }
-            catch (FormatException) { return format; }
+            string format = Lookup(new LocKey(category, key), out bool korean);
+            return LocFormat.Apply(format, LocArgs.Of(arg0, arg1), Particles(korean));
         }
 
         public static string F(string category, string key, object arg0, object arg1, object arg2)
         {
-            string format = T(category, key);
-            try { return string.Format(format, arg0, arg1, arg2); }
-            catch (FormatException) { return format; }
+            string format = Lookup(new LocKey(category, key), out bool korean);
+            return LocFormat.Apply(format, LocArgs.Of(arg0, arg1, arg2), Particles(korean));
         }
 
         public static string F(string category, string key, params object[] args)
         {
-            string format = T(category, key);
-            if (args == null || args.Length == 0) return format;
-            try { return string.Format(format, args); }
-            catch (FormatException) { return format; }
+            string format = Lookup(new LocKey(category, key), out bool korean);
+            return LocFormat.Apply(format, LocArgs.Of(args), Particles(korean));
         }
+
+        /// <summary>
+        /// 조사 해석기. 한국어가 아니면 null을 넘겨 처리 자체를 끈다 —
+        /// en 문장의 글자를 조사로 오인할 자리를 아예 만들지 않는다.
+        /// </summary>
+        static IParticleResolver Particles(bool korean) => korean ? KoreanParticles.Standard : null;
     }
 }

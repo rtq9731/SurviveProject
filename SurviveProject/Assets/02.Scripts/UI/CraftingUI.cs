@@ -512,7 +512,9 @@ namespace Survive.UI
                 if (row.max != null) row.max.interactable = max >= 1 && want != max;
                 if (row.amount != null)
                 {
-                    row.amount.text = "x" + want;
+                    // "x2"의 x도 글자다. 곱셈 기호(×)를 쓰는 언어가 있고, 수를 앞에
+                    // 두는 언어도 있다 — 코드에서 이어 붙이면 둘 다 못 한다.
+                    row.amount.text = Loc.F("UI", "quantity_amount", want);
                     row.amount.color = canMake ? Color.white : new Color(0.6f, 0.6f, 0.66f);
                 }
 
