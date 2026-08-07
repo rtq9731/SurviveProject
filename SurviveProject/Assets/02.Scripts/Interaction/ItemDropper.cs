@@ -24,8 +24,15 @@ namespace Survive.Interaction
         /// 한 번에 여러 종류를 떨구는 경우 떨구는 쪽의 프리팹 하나로는 맞출 수 없다.
         /// 둘 다 없으면 아이템 아이콘을 세운다 (<see cref="DropVisualRule"/>).
         /// </param>
+        /// <param name="occasion">
+        /// 같은 자리에서 <b>몇 번째</b> 떨굼인가. 착지 지점은 세계 시드에서
+        /// 파생하므로(<see cref="Survive.World.WorldSeed"/>), 한 번에 여럿을
+        /// 떨구면서 같은 번호를 주면 <b>전부 한 점에 겹쳐 떨어진다</b>.
+        /// 떨구는 쪽이 자기 묶음 안의 순번을 준다.
+        /// </param>
         public static GameObject Drop(ItemDataSO item, int count, Vector3 origin,
-                                      GameObject prefab = null, float spread = 0.9f)
+                                      GameObject prefab = null, float spread = 0.9f,
+                                      int occasion = 0)
         {
             if (item == null || count <= 0) return null;
 
@@ -60,7 +67,7 @@ namespace Survive.Interaction
             if (pickup == null) pickup = go.AddComponent<ItemPickup>();
             pickup.Setup(item, count);
 
-            Scatter(go.transform, origin, spread);
+            Scatter(go.transform, origin, spread, occasion);
             return go;
         }
 
@@ -244,10 +251,20 @@ namespace Survive.Interaction
         /// <summary>
         /// 옆으로 튀어 바닥에 내려앉는 궤적. 물리를 붙이면 굴러가 버려서
         /// 어디로 갔는지 놓치기 쉽다. 착지 지점을 정해 두고 트윈으로 보낸다.
+        ///
+        /// <b>착지 지점만 세계 시드에서 뽑는다.</b> 어디에 떨어지느냐가
+        /// <b>주울 수 있느냐</b>를 정하므로 그것은 세계 상태에 닿는 난수다.
+        /// 반면 구르는 각도(<see cref="Random"/>의 회전들)는 눈에만 보이는
+        /// 것이라 그대로 둔다 — 파티클과 소리가 매번 같으면 그것이 더 나쁘다.
         /// </summary>
-        static void Scatter(Transform t, Vector3 origin, float spread)
+        static void Scatter(Transform t, Vector3 origin, float spread, int occasion)
         {
-            var dir = Random.insideUnitCircle.normalized * Random.Range(spread * 0.4f, spread);
+            var rng = Survive.World.WorldSeed.Rng(
+                Survive.World.WorldSeedBranch.DropScatter, origin, occasion);
+
+            float 각 = (float)rng.NextDouble() * Mathf.PI * 2f;
+            float 거리 = Mathf.Lerp(spread * 0.4f, spread, (float)rng.NextDouble());
+            var dir = new Vector2(Mathf.Cos(각), Mathf.Sin(각)) * 거리;
             var target = origin + new Vector3(dir.x, 0f, dir.y);
 
             if (TryFindGround(target, out float groundY)) target.y = groundY + RestHeight;

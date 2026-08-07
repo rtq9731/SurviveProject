@@ -59,6 +59,16 @@ namespace Survive.Harvesting
 
         bool _harvested;
         float _harvestedAt;
+
+        /// <summary>신원을 지은 자리. 난수도 같은 자리로 파생한다.</summary>
+        Vector3 _site;
+
+        /// <summary>
+        /// 이 무더기에서 몇 번째 채집인가. 다시 자란 갓이 영영 같은 개수를
+        /// 내놓지 않게 굴림마다 하나씩 는다. 저장하지 않는 이유는
+        /// <c>HarvestNode._rolls</c>에 적어 두었다.
+        /// </summary>
+        int _rolls;
         float _regrowSeconds = GlowGroveRule.RegrowSeconds;
 
         /// <summary>지금 따여 있는가. 군락이 남은 갓을 셀 때 본다.</summary>
@@ -85,7 +95,8 @@ namespace Survive.Harvesting
             _colliders = GetComponentsInChildren<Collider>(true);
 
             // 신원은 깨어날 때의 자리로 짓고 그 뒤로 바꾸지 않는다.
-            _worldId = Survive.World.WorldId.At(WorldLedgerScope.GlowCap, transform.position);
+            _site = transform.position;
+            _worldId = Survive.World.WorldId.At(WorldLedgerScope.GlowCap, _site);
 
             // 비활성화가 아니라 철거에서 뺀다 — 딴 갓은 오브젝트를 끄지 않지만,
             // 관례를 갈래마다 다르게 두면 어느 날 하나가 조용히 저장에서 빠진다.
@@ -150,7 +161,11 @@ namespace Survive.Harvesting
                 return;
             }
 
-            int yield = Random.Range(MinYield, MaxYield + 1);
+            // 난수의 주인은 세계 시드다 (WorldSeed). UnityEngine.Random은 주인이 없어
+            // 같은 세계를 두 번 돌려도 같은 개수가 나오지 않았다.
+            int yield = WorldSeed.Rng(WorldSeedBranch.GlowCapYield, _site, _rolls)
+                                 .Next(MinYield, MaxYield + 1);
+            _rolls++;
             int leftover = player.Inventory.Inventory.TryAdd(item, yield);
             if (leftover > 0)
                 Debug.LogWarning($"[GlowCapCluster] 인벤토리가 가득 차 {DisplayName} {leftover}개를 넣지 못했습니다.", this);

@@ -65,6 +65,26 @@ namespace Survive.Harvesting
         float _depletedAt;
         Tween _regrow;
 
+        /// <summary>
+        /// 신원을 지은 자리. 난수도 같은 자리로 파생한다 — 신원과 어긋나면
+        /// 「저장된 그 자리」와 「굴린 그 자리」가 다른 것을 가리킨다.
+        /// </summary>
+        Vector3 _site;
+
+        /// <summary>
+        /// 이 노드에서 몇 번째 소진인가. 재생으로 돌아온 노드가 <b>영영 같은
+        /// 것</b>만 떨구지 않게 굴림마다 하나씩 는다.
+        ///
+        /// <b>저장하지 않는다.</b> 저장이 지켜야 하는 것은 「이 세계의 저 덤불에는
+        /// 무엇이 있다」이고, 그것은 아직 굴리지 않은 <b>다음 한 번</b>의 답이다.
+        /// 갓 불러온 세계에서 그 답이 같으려면 이 값도 같아야 하는데, 불러온
+        /// 노드는 씬이 놓아둔 그대로 0에서 시작하고 저장할 때도 0이었다 —
+        /// 이미 소진된 노드는 원장이 <c>gone</c>으로 들고 있어 다시 굴리지 않는다.
+        /// 재생을 여러 번 건넌 뒤의 횟수까지 맞추려면 원장의 줄마다 칸을 하나
+        /// 더 두어야 하는데, 그것으로 지키는 것은 <b>겉보기 변주</b>뿐이다.
+        /// </summary>
+        int _rolls;
+
         public HarvestNodeSO Definition => definition;
         public bool IsDepleted => _depleted;
 
@@ -136,7 +156,8 @@ namespace Survive.Harvesting
             // <b>신원은 깨어날 때의 자리로 짓고 그 뒤로 바꾸지 않는다.</b>
             // 매번 지금 자리로 지으면 물리나 검증이 물체를 조금 밀어 놓은 것만으로
             // 저장할 때와 불러올 때의 열쇠가 달라져, 저장본이 아무 자리도 못 찾는다.
-            _worldId = Survive.World.WorldId.At(WorldLedgerScope.Harvest, transform.position);
+            _site = transform.position;
+            _worldId = Survive.World.WorldId.At(WorldLedgerScope.Harvest, _site);
 
             // <b>비활성화가 아니라 철거에서 뺀다.</b> 다 캔 노드는 겉모습을 끄는데
             // (돌아오지 않는 것은 통째로), 그때 원장에서 빠지면 「다 캤다」가
@@ -331,7 +352,23 @@ namespace Survive.Harvesting
 
             if (definition.drops != null)
             {
-                var loot = definition.drops.Roll(new System.Random());
+                // <b>난수의 주인은 세계 시드다.</b> 예전에는 여기서 new System.Random()을
+                // 만들어 넘겼고, 그래서 같은 세계를 두 번 돌려도 같은 것이 안 나왔다.
+                // 자리는 깨어날 때 잡은 것을 쓴다 — 원장의 신원과 같은 자리여야
+                // 「저장된 그 자리」와 「굴린 그 자리」가 어긋나지 않는다.
+                var loot = definition.drops.Roll(
+                    WorldSeed.Rng(WorldSeedBranch.HarvestLoot, _site, _rolls));
+                _rolls++;
+
+                // 한 번의 소진에서 떨구는 것들이 서로 다른 자리에 내려앉게, 흩뿌림에는
+                // 이 소진 안에서의 순번을 준다. 같은 번호를 주면 전부 겹쳐 떨어진다.
+                //
+                // 소진 번호에 자리를 띄워 두는 것(×64)은, 재생으로 돌아온 노드가
+                // 앞 번 소진과 <b>같은 착지 지점</b>을 다시 쓰지 않게 하려는 것이다.
+                // 한 번에 64개를 넘게 떨구면 다음 번과 겹치는데, 그때 일어나는
+                // 최악은 물건 하나가 앞 번과 같은 자리에 내려앉는 것뿐이다.
+                int 떨군수 = 0;
+
                 foreach (var stack in loot)
                 {
                     if (toInventory != null)
@@ -345,7 +382,8 @@ namespace Survive.Harvesting
                     {
                         // 하나씩 떨궈야 흩어지는 맛이 난다
                         for (int i = 0; i < stack.count; i++)
-                            ItemDropper.Drop(stack.item, 1, dropAt ?? transform.position, dropPrefab);
+                            ItemDropper.Drop(stack.item, 1, dropAt ?? transform.position, dropPrefab,
+                                             occasion: _rolls * 64 + 떨군수++);
                     }
                 }
             }

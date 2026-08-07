@@ -127,7 +127,7 @@ namespace Survive.World
                                " — 세계 물건은 여럿이므로 자리로 신원을 짓는다. " +
                                $"{WorldId.Grid}m보다 가깝게 겹쳐 세우지 말 것.", this);
 
-            return _ledger.Capture(WorldClock.Seconds);
+            return _ledger.Capture(WorldClock.Seconds, WorldSeed.Value);
         }
 
         public void RestoreState(object state)
@@ -143,6 +143,14 @@ namespace Survive.World
             // 복원 순서는 저장본이 정한다. 뒤처진 채로 두면 <c>now - at</c>이 음수가
             // 되어 그 자리들이 영영 안 돌아온다.
             if (WorldClock.Now < s.clockSeconds) WorldClock.Restore(s.clockSeconds);
+
+            // <b>시드도 세계 상태다.</b> 시각과 같은 절에 실려 같은 문으로 돌아온다 —
+            // 그래야 불러온 세계에서 저 덤불이 저장하기 전과 같은 것을 떨군다.
+            //
+            // <b>0이면 앉히지 않는다.</b> 0은 「시드를 적기 전의 저장본」이라는 뜻이고
+            // (WorldSeed.Fresh는 0을 내지 않는다), 그때 옛 저장본 전부를 시드 0의
+            // 같은 세계로 만들어 버리는 것보다 이번 판의 시드를 그대로 두는 편이 낫다.
+            if (s.seed != 0) WorldSeed.Restore(s.seed);
 
             _ledger.Restore(s);
             _hasLoaded = true;
