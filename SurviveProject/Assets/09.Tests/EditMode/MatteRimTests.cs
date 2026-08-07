@@ -134,8 +134,8 @@ public class MatteRimTests
     [Test]
     public void 무광버섯에는_광원이_하나도_없다()
     {
-        // FixedLightZoneService는 Light를 훑어 밝은 구역을 세운다.
-        // Light가 없다는 것이 곧 "그 그물에 걸리지 않는다"의 근거다.
+        // 광원이 하나도 없다는 것이 "어둠을 깨지 않는다"의 가장 단순한 근거다.
+        // 밝은 구역이 되지 않는다는 것은 아래에서 따로 본다.
         var p = 프리팹();
         Assert.IsNotNull(p, 프리팹경로 + " 를 찾지 못했다");
         Assert.IsEmpty(p.GetComponentsInChildren<Light>(true),
@@ -166,11 +166,30 @@ public class MatteRimTests
     }
 
     [Test]
-    public void 광원이_아니므로_고정_광원_규칙의_대상이_아니다()
+    public void 광원을_붙여도_저절로_밝은_구역이_되지는_않는다()
     {
-        // 만약 누군가 나중에 Light를 붙이더라도, 그 세기로는 구역이 될 수 없어야 한다는
-        // 선을 여기 남겨 둔다. 8m가 구역의 하한이다(FixedLightRule.MinLitRadius).
-        Assert.IsFalse(FixedLightRule.IsZoneWorthy(intensity: 0.6f, range: 2.2f),
-                       "장식 밝기가 구역으로 승격되면 이 게이트의 전제가 무너진다");
+        // 한때 "이만큼 센 고정 광원은 밝은 구역이다"라는 자동 등록 규칙이 있었고,
+        // 이 게이트는 장식 밝기가 그 문턱을 넘지 않는다는 쪽으로 적혀 있었다.
+        // 그 규칙은 대상이 하나(시작 지점의 빛기둥)뿐이었고 그 하나가 없어지면서
+        // 함께 지워졌다. 그러므로 지금 지켜야 할 선은 문턱이 아니라 <b>등록 경로가
+        // 없다</b>는 것이다 — 아무리 센 Light를 붙여도 주인이 직접 올리지 않는 한
+        // 밝은 구역은 생기지 않는다. 이것이 무너지면 버섯 옆이 안전지대가 된다.
+        LitZoneRegistry.Clear();
+        var 인스턴스 = Object.Instantiate(프리팹());
+        try
+        {
+            var 램프 = 인스턴스.AddComponent<Light>();
+            램프.type = LightType.Point;
+            램프.intensity = 5000f;
+            램프.range = 200f;
+
+            Assert.IsFalse(LitZoneRegistry.IsLit(인스턴스.transform.position),
+                           "광원을 붙였다는 이유만으로 밝은 구역이 생겼다");
+        }
+        finally
+        {
+            Object.DestroyImmediate(인스턴스);
+            LitZoneRegistry.Clear();
+        }
     }
 }
