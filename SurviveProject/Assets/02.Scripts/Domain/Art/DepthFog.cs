@@ -24,6 +24,23 @@ namespace Survive.Domain.Art
     }
 
     /// <summary>
+    /// <b>규칙은 하나다 — 「무엇이 얼마나 두껍게 사이에 있는가」.</b> 재는 축만 다르다
+    /// (상세기획서 §7.4, 2026-08-07 개정).
+    ///
+    /// <list type="table">
+    /// <item><term>지상</term><description><b>거리</b>. 두꺼운 대기가 사이에 있고,
+    ///   시선을 올릴수록 대기를 짧게 지난다 — <see cref="SampleSurface"/></description></item>
+    /// <item><term>지하</term><description><b>깊이</b>. 매크로늄 농도가 깊이로 정해진다
+    ///   — <see cref="Sample"/></description></item>
+    /// <item><term>물속</term><description>랜턴 반경에서 역산 — <see cref="UnderwaterFog"/></description></item>
+    /// </list>
+    ///
+    /// 셋이 같은 광학(<see cref="Transmittance"/>·<see cref="FullDistance"/>)을 쓰고
+    /// 밀도를 정하는 방법만 갈린다. 두 벌을 만들면 "안개가 다 덮는 거리"의 정의가
+    /// 두 곳에 적히고, 한쪽만 고치는 날이 온다.
+    ///
+    /// ── 깊이 축 ──
+    ///
     /// 깊이가 곧 자홍의 농도다 (상세기획서 §7.3 / P0 아트 방향 §4).
     ///
     /// 그 문장을 구현하는 별도 시스템은 필요 없다 — <b>안개 하나로 끝난다.</b>
@@ -141,6 +158,213 @@ namespace Survive.Domain.Art
         {
             float full = FullDistance(density) * 1.15f;   // 안개가 다 덮은 뒤로 한 뼘 여유
             return Mathf.Clamp(full, Mathf.Min(minFar, sceneFar), sceneFar);
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // 지상 — 두꺼운 대기 (세계관 §2, 상세기획서 §7.4)
+        // ══════════════════════════════════════════════════════════
+        //
+        // <b>연출이 아니라 물성이다.</b> 이 행성의 대기는 지구와 같은 비율인데
+        // 훨씬 두껍다. 그 한 물성이 넷을 설명한다 — 우주에서 지표를 확인 못 한 것,
+        // 멀리가 안 보이는 것, 레이더가 필요한 것, 낮이 시들시들한 것.
+        //
+        // <b>탁한 것이 아니라 두꺼운 것이다.</b> 이 구분이 전부다. 먼지가 낀 것이면
+        // 위도 흐려야 하고, 그러면 「밤은 별이 잘 보인다」가 깨진다. 맑은 공기가
+        // 그저 많은 것이므로 <b>수평으로는 대기를 길게 지나 뿌옇고 천정으로는
+        // 짧게 지나 맑다.</b> 지평선은 자홍으로 번지는데 머리 위는 별이 쏟아진다.
+
+        /// <summary>
+        /// 공기가 끝나고 매크로늄이 시작되는 높이. <b>이 위는 거리 축, 아래는 깊이 축</b>이다.
+        ///
+        /// 액면과 같은 자리로 잡는다 — 두 매질의 경계가 곧 두 규칙의 경계라야
+        /// "왜 여기서 규칙이 바뀌는가"에 답이 있다. 이 아래로 머리가 잠기면
+        /// <see cref="UnderwaterFog"/>가 이어받으므로, 경계 바로 아래 구간은
+        /// 실제로는 물속 규칙이 덮는다.
+        /// </summary>
+        public const float AirLineY = SeaLevelY;
+
+        // ── 튜닝값 둘 ────────────────────────────────────────────
+        //
+        // <b>둘 다 사람이 정할 값이다.</b> 여기 적힌 것은 재기 위한 임시값이고,
+        // 실측을 붙여 올린 뒤 기획서 §7.4의 표에서 확정한다. 코드가 정할 수 있는
+        // 것은 「곡선의 모양」이지 「몇 미터에서 세계가 닫히는가」가 아니다.
+
+        /// <summary>
+        /// 수평으로 볼 때의 대기 밀도. <b>임시값</b> —
+        /// 지금까지 섬 위 밴드가 쓰던 값(0.008 → 268m)을 그대로 옮겨 왔다.
+        /// 새로 정한 것이 아니라 <b>바뀌지 않은 것</b>이고, 그래서 이 라운드의
+        /// 실측이 앞 라운드의 밝기 실측과 견줄 수 있다.
+        /// </summary>
+        public const float SurfaceBaseDensity = 0.008f;
+
+        /// <summary>
+        /// 대기의 척도고도(m) — 위로 이만큼 오를 때마다 밀도가 1/e로 준다.
+        ///
+        /// <b>실제 대기의 척도고도가 아니다.</b> 지구는 8500m이고 그 값을 쓰면
+        /// 게임 안의 시선 범위(수백 미터)에서는 천정과 지평선이 구별되지 않는다.
+        /// 여기서 정하는 것은 <b>화면에서 대비가 읽히는 정도</b>이고, 그 대비의
+        /// 크기가 곧 <see cref="ZenithClearing"/>다 (대략 수평 가시거리 / 이 값).
+        /// <b>임시값</b>.
+        /// </summary>
+        public const float SurfaceScaleHeight = 40f;
+
+        /// <summary>
+        /// 낮의 지평선이 햇빛 쪽으로 얼마나 씻기는가. 0이면 낮에도 순수 자홍,
+        /// 1이면 낮에는 자홍이 사라진다. <b>임시값</b>.
+        /// </summary>
+        public const float DaylightWash = 0.5f;
+
+        /// <summary>
+        /// 낮의 지평선이 밤보다 몇 배 밝은가. <b>임시값</b> —
+        /// 산란이 늘어난 만큼 지평선이 밝아지는 정도다.
+        /// </summary>
+        public const float DaylightBrightening = 2.5f;
+
+        /// <summary>
+        /// 밤의 지평선 휘도. <b>지금 씬이 정해 둔 바닥을 그대로 쓴다</b>
+        /// (<see cref="ArtPalette.FogIslands"/>의 휘도).
+        ///
+        /// <b>밤은 어두워지는 것이 아니라 보라색이 짙어지는 것이다</b>(기획서 §5.14).
+        /// 그래서 밤에 옮기는 것은 휘도가 아니라 <b>색조</b>다 — 밝기를 그대로 두고
+        /// 색만 자홍으로 옮기면, 앞 라운드가 잰 밤의 휘도 바닥(0.0376)이 흔들리지
+        /// 않으면서 화면은 보라로 간다.
+        /// </summary>
+        public static float NightHorizonLuminance => ArtPalette.Luminance(ArtPalette.FogIslands);
+
+        // ── 대기를 얼마나 지나는가 ───────────────────────────────
+
+        /// <summary>
+        /// 시선을 <paramref name="elevationDegrees"/>도로 올려 <paramref name="distance"/>미터를
+        /// 나아갈 때 <b>실제로 지나는 대기의 두께</b>(m).
+        ///
+        /// 밀도가 높이에 따라 지수로 줄어드는 대기에서 시선을 따라 적분한 값이다:
+        /// ∫₀^d exp(-s·sinφ / H) ds = H·(1 - exp(-d·sinφ/H)) / sinφ.
+        ///
+        /// <b>이 한 식이 두 문장을 동시에 말한다.</b>
+        /// <list type="bullet">
+        /// <item>φ → 0 (수평): 값이 <paramref name="distance"/>로 수렴한다 —
+        ///       <b>거리에 비례</b>한다</item>
+        /// <item>φ = 90도, d → ∞ (천정): 값이 H로 <b>수렴한다</b> —
+        ///       아무리 멀리 봐도 대기는 그만큼밖에 없다</item>
+        /// </list>
+        ///
+        /// <b>내려다보는 쪽은 줄이지 않는다.</b> 발밑으로는 대기가 더 짙어야 맞지만
+        /// 카메라가 이미 지표에 붙어 있어 아래로 남은 대기가 거의 없다. 수평값을
+        /// 그대로 쓰는 것이 안전한 쪽이다 — 잘못 줄이면 발밑이 부자연스럽게 맑아진다.
+        /// </summary>
+        public static float AtmospherePath(float elevationDegrees, float distance)
+        {
+            float sin = Mathf.Sin(elevationDegrees * Mathf.Deg2Rad);
+            if (sin <= 0f || SurfaceScaleHeight <= 0f) return distance;
+
+            if (float.IsPositiveInfinity(distance)) return SurfaceScaleHeight / sin;
+
+            float u = distance * sin / SurfaceScaleHeight;
+            // u가 아주 작으면 (1-e^-u)/u 가 0/0이 된다. 그 극한은 1이고,
+            // 그때 값은 distance 그대로다.
+            if (u < 1e-4f) return distance;
+
+            return SurfaceScaleHeight * (1f - Mathf.Exp(-u)) / sin;
+        }
+
+        /// <summary>수평으로 볼 때 세계가 닫히는 거리(m). 대기 두께를 재는 기준자다.</summary>
+        public static float SurfaceHorizonReach => FullDistance(SurfaceBaseDensity);
+
+        /// <summary>
+        /// 이 시선 고도에서 쓸 안개 밀도.
+        ///
+        /// Unity의 안개는 방향을 모르고 밀도 하나만 안다. 그래서 <b>기준 거리만큼
+        /// 나아가는 동안의 평균 밀도</b>를 내어 넣는다 — 지나는 대기가 얇아진 만큼
+        /// 밀도가 옅어지고, 그만큼 멀리까지 보인다.
+        /// </summary>
+        public static float SurfaceDensity(float elevationDegrees)
+        {
+            float reach = SurfaceHorizonReach;
+            if (reach <= 0f) return SurfaceBaseDensity;
+
+            return SurfaceBaseDensity * (AtmospherePath(elevationDegrees, reach) / reach);
+        }
+
+        /// <summary>
+        /// <b>천정을 볼 때 세계가 수평의 몇 배까지 열리는가.</b>
+        /// 이 라운드의 핵심 숫자이고, 대략 <see cref="SurfaceHorizonReach"/> /
+        /// <see cref="SurfaceScaleHeight"/>다.
+        /// </summary>
+        public static float ZenithClearing =>
+            FullDistance(SurfaceDensity(90f)) / FullDistance(SurfaceDensity(0f));
+
+        // ── 색 ──────────────────────────────────────────────────
+
+        /// <summary>
+        /// 지평선의 색. <b>자홍이다</b> — 팔레트의 매크로늄을 그대로 쓰고
+        /// 휘도만 시각이 정한다(새 hex를 적지 않는 것은 <see cref="MidDescent"/>와
+        /// 같은 이유다).
+        ///
+        /// 낮에는 햇빛 쪽으로 씻겨 옅은 연보라가 되고, 밤에는 <b>같은 밝기 그대로
+        /// 순수 자홍</b>이 된다. 밤이 「어두운 낮」이 아니라 「보라가 짙어진 것」으로
+        /// 보이는 자리가 여기다.
+        /// </summary>
+        public static Color HorizonColor(float daylight)
+        {
+            float d = Mathf.Clamp01(daylight);
+
+            var night = ArtPalette.WithLuminance(ArtPalette.Macronium, NightHorizonLuminance);
+            var day = ArtPalette.WithLuminance(
+                Color.Lerp(ArtPalette.Macronium, ArtPalette.LightShaft, DaylightWash),
+                NightHorizonLuminance * DaylightBrightening);
+
+            var c = Color.Lerp(night, day, d);
+            c.a = 1f;
+            return c;
+        }
+
+        /// <summary>
+        /// 대기 너머. <b>우주는 검다</b> — 하늘이 밝은 것은 대기가 빛을 흩기 때문이고,
+        /// 대기를 짧게 지나는 방향에서는 흩을 것이 없다.
+        /// </summary>
+        public static readonly Color BeyondTheAir = new Color(0f, 0f, 0f, 1f);
+
+        /// <summary>
+        /// 이 시선 고도에서 <b>대기가 배경을 얼마나 덮는가</b>(0~1).
+        ///
+        /// 배경은 무한히 먼 곳이므로 지나는 대기는 <see cref="AtmospherePath"/>의
+        /// 수렴값이다. 다만 수평 쪽에서는 그 값이 발산하므로 수평 가시거리에서
+        /// 자른다 — 어차피 그 너머는 안개색과 구별되지 않는다.
+        /// </summary>
+        public static float SkyCoverage(float elevationDegrees)
+        {
+            float path = Mathf.Min(AtmospherePath(elevationDegrees, float.PositiveInfinity),
+                                   SurfaceHorizonReach);
+            return 1f - Transmittance(SurfaceBaseDensity, path);
+        }
+
+        /// <summary>
+        /// 이 시선 고도에서 배경(하늘)에 깔릴 색.
+        ///
+        /// <b>「지평선은 뿌옇고 머리 위는 맑다」가 실제로 화면에 나오는 자리다.</b>
+        /// 지평선 쪽은 대기가 배경을 통째로 덮어 자홍이 되고, 천정 쪽은 대기가
+        /// 거의 없어 우주가 그대로 비친다.
+        ///
+        /// <b>지금은 화면 전체가 이 색 하나다.</b> 씬에 스카이박스가 없어
+        /// (<c>m_SkyboxMaterial: 0</c>) 배경이 단색으로 지워지기 때문이다. 한 화면
+        /// 안에서 지평선과 천정이 <b>동시에</b> 대비를 이루려면 이 함수를 시선
+        /// 방향마다 부르는 스카이박스가 있어야 한다 — 그 자리를 여기 열어 둔다.
+        /// </summary>
+        public static Color SkyColor(float elevationDegrees, float daylight)
+        {
+            var c = Color.Lerp(BeyondTheAir, HorizonColor(daylight), SkyCoverage(elevationDegrees));
+            c.a = 1f;
+            return c;
+        }
+
+        /// <summary>
+        /// 지상의 안개. 깊이가 아니라 <b>시선 고도와 시각</b>이 정한다.
+        /// </summary>
+        public static void SampleSurface(float elevationDegrees, float daylight,
+                                         out Color color, out float density)
+        {
+            color = HorizonColor(daylight);
+            density = SurfaceDensity(elevationDegrees);
         }
     }
 }
