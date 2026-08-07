@@ -251,12 +251,16 @@ namespace Survive.Creatures
         /// 규칙이 고른 위협의 몸. <b>고르는 일은 Domain이 하고 여기서는 자리만 되돌려
         /// 받는다</b> — 지금까지 이 함수가 아예 없던 것은 고를 것이 하나뿐이었기
         /// 때문이다(스펙 §0-2 ⑧ "타겟 선정 로직이 아예 없다").
+        ///
+        /// 정의가 없으면 <c>default</c> 성질을 넘긴다. 그것은 빛을 꺼리지 않는 성질이라
+        /// 규칙이 "가장 가까운 것"으로 접히고, 곧 이 함수가 예전에 하던 일과 같다.
         /// </summary>
         Transform Target
         {
             get
             {
-                int i = CreatureDecision.SelectThreat(_roster);
+                var traits = definition != null ? CreatureTraits.From(definition) : default;
+                int i = CreatureDecision.SelectThreat(traits, _roster);
                 return i >= 0 && i < _threatBodies.Count ? _threatBodies[i] : null;
             }
         }

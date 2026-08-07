@@ -29,22 +29,25 @@ namespace Survive.Creatures
         public static CreatureIntent NextIntent(in CreatureTraits traits, in ThreatRoster threats,
                                                 float aggroLeft, float stateTimer,
                                                 bool selfInLight = false) =>
-            NextIntent(traits, threats.Senses(aggroLeft, stateTimer, selfInLight));
+            NextIntent(traits, threats.Senses(traits, aggroLeft, stateTimer, selfInLight));
 
         /// <summary>어그로 시계를 다시 채워야 하는가 — 위협 목록판.</summary>
         public static bool ShouldRenewAggro(in CreatureTraits traits, in ThreatRoster threats,
                                             float aggroLeft, float stateTimer,
                                             bool selfInLight = false) =>
-            ShouldRenewAggro(traits, threats.Senses(aggroLeft, stateTimer, selfInLight));
+            ShouldRenewAggro(traits, threats.Senses(traits, aggroLeft, stateTimer, selfInLight));
 
         /// <summary>
         /// 규칙이 이번 프레임에 고른 위협은 누구인가. 몸이 <b>그 위협을 향해</b>
         /// 움직이려면 목록에서의 자리를 되돌려 받아야 한다.
         /// 아무도 없으면 <see cref="ThreatSelection.None"/>.
         ///
-        /// <c>threats.SelectedIndex</c>를 그대로 부르는 것과 같다. 이름을 하나 더 두는
-        /// 것은 <b>고르는 일이 판단이라는 것</b>을 부르는 쪽에서 읽히게 하기 위한 것이다.
+        /// <c>threats.SelectedIndex(traits)</c>를 그대로 부르는 것과 같다. 이름을 하나 더
+        /// 두는 것은 <b>고르는 일이 판단이라는 것</b>을 부르는 쪽에서 읽히게 하기 위한
+        /// 것이다. 성질을 함께 받는 것은 규칙이 빛을 보기 때문이다
+        /// (<see cref="ThreatSelection.Select"/>).
         /// </summary>
-        public static int SelectThreat(in ThreatRoster threats) => threats.SelectedIndex;
+        public static int SelectThreat(in CreatureTraits traits, in ThreatRoster threats) =>
+            threats.SelectedIndex(traits);
     }
 }
