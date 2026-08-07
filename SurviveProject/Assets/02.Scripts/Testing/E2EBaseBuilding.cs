@@ -663,48 +663,28 @@ namespace Survive.Testing
             // 물속/뭍을 구분할 수 없다. 물에 들어가기 전의 안개 색을 기준으로 삼는다.
             var landFogColor = RenderSettings.fogColor;
 
-            var water = GameObject.FindGameObjectsWithTag("Untagged")
-                                  .FirstOrDefault(g => g.name.Contains("Water"));
-            if (water == null)
-            {
-                var rends = Object.FindObjectsByType<Renderer>()
-                                  .Where(r => r.gameObject.name.Contains("Water"))
-                                  .ToList();
-                water = rends.Count > 0 ? rends[0].gameObject : null;
-            }
-
-            E2EHarness.Assert(water != null, "물이 씬에 있다");
+            // <b>이름으로 물을 집지 않는다.</b> 예전에는 「이름에 Water가 든 것」을
+            // 찾았는데, 섬 사이 액체가 호수가 아니라 매크로늄 바다임이 밝혀져
+            // <c>Water_Lake</c>가 <c>Macronium_Sea</c>로 개명되자 이 한 줄이 죽었다.
+            // 개명 한 번에 죽는 검사는 개명할 때마다 다시 죽는다 — 이름이 아니라
+            // <b>부품</b>으로 집는다(<see cref="Survive.World.WaterBody"/>).
+            // 찾는 자리는 <see cref="E2EWaterProbe"/> 하나로 모아 뒀다.
+            E2EHarness.Assert(E2EWaterProbe.TryFindSurface(out float surface, out var water),
+                              "액체 덩어리(WaterBody)가 씬에 있다");
             if (water == null) yield break;
 
             // 수면은 맵 전체를 덮는 한 장이다(1266m). 경계 상자로 훑으면 표본이
             // 전부 물 밖 지형에 떨어진다. 플레이 구역 주변만 촘촘히 본다.
-            float surface = water.GetComponent<Renderer>() != null
-                          ? water.GetComponent<Renderer>().bounds.max.y
-                          : water.transform.position.y;
-
-            var center = E2EHarness.Player.transform.position;
-
+            //
             // 가장 깊은 곳을 찾는다. 발 위치를 수면 바로 아래에 두면 머리는 물 위에 남는다 —
             // 그러면 "수중 시야"를 켜 보지도 않고 통과한다.
-            var deepest = Vector3.zero;
-            float best = 0f;
+            bool 찾음 = E2EWaterProbe.TryFindDeepest(E2EHarness.Player.transform.position,
+                                                     surface, 60f, out var deepest, out float best);
 
-            for (float dx = -60f; dx <= 60f; dx += 3f)
-            for (float dz = -60f; dz <= 60f; dz += 3f)
-            {
-                var probe = new Vector3(center.x + dx, surface + 1f, center.z + dz);
+            E2EHarness.Log($"  물 {water.name} 수면 y={surface:F1} / " +
+                           $"가장 깊은 곳 {deepest.ToString("F0")} 수심 {best:F1}m");
 
-                if (!Physics.Raycast(probe, Vector3.down, out var bed, 40f, ~0,
-                                     QueryTriggerInteraction.Ignore))
-                    continue;
-
-                float depth = surface - bed.point.y;
-                if (depth > best) { best = depth; deepest = bed.point; }
-            }
-
-            E2EHarness.Log($"  수면 y={surface:F1} / 가장 깊은 곳 {deepest.ToString("F0")} 수심 {best:F1}m");
-
-            if (best <= 0.1f)
+            if (!찾음)
             {
                 E2EHarness.Log("  [문제] 물 바닥을 찾지 못했다");
                 yield break;
@@ -739,11 +719,16 @@ namespace Survive.Testing
             // 물 밖으로 나오면 물속 색이 걷혀야 한다. 남으면 지상이 물속처럼 보인다.
             //
             // <b>"들어가기 전 값으로 돌아온다"고 단언하지 않는다.</b> 뭍의 안개는
-            // 백로그 40부터 고정값이 아니라 높이에서 나온다(<see cref="DepthFog"/>) —
-            // 물 밑바닥에서 수면 위 4m로 올라오면 높이가 달라졌으니 안개도 달라지는
-            // 것이 맞다. 대신 지금 높이의 밴드 값과 일치하는지를 본다. 이쪽이 더
-            // 강한 단언이다: 스냅숏 비교는 안개가 아예 갱신되지 않아도 통과하지만,
+            // 고정값이 아니라 규칙에서 나오고, 물 밑바닥에서 수면 위 4m로 올라오면
+            // 조건이 달라졌으니 안개도 달라지는 것이 맞다. 대신 <b>지금 값이 규칙과
+            // 맞는지</b>를 본다 — 스냅숏 비교는 안개가 아예 갱신되지 않아도 통과하지만
             // 이것은 갱신된 값이 규칙과 맞는지까지 본다.
+            //
+            // <b>어느 규칙인지는 눈높이가 가른다.</b> 액면(<see cref="DepthFog.AirLineY"/>)
+            // 위로 올라오면 안개를 정하는 것은 몸의 깊이가 아니라 <b>시선 고도와 시각</b>이다
+            // (<c>DepthFogService.LateUpdate</c>). 예전에는 여기서 깊이 밴드
+            // <c>DepthFog.Sample(몸 높이)</c>와 견줬는데, 그것은 액면 <b>아래</b>의 규칙이라
+            // 수면 위로 나온 이 자리에서는 무엇을 고쳐도 영영 어긋난다.
             E2EHarness.Teleport(deepest + Vector3.up * (best + 4f));
             yield return null;
 
@@ -752,16 +737,25 @@ namespace Survive.Testing
             { back += Time.deltaTime; yield return null; }
 
             float standY = E2EHarness.Player.transform.position.y;
-            DepthFog.Sample(standY, out var bandColor, out float bandDensity);
 
             E2EHarness.Assert(!swim.IsHeadSubmerged, "물 밖으로 나왔다");
             E2EHarness.Assert(RenderSettings.fogColor != underwaterFogColor,
                                "물 밖으로 나오면 물속 안개 색이 걷힌다");
-            E2EHarness.Assert(Mathf.Abs(RenderSettings.fogColor.r - bandColor.r) < 0.01f
-                               && Mathf.Abs(RenderSettings.fogColor.g - bandColor.g) < 0.01f
-                               && Mathf.Abs(RenderSettings.fogColor.b - bandColor.b) < 0.01f
-                               && Mathf.Abs(RenderSettings.fogDensity - bandDensity) < 0.002f,
-                               $"뭍의 안개가 y={standY:F1}의 깊이 밴드 값과 같다");
+            E2EHarness.Assert(Survive.Art.DepthFogService.LastOnSurface,
+                               $"액면 위(y={standY:F1})로 나오면 지상 안개 규칙이 돈다");
+
+            // 규칙에게 그 프레임의 입력(시선 고도·햇빛)을 그대로 물어 다시 계산한다.
+            // 서비스가 남긴 결과값과 비교하면 자기 자신과 비교하는 셈이라 아무것도 못 잡는다.
+            DepthFog.SampleSurface(Survive.Art.DepthFogService.LastElevation,
+                                   Survive.Art.DepthFogService.LastDaylight,
+                                   out var wantColor, out float wantDensity);
+
+            E2EHarness.Assert(Mathf.Abs(RenderSettings.fogColor.r - wantColor.r) < 0.01f
+                               && Mathf.Abs(RenderSettings.fogColor.g - wantColor.g) < 0.01f
+                               && Mathf.Abs(RenderSettings.fogColor.b - wantColor.b) < 0.01f
+                               && Mathf.Abs(RenderSettings.fogDensity - wantDensity) < 0.002f,
+                               $"뭍의 안개가 시선 고도 {Survive.Art.DepthFogService.LastElevation:F0}도 · " +
+                               $"햇빛 {Survive.Art.DepthFogService.LastDaylight:F2}의 규칙 값과 같다");
 
             E2EHarness.Log($"  수영={swim.IsSwimming} 머리잠김={swim.IsHeadSubmerged} 안개색={RenderSettings.fogColor}");
         }

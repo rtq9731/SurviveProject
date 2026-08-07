@@ -575,11 +575,12 @@ namespace Survive.Testing
                 var dir = Quaternion.Euler(0f, a * 30f, 0f) * Vector3.forward;
                 var probe = 기준 + dir * 4f;
 
-                if (!Physics.Raycast(probe + Vector3.up * 4f, Vector3.down, out var g, 12f, ~0,
-                                     QueryTriggerInteraction.Ignore))
-                    continue;
+                // 자기 몸을 거르는 창구로 잰다. 직접 쏘면 사람 정수리를 지면으로 읽어
+                // 「놓을 땅」이 사람 위가 된다.
+                if (!E2EHarness.TryGroundY(probe, out float 발밑, 4f, 12f)) continue;
+                var 지면 = new Vector3(probe.x, 발밑, probe.z);
 
-                E2EHarness.LookAt(g.point);
+                E2EHarness.LookAt(지면);
                 yield return null;
                 yield return null;
 
@@ -589,7 +590,7 @@ namespace Survive.Testing
                 if (r != PlacementResult.Ok && r != PlacementResult.NotEnoughResources)
                     continue;
 
-                result((true, g.point));
+                result((true, 지면));
 
                 if (!기대성공) yield break;
                 if (r != PlacementResult.Ok) continue;

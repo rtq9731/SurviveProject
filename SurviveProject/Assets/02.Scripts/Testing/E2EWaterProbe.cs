@@ -1,4 +1,3 @@
-using System.Linq;
 using UnityEngine;
 
 namespace Survive.Testing
@@ -12,6 +11,12 @@ namespace Survive.Testing
     ///
     /// 수영 시나리오 둘이 같은 것을 필요로 하므로 여기 모아 둔다.
     /// 각자 찾게 두면 한쪽만 고치고 다른 쪽은 낡는다.
+    ///
+    /// <b>이름으로 찾지 않는다.</b> 2026-08-07까지는 <c>WaterBody</c>를 못 찾으면
+    /// 「이름에 Water가 든 렌더러」로 물러서는 길이 남아 있었는데, 씬의 유일한 액체가
+    /// <c>Water_Lake</c>에서 <c>Macronium_Sea</c>로 개명되면서 그 길은 아무것도
+    /// 집지 못하게 됐다. 죽은 대비책은 대비책이 아니라 <b>고장을 늦게 알려 주는 장치</b>다 —
+    /// 걷어내고, 부품이 없으면 곧바로 false를 돌려 호출자가 단언에서 깨지게 둔다.
     /// </summary>
     public static class E2EWaterProbe
     {
@@ -22,19 +27,10 @@ namespace Survive.Testing
             water = null;
 
             var body = Object.FindAnyObjectByType<Survive.World.WaterBody>(FindObjectsInactive.Exclude);
-            if (body != null)
-            {
-                water = body.gameObject;
-                surfaceY = body.SurfaceY;
-                return true;
-            }
+            if (body == null) return false;
 
-            var rend = Object.FindObjectsByType<Renderer>(FindObjectsInactive.Exclude)
-                             .FirstOrDefault(r => r.gameObject.name.Contains("Water"));
-            if (rend == null) return false;
-
-            water = rend.gameObject;
-            surfaceY = rend.bounds.max.y;
+            water = body.gameObject;
+            surfaceY = body.SurfaceY;
             return true;
         }
 

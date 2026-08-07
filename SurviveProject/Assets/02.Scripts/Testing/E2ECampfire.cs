@@ -33,10 +33,11 @@ namespace Survive.Testing
             앞.y = 0f;
             if (앞.sqrMagnitude < 1e-4f) 앞 = Vector3.forward;
 
+            // 발밑은 <see cref="E2EHarness.TryGroundY"/>에게 묻는다. 직접 위에서 아래로
+            // 쏘면 <b>자기 몸을 먼저 맞는다</b> — 사람 코앞 2.2m는 캡슐 반경 안에 걸릴 수
+            // 있고, 그러면 정수리 높이를 지면으로 알고 불을 사람 위에 얹는다.
             var 자리 = 사람.position + 앞.normalized * 거리;
-            if (Physics.Raycast(자리 + Vector3.up * 30f, Vector3.down, out var hit, 200f,
-                                ~0, QueryTriggerInteraction.Ignore))
-                자리.y = hit.point.y;
+            if (E2EHarness.TryGroundY(자리, out float 발밑)) 자리.y = 발밑;
 
             var go = Object.Instantiate(def.prefab, 자리, Quaternion.identity);
             return go.GetComponentInChildren<Campfire>(true);
