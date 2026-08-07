@@ -7,6 +7,7 @@ using Survive.Interaction;
 using Survive.Localization;
 using Survive.Player;
 using Survive.Progression;
+using Survive.World;
 
 namespace Survive.Harvesting
 {
@@ -16,7 +17,7 @@ namespace Survive.Harvesting
     /// 플레이어가 캐거나 생산자가 먹으면 단계가 내려가고, 시간이 지나면 다시 자란다.
     /// 0단계로 오래 방치되면 시들어 사라진다 — 남획하면 그 구역이 빈다.
     /// </summary>
-    public class PlantNode : MonoBehaviour, IHoldInteractable
+    public class PlantNode : MonoBehaviour, IHoldInteractable, IWorldStateOwner
     {
         [SerializeField] PlantNodeSO definition;
 
@@ -51,7 +52,16 @@ namespace Survive.Harvesting
             if (visual == null) visual = transform;
             _stage = definition != null ? definition.maxStage : 1;
             RefreshScale();
+
+            // 신원은 깨어날 때의 자리로 짓고 그 뒤로 바꾸지 않는다.
+            _worldId = Survive.World.WorldId.At(WorldLedgerScope.Plant, transform.position);
+            WorldLedgerRegistry.Register(this);
         }
+
+        // <b>비활성화가 아니라 철거에서 뺀다.</b> 시든 식물은 스스로를 꺼 버리는데
+        // (<see cref="Wither"/>), 그때 원장에서 빠지면 「시들었다」는 사실이 저장되지
+        // 않아 불러온 세계에서 도로 자라 있게 된다. 없어진 것도 세계의 상태다.
+        void OnDestroy() => WorldLedgerRegistry.Unregister(this);
 
         void Update()
         {
@@ -181,6 +191,55 @@ namespace Survive.Harvesting
 
             RecordObservation();
             Consumed?.Invoke(this);
+        }
+
+        // ── 세계 원장 ────────────────────────────────────────────
+        //
+        // <b>담는 것은 단계와 사라짐뿐이다.</b> 자라는 중의 타이머
+        // (<c>_growTimer</c>·<c>_witherTimer</c>)는 담지 않는다 — 그것은 다음
+        // 단계까지 남은 시간이라 <b>파생값</b>이고, 남은 시간을 적으면 불러온
+        // 순간부터 다시 세므로 저장해 둔 사이에 흐른 시간이 사라진다.
+        // 그렇다고 절대 시각으로 바꿔 적을 값도 아니다: 사람은 식물이 몇 단계인지를
+        // 보지 「다음 단계까지 3초」를 보지 않으므로, 반 뼘쯤 자란 것을 한 단계
+        // 처음으로 되돌려도 세계가 달라 보이지 않는다.
+
+        string _worldId;
+
+        public string WorldId => _worldId;
+
+        public WorldRecord CaptureWorld()
+        {
+            int 처음단계 = definition != null ? definition.maxStage : 1;
+            if (!_gone && _stage == 처음단계) return null;      // 씬이 놓아둔 그대로다
+
+            return new WorldRecord
+            {
+                kind = WorldLedgerScope.Plant,
+                gone = _gone,
+                amount = _stage,
+            };
+        }
+
+        public void RestoreWorld(WorldRecord record)
+        {
+            if (record == null)
+            {
+                _gone = false;
+                _stage = definition != null ? definition.maxStage : 1;
+            }
+            else
+            {
+                _gone = record.gone;
+                _stage = Mathf.RoundToInt(record.amount);
+            }
+
+            _growTimer = 0f;
+            _witherTimer = 0f;
+
+            if (_gone) { gameObject.SetActive(false); return; }
+
+            if (!gameObject.activeSelf) gameObject.SetActive(true);
+            RefreshScale();
         }
     }
 }
