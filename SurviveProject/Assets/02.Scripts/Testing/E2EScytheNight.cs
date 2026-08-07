@@ -79,7 +79,19 @@ namespace Survive.Testing
             var 시계 = DayNightService.Instance;
             if (시계 == null) return;
 
-            시계.Frozen = true;
+            // <b>시계를 멈추지 않는다 — 시각만 옮긴다 (2026-08-07 정정).</b>
+            //
+            // 예전에는 여기서 <c>Frozen = true</c>를 켰다. 그런데 그 스위치는
+            // 하루의 시각만 붙드는 것이 아니라 <see cref="Survive.World.WorldClock"/>을
+            // 통째로 멈춘다(<c>WorldClock.Paused = Frozen || ...</c>). 그러면 그 시계로
+            // 재는 것들이 전부 얼어붙는다 — 채집물 재생이 그것이라, 「발광 군락」이
+            // <b>갓이 영영 다시 자라지 않아</b> 깨졌다. 낫 절이 먼저 실패하는 바람에
+            // 한동안 가려져 있었다.
+            //
+            // 붙들 이유도 없다. 밤은 8분 48초이고 시나리오는 1분을 넘지 않으므로,
+            // 0.95에 놓으면 해뜰녘까지 324초가 남는다. <b>필요한 것은 "지금이 밤"이지
+            // "시간이 멈춘 것"이 아니다.</b> 낮과 밤을 나란히 재는 시나리오만
+            // 제 손으로 얼린다(<see cref="밤으로_돌린다"/>).
             시계.SetTimeOfDay(0.95f);
 
             // <b>제 낫만 무대에 둔다.</b> 이 창구를 쓰는 시나리오들은 낫을 손수
@@ -99,6 +111,7 @@ namespace Survive.Testing
             시계.Frozen = false;
             시계.SetTimeOfDay(DayNightService.StartTimeOfDay);
             ScytheSpawner.Suspended = false;
+            Survive.World.WorldClock.Paused = false;
         }
 
         // ── 준비 ────────────────────────────────────────────────
