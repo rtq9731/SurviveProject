@@ -24,6 +24,13 @@ namespace Survive.Creatures
     /// 셋을 <b>한 덩어리로</b> 꼬리 밑동에서 돌린다. 둥근 몸통과 진짜 꼬리 체인은
     /// 사람이 만든다(스펙 §17) — 그때 이 클래스는 각도를 애니메이터에 넘기고
     /// 빛만 맡으면 된다.
+    ///
+    /// <b>몸통의 상시 발광도 여기서 정리한다.</b> 꼬리만 밝기를 몰고 가 봐야 몸통이
+    /// 항상 자홍으로 타고 있으면 자세가 화면에서 갈리지 않는다 — 실측으로 작업 중과
+    /// 공격 태세의 발광 총량 비가 1.16배였다. 무엇을 남길지는
+    /// <see cref="ScytheBodyEmission"/>이 정하고 여기서는 옮기기만 한다. 꼬리와 같은
+    /// 컴포넌트가 맡는 이유는 <b>머티리얼 인스턴스의 수명이 하나여야</b> 하기 때문이다 —
+    /// 둘로 나누면 같은 공유 머티리얼에서 각자 인스턴스를 떠 놓고 각자 지운다.
     /// </summary>
     [DisallowMultipleComponent]
     public class ScytheTail : MonoBehaviour
@@ -91,7 +98,10 @@ namespace Survive.Creatures
         Segment[] _segments;
         Renderer[] _arcRenderers;
         Renderer _bladeRenderer;
-        Material[] _owned;
+
+        /// <summary>이 개체가 떠서 쓰는 머티리얼 인스턴스 전부. 죽을 때 여기 있는 것만 지운다.</summary>
+        readonly System.Collections.Generic.List<Material> _owned =
+            new System.Collections.Generic.List<Material>();
 
         Transform _streak;
         Material _streakMaterial;
@@ -127,6 +137,7 @@ namespace Survive.Creatures
             if (!HasTail) return;
 
             PrepareGlowMaterials();
+            TameBody();
             BuildStreak();
 
             _pitch = trailingPitch;
@@ -137,9 +148,8 @@ namespace Survive.Creatures
         {
             // 인스턴스 머티리얼은 자동으로 정리되지 않는다. 개체수가 다섯으로 느는
             // 것이 이미 예정되어 있으므로(스펙 §5) 여기서 지운다.
-            if (_owned != null)
-                foreach (var m in _owned)
-                    if (m != null) Destroy(m);
+            foreach (var m in _owned)
+                if (m != null) Destroy(m);
 
             if (_streakMaterial != null) Destroy(_streakMaterial);
         }
@@ -289,12 +299,8 @@ namespace Survive.Creatures
         /// </summary>
         void PrepareGlowMaterials()
         {
-            var owned = new System.Collections.Generic.List<Material>();
-
-            foreach (var r in _arcRenderers) Adopt(r, owned);
-            Adopt(_bladeRenderer, owned);
-
-            _owned = owned.ToArray();
+            foreach (var r in _arcRenderers) Adopt(r, _owned);
+            Adopt(_bladeRenderer, _owned);
         }
 
         static void Adopt(Renderer r, System.Collections.Generic.List<Material> owned)
@@ -308,6 +314,97 @@ namespace Survive.Creatures
 
             r.sharedMaterial = m;
             owned.Add(m);
+        }
+
+        /// <summary>
+        /// 몸통의 <b>상시</b> 자홍 발광을 응축된 소수의 라인으로 줄인다 (기획서 §4.5 "아트").
+        ///
+        /// <b>왜 머티리얼 에셋을 고치지 않는가.</b> <c>Consumer_Blade</c>를 지금 쓰는 것은
+        /// 낫 하나뿐이지만(전수 확인함), 에셋의 발광을 낮추면 프리팹·에디터·아트 규칙
+        /// 점검이 전부 함께 움직인다. 다섯 마리가 각자 인스턴스를 갖는 편이 되돌리기 쉽다.
+        ///
+        /// <b>지금 실제로 빛나는 것만 건드린다.</b> <c>_EMISSION</c>이 꺼져 있거나 발광색이
+        /// 이미 검은 부품(Consumer_Chassis를 쓰는 몸통·다리)은 그대로 둔다 — 켜 주는 것이
+        /// 아니라 <b>과한 것을 줄이는</b> 일이다.
+        ///
+        /// 같은 값을 받는 부품끼리 인스턴스 하나를 나눠 쓴다. 부품마다 뜨면 개체 하나에
+        /// 열둘, 다섯 마리면 예순이다.
+        /// </summary>
+        void TameBody()
+        {
+            var lines = new System.Collections.Generic.Dictionary<Material, Material>();
+            var dark = new System.Collections.Generic.Dictionary<Material, Material>();
+
+            foreach (var r in GetComponentsInChildren<Renderer>(true))
+            {
+                if (r == null || IsTailPart(r.transform)) continue;
+
+                var source = r.sharedMaterial;
+                if (source == null) continue;
+                if (!source.IsKeywordEnabled("_EMISSION")) continue;
+                if (source.GetColor(EmissionColorId).maxColorComponent <= 0.001f) continue;
+
+                float level = ScytheBodyEmission.LevelFor(r.gameObject.name);
+                var bucket = ScytheBodyEmission.KeepsLine(r.gameObject.name) ? lines : dark;
+
+                if (!bucket.TryGetValue(source, out var tamed))
+                {
+                    tamed = new Material(source);
+                    tamed.SetColor(EmissionColorId, Macronium * level);
+                    bucket[source] = tamed;
+                    _owned.Add(tamed);
+                }
+
+                r.sharedMaterial = tamed;
+            }
+        }
+
+        /// <summary>이 부품이 꼬리인가. 꼬리의 빛은 자세가 몰고 가므로 여기서 손대면 안 된다.</summary>
+        bool IsTailPart(Transform t)
+        {
+            for (int i = 0; i < _segments.Length; i++)
+                if (_segments[i].T == t) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// 지금 이 개체가 내고 있는 <b>발광의 총량</b>. 켜져 있는 부품의 발광색을 그대로 더한다.
+        ///
+        /// <b>검증이 눈이 아니라 값으로 판정하라고 연다.</b> "자세 셋이 구별된다"는 말은
+        /// 화면을 보면 "그런 것 같다"까지밖에 갈 수 없다. 몸통이 상시 발광하던 동안에는
+        /// 이 값이 세 자세에서 거의 같았고(1.16배), 그것이 구별이 안 되던 이유였다.
+        /// </summary>
+        public float MeasureEmission()
+        {
+            float sum = 0f;
+            foreach (var r in GetComponentsInChildren<Renderer>(false))
+            {
+                var m = r != null ? r.sharedMaterial : null;
+                if (m == null || !m.HasProperty(EmissionColorId)) continue;
+                if (!m.IsKeywordEnabled("_EMISSION")) continue;
+                sum += m.GetColor(EmissionColorId).maxColorComponent;
+            }
+            return sum;
+        }
+
+        /// <summary>
+        /// 꼬리를 뺀 몸통이 내고 있는 발광. <b>이것이 자세와 무관하게 일정해야</b>
+        /// 총량의 차이가 전부 꼬리에서 나온 것이라고 말할 수 있다.
+        /// </summary>
+        public float MeasureBodyEmission()
+        {
+            float sum = 0f;
+            foreach (var r in GetComponentsInChildren<Renderer>(false))
+            {
+                if (r == null || IsTailPart(r.transform)) continue;
+                if (_streak != null && r.transform == _streak) continue;
+
+                var m = r.sharedMaterial;
+                if (m == null || !m.HasProperty(EmissionColorId)) continue;
+                if (!m.IsKeywordEnabled("_EMISSION")) continue;
+                sum += m.GetColor(EmissionColorId).maxColorComponent;
+            }
+            return sum;
         }
 
         /// <summary>
