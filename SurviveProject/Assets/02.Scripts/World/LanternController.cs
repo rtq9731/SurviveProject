@@ -10,16 +10,19 @@ namespace Survive.World
     /// <summary>
     /// 랜턴. 지하는 빛이 거의 공급되지 않으므로(세계관) 이것이 챕터 1의 핵심 압박이다.
     ///
-    /// <b>끄는 길이 없다.</b> 랜턴을 가지고 있으면 켜져 있고, 배터리가 있는 동안
-    /// 계속 닳는다. 예전에는 F로 켜고 껐다 — 그 스위치가 있으면 최적해가
-    /// "어두운 데서는 꺼 두고 필요할 때만 켠다"가 되어, 어둠이 <b>비용</b>이 아니라
-    /// <b>가끔 내는 요금</b>이 된다. 스위치를 없앤 대신 반경 티어라는 선택을
-    /// 돌려주었다. 규칙과 수치는 전부 <see cref="LanternRule"/> 한 곳에 있다 —
+    /// <b>F로 켜고 끈다.</b> 끌 수 있어야 "어둠은 비용"이 실제 선택이 된다
+    /// (검토회신 2026-08-07 ②) — 잠그면 플레이어가 비용을 감수할 방법이 없어
+    /// 어둠이 상수로 굳는다. 대신 끄면 아무것도 안 보이고 배터리만 멈춘다.
+    /// 비용이 즉시 청구되므로 대부분의 상황에서 켜 두는 것이 최적해이고,
+    /// 그것이 "상시 점등"이 원래 뜻하던 바다 — 기계적 잠금이 아니라 설계 의도.
+    ///
+    /// 규칙과 수치는 전부 <see cref="LanternRule"/> 한 곳에 있다 —
     /// 여기에는 사본을 두지 않는다.
     ///
-    /// 배터리가 다하면 불이 꺼지고 반경 밖과 같아진다. 그것이 이 게임의 유일한
-    /// "꺼짐"이고, 되살리는 방법은 셋이다 — 발광 버섯 군락(무료, 거점),
-    /// 화톳불 곁(무료, 거점), 배터리 셀(현장, 대가).
+    /// 불이 없는 상태에 이르는 길은 둘이다. <b>껐거나</b>(선택),
+    /// <b>다 태웠거나</b>(비용을 다 낸 결과). 태워 버린 쪽을 되살리는 방법은
+    /// 셋이다 — 발광 버섯 군락(무료, 거점), 화톳불 곁(무료, 거점),
+    /// 배터리 셀(현장, 대가).
     /// </summary>
     [DisallowMultipleComponent]
     public class LanternController : MonoBehaviour, IOffsetLitSource
@@ -46,6 +49,7 @@ namespace Survive.World
         float _battery;
         int _tier;
         bool _warning;
+        bool _switchedOn = LanternRule.DefaultSwitchedOn;
         Tween _flicker;
 
         // 램프를 매 프레임 앞으로 옮기므로, 밀기 전의 자리를 따로 기억해 둔다.
@@ -66,14 +70,23 @@ namespace Survive.World
         /// </summary>
         public int Tier => _tier;
 
-        /// <summary>랜턴을 가지고 있는가. 화면(배터리 눈금)이 "보일 때"를 이것으로 정한다.</summary>
+        /// <summary>
+        /// 랜턴을 가지고 있는가. 화면(배터리 눈금)이 "보일 때"를 이것으로 정한다.
+        ///
+        /// <b>켜짐이 아니라 소지가 기준이다.</b> 껐거나 다 태운 순간이 눈금이
+        /// 가장 필요한 순간인데, 켜짐을 기준으로 숨기면 그때 함께 사라져
+        /// 플레이어가 어두워진 이유를 화면 어디서도 확인할 수 없게 된다.
+        /// </summary>
         public bool HasLantern => _tier > 0;
 
+        /// <summary>스위치가 켜져 있는가. 배터리가 다해도 이 값은 그대로다.</summary>
+        public bool SwitchedOn => _switchedOn;
+
         /// <summary>
-        /// 불이 들어와 있는가. <b>조작이 아니라 상태다</b> —
-        /// 가졌는가와 남았는가만 본다(<see cref="LanternRule.IsLit"/>).
+        /// 불이 들어와 있는가. 스위치와 재료를 둘 다 본다
+        /// (<see cref="LanternRule.IsLit(int,float,bool)"/>).
         /// </summary>
-        public bool IsOn => LanternRule.IsLit(_tier, _battery);
+        public bool IsOn => LanternRule.IsLit(_tier, _battery, _switchedOn);
 
         public event Action<float, float> BatteryChanged;   // (현재, 최대)
 
@@ -187,20 +200,44 @@ namespace Survive.World
 
         void RefreshTier() => _tier = LanternRule.EquippedTier(inventory?.Inventory);
 
+        // ── 스위치 ───────────────────────────────────────────────
+
+        /// <summary>
+        /// 스위치를 이 자리에 놓는다. 끌 수 있어야 "어둠은 비용"이 실제 선택이
+        /// 된다(검토회신 ②). 켜는 것은 배터리를 만들어 내지 않는다 —
+        /// 다 태운 랜턴은 켜도 어둡다.
+        /// </summary>
+        public void SetSwitch(bool on)
+        {
+            if (_switchedOn == on) return;
+            _switchedOn = on;
+            ApplyLight();
+
+            // 눈금은 소지 기준으로 뜨지만, 껐다 켠 순간에도 다시 그려야
+            // 화면이 스위치와 같은 말을 한다.
+            BatteryChanged?.Invoke(_battery, MaxBattery);
+        }
+
+        /// <summary>F가 닿는 자리. 랜턴이 없으면 누른 적이 없는 것과 같다.</summary>
+        public void Toggle() => SetSwitch(LanternRule.NextSwitchState(_switchedOn, _tier));
+
         void Update()
         {
             RefreshTier();
 
             // 랜턴이 아직 없다. 어둠을 그대로 견디는 구간이고, 배터리는 닳지 않는다 —
             // 만들기도 전에 시계가 도는 것은 압박이 아니라 버그다.
-            if (_tier <= 0)
+            //
+            // 꺼 두었을 때도 같은 자리로 빠진다. 아끼는 대신 못 보는 것이
+            // 거래의 다른 쪽이므로, 꺼진 동안 시계가 돌면 거래가 성립하지 않는다.
+            if (_tier <= 0 || !_switchedOn)
             {
                 ApplyLight();
                 return;
             }
 
             float prev = _battery;
-            _battery = LanternRule.AfterDrain(_battery, _tier, Time.deltaTime);
+            _battery = LanternRule.AfterDrain(_battery, _tier, Time.deltaTime, _switchedOn);
             if (!Mathf.Approximately(prev, _battery)) BatteryChanged?.Invoke(_battery, MaxBattery);
 
             if (_battery <= 0f)
@@ -222,7 +259,7 @@ namespace Survive.World
 
         void RefreshWarning()
         {
-            bool danger = LanternRule.IsWarning(_tier, _battery);
+            bool danger = LanternRule.IsWarning(_tier, _battery, _switchedOn);
 
             if (danger && !_warning)
             {
@@ -291,10 +328,10 @@ namespace Survive.World
         /// <summary>
         /// 배터리를 이만큼 쓴다. <see cref="Recharge"/>의 짝이다.
         ///
-        /// <b>이것은 스위치가 아니다.</b> 끄는 입력이 없는 대신, "불이 없는 상태"에
-        /// 이르는 길은 배터리를 다 쓰는 것 하나뿐이다. 세계가 배터리를 더 먹이는
-        /// 장치(스펙 §5 경계 상태 등)와 검증이 그 하나뿐인 길을 지나야 하므로
-        /// 창구를 열어 둔다.
+        /// <b>이것은 스위치가 아니다.</b> 스위치는 <see cref="SetSwitch"/>이고
+        /// 그쪽은 배터리를 건드리지 않는다. 이쪽은 세계가 배터리를 더 먹이는
+        /// 장치(스펙 §5 경계 상태 등)가 쓰는 창구다 — 껐다 켜서 되돌릴 수 있는
+        /// 것과 태워 없앤 것은 플레이어에게 전혀 다른 일이므로 길을 갈라 둔다.
         /// </summary>
         public void Drain(float amount)
         {

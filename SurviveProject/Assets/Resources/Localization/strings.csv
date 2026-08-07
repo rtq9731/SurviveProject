@@ -94,7 +94,7 @@ UI,codex_empty_body,이 갈래에 등록된 항목이 없습니다.,Nothing is r
 UI,hint_basics,[WASD] 이동   [E] 상호작용   [Tab] 소지품   [J] 분석 기록,[WASD] Move   [E] Interact   [Tab] Inventory   [J] Analysis Log,
 UI,hint_pickaxe,[Q] 도구를 손에 든다 · 곡괭이로 광맥을 부순다,[Q] Take a tool in hand · break ore veins with the pickaxe,
 UI,hint_axe,[Q] 도구를 손에 든다 · 도끼로 거대 버섯을 벤다,[Q] Take a tool in hand · fell giant mushrooms with the axe,
-UI,hint_lantern,랜턴은 늘 켜져 있다 · 배터리가 다하면 어둠뿐이다,The lantern is always on · when the battery dies there is only darkness,
+UI,hint_lantern,[F] 랜턴 켜기 / 끄기,[F] Lantern on / off,
 #
 # ---- HUD ----
 UI,battery_amount,배터리 {0},Battery {0},{0}=남은 배터리 값

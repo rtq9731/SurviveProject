@@ -25,6 +25,7 @@ namespace Survive.Input
         public event Action AttackEvent;
         public event Action ToggleInventoryEvent;
         public event Action NextToolEvent;
+        public event Action ToggleLanternEvent;
         public event Action PauseEvent;
         public event Action CancelEvent;
 
@@ -161,10 +162,13 @@ namespace Survive.Input
             if (ctx.performed) NextToolEvent?.Invoke();
         }
 
-        // 랜턴 토글(F)은 없앴다. 랜턴은 상시 점등이 전제이고 끄는 선택지를 두지
-        // 않는다(스펙 §12) — 스위치가 있으면 최적해가 "어두운 데서는 꺼 둔다"가
-        // 되어 어둠이 매 순간의 비용이 아니라 가끔 내는 요금이 된다.
-        // 규칙은 Survive.World.LanternRule에 있다.
+        // 랜턴 토글(F). 끌 수 있어야 "어둠은 비용"이 실제 선택이 된다
+        // (검토회신 2026-08-07 ②) — 잠그면 플레이어가 비용을 감수할 방법이 없어
+        // 어둠이 상수로 굳는다. 규칙은 Survive.World.LanternRule에 있다.
+        public void OnToggleLantern(InputAction.CallbackContext ctx)
+        {
+            if (ctx.performed) ToggleLanternEvent?.Invoke();
+        }
 
         // ── UI ───────────────────────────────────────────────────
 
