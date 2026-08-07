@@ -156,7 +156,11 @@ namespace Survive.Testing
         {
             E2EHarness.Log("— 임시 조명: 랜턴은 따라붙기를 풀지 못한다 —");
 
-            yield return 사람을_낫_곁에_세운다();
+            // 웅덩이 밖 · 감지 안에 세운다. 웅덩이 안에 두면 낫이 제가 빛에 잠겨
+            // 물러나고, 물러나다 감지 밖으로 나가면 <b>랜턴이 아니라 거리가</b>
+            // 따라붙기를 푼다 — 그러면 이 절이 재려던 것과 다른 것을 재게 된다.
+            float 거리 = LanternRule.ForwardReachForTier(1) + 1.5f;
+            yield return 사람을_낫_곁에_세운다(거리);
             E2EHarness.LightLantern();
             yield return null;
 
@@ -165,10 +169,15 @@ namespace Survive.Testing
                               "그 빛은 고정 조명이 아니다 — 이 대조가 이 절의 전부다");
 
             // 랜턴을 켜고 <b>충분히</b> 버틴다. 시간으로 풀리는 규칙이었다면 여기서 풀린다.
+            // 무대는 붙들고 있는다 — 감지 안에 있다는 것은 이 문장의 전제이지 주어가 아니다.
             float t = 0f;
             var 본상태 = new HashSet<ScytheState>();
             while (t < 5f)
             {
+                if (Vector3.Distance(_낫.transform.position, 사람자리) > _def.detectRadius * 0.9f)
+                    yield return 사람을_낫_곁에_세운다(거리);
+
+                E2EHarness.LookAt(_낫.transform.position);
                 본상태.Add(_마음.State);
                 t += Time.deltaTime;
                 yield return null;
@@ -269,15 +278,23 @@ namespace Survive.Testing
                                               "랜턴이 앞을 막아 따라붙기에 머문다", 8f);
 
             int 시작횟수 = _마음.ReappearCount;
-            var 방위들 = new List<float> { 방위() };
-            var 좌표들 = new List<Vector3> { _낫.transform.position };
             int 마지막본횟수 = 시작횟수;
 
-            // 간격은 개체의 기억 길이(aggroSeconds, 낫은 6초)다. 세 번을 보려면
-            // 그 세 배에 여유를 더한 만큼 기다린다.
-            float 한계 = _def.aggroSeconds * 6f + 12f;
+            // <b>재등장 「한 번」에서 방위가 얼마나 도는지를 잰다.</b> 관측을 목록에
+            // 쌓아 두고 이웃끼리 빼면 안 된다 — 사이사이 무대를 다시 세우느라 사람이
+            // 순간이동하고, 그러면 낫이 옮겨서 바뀐 각과 사람이 옮겨서 바뀐 각이 섞인다
+            // (실측 0도·30도·60도가 그렇게 나왔다). 옮긴 그 프레임의 앞뒤만 본다.
+            var 돈각들 = new List<float>();
+            var 좌표들 = new List<Vector3>();
+            float 직전방위 = 방위();
+
+            // 간격은 개체의 기억 길이(aggroSeconds, 낫은 6초)다. 다만 사람이 몸을
+            // 돌리는 동안 상태가 따라붙기와 교전 사이를 오가므로 실제 리듬은 그보다
+            // 느리다 — <b>재는 것은 「세 번 옮기는가」이지 「몇 초 만인가」가 아니므로</b>
+            // 지켜보는 창을 넉넉히 연다(실측 48초에 두 번인 판이 있었다).
+            float 한계 = _def.aggroSeconds * 12f + 20f;
             float t = 0f;
-            while (t < 한계 && _마음.ReappearCount - 시작횟수 < 3)
+            while (t < 한계 && 돈각들.Count < 3)
             {
                 // <b>사람은 자리를 지키되 낫을 눈으로 좇는다.</b> 그것이 이 규칙이 노리는
                 // 플레이어 행동이고(§19 "조작 자체가 방어가 된다"), 몸을 돌려 정면으로
@@ -285,50 +302,53 @@ namespace Survive.Testing
                 // 사각이 열려 곧바로 교전으로 올라가 재등장이 한 번에 끝난다.
                 E2EHarness.LookAt(_낫.transform.position);
 
-                // 낫이 제 발로 감지 밖으로 나가 버리면 따라붙기가 풀리고 재등장도 멎는다.
-                // 그것은 규칙대로 도는 것이지 재등장이 안 되는 것이 아니므로, 무대를
-                // 다시 세우고 계속 잰다.
-                if (_마음.State == ScytheState.Patrol)
+                // <b>사이 거리를 붙들어 둔다.</b> 낫이 다가와 웅덩이 안으로 들어오면
+                // 후보 고리가 통째로 밝아져 고를 자리가 하나도 남지 않고(실측 0개),
+                // 그때 낫은 규칙대로 <b>머문다</b>. 그것은 옳은 동작이지만 이 절이
+                // 재려는 것은 아니다 — 여기서 재는 것은 「자리를 바꾸는가」다.
+                // 멀어져 감지 밖으로 나가는 경우도 같은 이유로 되돌린다.
+                float 사이 = Vector3.Distance(_낫.transform.position, 사람자리);
+                if (_마음.State == ScytheState.Patrol || 사이 < 거리 - 2f ||
+                    사이 > _def.detectRadius * 0.95f)
                 {
                     yield return 사람을_낫_곁에_세운다(거리);
                     yield return E2EHarness.WaitUntil(() => _마음.State == ScytheState.Beware,
                                                       "다시 따라붙는다", 6f);
+
+                    // 무대를 옮겼으니 기준을 다시 잡는다. 이 프레임의 각 변화는
+                    // 재등장이 만든 것이 아니다.
+                    마지막본횟수 = _마음.ReappearCount;
+                    직전방위 = 방위();
+                    t += Time.deltaTime;
+                    yield return null;
+                    continue;
                 }
 
                 if (_마음.ReappearCount > 마지막본횟수)
                 {
                     마지막본횟수 = _마음.ReappearCount;
-                    방위들.Add(방위());
+                    돈각들.Add(Mathf.Abs(Mathf.DeltaAngle(직전방위, 방위())));
                     좌표들.Add(_낫.transform.position);
                 }
 
+                직전방위 = 방위();
                 t += Time.deltaTime;
                 yield return null;
             }
 
-            // 마지막 한 번은 반복문이 조건을 보고 빠져나가느라 기록되지 않는다.
-            // 세 번을 세었으면 세 번 다 방위를 재야 한다.
-            if (_마음.ReappearCount > 마지막본횟수)
-            {
-                방위들.Add(방위());
-                좌표들.Add(_낫.transform.position);
-            }
+            for (int i = 0; i < 돈각들.Count; i++)
+                E2EHarness.Log($"  재등장 {i + 1}: {좌표들[i].ToString("F2")} · 돈 각 {돈각들[i]:F1}도");
 
-            for (int i = 0; i < 좌표들.Count; i++)
-                E2EHarness.Log($"  재등장 {i}: {좌표들[i].ToString("F2")} 방위 {방위들[i]:F1}도");
-
-            E2EHarness.Assert(_마음.ReappearCount - 시작횟수 >= 3,
-                              $"연속 세 번 이상 자리를 옮겼다 ({_마음.ReappearCount - 시작횟수}회, " +
-                              $"{t:F1}초, 통과한 자리 {_마음.LastAcceptableCount}개)");
+            E2EHarness.Assert(돈각들.Count >= 3,
+                              $"연속 세 번 이상 자리를 옮겼다 (잰 것 {돈각들.Count}회 / " +
+                              $"부품이 센 것 {_마음.ReappearCount - 시작횟수}회, {t:F1}초, " +
+                              $"통과한 자리 {_마음.LastAcceptableCount}개)");
 
             // <b>방위가 실제로 바뀌었는가.</b> 옮긴 횟수만 세면 제자리에서 떨어도 통과한다.
-            for (int i = 1; i < 방위들.Count; i++)
-            {
-                float 차 = Mathf.Abs(Mathf.DeltaAngle(방위들[i - 1], 방위들[i]));
-                E2EHarness.Assert(차 >= ScytheReappearance.MinTurnDegrees - 1f,
-                                  $"{i}번째 재등장이 하한만큼 돌았다 ({차:F1}도 " +
+            for (int i = 0; i < 돈각들.Count; i++)
+                E2EHarness.Assert(돈각들[i] >= ScytheReappearance.MinTurnDegrees - 1f,
+                                  $"{i + 1}번째 재등장이 하한만큼 돌았다 ({돈각들[i]:F1}도 " +
                                   $">= {ScytheReappearance.MinTurnDegrees})");
-            }
         }
 
         /// <summary>사람을 꼭짓점으로 잰 낫의 방위(도). 높이는 버린다.</summary>

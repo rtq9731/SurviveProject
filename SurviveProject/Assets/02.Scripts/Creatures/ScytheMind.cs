@@ -34,8 +34,16 @@ namespace Survive.Creatures
     [RequireComponent(typeof(CreatureBrain))]
     public class ScytheMind : MonoBehaviour
     {
-        /// <summary>재등장 후보를 사람 둘레 몇 방향에서 찾는가.</summary>
-        const int CandidateCount = 12;
+        /// <summary>
+        /// 재등장 후보를 사람 둘레 몇 방향에서 찾는가.
+        ///
+        /// <b>성기게 깔면 쓸 수 있는 자리를 통째로 놓친다.</b> 앞쪽은 눈에 보여서,
+        /// 뒤쪽은 사각이라서 빠지므로 실제로 남는 것은 <b>양옆의 좁은 띠</b>다.
+        /// 30도 간격(12곳)으로는 그 띠에 후보가 한 곳도 안 떨어지는 판이 나왔고
+        /// (실측: 통과한 자리 0개로 재등장이 멎었다), 15도로 좁히면 띠마다 두세 곳이
+        /// 들어온다. 6초에 한 번 도는 계산이라 스물넷을 재도 값이 싸다.
+        /// </summary>
+        const int CandidateCount = 24;
 
         /// <summary>
         /// 가려는 자리가 눈에 들어오는지 볼 때, 시야각의 어느 선까지를 "보인다"로 치는가.
@@ -243,6 +251,17 @@ namespace Survive.Creatures
                 // 서식지 밖은 애초에 후보가 아니다. 규칙이 고르고 나서 몸이 도로
                 // 돌아오면 옮긴 적이 없는 것과 같다.
                 if (_drifter != null && !_drifter.CanOccupy(p)) continue;
+
+                // <b>등 뒤 사각으로는 나타나지 않는다.</b> 사각은 교전이 열리는 자리인데
+                // (§19), 거기로 순간이동하면 <b>사람이 마주 보고 있어도 그 프레임에
+                // 등 뒤를 잡힌다</b> — "플레이어 조작 자체가 방어가 된다"는 §19의 축이
+                // 통째로 무너진다. 실측으로 「랜턴 오프셋」 시나리오가 정확히 그것을
+                // 잡아냈다("마주보는 동안 낫이 사각에 든 적이 없다"가 깨졌다).
+                //
+                // 사각을 노리는 것 자체는 맞다. 다만 그것은 <b>움직여서</b> 도달해야
+                // 하는 자리이지 나타나는 자리가 아니다. 옆으로 나타나 거기서부터
+                // 파고드는 것이 규칙 둘을 함께 지킨다.
+                if (LitZoneRegistry.IsBlindSide(p)) continue;
 
                 _spotPositions.Add(p);
                 _spots.Add(new ReappearSpot(p, LitZoneRegistry.IsLit(p), Seen(eye, p)));

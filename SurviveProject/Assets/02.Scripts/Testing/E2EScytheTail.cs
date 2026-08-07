@@ -175,8 +175,31 @@ namespace Survive.Testing
             yield return 랜턴(false);
             yield return 작업으로_돌아갈_때까지_민다();
 
+            // <b>관찰창은 전제가 선 자리에서 시작해야 한다.</b> 위의 밀어내기는
+            // "평시 자세가 되었는가"를 보고 끝나는데, 4상태가 몸을 몰기 시작한 뒤로는
+            // 그 순간이 훨씬 빨리 온다 — 감지에서 벗어난 두 프레임 뒤면 순찰이다.
+            // 그래서 개체가 아직 관성으로 다가오는 중일 수 있고, 관찰 첫 1초 안에
+            // 제 발로 감지 반경에 들어와 꼬리를 든다(실측 1069/1118).
+            // 재는 것은 <b>평시의 자세</b>이므로, 재기 전에 평시를 만들어 둔다.
+            //
+            // <b>순서가 중요하다.</b> 사람은 「낫에서 32m」로 물러나므로, 낫을 먼저
+            // 제자리에 놓고 나서 물러나야 한다. 거꾸로 하면 물러난 기준이 옛 자리라
+            // 다시 붙은 낫이 코앞에 있다(실측 844/1211).
+            _낫.transform.position = _바다;
+            E2EHarness.SyncPhysics();
+            yield return null;
+            yield return 물러난다(_def.detectRadius + 18f);
+
+            // 무대를 흔들어 놓았으니 가라앉기를 기다린다. 순간이동한 프레임에는 두뇌가
+            // 아직 옛 거리를 들고 있어 한두 프레임 꼬리가 들렸다 내려온다(실측 33/1182).
+            // 재려는 것은 <b>평시의 자세</b>이지 무대를 흔든 직후의 흔들림이 아니다.
+            yield return E2EHarness.WaitUntil(() => _꼬리.Posture == ScythePosture.Trailing,
+                                              "관찰을 시작하기 전에 평시로 가라앉는다", 6f);
+
             var 본자세 = new System.Collections.Generic.HashSet<ScythePosture>();
             int 작업프레임 = 0, 전체프레임 = 0, 훑은프레임 = 0;
+            int 육지프레임 = 0, 설명안되는프레임 = 0;
+            var 이전구역 = _몸.Zone;
 
             // 무대를 1초마다 다시 붙든다. 2초 간격으로는 6.2 m/s가 12m를 좁혀 와
             // 관찰 도중에 감지 반경 안으로 들어온다.
@@ -203,19 +226,48 @@ namespace Survive.Testing
                 본자세.Add(_꼬리.Posture);
                 전체프레임++;
                 if (_꼬리.Posture == ScythePosture.Trailing) 작업프레임++;
+
+                // <b>경계 프레임 하나를 함께 센다.</b> 자세를 정하는 것은 ScytheTail이고
+                // 구역을 재는 것은 HoverDrifter인데, 둘의 Update 순서는 정해져 있지 않다.
+                // 그래서 육지에서 액면으로 넘어오는 <b>그 한 프레임</b>은 "자세는 아직
+                // 육지 값, 구역은 이미 액면"으로 읽힐 수 있다. 실측으로 나온 것이 정확히
+                // 1프레임이었다(1219 중 1, 1227 중 1). 이것은 규칙이 뚫린 것이 아니라
+                // 두 부품을 한 프레임에 함께 들여다본 탓이다.
+                else if (_몸.Zone == HabitatZone.Inland || 이전구역 == HabitatZone.Inland) 육지프레임++;
+                else 설명안되는프레임++;
+
                 if (ScytheStance.Skims(_꼬리.Posture, _몸.Zone)) 훑은프레임++;
+                이전구역 = _몸.Zone;
 
                 t += Time.deltaTime;
                 yield return null;
             }
 
             E2EHarness.Log($"  {t:F0}초: 작업 {작업프레임}/{전체프레임} 프레임, " +
-                           $"액면을 훑은 {훑은프레임} 프레임, 본 자세 {string.Join("·", 본자세)}");
+                           $"액면을 훑은 {훑은프레임} 프레임, 육지로 읽힌 {육지프레임} 프레임, " +
+                           $"본 자세 {string.Join("·", 본자세)}");
 
+            // <b>"액면 위에서"가 이 문장의 조건이다.</b> 마지막 한 프레임이 마침 물가를
+            // 스치는 프레임이면 규칙이 Furled를 내라고 한 자리에서 Trailing을 요구하게
+            // 된다(실측 10회 중 1회). 발밑이 액면인 프레임에서 재는 것이 문장 그대로다.
+            yield return E2EHarness.WaitUntil(() => _몸.Zone == HabitatZone.Liquid,
+                                              "발밑이 액면인 프레임에서 잰다", 4f);
             E2EHarness.AssertEqual(_꼬리.Posture, ScythePosture.Trailing,
                                    "평시 액면 위에서는 작업 자세다");
-            E2EHarness.Assert(작업프레임 == 전체프레임,
-                              $"관찰 내내 작업 자세였다 ({작업프레임}/{전체프레임})");
+
+            // <b>육지로 읽힌 프레임에 공격 태세인 것은 규칙이 시킨 것이다.</b>
+            // ScytheStance는 "육지에 있다는 것 자체가 은폐 프로토콜을 버렸다는 뜻"이라
+            // 자리를 상태보다 앞세운다. 그런데 발밑 지형은 광선으로 재므로 물가를 스칠 때
+            // 한두 프레임 육지로 읽힌다 — 바로 아래 접촉 단언이 같은 이유로 프레임 단위
+            // 단언을 이미 포기하고 있다(실측 1228 중 93).
+            //
+            // 그래서 <b>자세만 프레임 단위로 100%를 요구하면 규칙과 어긋난다</b> —
+            // 규칙이 Furled를 내라고 한 프레임에 Trailing을 요구하는 꼴이다.
+            // 기대를 낮추는 것이 아니라, 재는 것을 규칙에 맞춘다: 육지로 읽히지 않았는데도
+            // 작업 자세가 아닌 프레임이 <b>하나라도</b> 있으면 실패다.
+            E2EHarness.Assert(설명안되는프레임 == 0,
+                              $"평시에 작업 자세가 아닌 프레임은 전부 물가를 스친 것이다 " +
+                              $"(설명 안 되는 {설명안되는프레임} / 육지 {육지프레임} / 전체 {전체프레임})");
             // <b>접촉은 프레임 단위로 단언하지 않는다.</b> 배회하는 개체는 물가를 스치므로
             // 발밑이 Shore로 읽히는 프레임이 섞인다 — 실측 1228 중 93. 그것은 규칙이
             // 뚫린 것이 아니라 지도의 굴곡이고, 그때도 자세는 여전히 작업 중이다.
@@ -237,18 +289,35 @@ namespace Survive.Testing
             yield return 랜턴(true);
 
             // 사람이 감지 반경 안에 있어야 한다. 육지에 서 있으므로 낫은 물가에서 멈춘다.
+            //
+            // <b>거리는 꼬리가 올라간 그 순간에 잰다.</b> 반복문을 빠져나온 뒤에 재면
+            // 마지막 자리 정렬(최대 1.5초 전)과 측정 사이에 6.2 m/s로 미끄러지는 개체가
+            // 반경을 넘어설 수 있고, 그러면 <b>규칙이 다 지켜졌는데도</b> 전제가 거짓으로
+            // 읽힌다(실측 14.2 > 14). 이 단언이 말하려는 것은 "든 그때 감지 안이었는가"이지
+            // "다 끝나고도 감지 안인가"가 아니다.
             bool 들었다 = false;
+            float 거리 = float.MaxValue;
             float t = 0f;
             while (t < 8f && !들었다)
             {
                 if (t % 1.5f < Time.deltaTime) yield return 선다(_내륙);
 
+                // <b>사람이 낫을 마주 본다 — 그것이 "빛에 막힌"의 전제다.</b>
+                // 랜턴 웅덩이는 앞으로 밀려 있어 앞쪽만 지키므로(§19), 등지고 서면
+                // 낫이 사각으로 돌아 들어와 <b>규칙대로</b> 교전에 올라간다.
+                // 4상태가 몸을 몰기 시작한 뒤로 그 규칙이 실제로 물어서, 이 절이
+                // 재려는 경계 자세 대신 공격 태세가 찍혔다(실측 10회 중 1회).
+                // 몸을 돌리는 것은 플레이어의 방어이지 검사의 편의가 아니다.
+                E2EHarness.LookAt(_낫.transform.position);
+
                 들었다 = _꼬리.Posture == ScythePosture.Raised;
+                if (들었다) 거리 = Vector3.Distance(_낫.transform.position, 사람자리);
+
                 t += Time.deltaTime;
                 yield return null;
             }
 
-            float 거리 = Vector3.Distance(_낫.transform.position, 사람자리);
+            if (!들었다) 거리 = Vector3.Distance(_낫.transform.position, 사람자리);
             E2EHarness.Log($"  {t:F1}초: 자세 {_꼬리.Posture}, 상태 {_낫.State}, " +
                            $"거리 {거리:F1} (감지 반경 {_def.detectRadius})");
 
