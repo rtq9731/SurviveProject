@@ -143,7 +143,8 @@ namespace Survive.Testing
                               $"초당 피해가 규칙과 맞는다 (실측 {초당:F2}, 규칙 {MacroniumSea.CorrosionPerSecond:F2})");
 
             // 한 번 건너는 값. 실측 횡단 시간(1→2, 맨몸 보통 수영 10.3초)으로 환산한다.
-            float 횡단 = MacroniumSea.DamageOver(SeaImmersion.Swimming, false, 10.3f)
+            float 횡단 = LiquidCrossing.DamageOver(LiquidKind.Macronium,
+                                                   SeaImmersion.Swimming, false, 10.3f)
                        / Vitals.Health.Max;
             E2EHarness.Log($"  이 값으로 1→2를 건너면 체력의 {횡단:P0}");
             E2EHarness.Assert(횡단 >= 0.25f && 횡단 <= 0.35f,

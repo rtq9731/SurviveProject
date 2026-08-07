@@ -57,15 +57,15 @@ public class IslandZoneTests
     {
         // 얕다 → 무해
         Assert.AreEqual(CrossingVerdict.Harmless,
-            LiquidCrossing.Judge(new LiquidBody(0.6f, 24f), 맨몸, 100f));
+            LiquidCrossing.Judge(new LiquidBody(LiquidKind.Macronium, 0.6f, 24f), 맨몸, 100f));
 
         // 깊고 좁다 → 깎인다
         Assert.AreEqual(CrossingVerdict.Costly,
-            LiquidCrossing.Judge(new LiquidBody(2f, 24f), 맨몸, 100f));
+            LiquidCrossing.Judge(new LiquidBody(LiquidKind.Macronium, 2f, 24f), 맨몸, 100f));
 
         // 깊고 넓다 → 못 건넌다
         Assert.AreEqual(CrossingVerdict.Fatal,
-            LiquidCrossing.Judge(new LiquidBody(2f, 200f), 맨몸, 100f));
+            LiquidCrossing.Judge(new LiquidBody(LiquidKind.Macronium, 2f, 200f), 맨몸, 100f));
     }
 
     /// <summary>
@@ -197,7 +197,7 @@ public class IslandZoneTests
     public void 발이_바닥에서_떨어지면_같은_폭도_아프다()
     {
         var 얕은바다 = IslandZones.LiquidAt(IslandZone.ShallowSea);
-        var 깊어진것 = new LiquidBody(LiquidCrossing.SwimDepth, 얕은바다.Width);
+        var 깊어진것 = new LiquidBody(얕은바다.Kind, LiquidCrossing.SwimDepth, 얕은바다.Width);
 
         Assert.AreEqual(0f, LiquidCrossing.Toll(얕은바다), 0.001f);
         Assert.Greater(LiquidCrossing.Toll(깊어진것), 0f);

@@ -7,16 +7,22 @@ using Survive.Vitals;
 namespace Survive.World
 {
     /// <summary>
-    /// 섬 사이 바다에 몸을 담그고 있는 동안 살을 깎는다 (백로그 32).
+    /// 액체에 몸을 담그고 있는 동안 살을 깎는다 (백로그 32).
     ///
-    /// <b>얼마나 깎이는지는 여기서 정하지 않는다.</b> 그 규칙은 <see cref="MacroniumSea"/>에
-    /// 있고 Unity 없이 시험된다. 이 컴포넌트가 하는 일은 지금 몸이 어떻게 잠겨 있는지를
+    /// <b>얼마나 깎이는지는 여기서 정하지 않는다.</b> 그 규칙은
+    /// <see cref="LiquidCrossing.DamagePerSecond"/>에 있고 Unity 없이 시험된다.
+    /// 이 컴포넌트가 하는 일은 지금 몸이 <b>무슨 액체에 어떻게</b> 잠겨 있는지를
     /// 재서 규칙에 묻고, 나온 값을 초에 한 번씩 세계에 반영하는 것뿐이다.
     ///
+    /// <b>호수에 들어가도 이 컴포넌트는 돈다.</b> 다만 규칙이 초당 0을 돌려주므로
+    /// 아무 일도 일어나지 않는다(<see cref="LiquidKind.Water"/>). "호수면 건너뛴다"는
+    /// 분기를 여기 적지 않는 이유가 그것이다 - 특례를 여기 적으면 규칙과 세계가
+    /// 서로 다른 말을 하기 시작한다.
+    ///
     /// <b>왜 <see cref="MacroniumContactService"/>와 따로 서는가.</b> 물질은 같지만 재는
-    /// 대상이 다르다. 그쪽은 씬에 놓인 <see cref="MacroniumSurfaceZone"/>(짙은 층)의
-    /// 표면 높이를 보고, 이쪽은 <see cref="WaterBody"/>(묽은 바다)에 잠긴 깊이를 본다.
-    /// 한 컴포넌트에 두 판정을 넣으면 액면이 없는 씬에서도 바다 판정이 액면 코드를
+    /// 대상이 다르다. 그쪽은 씬에 놓인 <see cref="MacroniumSurfaceZone"/>(짙은 구간)의
+    /// 표면 높이를 보고, 이쪽은 <see cref="WaterBody"/>에 잠긴 깊이를 본다.
+    /// 한 컴포넌트에 두 판정을 넣으면 액면이 없는 씬에서도 이 판정이 액면 코드를
     /// 지나가게 되어, 둘 중 하나를 고칠 때마다 다른 하나가 흔들린다.
     ///
     /// <b>왜 씬에 놓지 않고 스스로 붙는가.</b> <see cref="DeathDropService"/>·
@@ -44,7 +50,26 @@ namespace Survive.World
         /// <summary>지금 살이 깎이고 있는가.</summary>
         public static bool IsCorroding { get; private set; }
 
-        /// <summary>바다가 지금까지 넣은 피해의 합. 구간별로 빼서 보라고 둔 것이다.</summary>
+        /// <summary>
+        /// 가장 최근에 읽은 액체의 종류. 물 밖이면 <see cref="LastInLiquid"/>가 거짓이고
+        /// 이 값은 직전 것이 남는다. 검증이 "무슨 물에 들어갔는지"를 집는 자리다.
+        /// </summary>
+        public static LiquidKind LastLiquid { get; private set; }
+
+        /// <summary>지금 몸이 액체 안에 있는가. 깎이는가와는 다른 물음이다.</summary>
+        public static bool LastInLiquid { get; private set; }
+
+        /// <summary>
+        /// 몸이 액체에 <b>노출</b>되어 있는가. 종류를 묻지 않는다
+        /// (<see cref="LiquidCrossing.IsExposed"/>).
+        ///
+        /// <see cref="IsCorroding"/>과 갈라 두는 이유는 검증 때문이다 - 호수에서
+        /// "안 깎였다"만 재면 <i>애초에 안 잠긴 것</i>과 구별되지 않는다.
+        /// 잠기기는 잠겼는데 안 깎였다를 말하려면 이 값이 따로 있어야 한다.
+        /// </summary>
+        public static bool LastExposed { get; private set; }
+
+        /// <summary>액체가 지금까지 넣은 피해의 합. 구간별로 빼서 보라고 둔 것이다.</summary>
         public static float TotalDamage { get; private set; }
 
         /// <summary>물어뜯은 횟수. "안 아팠다"와 "아예 닿지 않았다"를 가른다.</summary>
@@ -57,6 +82,9 @@ namespace Survive.World
 
             LastImmersion = SeaImmersion.Dry;
             IsCorroding = false;
+            LastInLiquid = false;
+            LastExposed = false;
+            LastLiquid = LiquidKind.Macronium;
             TotalDamage = 0f;
             Bites = 0;
 
@@ -73,6 +101,9 @@ namespace Survive.World
         /// <summary>아직 물리지 않고 쌓아 둔 노출 시간(초).</summary>
         float _pending;
 
+        /// <summary>이번 프레임에 규칙이 답한 초당 피해. 한 입의 크기가 여기서 나온다.</summary>
+        float _perSecond;
+
         void OnDisable() => Unhook();
 
         // 씬을 다시 올리면 지금 잡고 있던 플레이어가 사라진다.
@@ -84,11 +115,22 @@ namespace Survive.World
             var immersion = Read();
             LastImmersion = immersion;
 
+            // 무슨 액체에 들어 있는가. 물 밖이면 물을 것이 없다.
+            LastInLiquid = _swim.TryGetLiquid(out var kind);
+            if (LastInLiquid) LastLiquid = kind;
+
             bool footing = _loco != null && _loco.IsGrounded;
-            bool corroding = MacroniumSea.Corrodes(immersion, footing);
+            LastExposed = LastInLiquid && LiquidCrossing.IsExposed(immersion, footing);
+
+            // 판정은 하나다. 종류가 초당 값을 정하고, 0이면 아무 일도 없다.
+            _perSecond = LastInLiquid
+                ? LiquidCrossing.DamagePerSecond(kind, immersion, footing)
+                : 0f;
+
+            bool corroding = _perSecond > 0f;
             IsCorroding = corroding;
 
-            // 죽은 사람을 더 물지 않는다. 되살아나기 전까지 셈을 멈춘다 —
+            // 죽은 사람을 더 물지 않는다. 되살아나기 전까지 셈을 멈춘다 -
             // 안 그러면 시체가 물에 뜬 채로 가방을 몇 개씩 만든다.
             if (!corroding || _vitals.Health.IsEmpty) { _pending = 0f; return; }
 
@@ -103,6 +145,9 @@ namespace Survive.World
         {
             LastImmersion = SeaImmersion.Dry;
             IsCorroding = false;
+            LastInLiquid = false;
+            LastExposed = false;
+            _perSecond = 0f;
             _pending = 0f;
         }
 
@@ -164,11 +209,14 @@ namespace Survive.World
             var receiver = _body.GetComponentInChildren<IDamageable>();
             if (receiver == null) return;
 
-            Bites++;
-            TotalDamage += MacroniumSea.BiteDamage;
+            // 한 입의 크기는 종류가 정한 초당 값에서 나온다. 상수를 그대로 쓰면
+            // 종류가 늘 때마다 여기가 거짓말을 시작한다.
+            float bite = _perSecond * MacroniumSea.BiteInterval;
 
-            receiver.TakeDamage(new DamageInfo(
-                MacroniumSea.BiteDamage, null, _body.position, Vector3.up));
+            Bites++;
+            TotalDamage += bite;
+
+            receiver.TakeDamage(new DamageInfo(bite, null, _body.position, Vector3.up));
         }
     }
 }

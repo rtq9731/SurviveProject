@@ -24195,7 +24195,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1507636620937791836, guid: 7097ba7ba649e1f41bba232312bdcbd8, type: 3}
       propertyPath: m_Name
-      value: Water_Lake
+      value: Macronium_Sea
       objectReference: {fileID: 0}
     - target: {fileID: 1507636620937791839, guid: 7097ba7ba649e1f41bba232312bdcbd8, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
@@ -24226,6 +24226,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86ffcebaa6872f64487b18c4631f0175, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Survive.World.WaterBody
+  kind: 2
   surfaceOverride: 0
   useOverride: 0
 --- !u!1001 &680142544
