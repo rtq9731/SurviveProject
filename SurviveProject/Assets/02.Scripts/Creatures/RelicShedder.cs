@@ -52,6 +52,7 @@ namespace Survive.Creatures
         }
 
         CreatureBrain _brain;
+        HoverDrifter _drifter;
         RelicShedSO _rule;
         PlayerInventory _player;
 
@@ -69,6 +70,8 @@ namespace Survive.Creatures
         void Awake()
         {
             _brain = GetComponent<CreatureBrain>();
+
+            _drifter = GetComponent<HoverDrifter>();
 
             var health = GetComponent<Survive.Combat.CreatureHealth>();
             _rule = health != null && health.Definition != null ? health.Definition.relicShed : null;
@@ -92,6 +95,13 @@ namespace Survive.Creatures
             // 싸움 중에 떨어지면 "쫓기다 주웠다"가 되어 위험을 감수한 보상이 아니게 된다.
             if (_brain == null) return;
             if (_brain.State != CreatureState.Wander && _brain.State != CreatureState.Idle) return;
+
+            // <b>제자리에 있을 때만 흘린다.</b> 서식지 밖으로 밀려나 돌아가는 중인
+            // 개체는 순찰하는 것이 아니다. 그리고 실무적으로, 돌아가는 동안에는
+            // 몸이 지형 막힘을 무시하고 가로지르므로(HoverDrifter.Glide) 그때 굴림이
+            // 걸리면 <b>유물이 육지에 떨어진다</b> — 「낫의 영역에 떨어졌다」가 거짓이 되고,
+            // 액면 보행 장비 없이 줍는 순환 해소가 지도 위에서 성립하지 않는다.
+            if (_drifter != null && _drifter.Returning) return;
 
             // <b>어둠이 조건이다.</b> 곁에 있는 것만으로는 모자라고, 그 사람이
             // 빛 밖에 서 있어야 한다 — 이 게임에서 가장 무서운 행동(칠흑 속에서

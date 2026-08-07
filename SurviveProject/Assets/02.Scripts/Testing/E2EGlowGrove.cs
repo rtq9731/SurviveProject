@@ -100,6 +100,9 @@ namespace Survive.Testing
 
         static IEnumerator 준비(System.Action<GlowGrove> result)
         {
+            // 낫은 밤에만 나온다(스펙 §8). 밤은 이 시나리오의 전제이지 주어가 아니다.
+            E2EScytheNight.밤에_세운다();
+
             // 설치 서비스는 AfterSceneLoad에 스스로 선다. 도메인 리로드를 끈 채
             // 재생을 반복하면 놓칠 수 있으므로 없으면 여기서 한 번 부른다.
             if (GlowGrove.Active.Count == 0) GlowGroveService.Build();

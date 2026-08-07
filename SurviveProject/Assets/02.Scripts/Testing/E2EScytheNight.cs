@@ -62,6 +62,37 @@ namespace Survive.Testing
             E2EHarness.Log("=== 낫은 밤에 다닌다 완주 ===");
         }
 
+        // ── 다른 낫 시나리오가 함께 쓰는 창구 ──────────────────
+
+        /// <summary>
+        /// 시계를 <b>한밤중에 세운다.</b> 낫 시나리오들이 준비 단계에서 부른다.
+        ///
+        /// <b>왜 필요해졌는가.</b> 2026-08-07에 낫이 밤에만 나오게 됐다
+        /// (<see cref="ScytheHabitat.IsAbroad(float)"/>). 시계를 흐르게 두면 판마다
+        /// 낮일 수도 밤일 수도 있고, 낮에 걸린 판은 낫이 물러나 있어
+        /// <b>규칙이 지켜졌는데도</b> 시나리오가 실패한다 — 실측으로 「낫 서식」이
+        /// 셋 중 둘, 「랜턴 오프셋」이 셋 중 하나에서 그렇게 깨졌다.
+        /// 밤은 그 시나리오들이 재려는 것의 <b>전제</b>이지 주어가 아니다.
+        /// </summary>
+        public static void 밤에_세운다()
+        {
+            var 시계 = DayNightService.Instance;
+            if (시계 == null) return;
+
+            시계.Frozen = true;
+            시계.SetTimeOfDay(0.95f);
+        }
+
+        /// <summary>세워 둔 시계를 되돌린다. 다음 시나리오가 남은 밤을 물려받지 않게.</summary>
+        public static void 시계를_되돌린다()
+        {
+            var 시계 = DayNightService.Instance;
+            if (시계 == null) return;
+
+            시계.Frozen = false;
+            시계.SetTimeOfDay(DayNightService.StartTimeOfDay);
+        }
+
         // ── 준비 ────────────────────────────────────────────────
 
         static IEnumerator 준비()
