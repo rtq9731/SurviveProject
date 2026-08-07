@@ -4,11 +4,29 @@ using Survive.Core;
 using Survive.Domain.Art;
 using Survive.Player;
 using Survive.Vitals;
+using Survive.World;
 
 namespace Survive.Art
 {
     /// <summary>
-    /// 깊이에 따라 안개를 갈아 끼운다 (백로그 40, 1순위).
+    /// 안개를 매 프레임 갈아 끼운다 (백로그 40, 1순위).
+    ///
+    /// <b>재는 축이 둘이다</b> (상세기획서 §7.4, 2026-08-07 개정).
+    /// <list type="bullet">
+    /// <item><b>지상</b>(<see cref="DepthFog.AirLineY"/> 위) — <b>거리</b>다.
+    ///   두꺼운 대기가 사이에 있으므로 멀리가 안 보이고, <b>시선을 올릴수록
+    ///   대기를 짧게 지나 맑아진다.</b> 그래서 여기서 재어 넣는 것은 높이가
+    ///   아니라 <b>카메라가 향한 고도</b>다</item>
+    /// <item><b>지하</b>(그 아래) — <b>깊이</b>다. 예전 밴드 표 그대로다</item>
+    /// </list>
+    ///
+    /// <b>왜 카메라 고도로 밀도를 바꾸는가.</b> Unity의 안개는 방향을 모른다 —
+    /// 밀도 하나만 받는다. 높이에 따라 옅어지는 안개를 픽셀 단위로 그리려면
+    /// 셰이더를 새로 써야 하는데, 그것은 마지막 수단이다. 대신 <b>지금 어디를
+    /// 보고 있는가</b>로 밀도를 정하면 "위를 보면 맑고 수평을 보면 뿌옇다"가
+    /// 공짜로 나온다. <b>대가는 한 화면 안에서 두 밀도가 동시에 보이지 않는
+    /// 것</b>이고, 그것은 스카이박스가 서면 배경 쪽에서 해결된다
+    /// (<see cref="DepthFog.SkyColor"/>).
     ///
     /// <b>안개가 승부처다.</b> 이 게임의 색은 후처리가 아니라 안개가 만든다 —
     /// 환경광이 0이라 화면 대부분은 광원이 닿지 않는 검정이고, 그 검정의
@@ -36,6 +54,18 @@ namespace Survive.Art
         public static Color LastColor { get; private set; }
         public static float LastDensity { get; private set; }
         public static float LastFarClip { get; private set; }
+
+        /// <summary>가장 최근에 깔린 배경(하늘) 색.</summary>
+        public static Color LastSkyColor { get; private set; }
+
+        /// <summary>가장 최근에 읽은 시선 고도(도). 지상 규칙이 돌 때만 뜻이 있다.</summary>
+        public static float LastElevation { get; private set; }
+
+        /// <summary>가장 최근에 읽은 햇빛의 양(0~1).</summary>
+        public static float LastDaylight { get; private set; }
+
+        /// <summary>지금 지상 규칙(거리 축)으로 돌고 있는가. 거짓이면 깊이 축이다.</summary>
+        public static bool LastOnSurface { get; private set; }
 
         /// <summary>
         /// 안개 밀도에 맞춰 카메라 원거리 평면을 줄일 것인가.
@@ -90,7 +120,37 @@ namespace Survive.Art
             // 잠긴 동안은 UnderwaterView의 것이다.
             if (_swim != null && _swim.IsHeadSubmerged) return;
 
-            DepthFog.Sample(_body.position.y, out var color, out float density);
+            Color color, sky;
+            float density;
+
+            // <b>축을 가르는 것은 눈의 높이다.</b> 발이 호수에 잠겼다고 시야가
+            // 물속이 되지는 않는다 — 무릎까지 담그고 서 있는 사람이 보는 것은
+            // 여전히 공기 너머다. 카메라가 액면 아래로 내려가는 순간이 곧
+            // 머리가 잠기는 순간이고, 그때는 UnderwaterView가 이미 이어받는다.
+            //
+            // 깊이 밴드가 읽는 값은 그대로 <b>몸의 높이</b>다. 밴드 표가 몸
+            // 높이로 짜여 있고, 그 표는 이 라운드에서 한 값도 움직이지 않는다.
+            float eyeY = _eye != null ? _eye.transform.position.y : _body.position.y;
+            bool onSurface = eyeY >= DepthFog.AirLineY;
+            LastOnSurface = onSurface;
+
+            if (onSurface)
+            {
+                float elevation = ViewElevationDegrees();
+                float daylight = DaylightNow();
+
+                DepthFog.SampleSurface(elevation, daylight, out color, out density);
+                sky = DepthFog.SkyColor(elevation, daylight);
+
+                LastElevation = elevation;
+                LastDaylight = daylight;
+            }
+            else
+            {
+                DepthFog.Sample(_body.position.y, out color, out density);
+                // 깊이 축에서는 배경도 안개색 그대로다 — 지하에 하늘은 없다.
+                sky = color;
+            }
 
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
@@ -99,14 +159,38 @@ namespace Survive.Art
 
             LastColor = color;
             LastDensity = density;
+            LastSkyColor = sky;
 
             if (_eye == null) return;
 
-            // 배경색을 안개색과 맞춘다. 원거리 평면 밖은 이 색으로 지워지므로
-            // 잘라 낸 자리가 "안개 저편"으로 자연스럽게 읽힌다.
-            if (_eye.clearFlags == CameraClearFlags.SolidColor) _eye.backgroundColor = color;
+            // 배경색이 곧 하늘이다. 원거리 평면 밖은 이 색으로 지워지므로
+            // 잘라 낸 자리가 "대기 저편"으로 자연스럽게 읽힌다.
+            if (_eye.clearFlags == CameraClearFlags.SolidColor) _eye.backgroundColor = sky;
 
             LastFarClip = TrimFarClip ? DepthFog.FarClipFor(density, _sceneFar) : _sceneFar;
+        }
+
+        /// <summary>
+        /// 카메라가 향한 고도(도). 수평이 0, 천정이 90이다.
+        ///
+        /// <b>플레이어의 몸이 아니라 카메라를 읽는다.</b> 재려는 것이 "어느 방향으로
+        /// 대기를 지나는가"이므로 기준은 실제로 그려지는 시선이다 — 몸의 방향으로
+        /// 재면 위를 올려다봐도 안개가 그대로다.
+        /// </summary>
+        float ViewElevationDegrees()
+        {
+            if (_eye == null) return 0f;
+            return Mathf.Asin(Mathf.Clamp(_eye.transform.forward.y, -1f, 1f)) * Mathf.Rad2Deg;
+        }
+
+        /// <summary>
+        /// 지금 햇빛의 양(0~1). 시계가 아직 안 섰으면 낮으로 본다 —
+        /// 안개가 시계보다 먼저 도는 프레임에서 화면이 한 번 캄캄해지지 않게.
+        /// </summary>
+        static float DaylightNow()
+        {
+            var clock = DayNightService.Instance;
+            return clock == null ? 1f : DayNightCycle.Daylight(clock.TimeOfDay);
         }
 
         bool Acquire()

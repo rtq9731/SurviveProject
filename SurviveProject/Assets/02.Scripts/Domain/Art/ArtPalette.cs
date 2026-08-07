@@ -31,11 +31,11 @@ namespace Survive.Domain.Art
         public static readonly Color WaterDeep = FromHex(0x0E1F2E);
 
         // 포그 색이 곧 구역의 색이다. 깊이가 곧 자홍의 농도다
-        public static readonly Color FogSurface = FromHex(0xC4703A);      // 프롤로그 화성 지표. 모래폭풍
-        public static readonly Color FogIslands = FromHex(0x0C0F15);      // 부유섬. 매크로늄은 발밑에만
+        public static readonly Color FogSurface = FromHex(0xC4703A);      // 폐기된 프롤로그의 지표색. 값만 남았다
+        public static readonly Color FogIslands = FromHex(0x0C0F15);      // 옅은 구간. 매크로늄은 발밑에만
         public static readonly Color FogPlains = FromHex(0x0D1A18);       // 얕은 평야. 등불버섯이 천장을 밝힌다
         public static readonly Color FogPlainsNight = FromHex(0x140A1E);  // 평야의 밤. 자홍 기운이 돈다
-        public static readonly Color FogCliffs = FromHex(0x2C1240);       // 깊은 절벽. 매크로늄이 노출되어 고인다
+        public static readonly Color FogCliffs = FromHex(0x2C1240);       // 짙은 구간. 매크로늄이 노출되어 고인다
 
         // readonly 배열은 참조만 고정할 뿐 원소는 그대로 변경 가능하다
         // (ArtPalette.AllowedEmission[0] = Color.red 가 컴파일된다). 이 배열은
@@ -48,6 +48,26 @@ namespace Survive.Domain.Art
 
         /// <summary>발광이 허용되는 색. 이 밖의 Emission은 위반이다.</summary>
         public static IReadOnlyList<Color> AllowedEmission => AllowedEmissionColors;
+
+        // ── 색 다루기 ───────────────────────────────────────────
+        //
+        // <b>왜 여기에 있는가.</b> 새 hex를 적지 않고 색을 만드는 유일한 길이
+        // "팔레트 색의 휘도만 옮기는 것"이다. 그 도구가 팔레트 바깥에 있으면
+        // 쓰는 쪽마다 제 손으로 다시 적게 되고, 그 순간 아트 규칙 검사기가 보는
+        // 팔레트와 화면에 깔리는 색이 갈라진다.
+
+        /// <summary>Rec.709 휘도. 픽셀 실측이 쓰는 것과 같은 식이다.</summary>
+        public static float Luminance(Color c) => 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b;
+
+        /// <summary>색조는 그대로 두고 휘도만 이 값으로. 원색이 검정이면 검정이다.</summary>
+        public static Color WithLuminance(Color c, float target)
+        {
+            float now = Luminance(c);
+            if (now <= 0.0001f) return new Color(0f, 0f, 0f, c.a);
+
+            float k = Mathf.Max(0f, target) / now;
+            return new Color(c.r * k, c.g * k, c.b * k, c.a);
+        }
 
         /// <summary>0xRRGGBB 정수를 불투명 Color로. 스펙의 hex를 그대로 옮겨 쓰기 위한 것이다.</summary>
         public static Color FromHex(int rgb) => new Color(
