@@ -29,7 +29,7 @@ public class OxygenRateTests
     {
         var 목록 = new List<IOxygenModifier>
         {
-            new 보정 { 값 = -8f },   // 모래폭풍
+            new 보정 { 값 = -8f },   // 위험 지대
             new 보정 { 값 = 5f }     // 버섯 군락
         };
         // 합산(-3)이 아니라 최댓값(5)이어야 한다

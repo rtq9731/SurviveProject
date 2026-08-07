@@ -106,7 +106,7 @@ public class HarvestRespawnRuleTests
     }
 
     /// <summary>
-    /// 근거 한 마디: <b>노동은 게이트가 아니다.</b> 외계 합금이 무한히 나오면
+    /// 근거 한 마디: <b>노동은 게이트가 아니다.</b> 이종 합금이 무한히 나오면
     /// 티어 3 관문이 "시간만 들이면 열리는 것"이 된다. 그러니 매장 총량은 유한해야 한다.
     /// </summary>
     [Test]
@@ -114,7 +114,7 @@ public class HarvestRespawnRuleTests
     {
         var 광맥 = 정의("OreVein");
         Assert.AreEqual(0f, 광맥.respawnSeconds,
-            "「합금 더미」가 재생하기 시작했다. 그러면 외계 합금 관문이 노동으로 열린다");
+            "「합금 더미」가 재생하기 시작했다. 그러면 이종 합금 관문이 노동으로 열린다");
         Assert.AreEqual(0f, HarvestRespawnRule.SupplyPerMinute(기댓값(광맥, "alien_alloy"),
                                                               씬에_선_수("OreVein"),
                                                               광맥.respawnSeconds), 0.0001f);
@@ -133,7 +133,7 @@ public class HarvestRespawnRuleTests
         int 필요 = 요구량("Assets/08.Data/Recipes/surface_walker.asset", "alien_alloy")
                  + 요구량("Assets/08.Data/Recipes/breach_pod.asset", "alien_alloy");
 
-        Assert.Greater(필요, 0, "외계 합금을 요구하는 레시피가 사라졌다 — 예외의 근거가 끊겼다");
+        Assert.Greater(필요, 0, "이종 합금을 요구하는 레시피가 사라졌다 — 예외의 근거가 끊겼다");
         Assert.Greater(매장량, 필요 * 1.5f,
             $"매장량 {매장량:F1}개로 요구량 {필요}개를 여유 있게 덮지 못한다 " +
             $"({곳}곳). 유한한 것이 관문이 아니라 막다른 길이 된다");
@@ -150,7 +150,7 @@ public class HarvestRespawnRuleTests
         Assert.IsNotNull(낫표, "낫 전리품 표를 못 읽었다");
         Assert.Greater(낫표.entries.Where(e => e?.item != null && e.item.id == "alien_alloy")
                                    .Sum(e => e.chance * e.maxCount), 0f,
-            "낫이 외계 합금을 흘리지 않는다 — 매장지가 마르면 되돌릴 길이 없다");
+            "낫이 이종 합금을 흘리지 않는다 — 매장지가 마르면 되돌릴 길이 없다");
     }
 
     // ── 에셋과 표가 같은 말을 한다 ──────────────────────────────

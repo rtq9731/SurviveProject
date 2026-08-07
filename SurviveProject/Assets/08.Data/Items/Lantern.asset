@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Survive.Domain::Survive.Items.ToolItemSO
   id: lantern
   displayName: "\uB79C\uD134"
-  description: "\uC9C0\uD558\uC758 \uC5B4\uB460\uC744 \uBC1D\uD78C\uB2E4."
+  description: "\uBC24\uC758 \uC5B4\uB460\uC744 \uBC1D\uD78C\uB2E4."
   icon: {fileID: 21300000, guid: a5ab51ab50797c94c8716a11f8314696, type: 3}
   maxStack: 1
   category: 1

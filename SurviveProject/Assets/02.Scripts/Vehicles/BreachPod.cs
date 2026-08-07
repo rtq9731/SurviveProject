@@ -23,7 +23,7 @@ namespace Survive.Vehicles
     /// 넘기고, 참이라는 답이 오면 하강을 한 번만 트는 것뿐이다 —
     /// <c>DescentZone</c>이 같은 모양으로 서 있다.
     ///
-    /// <b>연출과 챕터 종료는 새로 만들지 않는다.</b> 짙은 층을 다 내려갔을 때 벌어지는
+    /// <b>연출과 챕터 종료는 새로 만들지 않는다.</b> 짙은 구간을 다 내려갔을 때 벌어지는
     /// 일은 이미 <c>DescentZone.Breach</c>가 안다 — 암전, 다음 씬, 종막 신호까지.
     /// 여기서 그것을 다시 적으면 종막이 두 벌이 되고, 두 벌은 언젠가 갈라진다.
     /// </summary>
@@ -98,7 +98,7 @@ namespace Survive.Vehicles
             _launched = true;
             Launches++;
 
-            Debug.Log($"[BreachPod] 돌파정이 짙은 층으로 떠났다 — " +
+            Debug.Log($"[BreachPod] 돌파정이 짙은 구간으로 떠났다 — " +
                       $"윗면 {_layer.TopY:F2}, 두께 {_layer.Zone.Magnitude:F1}m, 용량 {_capacity:F1}m", this);
 
             Launched?.Invoke(this);

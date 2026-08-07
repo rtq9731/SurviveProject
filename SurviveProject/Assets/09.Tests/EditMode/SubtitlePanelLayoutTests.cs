@@ -63,7 +63,7 @@ public class SubtitlePanelLayoutTests
     [Test]
     public void 한_줄을_넣으면_판이_글자를_담을_높이를_갖는다()
     {
-        _label.text = "우주복 AI : 비상 착륙 완료. 기체는 회수 불가 상태입니다.";
+        _label.text = "우주복 AI : 착륙 완료. 성간 항행에 쓸 연료는 남지 않았습니다.";
         Rebuild();
 
         // 예전 결함은 10px였다. 24px 글자에 위아래 여백이 붙은 높이여야 한다.
@@ -123,7 +123,7 @@ public class SubtitlePanelLayoutTests
     [Test]
     public void 자막은_퀵슬롯과_대기열_띠_위에_앉는다()
     {
-        _label.text = "우주복 AI : 비상 착륙 완료.";
+        _label.text = "우주복 AI : 착륙 완료.";
         Rebuild();
 
         Assert.AreEqual(new Vector2(0.5f, 0f), _root.anchorMin, "화면 하단 중앙에 걸려 있지 않다");

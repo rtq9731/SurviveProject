@@ -11,12 +11,12 @@ using Survive.Items;
 using Survive.World;
 
 /// <summary>
-/// A섬에서 나오는 것 — <b>매크로늄은 0건, 외계 합금은 근거를 단 예외</b> (스펙 §21 게이트 3).
+/// A섬에서 나오는 것 — <b>매크로늄은 0건, 이종 합금은 근거를 단 예외</b> (스펙 §21 게이트 3).
 ///
 /// <b>왜 예외에 근거를 매다는가.</b> 「A섬에는 매크로늄이 없다」는 규칙에는 예외가 하나
-/// 있다 — 외계 합금은 A섬에 남는다. 예외를 목록으로만 적어 두면 그 목록은 늘어나기만
+/// 있다 — 이종 합금은 A섬에 남는다. 예외를 목록으로만 적어 두면 그 목록은 늘어나기만
 /// 하고, 몇 달 뒤에는 아무도 왜 거기 있는지 모른다. 그래서 여기서는 <b>예외의 근거인
-/// 사슬을 한 마디씩 실제로 밟는다</b>: 「액면 보행 장비」가 외계 합금을 요구하고 →
+/// 사슬을 한 마디씩 실제로 밟는다</b>: 「액면 보행 장비」가 이종 합금을 요구하고 →
 /// 그 결과물이 액면을 뚫는 장비이고 → 그 장비가 여는 것이 바다다.
 /// <b>사슬 중 한 마디라도 끊기면 이 검사가 빨개진다</b> — 근거가 사라졌으니 예외도 함께.
 /// </summary>
@@ -111,7 +111,7 @@ public class AIslandResourceTests
             "매크로늄을 떨구는 채집물이 아예 없다 — 그러면 A섬 검사가 빈 검사가 된다");
     }
 
-    // ── 외계 합금이라는 예외와 그 근거 ──────────────────────
+    // ── 이종 합금이라는 예외와 그 근거 ──────────────────────
 
     [Test]
     public void 외계_합금은_A섬_배치표에_들어_있다()
@@ -120,7 +120,7 @@ public class AIslandResourceTests
     }
 
     /// <summary>
-    /// <b>예외의 근거 — 사슬 한 마디: 「액면 보행 장비」가 외계 합금을 요구한다.</b>
+    /// <b>예외의 근거 — 사슬 한 마디: 「액면 보행 장비」가 이종 합금을 요구한다.</b>
     /// </summary>
     [Test]
     public void 예외의_근거_레시피가_외계_합금을_요구한다()
@@ -129,14 +129,14 @@ public class AIslandResourceTests
         Assert.IsNotNull(레시피, $"{예외레시피}를 못 읽었다");
         Assert.AreEqual(AIslandResources.ExceptionRecipe, 레시피.id);
 
-        var 외계합금 = 레시피.ingredients
+        var 이종합금 = 레시피.ingredients
             .Where(i => i != null && i.item != null && i.item.id == AIslandResources.ExceptionMaterial)
             .ToList();
 
-        Assert.IsNotEmpty(외계합금,
-            "「액면 보행 장비」가 외계 합금을 더 이상 요구하지 않는다. " +
-            "그러면 외계 합금이 A섬에 남을 이유도 사라진다");
-        Assert.Greater(외계합금.Sum(i => i.count), 0, "요구량이 0이면 요구하지 않는 것과 같다");
+        Assert.IsNotEmpty(이종합금,
+            "「액면 보행 장비」가 이종 합금을 더 이상 요구하지 않는다. " +
+            "그러면 이종 합금이 A섬에 남을 이유도 사라진다");
+        Assert.Greater(이종합금.Sum(i => i.count), 0, "요구량이 0이면 요구하지 않는 것과 같다");
     }
 
     /// <summary>
@@ -155,7 +155,7 @@ public class AIslandResourceTests
 
     /// <summary>
     /// <b>사슬 세 마디: 그 장비가 여는 것이 바다다.</b> 바다를 여는 장비가 다른 것으로
-    /// 바뀌면, A섬에서 외계 합금을 모을 이유가 사라진다.
+    /// 바뀌면, A섬에서 이종 합금을 모을 이유가 사라진다.
     /// </summary>
     [Test]
     public void 그_장비가_여는_것이_A섬과_B섬_사이의_바다다()
@@ -167,7 +167,7 @@ public class AIslandResourceTests
         Assert.AreEqual(IslandZone.Sea, AIslandResources.ExceptionOpens);
 
         // 그리고 그 바다는 맨몸으로는 못 건넌다. 건널 수 있으면 장비가 아무것도 열지 않고,
-        // 그러면 외계 합금을 A섬에 둘 이유도 없다.
+        // 그러면 이종 합금을 A섬에 둘 이유도 없다.
         Assert.AreEqual(CrossingVerdict.Fatal,
             IslandZones.Verdict(IslandZone.Sea, new List<GearCapability>()));
     }
@@ -190,7 +190,7 @@ public class AIslandResourceTests
     }
 
     /// <summary>
-    /// <b>A섬에서 외계 합금이 실제로 나온다.</b> 근거가 있어도 나오는 자리가 없으면
+    /// <b>A섬에서 이종 합금이 실제로 나온다.</b> 근거가 있어도 나오는 자리가 없으면
     /// 장비를 만들 수 없다. 출처는 「합금 더미」와 낫 둘이다(기획서 §2.1).
     /// </summary>
     [Test]
@@ -204,7 +204,7 @@ public class AIslandResourceTests
             bool 흘린다 = 표.entries != null && 표.entries.Any(
                 e => e?.item != null && e.item.id == AIslandResources.ExceptionMaterial);
 
-            Assert.IsTrue(흘린다, $"{이름}이 외계 합금을 흘리지 않는다 — A섬 출처가 하나 사라졌다");
+            Assert.IsTrue(흘린다, $"{이름}이 이종 합금을 흘리지 않는다 — A섬 출처가 하나 사라졌다");
         }
     }
 
@@ -218,6 +218,6 @@ public class AIslandResourceTests
         int 수 = 씬에_선_채집물들().Count(
             n => 떨구는것(n).Contains(AIslandResources.ExceptionMaterial));
 
-        Assert.Greater(수, 0, "외계 합금이 나오는 채집물이 씬에 하나도 없다");
+        Assert.Greater(수, 0, "이종 합금이 나오는 채집물이 씬에 하나도 없다");
     }
 }

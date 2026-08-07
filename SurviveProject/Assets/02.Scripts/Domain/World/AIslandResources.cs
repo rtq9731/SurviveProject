@@ -23,7 +23,7 @@ namespace Survive.World
         /// </summary>
         public const string BannedPrefix = "macronium";
 
-        // ── 외계 합금이라는 예외 ────────────────────────────────
+        // ── 이종 합금이라는 예외 ────────────────────────────────
 
         /// <summary>
         /// A섬에 남은 <b>유일한 고급 자원</b>. 스크랩·기계 부품은 난파선의 잔해라
@@ -33,12 +33,12 @@ namespace Survive.World
         public const string ExceptionMaterial = "alien_alloy";
 
         /// <summary>
-        /// <b>예외의 근거.</b> 「액면 보행 장비」가 외계 합금을 요구하고,
-        /// <b>그것이 곧 B섬으로 건너가는 장비</b>다. 외계 합금을 B섬으로 옮기면
+        /// <b>예외의 근거.</b> 「액면 보행 장비」가 이종 합금을 요구하고,
+        /// <b>그것이 곧 B섬으로 건너가는 장비</b>다. 이종 합금을 B섬으로 옮기면
         /// <i>B섬에 가려면 B섬의 자원이 필요한</i> 순환이 되어 챕터가 닫힌다.
         ///
-        /// <b>근거가 사라지면 예외도 함께 무너져야 한다.</b> 이 레시피가 외계 합금을
-        /// 더 이상 쓰지 않게 되는 날, A섬에 외계 합금이 남을 이유도 사라진다 —
+        /// <b>근거가 사라지면 예외도 함께 무너져야 한다.</b> 이 레시피가 이종 합금을
+        /// 더 이상 쓰지 않게 되는 날, A섬에 이종 합금이 남을 이유도 사라진다 —
         /// <c>AIslandResourceTests</c>가 그 사슬을 한 마디씩 밟아 확인한다.
         /// </summary>
         public const string ExceptionRecipe = "surface_walker";
@@ -47,7 +47,7 @@ namespace Survive.World
         public const IslandZone ExceptionOpens = IslandZone.Sea;
 
         /// <summary>
-        /// A섬에서 외계 합금이 나오는 자리. 「합금 더미」와 <b>낫</b> 둘뿐이다
+        /// A섬에서 이종 합금이 나오는 자리. 「합금 더미」와 <b>낫</b> 둘뿐이다
         /// (기획서 §2.1). 에셋 파일 이름으로 적는다 — id는 옛 이름(<c>ore_vein</c>)이라
         /// 여기 적으면 읽는 사람이 헷갈린다.
         /// </summary>

@@ -105,12 +105,12 @@ public class SurfaceWalkerRecipeTests
     [Test]
     public void 주재료가_섬3의_자원인_외계_합금이다()
     {
-        // 스펙 §5: 스크랩 → 기계 부품 → 외계 합금 → 매크로늄.
-        // 섬4를 여는 장비는 바로 앞 티어인 외계 합금을 요구해야 진행이 한 방향이 된다.
+        // 스펙 §5: 스크랩 → 기계 부품 → 이종 합금 → 매크로늄.
+        // 섬4를 여는 장비는 바로 앞 티어인 이종 합금을 요구해야 진행이 한 방향이 된다.
         var 재료 = new Dictionary<string, int>();
         foreach (var i in 레시피().ingredients) 재료[i.item.id] = i.count;
 
-        Assert.IsTrue(재료.ContainsKey("alien_alloy"), "외계 합금이 없으면 섬3을 건너뛰고 만들 수 있다");
+        Assert.IsTrue(재료.ContainsKey("alien_alloy"), "이종 합금이 없으면 섬3을 건너뛰고 만들 수 있다");
         Assert.Greater(재료["alien_alloy"], 0);
     }
 

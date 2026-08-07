@@ -221,7 +221,7 @@ public class EnvironmentThreatTests
         var 강 = new HazardZone(EnvironmentHazard.Depth, 20f);
         var 액면 = new HazardZone(EnvironmentHazard.MacroniumSurface, 30f);
         var 잠수통로 = new HazardZone(EnvironmentHazard.Submersion, 36f);
-        var 진한층 = new HazardZone(EnvironmentHazard.MacroniumLayer, 18f);
+        var 짙은구간 = new HazardZone(EnvironmentHazard.MacroniumLayer, 18f);
 
         // 수영은 관문이 아니라 학습 장치다 — 숨을 아무리 오래 참아도
         // 잠수 통로는 방호복 없이 열리지 않는다(기획서 갱신점 _3 §2).
@@ -229,28 +229,28 @@ public class EnvironmentThreatTests
         Assert.IsTrue(EnvironmentThreat.CanPass(강, 수영까지));
         Assert.IsFalse(EnvironmentThreat.CanPass(잠수통로, 수영까지));
         Assert.IsFalse(EnvironmentThreat.CanPass(액면, 수영까지));
-        Assert.IsFalse(EnvironmentThreat.CanPass(진한층, 수영까지));
+        Assert.IsFalse(EnvironmentThreat.CanPass(짙은구간, 수영까지));
 
         var 액면보행까지 = 장비(
             new GearCapability(TraversalGear.Swimming, 20f),
             new GearCapability(TraversalGear.SurfaceWalker, 30f));
         Assert.IsTrue(EnvironmentThreat.CanPass(액면, 액면보행까지));
         Assert.IsFalse(EnvironmentThreat.CanPass(잠수통로, 액면보행까지));
-        Assert.IsFalse(EnvironmentThreat.CanPass(진한층, 액면보행까지));
+        Assert.IsFalse(EnvironmentThreat.CanPass(짙은구간, 액면보행까지));
 
         var 방호복까지 = 장비(
             new GearCapability(TraversalGear.Swimming, 20f),
             new GearCapability(TraversalGear.SurfaceWalker, 30f),
             new GearCapability(TraversalGear.MacroniumSuit, 40f));
         Assert.IsTrue(EnvironmentThreat.CanPass(잠수통로, 방호복까지));
-        Assert.IsFalse(EnvironmentThreat.CanPass(진한층, 방호복까지));
+        Assert.IsFalse(EnvironmentThreat.CanPass(짙은구간, 방호복까지));
 
         var 돌파정까지 = 장비(
             new GearCapability(TraversalGear.Swimming, 20f),
             new GearCapability(TraversalGear.SurfaceWalker, 30f),
             new GearCapability(TraversalGear.MacroniumSuit, 40f),
             new GearCapability(TraversalGear.BreachPod, 18f));
-        Assert.IsTrue(EnvironmentThreat.CanPass(진한층, 돌파정까지));
+        Assert.IsTrue(EnvironmentThreat.CanPass(짙은구간, 돌파정까지));
     }
 
     // ── 걷어낸 관문 (기획서 §6.4: 게이트는 장비여야 하고 노동이면 안 된다) ──

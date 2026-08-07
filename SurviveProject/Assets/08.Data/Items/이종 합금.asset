@@ -10,12 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1e7f1797e5edde543978bb8369b71e2a, type: 3}
-  m_Name: "\uC678\uACC4 \uD569\uAE08"
+  m_Name: "\uC774\uC885 \uD569\uAE08"
   m_EditorClassIdentifier: Survive.Domain::Survive.Items.ItemDataSO
   id: alien_alloy
-  displayName: "\uC678\uACC4 \uD569\uAE08"
-  description: "\uD654\uC131\uC778\uC774 \uB9CC\uB4E0 \uACE0\uAC15\uB3C4 \uAD6C\uC870\uC7AC. \uD569\uAE08 \uB354\uBBF8\uC640 \uB0AB\uC758 \uC794\uD574\uC5D0\uC11C \uB098\uC628\uB2E4. \uC4F8 \uB370\uB294 \uC544\uC9C1 \uBC1D\uD600\uC9C0\uC9C0 \uC54A\uC558\uB2E4."
+  displayName: "\uC774\uC885 \uD569\uAE08"
+  description: "\uC778\uB958\uC758 \uAE30\uBC18\uAE30\uC220\uC744 \uB2EE\uC558\uC73C\uB418
+    \uC131\uBD84\uC774 \uB2E4\uB978 \uACE0\uAC15\uB3C4 \uAD6C\uC870\uC7AC. \uD569\uAE08
+    \uB354\uBBF8\uC640 \uB0AB\uC758 \uC794\uD574\uC5D0\uC11C \uB098\uC628\uB2E4.
+    \uC4F8 \uB370\uB294 \uC544\uC9C1 \uBC1D\uD600\uC9C0\uC9C0 \uC54A\uC558\uB2E4."
   icon: {fileID: 21300000, guid: e2af96b47cccbad49b9fbe8b11236334, type: 3}
   maxStack: 20
   category: 0
+  equipSlot: 0
   worldPrefab: {fileID: 2733041857388780544, guid: 49e8bd62c90ed67489913a40c8610e5a, type: 3}
