@@ -1,3 +1,5 @@
+using Survive.World;
+
 namespace Survive.Creatures
 {
     /// <summary>이 자리가 낫에게 무엇인가.</summary>
@@ -49,7 +51,7 @@ namespace Survive.Creatures
     ///
     /// <b>이 규정 하나가 셋을 동시에 푼다.</b>
     /// <list type="bullet">
-    /// <item>A섬 내륙과 B섬 지하가 왜 안전한가 — 낫이 상시로는 오지 않는다</item>
+    /// <item>안쪽 뭍(<c>SurfaceZone.Inland</c>)이 왜 안전한가 — 낫이 상시로는 오지 않는다</item>
     /// <item>액면 보행 장비 없이 티어 2 유물을 어떻게 먼저 얻는가 —
     ///       해안선까지는 나오므로 가장자리에서 줍는다 (순환이 풀린다)</item>
     /// <item>3단 목격을 어디에 두는가 — 해안에서 바다 너머로 →
@@ -71,9 +73,9 @@ namespace Survive.Creatures
         /// 지도를 고쳐도 규칙이 따라 움직이지 않는다.
         ///
         /// <b>왜 0.75인가 — 실측으로 정했다.</b> 처음에는 사람의 무릎 높이라는 이유로
-        /// 1.5를 썼는데, A섬의 걸을 수 있는 지형을 334곳 재어 보니 <b>액면 50.1 위로
+        /// 1.5를 썼는데, 걸을 수 있는 지형을 334곳 재어 보니 <b>액면 50.1 위로
         /// 최고가 52.32, 중앙값이 51.55</b>였다. 1.5m 띠는 그 섬의 절반을 해안선으로
-        /// 삼켜, "A섬 내륙이 안전하다"가 지도 위에서 성립하지 않는다.
+        /// 삼켜, "안쪽 뭍이 안전하다"가 지도 위에서 성립하지 않는다.
         ///
         /// 0.75는 <b>한 걸음 턱</b>이다. 물가에 선 사람이 팔을 뻗어 유물에 닿을 만큼은
         /// 나오면서(순환 해소의 조건), 물가를 한 발 벗어나면 곧바로 내륙이 된다.
@@ -112,6 +114,57 @@ namespace Survive.Creatures
         /// </summary>
         public static bool CanEnter(HabitatZone zone, ScytheAlert alert) =>
             zone != HabitatZone.Inland || alert == ScytheAlert.Alarmed;
+
+        // ══ 시간 축 ════════════════════════════════════════════
+        // 이 파일은 오래 <b>자리</b>와 <b>태세</b> 두 축만 알고 있었다. 세 번째 축이
+        // 여기 붙는다 — <b>시각</b>. 근거는 세계관 §5다: "일반 생물들에게 방해받지
+        // 않기 위해 눈에 띄지 않게 다닌다. 밤에는 더 보이지 않으므로 밤에 움직인다."
+        // <b>적의가 아니라 은폐다.</b>
+
+        /// <summary>
+        /// 지금 낫이 <b>나와 있는가</b>.
+        ///
+        /// <b>"없어지는가"가 아니라 "어디까지 나오는가"다.</b> 낮에 개체를 지웠다가
+        /// 밤에 다시 만들면 그것은 자리를 옮긴 것이 아니라 <b>다른 물건</b>이 된다 —
+        /// 도감과 관측(§5.13)이 「본 적 있다」를 세는데 그 셈이 흔들리고, 유물을
+        /// 흘리던 개체의 굴림 시계도 매일 처음부터 시작한다. 그래서 낮에도 낫은
+        /// 세계에 남아 있고, <b>물러날 뿐</b>이다(<see cref="CanEnter(HabitatZone, ScytheAlert, bool)"/>).
+        ///
+        /// <b>경계는 하나의 구간으로 잡는다.</b> 해질녘이 시작되는 순간부터 해뜰녘이
+        /// 시작되는 순간까지가 활동 시간이다 — 곧 <b>빛이 기울기 시작하면 나오고,
+        /// 빛이 돌아오기 시작하면 물러난다.</b> 박명 둘을 각각 어느 쪽으로 붙일지
+        /// 따로 정하지 않고 <b>한 구간</b>으로 두는 것이 요점이다. 둘을 따로 정하면
+        /// 경계가 넷이 되고, 그 넷 중 하나에서 값이 튀면 낫이 깜빡인다.
+        ///
+        /// 감광도(<see cref="DayNightCycle.Daylight"/>)에 문턱을 걸지 않은 것도 같은
+        /// 이유다. 그것은 부드러운 곡선이라 문턱 근처에서 프레임마다 답이 뒤집힌다.
+        /// 시각은 단조롭게 흐르므로 구간 판정이 흔들리지 않는다.
+        /// </summary>
+        public static bool IsAbroad(float timeOfDay) =>
+            timeOfDay >= DayNightCycle.DuskStart || timeOfDay < DayNightCycle.DawnStart;
+
+        /// <summary>
+        /// 태세까지 본 활동 여부. <b>발령은 낮을 이긴다.</b>
+        ///
+        /// 발령은 은폐 프로토콜을 <b>버렸다</b>는 뜻이다(<see cref="ScytheAlert.Alarmed"/>).
+        /// 숨을 이유가 사라진 개체가 해가 떴다고 물러나면 그 말이 거짓이 된다.
+        /// 그리고 등급은 <b>월드가 건 것</b>이라, 개체가 읽는 시계가 그것을 뚫으면
+        /// 소유권을 월드에 둔 뜻이 없어진다 — 고정 조명이 발령을 풀지 못하는 것과
+        /// 같은 원리다(<see cref="ScytheFsm"/>).
+        /// </summary>
+        public static bool IsAbroad(float timeOfDay, ScytheAlert alert) =>
+            alert == ScytheAlert.Alarmed || IsAbroad(timeOfDay);
+
+        /// <summary>
+        /// 시간까지 본 서식 범위. <b>낮에는 액면 위로 물러난다.</b>
+        ///
+        /// 낮의 범위를 <see cref="HabitatZone.Liquid"/> 하나로 좁히는 것이
+        /// "물러난다"의 내용이다. 해안선을 잃으므로 물가에 선 사람에게 닿지 않고,
+        /// 유물도 물 위에만 떨어져 <b>액면 보행 장비 없이는 주울 수 없다</b> —
+        /// 낮과 밤이 갈리는 자리가 전부 이 한 줄에서 나온다.
+        /// </summary>
+        public static bool CanEnter(HabitatZone zone, ScytheAlert alert, bool abroad) =>
+            abroad ? CanEnter(zone, alert) : zone == HabitatZone.Liquid;
 
         /// <summary>재는 것과 판정을 한 번에. 몸이 부르는 창구다.</summary>
         public static bool CanOccupy(bool hasLiquid, float liquidSurfaceY,

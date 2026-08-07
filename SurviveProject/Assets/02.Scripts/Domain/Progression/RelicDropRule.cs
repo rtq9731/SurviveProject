@@ -48,6 +48,31 @@ namespace Survive.Progression
         public const int Nothing = -1;
 
         /// <summary>
+        /// 지금 유물을 흘릴 수 있는 자리인가 — <b>사람이 곁에 있고, 그 사람이 어둠에 있을 때</b>
+        /// (세계관 §10 "칠흑 속에서 랜턴을 꺼야 낫에게 닿는다").
+        ///
+        /// <b>왜 새 규칙이 필요한가.</b> 「빛에 막힌다」만으로는 저절로 성립하지 않는다.
+        /// 목격 반경은 40m이고 감지 반경은 14m라, 그 사이 26m 띠에서는 <b>랜턴을 켠
+        /// 채로도</b> 굴림이 돈다 — 사람은 안전한 거리에 서서 유물만 받아 갈 수 있었다.
+        /// 오프셋을 6.5m로 올린 뒤로는 더 심해졌다: 정면 도달 14.5m가 감지 반경 14m를
+        /// 넘어, <b>마주 보고 서 있기만 하면</b> 낫이 아예 다가오지 못한 채 흘린다.
+        /// 겁나는 구석이 한 군데도 없는 진행 조건이 되어 버린다.
+        ///
+        /// <b>왜 줍는 쪽이 아니라 흘리는 쪽을 막는가.</b> 줍기만 막으면 낮에 밝은 채로
+        /// 잔뜩 떨어뜨려 두었다가 나중에 안전한 곳에서 어둠을 만들어 주울 수 있다.
+        /// 그러면 무서운 것은 「줍는 순간」뿐이고 <b>낫 곁에 서 있는 시간</b>이 사라진다.
+        /// 설계가 노린 두려움은 어둠 속에서 <b>그것과 함께 있는 동안</b>이다.
+        ///
+        /// <b>이야기로도 맞는다.</b> 낫은 은폐 프로토콜로 도는 유지보수 유닛이고
+        /// (세계관 §5) 눈에 띄지 않게 다닌다. 빛 안에 선 사람 곁에서 부품을 흘리는
+        /// 것은 그 프로토콜과 어긋난다. <b>보이지 않을 때만 제 일을 한다.</b>
+        /// </summary>
+        /// <param name="playerWithinWitness">사람이 목격 반경 안인가.</param>
+        /// <param name="playerInLight">그 사람이 지금 밝은 구역 안인가. 랜턴이든 화톳불이든 가리지 않는다.</param>
+        public static bool CanShed(bool playerWithinWitness, bool playerInLight) =>
+            playerWithinWitness && !playerInLight;
+
+        /// <summary>
         /// 이미 가진 것인가. 손에 있거나(인벤토리), 이미 다 밝혀냈으면(원장) 가진 것이다.
         /// </summary>
         public static bool AlreadyHeld(RelicOption option, Inventory inventory, UnlockLedger ledger)

@@ -153,8 +153,15 @@ namespace Survive.Creatures
             var target = _brain.Target;
             bool nearFixedLight = target != null && LitZoneRegistry.IsLitByFixed(target.position);
 
+            // <b>시계를 읽는다.</b> 시계가 아직 안 섰으면(검증 무대 등) 밤인 것으로
+            // 친다 — 시간 축이 붙기 전과 같은 답이라, 없는 시계가 동작을 바꾸지 않는다.
+            var 시계 = DayNightService.Instance;
+            bool abroad = 시계 == null
+                        || ScytheHabitat.IsAbroad(시계.TimeOfDay, ScytheWatch.Alert);
+
             return new ScytheSituation(detected, light, closing, nearFixedLight,
-                                       pushedByFlare: false, alert: ScytheWatch.Alert);
+                                       pushedByFlare: false, alert: ScytheWatch.Alert,
+                                       abroad: abroad);
         }
 
         /// <summary>상태에 <b>처음 들어선</b> 프레임에만 하는 일.</summary>
