@@ -37,6 +37,9 @@ namespace Survive.Testing
 
         static Vector3 사람자리 => E2EHarness.Player.transform.position;
 
+        /// <summary>재등장 절에서 사람이 계속 바라보는 곳. 무대를 흔들지 않으려고 고정한다.</summary>
+        static Vector3 _바라볼곳;
+
         public static IEnumerator FullRun()
         {
             yield return 준비();
@@ -156,11 +159,13 @@ namespace Survive.Testing
         {
             E2EHarness.Log("— 임시 조명: 랜턴은 따라붙기를 풀지 못한다 —");
 
-            // 웅덩이 밖 · 감지 안에 세운다. 웅덩이 안에 두면 낫이 제가 빛에 잠겨
-            // 물러나고, 물러나다 감지 밖으로 나가면 <b>랜턴이 아니라 거리가</b>
-            // 따라붙기를 푼다 — 그러면 이 절이 재려던 것과 다른 것을 재게 된다.
-            float 거리 = LanternRule.ForwardReachForTier(1) + 1.5f;
-            yield return 사람을_낫_곁에_세운다(거리);
+            // <b>옆에 세운다.</b> 웅덩이 안에 두면 낫이 제가 빛에 잠겨 물러나고,
+            // 물러나다 감지 밖으로 나가면 <b>랜턴이 아니라 거리가</b> 따라붙기를
+            // 푼다 — 그러면 이 절이 재려던 것과 다른 것을 재게 된다. 그런데 오프셋이
+            // 오른 뒤로 정면 도달(14.5m)이 감지 반경(14m)을 넘어, 정면에는 그런
+            // 자리가 아예 없다. 옆 도달은 4.66m로 줄어 있으므로 옆 10m가 그 자리다.
+            float 거리 = 10f;
+            yield return 낫을_사람_옆에_세운다(거리);
             E2EHarness.LightLantern();
             yield return null;
 
@@ -175,9 +180,9 @@ namespace Survive.Testing
             while (t < 5f)
             {
                 if (Vector3.Distance(_낫.transform.position, 사람자리) > _def.detectRadius * 0.9f)
-                    yield return 사람을_낫_곁에_세운다(거리);
+                    yield return 낫을_사람_옆에_세운다(거리);
 
-                E2EHarness.LookAt(_낫.transform.position);
+                E2EHarness.LookAt(_바라볼곳);
                 본상태.Add(_마음.State);
                 t += Time.deltaTime;
                 yield return null;
@@ -262,17 +267,23 @@ namespace Survive.Testing
             // 사라지면 그것은 재등장이 아니라 도주다. 기획서 §4.5가 재등장을 적은 자리도
             // 정확히 여기다: <b>"임시 조명(랜턴)일 때는 계속 따라붙는다. 단 같은 방향에
             // 머무르지 않는다."</b> 랜턴이 앞을 막는 동안에만 이 규칙이 돈다.
-            // <b>웅덩이 밖, 감지 안.</b> 웅덩이는 앞으로 오프셋만큼 밀려 있어 정면으로는
-            // 반경 + 오프셋까지 닿는다(실측 8 + 3 = 11m). 그 안에 낫을 두면 제가 빛에
-            // 잠겨 Retreat으로 물러나고, 물러나다 감지 밖으로 나가면 따라붙기가 풀려
-            // 재등장이 아예 돌지 않는다. 감지 반경(14)과의 사이에 세운다.
-            float 거리 = LanternRule.ForwardReachForTier(1) + 1.5f;
-            yield return 사람을_낫_곁에_세운다(거리);
+            // <b>낫을 옆에 세운다 — 정면이 아니다.</b> 오프셋이 6.5m로 오르면서
+            // 웅덩이 정면 도달이 14.5m가 되어 <b>낫의 감지 반경 14m를 넘어섰다.</b>
+            // 그래서 사람이 낫을 마주 보는 한 「웅덩이 밖이면서 감지 안」인 자리가
+            // 정면에는 존재하지 않는다 — 마주 보면 낫이 제 감지 밖으로 밀린다.
+            // 그것이 §19가 노린 것이므로 고칠 일이 아니라 무대를 옮길 일이다.
+            //
+            // 옆은 다르다. 원을 앞으로 밀면 옆 도달이 줄어들어(피타고라스, 지금 4.66m)
+            // <b>옆쪽 10m는 웅덩이 밖이면서 감지 안</b>이다. 그리고 정확히 옆은 등 뒤도
+            // 아니라 사각이 아니므로 빛이 앞을 막고, 낫은 따라붙기에 머문다.
+            // 재등장이 실제로 도는 자리가 여기다.
+            float 거리 = 10f;
+            yield return 낫을_사람_옆에_세운다(거리);
             E2EHarness.LightLantern();
             yield return null;
-            E2EHarness.Log($"  사람과의 거리 {거리:F1}m " +
-                           $"(웅덩이 정면 도달 {LanternRule.ForwardReachForTier(1):F1}m, " +
-                           $"감지 반경 {_def.detectRadius})");
+            E2EHarness.Log($"  사람과의 거리 {거리:F1}m · 옆 도달 " +
+                           $"{LanternRule.SideReachForTier(1):F2}m · 정면 도달 " +
+                           $"{LanternRule.ForwardReachForTier(1):F1}m · 감지 반경 {_def.detectRadius}");
 
             yield return E2EHarness.WaitUntil(() => _마음.State == ScytheState.Beware,
                                               "랜턴이 앞을 막아 따라붙기에 머문다", 8f);
@@ -296,22 +307,27 @@ namespace Survive.Testing
             float t = 0f;
             while (t < 한계 && 돈각들.Count < 3)
             {
-                // <b>사람은 자리를 지키되 낫을 눈으로 좇는다.</b> 그것이 이 규칙이 노리는
-                // 플레이어 행동이고(§19 "조작 자체가 방어가 된다"), 몸을 돌려 정면으로
-                // 마주 보는 동안 랜턴이 앞을 막아 낫은 따라붙기에 머문다. 등지고 있으면
-                // 사각이 열려 곧바로 교전으로 올라가 재등장이 한 번에 끝난다.
-                E2EHarness.LookAt(_낫.transform.position);
+                // <b>사람은 한 방향을 보고 서 있는다.</b> 낫을 눈으로 좇게 하면
+                // 웅덩이가 그쪽으로 밀려 낫을 삼키고(정면 도달 14.5m), 그러면 낫이
+                // 제 빛에 잠겨 물러나다 감지 밖으로 나간다. 사람이 한쪽을 보는 동안
+                // 반대쪽이 비는 것이 §19가 그린 그림이고, 이 절은 그 상태에서
+                // 낫이 자리를 바꾸는지를 잰다.
+                E2EHarness.LookAt(_바라볼곳);
 
                 // <b>사이 거리를 붙들어 둔다.</b> 낫이 다가와 웅덩이 안으로 들어오면
                 // 후보 고리가 통째로 밝아져 고를 자리가 하나도 남지 않고(실측 0개),
                 // 그때 낫은 규칙대로 <b>머문다</b>. 그것은 옳은 동작이지만 이 절이
                 // 재려는 것은 아니다 — 여기서 재는 것은 「자리를 바꾸는가」다.
                 // 멀어져 감지 밖으로 나가는 경우도 같은 이유로 되돌린다.
+                // <b>따라붙기에 머무는 것이 이 절의 전제다.</b> 재등장은 Beware 안의
+                // 규칙이므로, 낫이 사각으로 돌아 들어가 교전에 올라가거나(그러면
+                // 규칙대로 자리를 안 바꾼다) 감지 밖으로 나가면 잴 것이 없어진다.
+                // 거리도 붙든다 — 가까워지면 후보 고리가 통째로 웅덩이에 잠긴다.
                 float 사이 = Vector3.Distance(_낫.transform.position, 사람자리);
-                if (_마음.State == ScytheState.Patrol || 사이 < 거리 - 2f ||
+                if (_마음.State != ScytheState.Beware || 사이 < 거리 - 3f ||
                     사이 > _def.detectRadius * 0.95f)
                 {
-                    yield return 사람을_낫_곁에_세운다(거리);
+                    yield return 낫을_사람_옆에_세운다(거리);
                     yield return E2EHarness.WaitUntil(() => _마음.State == ScytheState.Beware,
                                                       "다시 따라붙는다", 6f);
 
@@ -364,6 +380,31 @@ namespace Survive.Testing
         /// 사람을 낫의 감지 반경 안쪽 <b>어두운 자리</b>에 세운다.
         /// 낫을 옮기지 않는 것은 이 시나리오가 재려는 것이 낫의 자리 선택이기 때문이다.
         /// </summary>
+        /// <summary>
+        /// <b>낫을 사람의 옆에 놓는다.</b> 사람은 한 방향(+z)을 보고 서 있고 낫은
+        /// 그 90도 옆에 선다.
+        ///
+        /// 옆이어야 하는 이유는 기하다. 웅덩이가 앞으로 6.5m 밀려 있어 정면 도달이
+        /// 14.5m인데 낫의 감지 반경은 14m다 — <b>정면에는 「빛 밖이면서 감지 안」인
+        /// 자리가 없다.</b> 옆 도달은 4.66m로 줄어 있으므로 옆 10m가 그 자리다.
+        /// 정확히 옆은 등 뒤가 아니라 사각도 아니므로, 빛이 앞을 막아 낫이 따라붙기에
+        /// 머문다 — 재등장이 도는 유일한 상태다.
+        /// </summary>
+        static IEnumerator 낫을_사람_옆에_세운다(float 거리)
+        {
+            Vector3 사람 = 사람자리;
+            _바라볼곳 = 사람 + Vector3.forward * 20f;
+
+            var 옆 = 사람 + new Vector3(거리, 0f, 0f);
+            옆.y = _낫.transform.position.y;
+
+            _낫.transform.position = 옆;
+            E2EHarness.LookAt(_바라볼곳);
+            E2EHarness.SyncPhysics();
+            yield return null;
+            yield return null;
+        }
+
         static IEnumerator 사람을_낫_곁에_세운다(float 거리 = -1f)
         {
             if (거리 <= 0f) 거리 = _def.detectRadius * 0.5f;
