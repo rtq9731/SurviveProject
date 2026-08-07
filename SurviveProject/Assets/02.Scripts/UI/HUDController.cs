@@ -61,6 +61,10 @@ namespace Survive.UI
                 RefreshBuildPrompt(_placer.LastResult);
             }
             else Debug.LogWarning("[HUDController] BuildPlacer를 찾지 못했습니다.", this);
+
+            // 돌파정도 배치 판정을 갖는다(스펙 §6). 사유를 띄우는 줄은 같은 줄이다 —
+            // 화면에 자리를 하나 더 만들면 플레이어는 규칙이 둘이라고 배운다.
+            Survive.Vehicles.BreachPodService.ResultChanged += RefreshPodPrompt;
         }
 
         void OnDestroy()
@@ -70,6 +74,21 @@ namespace Survive.UI
                 _placer.ResultChanged -= RefreshBuildPrompt;
                 _placer.SelectionChanged -= OnBuildSelectionChanged;
             }
+            Survive.Vehicles.BreachPodService.ResultChanged -= RefreshPodPrompt;
+        }
+
+        /// <summary>
+        /// 돌파정의 배치 사유. 건설 모드가 켜져 있으면 그쪽이 이긴다 —
+        /// 한 줄에 두 판정이 번갈아 뜨면 어느 쪽 말인지 알 수 없다.
+        /// </summary>
+        void RefreshPodPrompt(PlacementResult result)
+        {
+            if (buildPlacementPrompt == null) return;
+            if (_placer != null && _placer.IsActive) return;
+
+            string text = PlacementCheckText.Describe(result);
+            buildPlacementPrompt.text = text;
+            buildPlacementPrompt.gameObject.SetActive(!string.IsNullOrEmpty(text));
         }
 
         void RefreshPrompt(string prompt)

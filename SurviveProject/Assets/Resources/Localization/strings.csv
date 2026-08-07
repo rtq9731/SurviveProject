@@ -183,6 +183,8 @@ Build,reject_wrong_surface,여기엔 놓을 수 없다,Cannot place it here,
 Build,reject_no_anchor,붙일 곳이 없다: 토대부터 놓아라,Nothing to attach to: place a foundation first,
 Build,reject_slot_taken,그 자리엔 이미 있다,That slot is already taken,
 Build,reject_not_researched,지을 줄 모른다: 청사진이 없다,You do not know how: no blueprint,
+Build,reject_not_dense_layer,진한 층이 드러난 자리에만 놓을 수 있다,It only sits where the dense layer is exposed,돌파정 전용 거부 사유
+Build,pod_prompt_board,[E] 돌파정에 탄다,[E] Board the breach pod,
 Build,structure_default_name,구조물,Structure,에셋이 이름을 적지 않았을 때 쓰는 이름
 #
 # ── 연구대 (Progression/ResearchStation) ──────────────────
@@ -350,7 +352,7 @@ Discovery,disc_mushroom_cap.line.speaker,우주복 AI,,
 Discovery,disc_mushroom_cap.line.text,다공성 포자 조직 분석... 기체 여과재로 사용 가능한 것으로 보입니다. 해당 물질을 사용한 제작법이 있습니다.,,
 Discovery,disc_radar_islet.line.speaker,우주복 AI,,
 #   그 자리에 처음 닿았을 때의 대사. 대상 자리: a_islet
-Discovery,disc_radar_islet.line.text,"지각 아래 밀도 이상 분석... 추가 지하 구조물이 존재하는 것으로 보입니다. 전자파 관측을 통한 탐색을 권장하며, 해당 장비의 제작법이 있습니다.",,
+Discovery,disc_radar_islet.line.text,지각 아래 밀도 이상 분석... 전자파 관측이 권장되며 추가 지하 구조물을 짚어낼 수 있는 것으로 보입니다. 해당 장비의 제작법이 있습니다.,,
 Discovery,disc_scrap.line.speaker,우주복 AI,,
 #   재료를 처음 쥐었을 때의 대사. 대상 아이템: 스크랩 (scrap)
 Discovery,disc_scrap.line.text,외계 금속물체 분석... 에너지로 사용가능한 것으로 보입니다. 해당 물질을 사용한 제작법이 있습니다.,,
@@ -400,7 +402,7 @@ Item,part_eye.desc,부양체 앞면에 박혀 있던 단안 렌즈. 초점이 �
 Item,part_eye.name,눈의 렌즈,,
 Item,part_fruit_crab.desc,네 다리 중 하나에서 빠진 관절 마디. 마디 안쪽이 아직 매끄럽게 돌아간다. 끝에 마른 열매 껍질이 눌어붙어 있다.,,
 Item,part_fruit_crab.name,열매게의 다리마디,,
-Item,part_scythe.desc,어깨에서 뻗어 있던 절단 부속 하나. 날 끝이 어둠 속에서 옅게 탄다. 잡는 쪽 접합면만 매끈하게 잘려 있다.,,
+Item,part_scythe.desc,몸통에서 떨어져 나온 절단 부속 하나. 날 끝이 어둠 속에서 옅게 탄다. 잡는 쪽 접합면만 매끈하게 잘려 있다.,,
 Item,part_scythe.name,낫의 날붙이,,
 Item,part_wing.desc,몸통 양쪽 팬에서 떼어 낸 날 한 장. 두께가 종이만 한데 손으로는 휘어지지 않는다. 표면을 따라 미세한 홈이 결처럼 나 있다.,,
 Item,part_wing.name,날개의 팬날,,
@@ -470,7 +472,7 @@ Research,res_codex_fruit_crab.line.text,사족 관절과 상부 포획 구조 �
 Research,res_codex_fruit_crab.name,열매게 개체 분석,,
 Research,res_codex_scythe.line.speaker,우주복 AI,,
 #   연구를 끝냈을 때의 대사. 대상: 낫의 날붙이 / 항목 이름: 낫 개체 분석
-Research,res_codex_scythe.line.text,고속 이족 보행체의 절단 부속 분석... 밝은 곳을 피해 어둠에서만 움직이는 것으로 보입니다. 해당 개체의 정보가 정리되었습니다.,,
+Research,res_codex_scythe.line.text,다리 없이 액면을 미끄러지는 개체의 절단 부속 분석... 밝은 곳을 피해 어둠에서만 움직이는 것으로 보입니다. 해당 개체의 정보가 정리되었습니다.,,
 Research,res_codex_scythe.name,낫 개체 분석,,
 Research,res_codex_wing.line.speaker,우주복 AI,,
 #   연구를 끝냈을 때의 대사. 대상: 날개의 팬날 / 항목 이름: 날개 개체 분석
