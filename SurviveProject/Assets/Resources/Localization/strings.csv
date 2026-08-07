@@ -519,6 +519,9 @@ Sequence,prologue_intro.line3.text,주의 : 지표를 덮은 액체가 데이터
 Sequence,prologue_intro.line4.speaker,우주복 AI,Suit AI,
 #   4번째 자막 (앞 줄: 주의 : 지표를 덮은 액체가 데이터베이스에 ...)
 Sequence,prologue_intro.line4.text,파일럿의 생존을 위해 주변 탐색을 실시합니다...,Commencing a local survey to sustain the pilot...,
+Sequence,warn_core_theft.line1.speaker,우주복 AI,,
+#   1번째 자막
+Sequence,warn_core_theft.line1.text,경고 : 인접한 발열체가 다수 개체의 신호와 같은 주기로 진동합니다. 반출하는 즉시 그 개체들이 일제히 반응할 것으로 판단됩니다. 실행 여부는 파일럿의 결정입니다.,,
 #
 # ---- Vital ----
 #   생명 수치 이름. HUD 게이지에 붙는다.
