@@ -394,4 +394,176 @@ public class SpawnLedgerTests
         Assert.AreEqual(1, 목록.Count);
         Assert.AreEqual("campfire", 목록.Records[0].what);
     }
+
+    // ══ ⑥ 몸에 딸린 것 ═════════════════════════════════════════
+    //
+    // <b>보관함의 내용물 · 회수함 · 걸어 둔 제작은 한 갈래다.</b> 셋 다 「생성된
+    // 몸에 붙어 있는 상태」이고, 몸이 사라지면 갈 곳이 없다. 갈래를 셋으로 두면
+    // 저장본에 절이 셋 늘고 그 셋의 복원 순서를 저장본이 정하게 된다 —
+    // 몸이 아직 없는데 내용물이 먼저 돌아오면 그것은 허공에 부어진다.
+    // 줄이 제 딸림을 실으면 순서라는 물음 자체가 없다.
+
+    static SpawnStack 무더기(string id, int count) => new SpawnStack { id = id, count = count };
+
+    static SpawnJobRow 제작(string recipe, int remaining = 1) =>
+        new SpawnJobRow { recipe = recipe, remaining = remaining, elapsed = 0f, unitSeconds = 5f };
+
+    /// <summary>
+    /// <b>몸을 싣는 줄이 내용물도 싣는다.</b> 이것이 이 라운드의 요점이다 —
+    /// 몸은 돌아오는데 안이 비면 저장이 물건을 먹는다.
+    /// </summary>
+    [Test]
+    public void 건축물_줄이_보관함의_내용물을_싣는다()
+    {
+        var 줄 = 건축물("storage", Vector3.zero);
+        줄.holds.Add(무더기("scrap", 12));
+        줄.holds.Add(무더기("mushroom_wood", 3));
+
+        var 목록 = new SpawnLedger();
+        목록.BeginSweep();
+        Assert.IsTrue(목록.Put(줄));
+        목록.EndSweep();
+
+        var 되살린것 = new SpawnLedger();
+        되살린것.Restore(목록.Capture());
+
+        Assert.AreEqual(1, 되살린것.Count);
+        Assert.AreEqual(2, 되살린것.Records[0].holds.Count);
+        Assert.AreEqual("scrap", 되살린것.Records[0].holds[0].id);
+        Assert.AreEqual(12, 되살린것.Records[0].holds[0].count);
+    }
+
+    /// <summary>
+    /// 회수함과 대기열도 같은 줄에 실린다. 스크랩 다섯을 넣고 기다리다 저장하면
+    /// 그 다섯이 없어지던 자리다.
+    /// </summary>
+    [Test]
+    public void 건축물_줄이_회수함과_걸어_둔_제작을_싣는다()
+    {
+        var 줄 = 건축물("campfire", Vector3.zero);
+        줄.output.Add(무더기("battery_cell", 2));
+        줄.queued.Add(제작("battery_cell", 5));
+
+        var 목록 = new SpawnLedger();
+        목록.BeginSweep();
+        목록.Put(줄);
+        목록.EndSweep();
+
+        var 되살린것 = new SpawnLedger();
+        되살린것.Restore(목록.Capture());
+
+        var r = 되살린것.Records[0];
+        Assert.AreEqual(1, r.output.Count);
+        Assert.AreEqual(2, r.output[0].count);
+        Assert.AreEqual(1, r.queued.Count);
+        Assert.AreEqual(5, r.queued[0].remaining, "남은 개수를 잃으면 재료를 잃는다");
+        Assert.AreEqual(5f, r.queued[0].unitSeconds, 0.001f,
+                        "개당 시간은 걸 때 찍어 둔 값이다");
+    }
+
+    /// <summary>
+    /// <b>낙하물은 딸림을 안 싣는다.</b> 바닥에 굴러다니는 물건은 자기가 곧
+    /// 내용물이라 안에 무엇을 담지 않는다. 실을 자리를 열어 두면 언젠가 그릇을
+    /// 거기 넣게 되는데, 그릇은 몸을 갖는 편이 낫다.
+    /// </summary>
+    [Test]
+    public void 낙하물_줄은_딸림을_싣지_않는다()
+    {
+        Assert.IsFalse(SpawnLedgerRule.CarriesAttachment(WorldLedgerScope.Drop));
+        Assert.IsTrue(SpawnLedgerRule.CarriesAttachment(WorldLedgerScope.Structure));
+
+        var 줄 = 낙하물("scrap", 3, Vector3.zero);
+        줄.holds.Add(무더기("scrap", 99));
+
+        var 목록 = new SpawnLedger();
+        목록.BeginSweep();
+        목록.Put(줄);
+        목록.EndSweep();
+
+        Assert.IsTrue(목록.Records[0].holds == null || 목록.Records[0].holds.Count == 0,
+                      "낙하물 줄에 실린 딸림은 지워진다 — 되돌릴 그릇이 없다");
+    }
+
+    /// <summary>
+    /// <b>몸마다 상한이 있다.</b> 보관함이 여럿이고 각자 칸이 스물이면 저장본이
+    /// 커진다. 낙하물에 상한을 둔 것과 같은 물음이고, 이쪽은 축이 「몸 하나가
+    /// 몇 칸」이라 상한도 몸마다 둔다.
+    /// </summary>
+    [Test]
+    public void 몸마다의_무더기_상한을_넘으면_앞을_남기고_세어_둔다()
+    {
+        var 줄 = 건축물("storage", Vector3.zero);
+        int 넘치게 = SpawnLedgerRule.StacksPerBody + 4;
+        for (int i = 0; i < 넘치게; i++) 줄.holds.Add(무더기("scrap" + i, 1));
+
+        var 목록 = new SpawnLedger();
+        목록.BeginSweep();
+        목록.Put(줄);
+        목록.EndSweep();
+
+        Assert.AreEqual(SpawnLedgerRule.StacksPerBody, 목록.Records[0].holds.Count);
+        Assert.AreEqual("scrap0", 목록.Records[0].holds[0].id, "앞칸이 먼저 넣은 것이다");
+        Assert.AreEqual(4, 목록.AttachmentTrimmed,
+                        "조용히 버리지 않는다 — 세어 두고 모는 쪽이 소리 낸다");
+    }
+
+    [Test]
+    public void 몸마다의_제작_상한을_넘으면_세어_둔다()
+    {
+        var 줄 = 건축물("bench", Vector3.zero);
+        for (int i = 0; i < SpawnLedgerRule.JobsPerBody + 2; i++) 줄.queued.Add(제작("r" + i));
+
+        var 목록 = new SpawnLedger();
+        목록.BeginSweep();
+        목록.Put(줄);
+        목록.EndSweep();
+
+        Assert.AreEqual(SpawnLedgerRule.JobsPerBody, 목록.Records[0].queued.Count);
+        Assert.AreEqual(2, 목록.AttachmentTrimmed);
+    }
+
+    /// <summary>
+    /// <b>상한은 게임이 이미 허락한 것보다 넉넉해야 한다.</b> 안 그러면 정상
+    /// 플레이가 상한에 닿고, 그때 사라지는 것은 사고가 아니라 규칙이 된다 —
+    /// 그러면 「걸어두고 자리를 뜰 수 있다」가 거짓말이 된다.
+    /// </summary>
+    [Test]
+    public void 제작_상한이_대기열_길이보다_넉넉하다()
+    {
+        Assert.GreaterOrEqual(SpawnLedgerRule.JobsPerBody,
+                              Survive.Crafting.CraftQueue.DefaultCapacity,
+                              "게임이 걸도록 허락한 것을 저장이 잘라 내면 재료가 사라진다");
+    }
+
+    [Test]
+    public void 무더기_상한이_회수함_칸보다_넉넉하다()
+    {
+        Assert.GreaterOrEqual(SpawnLedgerRule.StacksPerBody,
+                              Survive.Crafting.StationCraftQueue.DefaultOutputSlots);
+    }
+
+    /// <summary>
+    /// <b>딸림 칸이 없던 저장본이 그냥 열린다.</b> 칸을 더한 것이지 형식을 바꾼
+    /// 것이 아니다 — 그때 올바른 세계는 「몸은 서 있고 안은 비어 있다」다.
+    /// 그 저장본을 쓰던 세계에서는 몸조차 안 돌아왔으므로 이쪽이 더 낫다.
+    /// </summary>
+    [Test]
+    public void 딸림_칸이_없는_줄도_그냥_열린다()
+    {
+        var 옛것 = new SpawnLedgerState();
+        옛것.records.Add(new SpawnRecord
+        {
+            kind = WorldLedgerScope.Structure,
+            what = "storage",
+            count = 1,
+            holds = null,
+            output = null,
+            queued = null,
+        });
+
+        var 목록 = new SpawnLedger();
+        Assert.DoesNotThrow(() => 목록.Restore(옛것));
+        Assert.AreEqual(1, 목록.Count);
+        Assert.AreEqual(0, 목록.AttachmentTrimmed);
+    }
 }

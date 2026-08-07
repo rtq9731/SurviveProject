@@ -5,6 +5,47 @@ using UnityEngine;
 namespace Survive.World
 {
     /// <summary>
+    /// 몸이 들고 있는 한 무더기 — 보관함 한 칸, 회수함 한 칸.
+    ///
+    /// <b>낙하물 줄과 다르다.</b> 바닥에 굴러다니는 것은 제 몸이 있어서 제 줄을
+    /// 갖지만, 보관함 속의 것은 <b>몸이 없다</b> — 보관함이 사라지면 그 안의 것도
+    /// 함께 사라지고 되찾을 자리가 없다. 그래서 이쪽은 자리를 적지 않는다.
+    /// 자리는 자기를 담고 있는 몸의 것이다.
+    /// </summary>
+    [Serializable]
+    public class SpawnStack
+    {
+        /// <summary><c>ItemDataSO.id</c>.</summary>
+        public string id;
+
+        public int count;
+    }
+
+    /// <summary>
+    /// 몸에 걸어 두고 자리를 뜬 제작 하나.
+    ///
+    /// <b>개당 소요 시간을 함께 적는다.</b> <c>CraftJob</c>은 걸 때의
+    /// <c>RecipeSO.craftSeconds</c>를 찍어 두고 그 값으로 산다 — 값을 다시 읽으면
+    /// 밸런스를 돌린 날 이미 걸려 있던 제작의 값이 조용히 바뀐다. 사람이 걸 때
+    /// 들은 값 그대로 끝나야 한다.
+    /// </summary>
+    [Serializable]
+    public class SpawnJobRow
+    {
+        /// <summary><c>RecipeSO.id</c>.</summary>
+        public string recipe;
+
+        /// <summary>아직 완성되지 않은 개수. 재료는 걸 때 이미 전부 빠졌다.</summary>
+        public int remaining;
+
+        /// <summary>지금 만드는 <b>한 개</b>에 들인 시간(초).</summary>
+        public float elapsed;
+
+        /// <summary>개당 소요 시간(초). 걸 때 찍어 둔 값이다.</summary>
+        public float unitSeconds;
+    }
+
+    /// <summary>
     /// 생성 목록에 적힌 한 줄. <b>씬에 없던 것이 지금 세계에 있다</b>는 기록이다.
     ///
     /// <b><see cref="WorldRecord"/>와 담는 것이 다르다.</b> 저쪽은 씬이 놓아둔
@@ -62,6 +103,37 @@ namespace Survive.World
         /// 아무 데나 잡힌다. 쓰지 않는 갈래는 0이다.
         /// </summary>
         public float since;
+
+        // ── 몸에 딸린 것 ─────────────────────────────────────────
+        //
+        // <b>왜 딸림을 줄이 싣는가.</b> 보관함의 내용물·회수함·걸어 둔 제작은
+        // 셋 다 「생성된 몸에 붙어 있는 상태」다. 각자 저장본에 제 절을 갖게 하면
+        // 절의 주인과 몸의 주인이 갈라지고, 그 순간 <b>순서</b>가 정답을 정하게 된다 —
+        // 몸이 아직 안 세워졌는데 내용물이 먼저 돌아오면 그것은 허공에 부어진다.
+        // 줄이 제 딸림을 실으면 몸을 세우는 그 한 걸음 안에서 함께 앉으므로
+        // 순서라는 문제 자체가 없어진다. 저장할 때의 창구도 하나가 된다.
+
+        /// <summary>
+        /// <b>몸이 보관하고 있는 것.</b> 보관함의 내용물이 여기 실린다.
+        /// 몸이 없으면 갈 곳이 없는 물건들이다.
+        /// </summary>
+        public List<SpawnStack> holds = new List<SpawnStack>();
+
+        /// <summary>
+        /// <b>다 만들어 놓고 아직 안 가져간 것.</b> 스테이션의 회수함이다.
+        /// <see cref="holds"/>와 목록을 나눈 이유는 <b>돌아갈 자리가 다르기</b>
+        /// 때문이다 — 이쪽은 회수함, 저쪽은 보관 격자다. 한 목록에 담으려면
+        /// 무더기마다 어느 쪽인지를 적어야 하고, 그 꼬리표가 빈 목록 하나보다 크다.
+        /// </summary>
+        public List<SpawnStack> output = new List<SpawnStack>();
+
+        /// <summary>
+        /// <b>걸어 두고 자리를 뜬 제작.</b> 규칙 §5.4가 「여러 개를 대기열에
+        /// 걸어두고 자리를 뜰 수 있다」고 하는데, 저장이 그것을 지우면 자리를 뜨는
+        /// 일이 <b>저장으로만</b> 금지되는 셈이 된다. 재료는 걸 때 이미 빠졌으므로
+        /// 잃는 것은 시간이 아니라 물건이다.
+        /// </summary>
+        public List<SpawnJobRow> queued = new List<SpawnJobRow>();
     }
 
     /// <summary>
@@ -106,6 +178,37 @@ namespace Survive.World
         /// </summary>
         public static bool HasRow(string kind) =>
             kind == WorldLedgerScope.Structure || kind == WorldLedgerScope.Drop;
+
+        /// <summary>
+        /// 한 몸이 <b>몇 무더기</b>까지 싣는가 (보관 격자와 회수함 각각).
+        ///
+        /// <b>상한을 몸마다 두는 이유.</b> 저장본이 커지는 축은 「몸 몇 개」와
+        /// 「몸 하나가 몇 칸」 둘인데, 앞은 <see cref="StructureCap"/>이 이미 막고
+        /// 있고 뒤는 게임 자신이 이미 정해 둔 값이 있다 — 보관함 18칸, 회수함 4칸.
+        /// 그 값보다 넉넉하게 잡아 두면 <b>정상 플레이로는 닿지 않고</b>, 닿았다면
+        /// 그것은 칸 수를 늘리면서 이 규칙을 안 본 것이다.
+        ///
+        /// 둘을 곱한 것이 최악이다: 건축물 512 × (32 + 32)무더기.
+        /// 무더기 하나가 서른 글자 남짓이니 저장본이 1MB를 넘지 않는다.
+        /// </summary>
+        public const int StacksPerBody = 32;
+
+        /// <summary>
+        /// 한 몸이 <b>몇 개의 제작</b>까지 싣는가.
+        /// <c>CraftQueue.DefaultCapacity</c>(6)보다 넉넉해야 한다 —
+        /// 게임이 걸도록 허락한 것을 저장이 잘라 내면 재료가 사라진다.
+        /// </summary>
+        public const int JobsPerBody = 16;
+
+        /// <summary>
+        /// 이 갈래가 <b>딸림</b>을 싣는가.
+        ///
+        /// <b>낙하물은 안 싣는다.</b> 바닥에 굴러다니는 물건은 자기가 곧 내용물이라
+        /// 안에 무엇을 담지 않는다. 실을 자리를 만들어 두면 「가방을 떨궜다」 같은
+        /// 것을 언젠가 거기 넣게 되는데, 그것은 낙하물이 아니라 그릇이고
+        /// 그릇은 몸을 갖는 편이 낫다.
+        /// </summary>
+        public static bool CarriesAttachment(string kind) => kind == WorldLedgerScope.Structure;
 
         /// <summary>이 갈래를 몇 줄까지 담는가. 제 줄이 없는 갈래는 0이다.</summary>
         public static int CapFor(string kind)
@@ -200,6 +303,15 @@ namespace Survive.World
         public int Trimmed => _trimmed;
 
         /// <summary>
+        /// 몸마다의 상한에 걸려 <b>못 실은 딸림</b>의 수(무더기와 제작을 합친 것).
+        /// 비어 있는 것이 정상이다 — 정상 플레이로 닿는 수가 아니므로
+        /// 0이 아니면 그것은 칸 수를 늘리면서 규칙을 안 본 것이다.
+        /// </summary>
+        public int AttachmentTrimmed => _attachmentTrimmed;
+
+        int _attachmentTrimmed;
+
+        /// <summary>
         /// 훑기를 시작한다. <b>목록을 비운다</b> — 원장과 달리 이쪽은 매번
         /// 세계를 그대로 옮겨 적는 것이라, 지난번 줄을 남겨 둘 이유가 없다.
         /// 철거된 것과 주워진 것이 저절로 빠지는 자리가 여기다.
@@ -209,6 +321,7 @@ namespace Survive.World
             _records.Clear();
             _overflowed.Clear();
             _trimmed = 0;
+            _attachmentTrimmed = 0;
         }
 
         /// <summary>
@@ -223,8 +336,41 @@ namespace Survive.World
             if (string.IsNullOrEmpty(record.what)) return false;
             if (record.count <= 0) return false;
 
+            딸림을_다듬는다(record);
+
             _records.Add(record);
             return true;
+        }
+
+        /// <summary>
+        /// 딸림에 몸마다의 상한을 먹이고, 실을 자격이 없는 갈래의 딸림은 지운다.
+        ///
+        /// <b>앞을 남긴다.</b> 격자의 앞칸이 사람이 먼저 넣은 것이고, 회수함도
+        /// 먼저 완성된 것이 앞에 있다. 그리고 무엇보다 이 상한에 닿는 것은
+        /// 정상 플레이가 아니므로 이 규칙의 몫은 조용히 고르는 것이 아니라
+        /// <see cref="AttachmentTrimmed"/>로 <b>세어 두는 것</b>이다.
+        /// </summary>
+        void 딸림을_다듬는다(SpawnRecord record)
+        {
+            if (!SpawnLedgerRule.CarriesAttachment(record.kind))
+            {
+                record.holds = null;
+                record.output = null;
+                record.queued = null;
+                return;
+            }
+
+            자른다(record.holds, SpawnLedgerRule.StacksPerBody);
+            자른다(record.output, SpawnLedgerRule.StacksPerBody);
+            자른다(record.queued, SpawnLedgerRule.JobsPerBody);
+        }
+
+        void 자른다<T>(List<T> list, int cap)
+        {
+            if (list == null || list.Count <= cap) return;
+
+            _attachmentTrimmed += list.Count - cap;
+            list.RemoveRange(cap, list.Count - cap);
         }
 
         /// <summary>

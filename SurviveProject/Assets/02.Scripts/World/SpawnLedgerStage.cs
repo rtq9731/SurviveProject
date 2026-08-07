@@ -1,6 +1,7 @@
 using UnityEngine;
 using Survive.Building;
 using Survive.Core;
+using Survive.Crafting;
 using Survive.Interaction;
 using Survive.Items;
 
@@ -68,6 +69,8 @@ namespace Survive.World
                     줄.since = 불.KindledAt;
                 }
 
+                딸림을_적는다(s, 줄);
+
                 ledger.Put(줄);
             }
 
@@ -88,6 +91,27 @@ namespace Survive.World
             }
 
             ledger.EndSweep();
+        }
+
+        /// <summary>
+        /// 몸에 붙어 있는 상태를 그 몸의 줄에 함께 적는다.
+        ///
+        /// <b>갈래를 세지 않는다.</b> 보관함이면 보관 격자, 스테이션이면 회수함과
+        /// 대기열 — 물어보는 것은 「이 몸이 무엇을 들고 있나」 하나이고, 새로운
+        /// 그릇이 붙는 날 여기 한 줄만 는다. 세 갈래를 목록의 세 갈래로 두지 않은
+        /// 이유는 <see cref="SpawnRecord"/>에 적어 두었다.
+        /// </summary>
+        static void 딸림을_적는다(BuiltStructure s, SpawnRecord 줄)
+        {
+            var 보관함 = s.GetComponent<StorageContainer>();
+            if (보관함 != null) 줄.holds = StationSaveRule.Capture(보관함.Contents);
+
+            var 스테이션 = s.GetComponent<ICraftStation>();
+            if (스테이션?.Work != null)
+            {
+                줄.output = StationSaveRule.Capture(스테이션.Work.Output);
+                줄.queued = StationSaveRule.Capture(스테이션.Work.Queue);
+            }
         }
 
         // ── 다시 세운다 ──────────────────────────────────────────
@@ -196,7 +220,37 @@ namespace Survive.World
             // 흘렀으면 그만큼 줄어 있고, 다 지났으면 꺼진 채로 선다.
             if (불 != null) 불.Adopt(SpawnLedgerRule.FuelLeft(r.until, 지금), r.since);
 
+            딸림을_되돌린다(go, r);
+
             return true;
+        }
+
+        /// <summary>
+        /// 줄이 실어 온 딸림을 방금 세운 몸에 앉힌다.
+        ///
+        /// <b>몸을 세우는 같은 걸음 안에서 앉힌다.</b> 이것이 딸림을 저장본의
+        /// 다른 절에 두지 않은 값이다 — 절이 갈리면 「몸이 아직 없는데 내용물이
+        /// 먼저 돌아오는」 순서가 생기고, 그것을 막으려면 어느 절이 먼저인지를
+        /// 저장본이 약속해야 한다. 여기서는 순서가 있을 수 없다.
+        /// </summary>
+        static void 딸림을_되돌린다(GameObject go, SpawnRecord r)
+        {
+            var 보관함 = go.GetComponent<StorageContainer>();
+            if (보관함 != null)
+                StationSaveRule.AdoptInto(보관함.Contents, r.holds, 아이템찾기);
+
+            var 스테이션 = go.GetComponent<ICraftStation>();
+            if (스테이션?.Work != null)
+            {
+                StationSaveRule.AdoptInto(스테이션.Work.Output, r.output, 아이템찾기);
+                StationSaveRule.AdoptInto(스테이션.Work.Queue, r.queued, RecipeIndex.Find);
+            }
+        }
+
+        static ItemDataSO 아이템찾기(string id)
+        {
+            var 표 = 아이템표();
+            return 표 != null ? 표.GetById(id) : null;
         }
 
         static bool 낙하물을_놓는다(SpawnRecord r, ItemDatabaseSO 표)

@@ -15,7 +15,7 @@ namespace Survive.Crafting
     /// 고민할 성질도 아니다. RespawnService·DeathDropService가 쓰는 방식과 같다.
     /// </summary>
     [DisallowMultipleComponent]
-    public class HandCraftingService : MonoBehaviour
+    public class HandCraftingService : MonoBehaviour, ISaveable
     {
         static HandCraftingService _instance;
 
@@ -92,6 +92,29 @@ namespace Survive.Crafting
             bool ok = CraftQueueService.TryCancel(Queue, index, inv);
             if (ok) ReportProgress();
             return ok;
+        }
+
+        // ── 저장 ─────────────────────────────────────────────────
+        //
+        // <b>몸이 없는 대기열</b>이다. 제작대는 세계에 서 있고 세운 것이면 생성
+        // 목록의 줄이 싣지만, 손에 든 일은 서 있는 자리가 없다 — 주인은 사람이다.
+        // 그래서 자기 절을 하나 갖는다. 「몸을 따라간다」는 규칙은 그대로다.
+        // 몸이 목록에 실리면 줄이 싣고, 몸이 씬의 것이면 몸이 싣고,
+        // <b>몸이 없으면 사람이 싣는다.</b>
+        //
+        // 안 실으면 잃는 것은 시간이 아니라 물건이다 — 재료는 걸 때 이미 빠졌다.
+
+        public const string Key = "handcraft";
+
+        public string SaveKey => Key;
+
+        public object CaptureState() =>
+            new StationSaveState { queued = StationSaveRule.Capture(Queue) };
+
+        public void RestoreState(object state)
+        {
+            if (state is not StationSaveState s) return;
+            StationSaveRule.AdoptInto(Queue, s.queued, RecipeIndex.Find);
         }
     }
 }

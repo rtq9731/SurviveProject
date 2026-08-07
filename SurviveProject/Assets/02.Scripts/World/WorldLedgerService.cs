@@ -161,6 +161,14 @@ namespace Survive.World
                                string.Join(", ", _spawns.Overflowed) +
                                " — 정상 플레이로 닿는 수가 아니다.", this);
 
+            // 딸림도 조용히 사라지지 않는다. 여기 걸렸다는 것은 보관함의 칸 수나
+            // 대기열 길이를 늘리면서 SpawnLedgerRule을 안 봤다는 뜻이다.
+            if (_spawns.AttachmentTrimmed > 0)
+                Debug.LogError($"[SpawnLedger] 몸에 딸린 것 {_spawns.AttachmentTrimmed}개를 " +
+                               $"못 실었다 (몸마다 무더기 {SpawnLedgerRule.StacksPerBody}개 · " +
+                               $"제작 {SpawnLedgerRule.JobsPerBody}개까지) — " +
+                               "칸 수를 늘렸으면 상한도 함께 올려야 한다.", this);
+
             return state;
         }
 
