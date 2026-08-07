@@ -90,6 +90,14 @@ namespace Survive.Combat
             if (swingOrigin == null) return;
 
             _nextSwingTime = Time.time + tool.attackCooldown;
+
+            // <b>조명탄 총은 휘두르는 물건이 아니다.</b> 같은 버튼을 쓰되 하는 일이
+            // 갈린다 — 쏘는 순간 도구 하나로 배터리를 태우고 저쪽 자리를 밝힌다.
+            // 여기서 갈라 두는 이유는 입력이다. 이 컴포넌트가 이미 공격 입력을
+            // 물고 있으므로, 새 입력 액션을 만들어 프리팹 배선을 늘리는 대신
+            // 손에 든 것이 무엇인가로 가른다(기획서 §5.2).
+            if (Survive.World.FlareGun.Holding(tool)) { FireFlare(); return; }
+
             _hitThisSwing.Clear();
             SwingCount++;
 
@@ -147,6 +155,26 @@ namespace Survive.Combat
                 AudioService.Play(AudioCueBookSO.Or(swingMissCue, book != null ? book.swingMiss : null),
                                   swingOrigin.position);
             }
+        }
+
+        /// <summary>
+        /// 조명탄을 한 발 쏜다. 배터리가 모자라면 아무 일도 일어나지 않는다 —
+        /// 판단은 전부 <see cref="Survive.World.FlareGun.TryFire"/>에 있다.
+        ///
+        /// <b>휘두름 수(<see cref="SwingCount"/>)를 올리지 않는다.</b> 그 값은
+        /// "도구를 몇 번 휘둘렀는가"를 세는 자리이고, 조명탄은 휘두른 것이 아니다.
+        /// </summary>
+        void FireFlare()
+        {
+            if (!Survive.World.FlareGun.TryFire(swingOrigin, out _)) return;
+
+            // 쏜 반동은 도구 모션 그대로 쓴다. 전용 연출은 사람이 붙일 자리다.
+            swingAnimator?.Play();
+            swingFeedback?.PlayFeedbacks();
+
+            var book = AudioService.Book;
+            AudioService.Play(AudioCueBookSO.Or(swingCue, book != null ? book.swing : null),
+                              swingOrigin.position);
         }
 
         /// <summary>

@@ -291,6 +291,8 @@ Blueprint,bp_breach_pod.hint,낫의 핵을 연구대에서 분석하면 알게 �
 Blueprint,bp_breach_pod.name,돌파 설계,,
 Blueprint,bp_fibercraft.hint,양치 섬유를 손에 넣으면 알게 된다,,
 Blueprint,bp_fibercraft.name,섬유 세공,,
+Blueprint,bp_flare_gun.hint,매크로늄 석영을 처음 쥐면 알게 된다,,
+Blueprint,bp_flare_gun.name,발광 사출 설계,,
 Blueprint,bp_macronium_suit.hint,무광버섯을 처음 쥐면 알게 된다,,
 Blueprint,bp_macronium_suit.name,차폐 설계,,
 Blueprint,bp_radar.hint,여울 건너 물가에서 본 것,,
@@ -346,6 +348,9 @@ Discovery,disc_fern_fiber.line.text,유연 섬유질 분석... 결속재로 적�
 Discovery,disc_machine_part.line.speaker,우주복 AI,,
 #   재료를 처음 쥐었을 때의 대사. 대상 아이템: 기계 부품 (machine_part)
 Discovery,disc_machine_part.line.text,회전 축계 구조물 분석... 공구로 전용 가능한 것으로 보입니다. 해당 물질을 사용한 제작법이 있습니다.,,
+Discovery,disc_macronium_quartz.line.speaker,우주복 AI,,
+#   재료를 처음 쥐었을 때의 대사. 대상 아이템: 매크로늄 석영 (macronium_quartz)
+Discovery,disc_macronium_quartz.line.text,지하 조명과 동일한 성분의 결정 분석... 빛을 가두었다가 한꺼번에 놓을 수 있는 것으로 보입니다. 해당 물질을 사용한 제작법이 있습니다.,,
 Discovery,disc_matte_mushroom.line.speaker,우주복 AI,,
 #   재료를 처음 쥐었을 때의 대사. 대상 아이템: 무광버섯 (matte_mushroom)
 Discovery,disc_matte_mushroom.line.text,빛과 방사를 흡수하는 유기 조직 분석... 차폐재로 사용가능한 것으로 보입니다. 해당 물질을 사용한 제작법이 있습니다.,,
@@ -380,6 +385,8 @@ Item,breach_pod.desc,매크로늄으로 지은 한 사람짜리 껍데기. 같�
 Item,breach_pod.name,돌파정,,
 Item,fern_fiber.desc,호숫가 양치류의 질긴 섬유.,,
 Item,fern_fiber.name,양치 섬유,,
+Item,flare_gun.desc,"매크로늄 석영을 압축해 쏘아 보낸다. 박힌 자리가 한동안 자홍으로 타올라, 그 안에서는 빛을 꺼리는 것이 버티지 못한다. 배터리를 크게 먹으므로 한 발이 곧 랜턴을 켜 둘 시간이다.",,
+Item,flare_gun.name,조명탄 총,,
 Item,lantern.desc,밤의 어둠을 밝힌다.,,
 Item,lantern.name,랜턴,,
 Item,machine_part.desc,죽은 기계에서 회수한 부품.,,
@@ -442,6 +449,7 @@ Plant,ember_fungus.name,불씨버섯,,
 Recipe,axe.name,도끼,,
 Recipe,battery_cell.name,스크랩 에너지 추출,,
 Recipe,breach_pod.name,돌파정,,
+Recipe,flare_gun.name,조명탄 총,,
 Recipe,lantern.name,랜턴,,
 Recipe,macronium_suit.name,매크로늄 방호복,,
 Recipe,oxygen_filter.name,산소 필터,,
@@ -507,7 +515,7 @@ Sequence,prologue_intro.line4.text,파일럿의 생존을 위해 주변 탐색�
 #
 # ---- Vital ----
 #   생명 수치 이름. HUD 게이지에 붙는다.
-Vital,health.name,체력,,
-Vital,oxygen.name,산소,Oxygen,
-Vital,hydration.name,수분,Hydration,
 Vital,food.name,식량,Food,
+Vital,health.name,체력,,
+Vital,hydration.name,수분,Hydration,
+Vital,oxygen.name,산소,Oxygen,
