@@ -178,7 +178,7 @@ namespace Survive.Testing
             Vitals.Revive();
             float 전 = Vitals.Health.Current;
             float 전피해 = Loco.TotalFallDamage;
-            float 전바다 = MacroniumSeaService.TotalDamage;
+            float 전바다 = LiquidContactService.TotalDamage;
 
             bool 떨어졌다 = false;
             yield return 발판에서_떨군다(LethalHeight, true, r => 떨어졌다 = r);
@@ -186,7 +186,7 @@ namespace Survive.Testing
             if (!떨어졌다) yield break;
 
             float 후 = Vitals.Health.Current;
-            float 바다몫 = MacroniumSeaService.TotalDamage - 전바다;
+            float 바다몫 = LiquidContactService.TotalDamage - 전바다;
             E2EHarness.Log($"  마지막 착지 {Loco.LastLandingSpeed:F2} m/s, " +
                            $"낙하 피해 {Loco.TotalFallDamage - 전피해:F1}, 체력 {전:F0} → {후:F0} " +
                            $"(그중 바다 {바다몫:F1})");

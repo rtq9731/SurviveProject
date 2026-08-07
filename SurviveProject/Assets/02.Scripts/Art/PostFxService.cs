@@ -21,7 +21,7 @@ namespace Survive.Art
     /// <b>씬을 고치지 않는다.</b> MainScene의 카메라는 후처리가 꺼져 있고
     /// (<c>m_RenderPostProcessing: 0</c>) 씬 파일은 병합할 수 없어 손대지 않기로 되어 있다.
     /// 그래서 카메라의 후처리·디더링을 런타임에 켜고, 볼륨도 런타임에 세운다.
-    /// <see cref="MacroniumSeaService"/>가 스스로 붙는 것과 같은 방식이다.
+    /// <see cref="LiquidContactService"/>가 스스로 붙는 것과 같은 방식이다.
     ///
     /// <b>디더링을 켜는 이유.</b> 거의 검정인 화면에서 8비트 출력은 계단(밴딩)을
     /// 만든다. 디더링과 아주 약한 필름 그레인이 그 계단을 부순다 — 이것이

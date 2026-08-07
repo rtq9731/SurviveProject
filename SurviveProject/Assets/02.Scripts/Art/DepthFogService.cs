@@ -35,7 +35,7 @@ namespace Survive.Art
     /// 여기서 밴드를 보간하는 것으로 끝난다. 규칙은 <see cref="DepthFog"/>에 있고
     /// 이 컴포넌트는 높이를 재서 넣기만 한다.
     ///
-    /// <b>왜 씬에 놓지 않고 스스로 붙는가.</b> <see cref="MacroniumSeaService"/>·
+    /// <b>왜 씬에 놓지 않고 스스로 붙는가.</b> <see cref="LiquidContactService"/>·
     /// <see cref="DeathDropService"/>와 같은 이유다 — MainScene은 병합할 수 없는
     /// 단일 파일이라 여러 갈래로 나뉘어 일하는 동안 손대지 않는다.
     ///

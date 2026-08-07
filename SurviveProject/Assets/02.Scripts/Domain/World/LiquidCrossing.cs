@@ -104,6 +104,22 @@ namespace Survive.World
         /// <summary>맨몸 수영 속도(m/s). <c>PlayerLocomotion.swimSpeed</c>의 기본값.</summary>
         public const float SwimSpeed = 3.2f;
 
+        /// <summary>
+        /// 한 번에 물어뜯는 간격(초). <b>종류를 묻지 않는다</b> - 연출 박자이지
+        /// 매크로늄의 성질이 아니다.
+        ///
+        /// 매 프레임 조금씩 넣으면 피격 연출이 초당 수백 번 터진다. 초에 한 번
+        /// 뭉쳐서 넣으면 화면도 견디고, "잠겨 있는 동안 계속 물린다"는 감각도 남는다.
+        /// 호수에서도 이 박자는 돌지만 초당 값이 0이라 아무 일도 일어나지 않는다.
+        ///
+        /// <b>왜 여기로 옮겼나 (2026-08-07).</b> <see cref="MacroniumSea"/>에 있었다.
+        /// 종류가 하나뿐일 때는 티가 안 났지만, 물이 축으로 들어오고 나서는
+        /// <b>물에 잠긴 몸의 박자를 매크로늄 파일에서 읽어 오는</b> 모양이 됐다.
+        /// 종류를 묻지 않는 수는 종류를 묻지 않는 자리에 있어야 한다 -
+        /// <see cref="WadeDepth"/>·<see cref="SwimSpeed"/>와 같은 이유다.
+        /// </summary>
+        public const float BiteInterval = 1f;
+
         /// <summary>이 깊이에서 몸이 어디까지 잠기는가. <b>종류를 묻지 않는다.</b></summary>
         public static SeaImmersion ImmersionAt(float depth)
         {

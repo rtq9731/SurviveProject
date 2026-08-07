@@ -308,8 +308,23 @@ namespace Survive.Testing
         /// </summary>
         public static int SessionId => Process.GetCurrentProcess().Id;
 
-        /// <summary>파일 자리. 슬롯 이름을 풀이하지 않고 <b>준 이름 그대로</b> 본다.</summary>
+        /// <summary>
+        /// 파일 자리. 슬롯 이름을 풀이하지 않고 <b>준 이름 그대로</b> 본다.
+        ///
+        /// 폴더는 <see cref="SaveService.Root"/>를 지난다 — 저장이 실제로 쓰는 자리와
+        /// 검사가 들여다보는 자리가 갈리면 검사는 늘 "없음"만 보고 통과한다.
+        /// </summary>
         public static string SlotPath(string slot) =>
+            Path.Combine(SaveService.Root, SaveSlots.FileNameOf(slot));
+
+        /// <summary>
+        /// <b>사람의 파일 자리.</b> 갈래 폴더로 내려가기 전, 이 기계의 에디터 전부와
+        /// 빌드가 공유하는 자리다.
+        ///
+        /// 검사가 여기를 보는 이유는 하나뿐이다 — <b>여기에 아무 일도 안 일어났음을
+        /// 확인하려고.</b> 이 창구로 쓰는 검사가 있으면 안 된다.
+        /// </summary>
+        public static string SharedSlotPath(string slot) =>
             Path.Combine(Application.persistentDataPath, SaveSlots.FileNameOf(slot));
 
         /// <summary>
@@ -318,9 +333,11 @@ namespace Survive.Testing
         /// 시나리오 앞뒤로 이것을 재서 같으면 「한 바이트도 안 썼다」가 성립한다.
         /// 크기만 재면 같은 크기로 덮어쓴 경우를 놓치므로 쓴 시각을 함께 담는다.
         /// </summary>
-        public static string Fingerprint(string slot)
+        public static string Fingerprint(string slot) => FingerprintOf(SlotPath(slot));
+
+        /// <summary>슬롯이 아니라 <b>파일 하나</b>의 지문. 공유 자리를 볼 때 쓴다.</summary>
+        public static string FingerprintOf(string path)
         {
-            var path = SlotPath(slot);
             if (!File.Exists(path)) return "없음";
 
             var info = new FileInfo(path);

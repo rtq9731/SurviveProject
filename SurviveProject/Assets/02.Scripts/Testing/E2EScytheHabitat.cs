@@ -564,7 +564,7 @@ namespace Survive.Testing
             yield return 물가에_선다(떨어진곳);
             E2EHarness.Assert(사람자리.y >= _액면,
                               $"사람은 액면 위에 서 있다 (발 {사람자리.y:F2} >= 액면 {_액면:F2})");
-            E2EHarness.Assert(MacroniumSeaService.LastImmersion != SeaImmersion.Swimming,
+            E2EHarness.Assert(LiquidContactService.LastImmersion != SeaImmersion.Swimming,
                               "헤엄쳐 간 것이 아니다");
 
             // <b>2026-08-07: 여기서 랜턴을 켜던 것을 걷어냈다 — 설계가 뒤집혔다.</b>

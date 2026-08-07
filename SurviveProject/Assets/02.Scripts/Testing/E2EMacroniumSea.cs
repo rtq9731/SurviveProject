@@ -59,7 +59,7 @@ namespace Survive.Testing
 
             E2EHarness.Assert(Swim != null, "PlayerSwimming이 있다");
             E2EHarness.Assert(Vitals != null, "PlayerVitals가 있다");
-            E2EHarness.Assert(MacroniumSeaService.Instance != null, "바다 서비스가 스스로 서 있다");
+            E2EHarness.Assert(LiquidContactService.Instance != null, "바다 서비스가 스스로 서 있다");
             E2EHarness.Assert(DeathDropService.Instance != null, "사망 드롭 서비스가 서 있다");
             E2EHarness.Assert(RespawnService.Instance != null, "부활 서비스가 서 있다");
 
@@ -120,7 +120,7 @@ namespace Survive.Testing
             E2EHarness.Assert(loco == null || loco.IsGrounded, "바닥을 딛고 서 있다");
 
             float 전 = Vitals.Health.Current;
-            float 전바다 = MacroniumSeaService.TotalDamage;
+            float 전바다 = LiquidContactService.TotalDamage;
 
             float t = 0f;
             while (t < 6f) { t += Time.deltaTime; yield return null; }
@@ -129,9 +129,9 @@ namespace Survive.Testing
             E2EHarness.Log($"  {t:F1}초 담그고 서 있었다 — 체력 {전:F1} → {후:F1}");
 
             E2EHarness.Assert(후 >= 전 - 0.01f, $"체력이 줄지 않았다 ({전:F1} → {후:F1})");
-            E2EHarness.Assert(Mathf.Approximately(MacroniumSeaService.TotalDamage, 전바다),
+            E2EHarness.Assert(Mathf.Approximately(LiquidContactService.TotalDamage, 전바다),
                               "바다가 한 번도 물지 않았다");
-            E2EHarness.Assert(!MacroniumSeaService.IsCorroding, "깎이는 중이 아니다");
+            E2EHarness.Assert(!LiquidContactService.IsCorroding, "깎이는 중이 아니다");
         }
 
         /// <summary>
@@ -242,7 +242,7 @@ namespace Survive.Testing
             yield return null;
 
             float 전체력 = Vitals.Health.Current;
-            float 전바다 = MacroniumSeaService.TotalDamage;
+            float 전바다 = LiquidContactService.TotalDamage;
 
             if (가속) yield return E2EHarness.PressKey(Key.LeftShift);
             yield return E2EHarness.PressKey(Key.W);
@@ -254,7 +254,7 @@ namespace Survive.Testing
                 겨눈다(rig, body, 도착);
                 E2EHarness.QueueKeys();
 
-                if (MacroniumSeaService.IsCorroding) 잠김 += Time.deltaTime;
+                if (LiquidContactService.IsCorroding) 잠김 += Time.deltaTime;
                 if (잠김 > 1f && 평면거리(body.position, 도착) < 3f) { 닿았다 = true; break; }
                 if (Vitals.Health.IsEmpty) break;
 
@@ -264,7 +264,7 @@ namespace Survive.Testing
             yield return E2EHarness.ReleaseAllKeys();
 
             float 잃은것 = 전체력 - Vitals.Health.Current;
-            float 바다가낸것 = MacroniumSeaService.TotalDamage - 전바다;
+            float 바다가낸것 = LiquidContactService.TotalDamage - 전바다;
 
             E2EHarness.Log($"    가속={가속} 도착={닿았다} {t:F1}초 (잠김 {잠김:F1}초) " +
                            $"체력 -{잃은것:F1}, 그중 바다 {바다가낸것:F1}");
@@ -274,7 +274,7 @@ namespace Survive.Testing
                               $"잃은 체력은 전부 바다가 낸 것이다 (잃음 {잃은것:F1}, 바다 {바다가낸것:F1})");
 
             // 규칙이 그대로 적용됐는가. 물린 횟수는 잠긴 시간을 간격으로 나눈 값이어야 한다.
-            float 기대 = Mathf.Floor(잠김 / MacroniumSea.BiteInterval) * MacroniumSea.BiteDamage;
+            float 기대 = Mathf.Floor(잠김 / LiquidCrossing.BiteInterval) * MacroniumSea.BiteDamage;
             E2EHarness.Assert(Mathf.Abs(바다가낸것 - 기대) <= MacroniumSea.BiteDamage + 0.01f,
                               $"잠긴 시간만큼 물렸다 (실제 {바다가낸것:F1}, 기대 {기대:F1})");
 
@@ -371,7 +371,7 @@ namespace Survive.Testing
             yield return null;
             yield return null;
 
-            yield return E2EHarness.WaitUntil(() => MacroniumSeaService.IsCorroding,
+            yield return E2EHarness.WaitUntil(() => LiquidContactService.IsCorroding,
                                               "몸이 잠기자 바다가 물기 시작한다", 5f);
 
             var 벌어온수량 = new int[벌어온것.Length];
@@ -388,7 +388,7 @@ namespace Survive.Testing
             while (t < 25f && !Vitals.Health.IsEmpty) { t += Time.deltaTime; yield return null; }
 
             var 죽은자리 = E2EHarness.Player.transform.position;
-            E2EHarness.Log($"  {t:F1}초 만에 체력이 0이 됐다 (바다 누적 {MacroniumSeaService.TotalDamage:F0})");
+            E2EHarness.Log($"  {t:F1}초 만에 체력이 0이 됐다 (바다 누적 {LiquidContactService.TotalDamage:F0})");
             E2EHarness.Assert(Vitals.Health.IsEmpty, "잠긴 채 두면 바다가 끝까지 깎는다");
 
             yield return E2EHarness.WaitUntil(() => DeathDropBag.Active.Count > 이전가방수,

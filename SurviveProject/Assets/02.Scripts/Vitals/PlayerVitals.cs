@@ -20,7 +20,7 @@ namespace Survive.Vitals
     /// <b>수분·식량의 정의만 왜 <c>Resources</c>에서 읽는가.</b> 체력·산소는 플레이어
     /// 프리팹의 직렬화 필드에 꽂혀 있는데, <b>프리팹은 병합할 수 없는 단일 파일</b>이라
     /// 여러 갈래가 동시에 도는 동안 손대지 않는다는 규율이 있다
-    /// (<see cref="Survive.World.MacroniumSeaService"/>가 스스로 서는 것과 같은 이유다).
+    /// (<see cref="Survive.World.LiquidContactService"/>가 스스로 서는 것과 같은 이유다).
     /// 그래서 새로 붙는 둘은 <c>08.Data/Vitals/Resources/</c>에서 읽는다 —
     /// <c>DiscoveryBook</c>·<c>AudioCueBook</c>이 이미 쓰는 길이다.
     /// 프리팹을 열 수 있는 날이 오면 네 개를 같은 방식으로 맞추면 된다.
@@ -153,7 +153,7 @@ namespace Survive.Vitals
             Oxygen.Modify(CurrentOxygenRate() * dt);
 
             // 질식은 환경 피해와 겹쳐서 들어간다. 매크로늄 바다에 잠긴 채 숨까지 다하면
-            // 살이 녹는 값(MacroniumSeaService)과 이 값이 함께 붙는다 — 둘 중 하나가
+            // 살이 녹는 값(LiquidContactService)과 이 값이 함께 붙는다 — 둘 중 하나가
             // 다른 하나를 대신하지 않는다. 숨을 참는 것과 살이 녹는 것은 다른 일이다.
             if (Oxygen.IsEmpty)
                 Health.Modify(-suffocationDamagePerSecond * dt);

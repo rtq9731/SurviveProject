@@ -83,7 +83,7 @@ namespace Survive.Testing
                                               "챕터가 시작된다", 8f);
 
             E2EHarness.Assert(Swim != null, "PlayerSwimming이 있다");
-            E2EHarness.Assert(MacroniumSeaService.Instance != null, "바다 서비스가 스스로 서 있다");
+            E2EHarness.Assert(LiquidContactService.Instance != null, "바다 서비스가 스스로 서 있다");
             E2EHarness.Assert(E2EWaterProbe.TryFindSurface(out _surface, out var water),
                               "액면이 씬에 있다");
             E2EHarness.Log($"  액면 y={_surface:F2} ({(water == null ? "?" : water.name)})");
@@ -134,7 +134,7 @@ namespace Survive.Testing
             while (settle < 1.2f) { settle += Time.deltaTime; yield return null; }
 
             float 전체력 = Vitals.Health.Current;
-            float 전바다 = MacroniumSeaService.TotalDamage;
+            float 전바다 = LiquidContactService.TotalDamage;
 
             var rig = E2EHarness.Player.CameraRig;
             var body = E2EHarness.Player.transform;
@@ -162,7 +162,7 @@ namespace Survive.Testing
             yield return E2EHarness.ReleaseAllKeys();
 
             float 잃은것 = 전체력 - Vitals.Health.Current;
-            float 바다가낸것 = MacroniumSeaService.TotalDamage - 전바다;
+            float 바다가낸것 = LiquidContactService.TotalDamage - 전바다;
 
             E2EHarness.Log($"  {t:F1}초 걸었다 (물에 잠긴 시간 {잠긴시간:F1}초, " +
                            $"헤엄친 시간 {헤엄친시간:F1}초) — 체력 -{잃은것:F1}, 그중 액체 {바다가낸것:F1}");
@@ -201,7 +201,7 @@ namespace Survive.Testing
             while (settle < 0.9f) { settle += Time.deltaTime; yield return null; }
 
             float 전체력 = Vitals.Health.Current;
-            float 전바다 = MacroniumSeaService.TotalDamage;
+            float 전바다 = LiquidContactService.TotalDamage;
 
             var rig = E2EHarness.Player.CameraRig;
             var body = E2EHarness.Player.transform;
@@ -217,7 +217,7 @@ namespace Survive.Testing
                 겨눈다(rig, body, 도착);
                 E2EHarness.QueueKeys();
 
-                if (MacroniumSeaService.IsCorroding) 잠김 += Time.deltaTime;
+                if (LiquidContactService.IsCorroding) 잠김 += Time.deltaTime;
                 if (잠김 > 1f && 평면거리(body.position, 도착) < 3f) { 닿았다 = true; break; }
                 if (Vitals.Health.IsEmpty) break;
 
@@ -227,7 +227,7 @@ namespace Survive.Testing
             yield return E2EHarness.ReleaseAllKeys();
 
             float 잃은것 = 전체력 - Vitals.Health.Current;
-            float 바다가낸것 = MacroniumSeaService.TotalDamage - 전바다;
+            float 바다가낸것 = LiquidContactService.TotalDamage - 전바다;
 
             // 규칙이 이 폭에 대해 예측한 값. 세계가 그 근처인지 본다.
             float 예측 = LiquidCrossing.Toll(new LiquidBody(SurfaceZones.KindOf(SurfaceZone.Inlet),

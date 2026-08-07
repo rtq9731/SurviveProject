@@ -255,7 +255,7 @@ namespace Survive.Testing
             E2EHarness.Assert(coordinator != null, "SaveCoordinator가 있다");
             if (coordinator == null) yield break;
 
-            E2EHarness.Log($"  저장 경로: {Application.persistentDataPath}");
+            E2EHarness.Log($"  저장 경로: {SaveService.Root}");
             E2EHarness.Log($"  슬롯: {슬롯} (기본 슬롯을 건드리지 않는다)");
 
             거둔다();
@@ -295,7 +295,7 @@ namespace Survive.Testing
                 yield return null;
                 E2EHarness.Assert(coordinator.HasSave(슬롯), "저장본이 생겼다");
 
-                string 파일 = Path.Combine(Application.persistentDataPath, $"save_{슬롯}.json");
+                string 파일 = E2EHarness.SlotPath(슬롯);
                 E2EHarness.Assert(File.Exists(파일), "파일이 실제로 디스크에 있다");
                 string 본문 = File.ReadAllText(파일);
                 E2EHarness.Assert(본문.Contains(LanderBase.Key),

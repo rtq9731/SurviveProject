@@ -283,7 +283,7 @@ namespace Survive.Testing
             저장소.Save(옛슬롯);
             yield return null;
 
-            string 경로 = Path.Combine(Application.persistentDataPath, $"save_{옛슬롯}.json");
+            string 경로 = E2EHarness.SlotPath(옛슬롯);
             E2EHarness.Assert(File.Exists(경로), "저장본 파일이 생겼다");
 
             E2EHarness.Assert(SaveSerializer.TryDeserialize(File.ReadAllText(경로),

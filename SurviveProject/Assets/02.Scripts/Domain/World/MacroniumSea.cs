@@ -67,15 +67,11 @@ namespace Survive.World
         public const float CorrosionPerSecond = 3f;
 
         /// <summary>
-        /// 한 번에 물어뜯는 간격(초). <b>종류와 무관한 연출 박자다.</b>
+        /// 매크로늄에 한 번 물릴 때의 피해.
         ///
-        /// 매 프레임 조금씩 넣으면 피격 연출이 초당 수백 번 터진다. 초에 한 번
-        /// 뭉쳐서 넣으면 화면도 견디고, "잠겨 있는 동안 계속 물린다"는 감각도 남는다.
-        /// 호수에서는 초당 값이 0이라 이 박자가 돌아도 아무 일도 일어나지 않는다.
+        /// 박자는 종류가 정하지 않으므로 <see cref="LiquidCrossing.BiteInterval"/>에서
+        /// 가져온다 - 이 파일에 남는 것은 <b>매크로늄의 수</b>뿐이다.
         /// </summary>
-        public const float BiteInterval = 1f;
-
-        /// <summary>매크로늄에 한 번 물릴 때의 피해.</summary>
-        public const float BiteDamage = CorrosionPerSecond * BiteInterval;
+        public const float BiteDamage = CorrosionPerSecond * LiquidCrossing.BiteInterval;
     }
 }
