@@ -63,6 +63,14 @@ namespace Survive.Domain.Art
             // 테두리에만 받은 빛을 튕기는 것(검토회신 ⑤). 에미션 맵으로 흉내 내면 UV에
             // 고정되어 카메라가 돌 때 따라오지 않는다 — 실루엣은 시점이 정한다.
             "Survive/MatteRim",
+            // 하늘(Assets/03.Materials/Sky.shader). Skybox/Procedural은 지구의 레일리
+            // 산란을 제 안에 박아 두고 태양 각도에서 하늘색을 스스로 계산한다 —
+            // 이 세계의 규칙(「무엇이 얼마나 두껍게 사이에 있는가」, §7.4)을 받을
+            // 창구가 없고, 받지 못하면 지평선의 안개색과 지평선의 하늘색이 서로 다른
+            // 색이 되어 땅과 하늘이 만나는 선에 이음매가 보인다. 이 셰이더는 규칙을
+            // 제 안에 두지 않고 DepthFog가 구워 준 표(_Coverage)와 색(_HorizonColor)을
+            // 받아 곱하기만 하므로, 규칙은 여전히 Domain 한 곳에 있다.
+            "Survive/Sky",
         };
 
         public static bool IsAllowedShader(string shaderName)
