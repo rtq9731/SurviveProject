@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Chapter1_FloatingIsland
   m_EditorClassIdentifier: Survive.Domain::Survive.Progression.ChapterSO
   id: chapter1
-  title: "\uCC55\uD130 1 \u00B7 \uBD80\uC720\uC12C"
+  title: "\uCC55\uD130 1 \xB7 \uC9C0\uC0C1"
   objectives:
   - {fileID: 11400000, guid: c3a50af6e4ac77f4395534ac115969f7, type: 2}
   - {fileID: 11400000, guid: 24a49b5f946a90b4a8d701bd47a23cee, type: 2}

@@ -148,14 +148,14 @@ namespace Survive.Testing
         /// 이야기였고, 4번 섬에서 캔 매크로늄은 쓸 데가 없었다. 지금은 그 매크로늄으로
         /// 돌파정을 만들어 여태 닿으면 죽던 층으로 걸어 들어간다 (기획서 §6.2).
         ///
-        /// <b>매크로늄과 짙은 층은 아직 씬에 없다.</b> 4번 섬의 광맥도 액면도 배치는
+        /// <b>매크로늄과 짙은 구간은 아직 씬에 없다.</b> 4번 섬의 광맥도 액면도 배치는
         /// §8-4의 일이라 이번 작업에서 씬을 건드리지 않았다. 그래서 재료는 주입하고
         /// 층은 런타임에 세운다 — 여기서 볼 것은 배치가 아니라 종막의 흐름
         /// ("만들었는가 → 걸쳤는가 → 스스로 내려갔는가")이다.
         /// </summary>
         static IEnumerator Objective6Descent(ChapterDirector dir)
         {
-            E2EHarness.Log("목표6: 매크로늄으로 돌파정을 만들어 짙은 층을 뚫고 내려간다");
+            E2EHarness.Log("목표6: 매크로늄으로 돌파정을 만들어 짙은 구간을 뚫고 내려간다");
 
             // 곡괭이가 있어야 광맥을 캘 수 있다
             var user = E2EHarness.Player.GetComponent<Survive.Player.PlayerToolUser>();

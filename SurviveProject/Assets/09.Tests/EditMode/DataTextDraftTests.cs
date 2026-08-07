@@ -248,8 +248,8 @@ public class DataTextDraftTests
     [Test]
     public void 글꼴에_없는_줄표는_가운뎃점으로_바꾼다()
     {
-        Assert.AreEqual("챕터 1 · 부유섬", FontSafe.Sanitize("챕터 1 — 부유섬"));
-        Assert.IsTrue(FontSafe.HasMissing("챕터 1 — 부유섬"));
+        Assert.AreEqual("챕터 1 · 지상", FontSafe.Sanitize("챕터 1 — 지상"));
+        Assert.IsTrue(FontSafe.HasMissing("챕터 1 — 지상"));
     }
 
     [Test]
@@ -276,14 +276,14 @@ public class DataTextDraftTests
     {
         var chapter = ScriptableObject.CreateInstance<Survive.Progression.ChapterSO>();
         chapter.id = "ch_x";
-        chapter.title = "챕터 1 — 부유섬";
+        chapter.title = "챕터 1 — 지상";
 
         var entries = new List<DataTextEntry>();
         DataTextCatalog.Collect(new ScriptableObject[] { chapter }, entries);
 
         Assert.AreEqual(1, entries.Count);
-        Assert.AreEqual("챕터 1 · 부유섬", entries[0].Korean);
-        Assert.AreEqual("챕터 1 — 부유섬", entries[0].AssetKorean);
+        Assert.AreEqual("챕터 1 · 지상", entries[0].Korean);
+        Assert.AreEqual("챕터 1 — 지상", entries[0].AssetKorean);
         Assert.IsTrue(entries[0].FontFixed);
         StringAssert.Contains("에셋 원문", entries[0].Note, "왜 다른지가 표에 적혀야 한다");
 

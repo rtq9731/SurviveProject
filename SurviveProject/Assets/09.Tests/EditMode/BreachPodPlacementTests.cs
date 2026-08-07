@@ -17,7 +17,7 @@ using Survive.World;
 ///
 /// <b>이 파일이 지키려는 것 셋.</b>
 /// <list type="number">
-/// <item><b>경계값.</b> "진한 층이 노출된 자리"는 눈으로는 또렷하지만 코드로는
+/// <item><b>경계값.</b> "짙은 구간이 노출된 자리"는 눈으로는 또렷하지만 코드로는
 ///       부동소수점 한 자리다. 어디까지가 드러난 것인지 시험이 못 박지 않으면
 ///       다음 사람이 여유값을 마음대로 옮긴다.</item>
 /// <item><b>판정이 두 벌이 아니다.</b> 답도 건축과 같은 열거형이고, 묻는 순서도
@@ -36,7 +36,7 @@ public class BreachPodPlacementTests
     static IReadOnlyList<GearCapability> 돌파정(float capacity = 용량) =>
         new[] { new GearCapability(TraversalGear.BreachPod, capacity) };
 
-    static HazardZone 짙은층(float 두께 = 12f) =>
+    static HazardZone 짙은구간(float 두께 = 12f) =>
         new HazardZone(EnvironmentHazard.MacroniumLayer, 두께);
 
     // ── ① 배치 판정 ─────────────────────────────────────────────
@@ -230,7 +230,7 @@ public class BreachPodPlacementTests
     {
         foreach (float 두께 in new[] { 1f, 12f, 20f, 20.0001f, 50f })
         {
-            var layer = 짙은층(두께);
+            var layer = 짙은구간(두께);
             bool 관문이_연다 = EnvironmentThreat.CanPass(layer, 돌파정());
             var 탑승 = BreachPodLaunch.Evaluate(placed: true, alreadyGone: false, layer, 돌파정(), ledger: null);
 
@@ -247,7 +247,7 @@ public class BreachPodPlacementTests
         var 원장 = new 가짜원장();
 
         Assert.AreEqual(BoardingResult.NotPlaced,
-            BreachPodLaunch.Board(placed: false, alreadyGone: false, 짙은층(), 돌파정(), 원장));
+            BreachPodLaunch.Board(placed: false, alreadyGone: false, 짙은구간(), 돌파정(), 원장));
         Assert.AreEqual(0, 원장.GetFlag(BreachPodLaunch.DescendedFlag),
             "타지도 않았는데 원장에 종막이 적혔다");
     }
@@ -269,7 +269,7 @@ public class BreachPodPlacementTests
         var 원장 = new 가짜원장();
 
         Assert.AreEqual(BoardingResult.TooThick,
-            BreachPodLaunch.Board(placed: true, alreadyGone: false, 짙은층(용량 + 0.5f), 돌파정(), 원장));
+            BreachPodLaunch.Board(placed: true, alreadyGone: false, 짙은구간(용량 + 0.5f), 돌파정(), 원장));
         Assert.AreEqual(0, 원장.GetFlag(BreachPodLaunch.DescendedFlag),
             "뚫지도 못했는데 챕터가 끝났다");
     }
@@ -281,7 +281,7 @@ public class BreachPodPlacementTests
         Assert.AreEqual(0, 원장.GetFlag(BreachPodLaunch.DescendedFlag), "시작부터 적혀 있다");
 
         Assert.AreEqual(BoardingResult.Ok,
-            BreachPodLaunch.Board(placed: true, alreadyGone: false, 짙은층(), 돌파정(), 원장));
+            BreachPodLaunch.Board(placed: true, alreadyGone: false, 짙은구간(), 돌파정(), 원장));
 
         Assert.AreEqual(1, 원장.GetFlag(BreachPodLaunch.DescendedFlag),
             "탔는데 원장에 아무것도 남지 않았다 — 마지막 목표가 영영 완료되지 않는다");
@@ -293,8 +293,8 @@ public class BreachPodPlacementTests
     {
         var 원장 = new 가짜원장();
 
-        Assert.AreEqual(BoardingResult.Ok, BreachPodLaunch.Board(true, false, 짙은층(), 돌파정(), 원장));
-        Assert.AreEqual(BoardingResult.AlreadyGone, BreachPodLaunch.Board(true, false, 짙은층(), 돌파정(), 원장));
+        Assert.AreEqual(BoardingResult.Ok, BreachPodLaunch.Board(true, false, 짙은구간(), 돌파정(), 원장));
+        Assert.AreEqual(BoardingResult.AlreadyGone, BreachPodLaunch.Board(true, false, 짙은구간(), 돌파정(), 원장));
 
         Assert.AreEqual(1, 원장.적은횟수, "종막이 두 번 적혔다");
     }
@@ -307,7 +307,7 @@ public class BreachPodPlacementTests
 
         for (int i = 0; i < 5; i++)
             Assert.AreEqual(BoardingResult.Ok,
-                BreachPodLaunch.Evaluate(true, false, 짙은층(), 돌파정(), 원장));
+                BreachPodLaunch.Evaluate(true, false, 짙은구간(), 돌파정(), 원장));
 
         Assert.AreEqual(0, 원장.적은횟수, "미리보기가 챕터를 끝냈다");
     }

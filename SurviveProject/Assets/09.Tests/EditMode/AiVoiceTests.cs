@@ -52,7 +52,7 @@ public class AiVoiceTests
     [Test]
     public void 프롤로그_자막의_문장_수를_센다()
     {
-        Assert.AreEqual(2, AiVoice.SentenceCount("비상 착륙 완료. 기체는 회수 불가 상태입니다."));
+        Assert.AreEqual(2, AiVoice.SentenceCount("착륙 완료. 성간 항행에 쓸 연료는 남지 않았습니다."));
         Assert.AreEqual(1, AiVoice.SentenceCount("주의 : 현재 생명 유지 장치가 위험 상태입니다."));
         Assert.AreEqual(2, AiVoice.SentenceCount("근처에 적절한 피난처 감지. 표시합니다..."));
     }
@@ -77,14 +77,16 @@ public class AiVoiceTests
     }
 
     /// <summary>
-    /// <b>문장 부호는 그림글자가 아니다.</b> 프롤로그의 "$#@%급 모래 폭풍"과
-    /// 가운뎃점이 여기 걸리면 멀쩡한 대사가 규격 위반이 된다.
+    /// <b>문장 부호는 그림글자가 아니다.</b> 프롤로그의 콜론과 가운뎃점이 여기 걸리면
+    /// 멀쩡한 대사가 규격 위반이 된다. AI가 조회하지 못한 값을 가리는 <c>$#@%</c>도
+    /// 같다 — 기호가 뭉쳐 있을 뿐 그림글자가 아니다.
     /// </summary>
     [Test]
     public void 문장_부호와_한글은_그림글자가_아니다()
     {
         Assert.IsFalse(AiVoice.HasEmoji(규격_본보기));
-        Assert.IsFalse(AiVoice.HasEmoji("주의 : 행성에 현재 $#@%급 모래 폭풍 접근 중, 즉시 철수를 권고합니다."));
+        Assert.IsFalse(AiVoice.HasEmoji("주의 : 지표를 덮은 액체가 데이터베이스에 없습니다. 접촉을 피하십시오."));
+        Assert.IsFalse(AiVoice.HasEmoji("$#@% 등급으로 조회됩니다."));
         Assert.IsFalse(AiVoice.HasEmoji("내구 40 · 이동 3.5"));
         Assert.IsFalse(AiVoice.HasEmoji(null));
     }

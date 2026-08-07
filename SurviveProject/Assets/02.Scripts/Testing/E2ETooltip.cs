@@ -43,6 +43,7 @@ namespace Survive.Testing
             yield return 빈_칸에서는_뜨지_않는다();
             yield return 제작_목록은_결과물과_재료를_읽어_준다();
             yield return 도감의_물질_줄도_같은_쪽지를_쓴다();
+            yield return 고친_문구가_옛_세계관을_말하지_않는다();
 
             E2EHarness.Log("=== 아이템 설명 쪽지 통과 ===");
         }
@@ -198,6 +199,86 @@ namespace Survive.Testing
 
             yield return E2EHarness.TapKey(Key.J);
             yield return E2EHarness.WaitUntil(() => !codex.IsOpen, "J로 다시 닫는다", 3f);
+        }
+
+        // ── 6. 세계관이 갈린 뒤의 문구 ───────────────────────────
+
+        /// <summary>
+        /// 2026-08-06에 세계관이 통째로 갈렸고(<c>Plan/세계관.md</c> §8) 이 물건들의
+        /// 이름·설명이 그 개정에 맞춰 다시 쓰였다. <b>EditMode는 여기까지 못 본다.</b>
+        /// 에셋과 표가 맞는지는 EditMode가 보지만, 그 값이 <b>쪽지까지 흘러가는지</b>는
+        /// 재생해 봐야 안다 — 사이에 <c>DataText</c>·<c>Loc</c>가 끼어 있고,
+        /// 그중 하나가 옛 칸을 들고 있으면 화면에만 폐기된 세계관이 남는다.
+        ///
+        /// <b>폐기어를 조각으로 짓지 않는다.</b> <c>02.Scripts</c>도 훑는 자리 안이므로
+        /// (<c>AssetTextScan.검사범위</c>) 여기 적은 낱말은 <c>RetiredContentGateTests</c>에
+        /// 그대로 걸린다. 조각으로 이으면 그 게이트를 속이게 되고, 속인 게이트는
+        /// 없느니만 못하다. 그래서 <b>새 문구가 무엇을 말해야 하는가</b>로 뒤집어 묻는다 —
+        /// 옛 낱말을 적지 않고도 옛 문구를 잡을 수 있다.
+        /// </summary>
+        static IEnumerator 고친_문구가_옛_세계관을_말하지_않는다()
+        {
+            E2EHarness.Log("[6] 세계관 개정으로 다시 쓴 문구가 쪽지에 그대로 뜬다");
+
+            // 물건 -> 새 문구가 반드시 담아야 하는 말. 옛 문구에는 없던 말이라,
+            // 되돌려 놓으면 여기서 걸린다.
+            var 소지품에서 = new (string id, string 담아야하는말)[]
+            {
+                ("alien_alloy",  "성분이 다른"),      // 바깥에서 온 것이 아니라 성분만 다르다
+                ("scrap",        "기계가 된"),        // 이 별의 원주민이 만든 것이 아니다
+                ("fern_fiber",   "호숫가"),           // 지상 생물은 호수 근방에만 있다
+                ("relic_core",   "가장 짙은 자리"),   // 층이 둘이 아니라 농도 구배 하나다
+            };
+
+            yield return OpenInventory();
+
+            foreach (var (id, 담아야하는말) in 소지품에서)
+            {
+                var item = Give(id);
+                yield return null;
+
+                var slot = SlotOf(item);
+                E2EHarness.Assert(slot != null, $"{item.displayName}이 든 칸을 찾았다");
+                if (slot == null) continue;
+
+                yield return Hover(slot.gameObject);
+                yield return 쪽지를_읽는다(item, id, 담아야하는말);
+                yield return Unhover();
+            }
+
+            // 랜턴은 장비라 소지품 칸이 아니라 빠른칸에 앉는다. 제작 목록 줄에도
+            // 같은 쪽지가 붙으므로 그쪽으로 확인한다 — 화면에 닿는지를 묻는 것은 같다.
+            var 랜턴 = Give("lantern");
+            var 랜턴줄 = Object.FindObjectsByType<ItemTooltipTrigger>(FindObjectsInactive.Exclude)
+                              .FirstOrDefault(t => t.Resolve() == 랜턴);
+            E2EHarness.Assert(랜턴줄 != null, "제작 목록에 랜턴 줄이 있다");
+            if (랜턴줄 != null)
+            {
+                yield return Hover(랜턴줄.gameObject);
+                yield return 쪽지를_읽는다(랜턴, "lantern", "밤의");  // 무대가 지상이다
+                yield return Unhover();
+            }
+        }
+
+        /// <summary>뜬 쪽지가 그 물건의 지금 문구를 그대로 적고 있는가.</summary>
+        static IEnumerator 쪽지를_읽는다(ItemDataSO item, string id, string 담아야하는말)
+        {
+            E2EHarness.Assert(Tip.IsVisible, $"{item.displayName} 쪽지가 떴다");
+
+            string 이름 = Text("Title");
+            string 본문 = Text("Body");
+            E2EHarness.Log($"  {id}: \"{이름}\" / \"{본문}\"");
+
+            E2EHarness.AssertEqual(이름, DataText.Name(item), $"{id}의 이름이 표를 거쳐 화면에 떴다");
+            E2EHarness.AssertEqual(본문, item.description.Trim(), $"{id}의 설명문이 그대로 화면에 떴다");
+            E2EHarness.Assert(본문.Contains(담아야하는말),
+                              $"{id} 설명문이 \"{담아야하는말}\"을 담고 있다 " +
+                              "(옛 세계관 문구로 되돌아갔는가)");
+
+            if (id == "alien_alloy")
+                E2EHarness.AssertEqual(이름, "이종 합금",
+                                       "표시 이름이 개명 뒤의 이름이다 (id는 그대로 alien_alloy)");
+            yield break;
         }
 
         // ── 도우미 ───────────────────────────────────────────────

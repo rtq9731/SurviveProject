@@ -183,7 +183,7 @@ Build,reject_wrong_surface,여기엔 놓을 수 없다,Cannot place it here,
 Build,reject_no_anchor,붙일 곳이 없다: 토대부터 놓아라,Nothing to attach to: place a foundation first,
 Build,reject_slot_taken,그 자리엔 이미 있다,That slot is already taken,
 Build,reject_not_researched,지을 줄 모른다: 청사진이 없다,You do not know how: no blueprint,
-Build,reject_not_dense_layer,진한 층이 드러난 자리에만 놓을 수 있다,It only sits where the dense layer is exposed,돌파정 전용 거부 사유
+Build,reject_not_dense_layer,짙은 구간이 드러난 자리에만 놓을 수 있다,It only sits where the dense layer is exposed,돌파정 전용 거부 사유
 Build,pod_prompt_board,[E] 돌파정에 탄다,[E] Board the breach pod,
 Build,structure_default_name,구조물,Structure,에셋이 이름을 적지 않았을 때 쓰는 이름
 #
@@ -317,7 +317,7 @@ Buildable,storage.name,보관함,,
 #
 # ---- Chapter ----
 #   챕터 제목.
-Chapter,chapter1.title,챕터 1 · 부유섬,,
+Chapter,chapter1.title,챕터 1 · 지상,,
 #
 # ---- Creature ----
 #   생물 이름(.name)과 도감 관측 기록(.codex).
@@ -329,7 +329,7 @@ Creature,fruit_crab.codex,"다리가 4개 달린 소형 기계. 앞쪽으로 튀
 Creature,fruit_crab.name,열매게,,
 Creature,scythe.codex,"다리가 관측되지 않는 기계. 걷지 않고 액면에 붙어 미끄러지며, 뒤로 늘어뜨린 꼬리가 표면을 훑고 지나간다. 바다와 양쪽 물가에서만 관측되었고 뭍 안쪽으로 올라온 기록은 없다. 접합부의 자홍빛은 액체층에서 온 것으로 보인다. 밝은 곳으로는 들어오지 않는다. 랜턴을 켠 사람에게 다가온 기록이 없다.",,
 Creature,scythe.name,낫,,
-Creature,wing.codex,몸통 양측의 커다란 팬으로 이동하는 잠자리 형태의 기계. 몸체 하부의 스캔 장치가 탐지기관이다. 박쥐와 생활방식이 비슷해 작은 열매를 통째로 담아 스크랩으로 전환한다. 주로 동굴에 서식한다.,,
+Creature,wing.codex,몸통 양측의 커다란 팬으로 이동하는 잠자리 형태의 기계. 몸체 하부의 스캔 장치가 탐지기관이다. 박쥐와 생활방식이 비슷해 작은 열매를 통째로 담아 스크랩으로 전환한다. 주로 물가에 서식한다.,,
 Creature,wing.name,날개,,
 #
 # ---- Discovery ----
@@ -368,17 +368,17 @@ Harvest,ore_vein.name,합금 더미,,
 #
 # ---- Item ----
 #   아이템 이름(.name)과 설명(.desc). 설명은 소지품 쪽지에 뜬다.
-Item,alien_alloy.desc,화성인이 만든 고강도 구조재. 합금 더미와 낫의 잔해에서 나온다. 쓸 데는 아직 밝혀지지 않았다.,,
-Item,alien_alloy.name,외계 합금,,
+Item,alien_alloy.desc,인류의 기반기술을 닮았으되 성분이 다른 고강도 구조재. 합금 더미와 낫의 잔해에서 나온다. 쓸 데는 아직 밝혀지지 않았다.,,
+Item,alien_alloy.name,이종 합금,,
 Item,axe.desc,거대 버섯을 베는 도구. 돌은 이것으로 깨지지 않는다.,,
 Item,axe.name,도끼,,
 Item,battery_cell.desc,불의 열로 스크랩에 갇힌 에너지를 끌어내 담은 전지. 랜턴이 꺼지려 할 때 저절로 물린다.,,
 Item,battery_cell.name,배터리 셀,,
-Item,breach_pod.desc,매크로늄으로 지은 한 사람짜리 껍데기. 같은 물질만이 짙은 층을 지난다. 액면 위에서 하강 키(Ctrl)를 누르면 걷는 대신 가라앉아 아래로 내려간다.,,
+Item,breach_pod.desc,매크로늄으로 지은 한 사람짜리 껍데기. 같은 물질만이 짙은 구간을 지난다. 액면 위에서 하강 키(Ctrl)를 누르면 걷는 대신 가라앉아 아래로 내려간다.,,
 Item,breach_pod.name,돌파정,,
-Item,fern_fiber.desc,지하 양치류의 질긴 섬유.,,
+Item,fern_fiber.desc,호숫가 양치류의 질긴 섬유.,,
 Item,fern_fiber.name,양치 섬유,,
-Item,lantern.desc,지하의 어둠을 밝힌다.,,
+Item,lantern.desc,밤의 어둠을 밝힌다.,,
 Item,lantern.name,랜턴,,
 Item,machine_part.desc,죽은 기계에서 회수한 부품.,,
 Item,machine_part.name,기계 부품,Machine Part,
@@ -410,15 +410,15 @@ Item,pickaxe.desc,광부의 기본 도구. 기계 잔해와 광맥을 캘 수 �
 Item,pickaxe.name,곡괭이,,
 Item,radar.desc,낮은 주파수의 전자파를 쏘아 되돌아오는 것을 쌓아 읽는다. 큰 것과 깊은 것은 잡히고 작은 것은 뭉개진다. 쌓는 동안 제자리에 서 있어야 한다.,,
 Item,radar.name,레이더,,
-Item,relic_core.desc,낫의 안쪽에서 나온 굳은 덩어리. 매크로늄과 같은 빛을 띠면서도 짙은 층에 삼켜지지 않았다. 무게가 크기에 맞지 않는다.,,
+Item,relic_core.desc,낫의 안쪽에서 나온 굳은 덩어리. 매크로늄과 같은 빛을 띠면서도 가장 짙은 자리에 삼켜지지 않았다. 무게가 크기에 맞지 않는다.,,
 Item,relic_core.name,낫의 핵,,
 Item,relic_membrane.desc,낫의 몸을 감싸던 얇은 막 한 조각. 액면에 잠겨 있었는데도 젖은 자국이 없다. 손끝으로 눌러도 가라앉지 않고 되밀어 낸다.,,
 Item,relic_membrane.name,낫의 막,,
 Item,repair_kit.desc,우주복 손상을 응급 처치한다.,,
 Item,repair_kit.name,수리 키트,,
-Item,scrap.desc,화성인들이 만든 물질. 연료이자 화폐이자 제작재다.,,
+Item,scrap.desc,기계가 된 짐승을 움직이던 연료. 화폐이자 제작재이기도 하다.,,
 Item,scrap.name,스크랩,Scrap,
-Item,surface_walker.desc,매크로늄 액면은 표면장력이 강해 발이 빠지지 않는다. 외계 합금으로 접지면을 넓힌 부츠를 신으면 그 위를 걸어 건널 수 있다.,,
+Item,surface_walker.desc,매크로늄 액면은 표면장력이 강해 발이 빠지지 않는다. 이종 합금으로 접지면을 넓힌 부츠를 신으면 그 위를 걸어 건널 수 있다.,,
 Item,surface_walker.name,액면 보행 장비,,
 #
 # ---- Objective ----
@@ -485,22 +485,22 @@ Research,res_surface_walker.name,젖지 않는 막 분석,,
 #
 # ---- Scene ----
 #   씬 표시 이름. 키는 Build Settings의 씬 이름에서 만든다.
-Scene,main_scene.name,챕터 1 · 부유섬,,
-Scene,start_scene.name,프롤로그 · 화성 지표면,,
+Scene,main_scene.name,챕터 1 · 지상,,
+Scene,start_scene.name,프롤로그 · 이름 없는 행성,,
 #
 # ---- Sequence ----
 #   연출 자막. .line1부터 <b>재생 순서대로</b>다. 순서가 곧 맥락이다.
 Sequence,prologue_intro.line1.speaker,우주복 AI,,
 #   1번째 자막
-Sequence,prologue_intro.line1.text,비상 착륙 완료. 기체는 회수 불가 상태입니다.,,
+Sequence,prologue_intro.line1.text,착륙 완료. 성간 항행에 쓸 연료는 남지 않았습니다.,,
 Sequence,prologue_intro.line2.speaker,우주복 AI,,
-#   2번째 자막 (앞 줄: 비상 착륙 완료. 기체는 회수 불가 상태입니...)
+#   2번째 자막 (앞 줄: 착륙 완료. 성간 항행에 쓸 연료는 남지 않...)
 Sequence,prologue_intro.line2.text,주의 : 현재 생명 유지 장치가 위험 상태입니다.,,
 Sequence,prologue_intro.line3.speaker,우주복 AI,,
 #   3번째 자막 (앞 줄: 주의 : 현재 생명 유지 장치가 위험 상태입...)
-Sequence,prologue_intro.line3.text,"주의 : 행성에 현재 $#@%급 모래 폭풍 접근 중, 즉시 철수를 권고합니다.",,
+Sequence,prologue_intro.line3.text,주의 : 지표를 덮은 액체가 데이터베이스에 없습니다. 접촉을 피하십시오.,,
 Sequence,prologue_intro.line4.speaker,우주복 AI,,
-#   4번째 자막 (앞 줄: 주의 : 행성에 현재 $#@%급 모래 폭풍 ...)
+#   4번째 자막 (앞 줄: 주의 : 지표를 덮은 액체가 데이터베이스에 ...)
 Sequence,prologue_intro.line4.text,파일럿의 생존을 위해 주변 탐색을 실시합니다...,,
 Sequence,prologue_intro.line5.speaker,우주복 AI,,
 #   5번째 자막 (앞 줄: 파일럿의 생존을 위해 주변 탐색을 실시합니다...)

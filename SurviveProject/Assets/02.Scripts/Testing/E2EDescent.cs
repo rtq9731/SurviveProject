@@ -19,7 +19,7 @@ namespace Survive.Testing
     ///
     /// 세 가지를 이어서 본다.
     /// <list type="number">
-    /// <item><b>돌파정이 없으면 짙은 층은 여전히 즉사다.</b> 종막이 생겼다고 액면이
+    /// <item><b>돌파정이 없으면 짙은 구간은 여전히 즉사다.</b> 종막이 생겼다고 액면이
     ///       순해지면 세계의 규칙이 무너진다 (기획서 §6.2)</item>
     /// <item><b>돌파정을 실제로 만든다.</b> 제작대에 걸고, 시간을 채우고, 회수한다 —
     ///       재료가 빠지고 시간이 흐르는 것을 건너뛰지 않는다</item>
@@ -159,7 +159,7 @@ namespace Survive.Testing
 
         static IEnumerator 돌파정_없이는_여전히_즉사다()
         {
-            E2EHarness.Log("— 돌파정 없이 짙은 층에 닿는다 —");
+            E2EHarness.Log("— 돌파정 없이 짙은 구간에 닿는다 —");
 
             벗는다();
             E2EHarness.AssertEqual(Inv.CountOf(돌파정), 0, "돌파정을 지니지 않았다");
@@ -171,7 +171,7 @@ namespace Survive.Testing
             _surface = 액면을_깐다(발바닥() + 0.5f);
 
             yield return E2EHarness.WaitUntil(() => Vitals.Health.IsEmpty,
-                                              "맨몸으로 짙은 층에 닿자 체력이 0이 된다", 5f);
+                                              "맨몸으로 짙은 구간에 닿자 체력이 0이 된다", 5f);
 
             E2EHarness.AssertEqual(MacroniumContactService.LastOutcome,
                                    MacroniumContactOutcome.Lethal, "액면이 낸 판정");
@@ -286,7 +286,7 @@ namespace Survive.Testing
         }
 
         /// <summary>
-        /// 지금 선 자리에 짙은 층을 세우고 뚫고 내려간다. <b>종막 구간을 지나야 하는
+        /// 지금 선 자리에 짙은 구간을 세우고 뚫고 내려간다. <b>종막 구간을 지나야 하는
         /// 시나리오가 공유하는 조각</b>이다 — <c>E2EChapter1</c>·<c>E2EWalkthrough</c>의
         /// 마지막 목표가 이것을 부른다.
         ///

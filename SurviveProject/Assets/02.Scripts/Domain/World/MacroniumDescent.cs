@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace Survive.World
 {
     /// <summary>
-    /// 짙은 매크로늄 층을 <b>다 내려갔는가</b>. 챕터 1의 종막이 이 물음 하나로 끝난다
+    /// 짙어진 매크로늄 구간을 <b>다 내려갔는가</b>. 챕터 1의 종막이 이 물음 하나로 끝난다
     /// (기획서 §6.2 "종막 — 뚫고 내려간다").
     ///
     /// <see cref="MacroniumContact"/>는 표면에서 벌어지는 일을 답한다 — 죽는가, 얹히는가,

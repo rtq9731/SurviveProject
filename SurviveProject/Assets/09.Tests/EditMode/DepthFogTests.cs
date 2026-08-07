@@ -33,7 +33,7 @@ namespace Survive.Tests.EditMode
         }
 
         [Test]
-        public void 섬_높이의_안개는_팔레트의_부유섬_색이다()
+        public void 섬_높이의_안개는_팔레트의_섬_색이다()
         {
             DepthFog.Sample(DepthFog.SeaLevelY + 50f, out var color, out _);
             AssertColor(ArtPalette.FogIslands, color);

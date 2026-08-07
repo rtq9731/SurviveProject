@@ -27,7 +27,7 @@ namespace Survive.World
         /// <summary>레이더가 있는 자리.</summary>
         A3,
 
-        /// <summary>A섬과 B섬을 가르는 묽은 층. 넓다 — 헤엄쳐서는 못 건넌다.</summary>
+        /// <summary>A섬과 B섬을 가르는 옅은 구간. 넓다 — 헤엄쳐서는 못 건넌다.</summary>
         Sea,
 
         /// <summary>B섬. 여기 <b>닿는 것</b>이 §5의 각성 방아쇠다.</summary>

@@ -692,7 +692,7 @@ namespace Survive.Testing
 
         /// <summary>
         /// 낫에게서 <paramref name="거리m"/>만큼, <b>걸을 수 있는 자리로</b> 물러난다.
-        /// 직선 뒤가 언제나 땅인 것은 아니다 — 부유섬 가장자리로 물러나면 허공이다
+        /// 직선 뒤가 언제나 땅인 것은 아니다 — 섬 가장자리로 물러나면 허공이다
         /// (<c>E2EConsumer</c>가 같은 이유로 같은 방식을 쓴다).
         /// </summary>
         static IEnumerator 물러난다(float 거리m)

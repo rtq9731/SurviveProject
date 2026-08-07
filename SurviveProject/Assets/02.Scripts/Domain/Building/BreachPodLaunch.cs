@@ -25,7 +25,7 @@ namespace Survive.Building
         /// <summary>아직 놓이지 않았다. 손에 든 채로는 탈 수 없다.</summary>
         NotPlaced,
 
-        /// <summary>놓이긴 했는데 발밑이 짙은 층이 아니다.</summary>
+        /// <summary>놓이긴 했는데 발밑이 짙은 구간이 아니다.</summary>
         NotOnLayer,
 
         /// <summary>층이 이 돌파정이 뚫을 수 있는 것보다 두껍다.</summary>
@@ -65,7 +65,7 @@ namespace Survive.Building
         /// </summary>
         /// <param name="placed">놓여 있는가.</param>
         /// <param name="alreadyGone">이 돌파정이 이미 떠났는가.</param>
-        /// <param name="layer">발밑의 구간. 짙은 층이어야 한다.</param>
+        /// <param name="layer">발밑의 구간. 짙은 구간이어야 한다.</param>
         /// <param name="pod">이 돌파정이 감당하는 것. 걸친 것이 아니라 놓인 물건의 성능이다.</param>
         /// <remarks>
         /// <b>「이미 떠났다」가 제일 먼저다.</b> 떠난 돌파정은 자리도 층도 잃는다 —

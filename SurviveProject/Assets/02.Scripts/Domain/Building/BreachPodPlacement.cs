@@ -19,7 +19,7 @@ namespace Survive.Building
         /// <summary>그 자리에 구간이 하나 걸려 있는가. 아무 구간도 없으면 거짓.</summary>
         public readonly bool HasZone;
 
-        /// <summary>걸린 구간이 무슨 위협인가. 짙은 층이어야 돌파정이 선다.</summary>
+        /// <summary>걸린 구간이 무슨 위협인가. 짙은 구간이어야 돌파정이 선다.</summary>
         public readonly EnvironmentHazard Hazard;
 
         /// <summary>층의 윗면 높이. 이것이 곧 <b>드러난 면</b>이다.</summary>
@@ -67,7 +67,7 @@ namespace Survive.Building
     /// (<c>BreachPodPlacementTests</c>).
     ///
     /// <b>돌파정만 다른 것은 「맞는 면」의 뜻 하나다.</b> 건축은 지면이냐 구조물이냐를
-    /// 묻고(<see cref="PlacementMode"/>), 돌파정은 <b>진한 층이 드러났는가</b>를 묻는다.
+    /// 묻고(<see cref="PlacementMode"/>), 돌파정은 <b>짙은 구간이 드러났는가</b>를 묻는다.
     /// 그 하나를 위해 사유가 하나 늘었을 뿐이다(<see cref="PlacementResult.NotDenseLayer"/>).
     ///
     /// <b>왜 「드러났는가」를 높이로 재는가.</b> 층은 액면 아래에 깔려 있고, 그 위를 바위나

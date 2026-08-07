@@ -2,7 +2,7 @@ using NUnit.Framework;
 using Survive.World;
 
 /// <summary>
-/// 백로그 32 — "섬 사이 바다는 묽은 매크로늄이고, 몸을 담그고 있는 동안 살을 깎는다".
+/// 백로그 32 — "섬 사이 바다는 옅은 매크로늄이고, 몸을 담그고 있는 동안 살을 깎는다".
 ///
 /// 규칙은 Unity 없이 도는 순수 정적 클래스이므로 씬도 MonoBehaviour도 쓰지 않는다.
 /// 여기서 보는 것은 <b>값을 매기는 규칙</b>이고, 그 규칙이 실제로 사람을 죽이고
@@ -134,7 +134,7 @@ public class MacroniumSeaTests
     [Test]
     public void 온전한_체력이_한_입에_사라지지는_않는다()
     {
-        // 묽은 층은 깎는 것이지 죽이는 것이 아니다. 즉사는 짙은 층(MacroniumContact)의 몫이다.
+        // 옅은 구간은 깎는 것이지 죽이는 것이 아니다. 즉사는 짙은 구간(MacroniumContact)의 몫이다.
         Assert.Less(MacroniumSea.BiteDamage, 100f * 0.2f);
     }
 }

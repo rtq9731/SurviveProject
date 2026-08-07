@@ -32,7 +32,7 @@ namespace Survive.Building
         NotResearched,
 
         /// <summary>
-        /// 진한 매크로늄 층이 드러난 자리가 아니다. <b>돌파정만 이 사유를 낸다</b>
+        /// 짙어진 매크로늄 구간이 드러난 자리가 아니다. <b>돌파정만 이 사유를 낸다</b>
         /// (스펙 §6).
         ///
         /// <b>왜 <see cref="WrongSurface"/>로 때우지 않는가.</b> 그쪽은 "지면이냐

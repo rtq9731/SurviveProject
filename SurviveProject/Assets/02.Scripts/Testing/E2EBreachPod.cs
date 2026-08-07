@@ -20,14 +20,14 @@ namespace Survive.Testing
     /// <item><b>아무 데나 못 놓는다.</b> 층이 없는 자리와, 층은 있는데 무언가가 덮고 있는
     ///       자리에서 각각 거부된다. 거부 사유는 화면에 뜰 수 있는 문구여야 한다 —
     ///       "왜 안 놓이지"만 알 수 있는 상태가 이 라운드가 막으려는 것이다</item>
-    /// <item><b>진한 층이 드러난 자리에는 놓인다.</b> 손에서 하나가 빠지고 세계에 하나가 선다</item>
+    /// <item><b>짙은 구간이 드러난 자리에는 놓인다.</b> 손에서 하나가 빠지고 세계에 하나가 선다</item>
     /// <item><b>놓은 뒤 탄다.</b> 걸어가 [E]를 눌러 타면 진행 원장에 종막이 적히고
     ///       챕터 종료 신호가 울린다</item>
     /// </list>
     ///
     /// <b>왜 층을 런타임에 세우는가.</b> B섬 지하의 배치는 §16(사람의 몫)이고, 씬은
     /// 병합할 수 없는 단일 파일이라 이 라운드에서 건드리지 않았다. 실제로 재어 보면
-    /// <b>씬에 짙은 층이 한 곳도 없다</b> — 아래 <see cref="Prepare"/>가 그것을 단언한다.
+    /// <b>씬에 짙은 구간이 한 곳도 없다</b> — 아래 <see cref="Prepare"/>가 그것을 단언한다.
     /// 여기서 볼 것은 배치가 아니라 <b>판정</b>이므로 층을 곁에 세운다.
     /// <c>E2EDescent</c>가 같은 이유로 같은 일을 한다.
     /// </summary>
@@ -73,7 +73,7 @@ namespace Survive.Testing
             // 이 단언이 먼저 걸리고, 그때 이 시나리오는 세운 층 대신 그 층으로 간다.
             E2EHarness.Assert(
                 Object.FindAnyObjectByType<DescentZone>(FindObjectsInactive.Include) == null,
-                "시작할 때 씬에 짙은 층이 없다 (§16 배치 전 — 진짜 배치를 기다린다)");
+                "시작할 때 씬에 짙은 구간이 없다 (§16 배치 전 — 진짜 배치를 기다린다)");
 
             var db = E2EHarness.Player.Inventory.Database;
             E2EHarness.Assert(db != null && db.GetById(돌파정) != null,
@@ -156,7 +156,7 @@ namespace Survive.Testing
 
         static IEnumerator 층이_드러난_자리에는_놓인다()
         {
-            E2EHarness.Log("— 진한 층이 드러난 자리에 놓는다 —");
+            E2EHarness.Log("— 짙은 구간이 드러난 자리에 놓는다 —");
 
             층을_걷는다();
             발밑을_본다();

@@ -116,8 +116,8 @@ public class MacroniumContactTests
     [TestCase(EnvironmentHazard.MacroniumLayer)]
     public void 액면이_아닌_위협은_밟아도_대가가_없다(EnvironmentHazard 위협)
     {
-        // 어둠도 수심도 진한 층도 "밟으면 죽는" 종류가 아니다 — 위협은 막는 것이다.
-        // 진한 층은 액면 아래에 있으므로 "밟는" 판정의 대상이 아예 아니다.
+        // 어둠도 수심도 짙은 구간도 "밟으면 죽는" 종류가 아니다 — 위협은 막는 것이다.
+        // 짙은 구간은 액면 아래에 있으므로 "밟는" 판정의 대상이 아예 아니다.
         var 구간 = new HazardZone(위협, 30f);
 
         Assert.AreEqual(MacroniumContactOutcome.None, MacroniumContact.Resolve(true, 구간, 장비()));
