@@ -15,7 +15,7 @@ namespace Survive.Creatures
     ///       (실측 지형: 액면 50.1인데 바다 한가운데 해저는 47.0). 낫은 수면에
     ///       붙어야 한다 — 꼬리가 액체를 훑는 것이 이 개체가 하는 일이다</item>
     /// <item><b>갈 수 있는 곳.</b> 비행체는 어디든 간다. 낫은 <see cref="ScytheHabitat"/>가
-    ///       허락하는 곳까지만 간다. 평시에 육지로 올라오지 않는 것이 A섬 내륙을
+    ///       허락하는 곳까지만 간다. 평시에 육지로 올라오지 않는 것이 안쪽 뭍을
     ///       안전하게 만드는 규칙 자체이므로, 몸이 그것을 어기면 설계가 무너진다</item>
     /// <item><b>움직이는 결.</b> 비행체는 초당 1.4번 위아래로 까딱이며 방향을 빠르게
     ///       튼다. 낫은 <b>관성으로 미끄러진다</b> — 멈추라고 해도 곧바로 서지 않고,
@@ -93,6 +93,20 @@ namespace Survive.Creatures
         /// </summary>
         public ScytheAlert Alert => ScytheWatch.Alert;
 
+        /// <summary>
+        /// 지금 나와 있는가 — 밤이면 참. <b>읽기만 한다</b>(<see cref="ScytheWatch"/>와 같은 결).
+        /// 시계가 아직 없으면 밤으로 친다: 시간 축이 붙기 전과 같은 답이라,
+        /// 시계 없는 무대에서 동작이 달라지지 않는다.
+        /// </summary>
+        public bool Abroad
+        {
+            get
+            {
+                var 시계 = DayNightService.Instance;
+                return 시계 == null || ScytheHabitat.IsAbroad(시계.TimeOfDay, Alert);
+            }
+        }
+
         /// <summary>지금 서 있는 자리가 무엇인가. 검증이 눈이 아니라 값으로 확인하라고 연다.</summary>
         public HabitatZone Zone { get; private set; } = HabitatZone.Liquid;
 
@@ -140,7 +154,7 @@ namespace Survive.Creatures
             // "가지 않는다"가 아니라 "있으면 안 된다"이므로, 밀려 들어간 개체도
             // 제자리로 돌아가야 규칙이 상태와 무관하게 성립한다.
             Vector3 goal = _target;
-            Returning = !ScytheHabitat.CanEnter(sample.Zone, Alert);
+            Returning = !ScytheHabitat.CanEnter(sample.Zone, Alert, Abroad);
             if (Returning && TryFindWayHome(here, out var home)) goal = home;
 
             Steer(dt, here, goal);
@@ -242,7 +256,7 @@ namespace Survive.Creatures
         bool CanStand(Vector3 p)
         {
             var s = Sample(p);
-            if (!ScytheHabitat.CanEnter(s.Zone, Alert)) return false;
+            if (!ScytheHabitat.CanEnter(s.Zone, Alert, Abroad)) return false;
             if (Alert == ScytheAlert.Alarmed) return true;
             return s.EdgeRoom > EdgeMargin;
         }

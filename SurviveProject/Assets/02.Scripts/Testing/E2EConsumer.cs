@@ -164,6 +164,9 @@ namespace Survive.Testing
         /// </summary>
         static IEnumerator 무대를_비운다()
         {
+            // 낫은 밤에만 나온다(스펙 §8). 밤은 이 시나리오의 전제이지 주어가 아니다.
+            E2EScytheNight.밤에_세운다();
+
             int 잠든생물 = E2EHarness.SleepWildCreatures();
             int 끈광원 = E2EHarness.MuteAmbientLitZones();
             E2EHarness.Log($"  무대 정리: 야생 생물 {잠든생물}마리를 재우고, " +

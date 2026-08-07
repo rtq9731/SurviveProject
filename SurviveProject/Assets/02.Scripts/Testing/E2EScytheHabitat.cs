@@ -101,6 +101,11 @@ namespace Survive.Testing
 
             남은것을_치운다();
 
+            // 낫은 밤에만 나온다(스펙 §8). 밤은 이 시나리오의 전제이지 주어가 아니다.
+
+            E2EScytheNight.밤에_세운다();
+
+
             int 잠든생물 = E2EHarness.SleepWildCreatures();
             int 끈광원 = E2EHarness.MuteAmbientLitZones();
             E2EHarness.Log($"  무대 정리: 야생 생물 {잠든생물}마리, 주변 광원 {끈광원}곳 " +
@@ -562,14 +567,26 @@ namespace Survive.Testing
             E2EHarness.Assert(MacroniumSeaService.LastImmersion != SeaImmersion.Swimming,
                               "헤엄쳐 간 것이 아니다");
 
-            yield return 랜턴(true);
+            // <b>2026-08-07: 여기서 랜턴을 켜던 것을 걷어냈다 — 설계가 뒤집혔다.</b>
+            //
+            // 예전 이 줄은 <b>랜턴을 켠 채로 유물을 줍는 것을 정상으로</b> 못 박고
+            // 있었다. 세계관 §10이 그 반대를 정했다: <b>"낫은 밤에 다니고 빛을
+            // 피한다. 유물이 있어야 진행이 되므로, 유물을 얻으려면 칠흑 속에서
+            // 랜턴을 꺼야 한다. 이 게임에서 가장 무서운 행동이 곧 진행 조건이다."</b>
+            // 규칙도 그렇게 섰다(<see cref="Survive.Progression.RelicDropRule.CanShed"/>) —
+            // 사람이 빛 안이면 낫이 애초에 흘리지 않는다.
+            //
+            // 그래서 이 절은 처음부터 끝까지 어둠에서 돈다. 이 항목이 재려는 것은
+            // <b>액면 보행 장비 없이 손이 닿는가</b>이지 랜턴 상태가 아니므로,
+            // 켜는 줄 하나를 지우는 것으로 족하다.
+            E2EHarness.Assert(!_lantern.IsOn, "어둠에서 줍는다 — 켜면 애초에 흘리지 않는다");
+
             int 전 = Inv.CountOf(id);
             yield return 줍는다(pickup);
 
             E2EHarness.AssertEqual(Inv.CountOf(id), 전 + 1,
                                    $"액면 보행 장비 없이 {id}를 손에 넣었다 — 순환이 풀린다");
             E2EHarness.AssertEqual(Inv.CountOf(보행장비), 0, "끝까지 액면 보행 장비 없이 해냈다");
-            yield return 랜턴(false);
         }
 
         // ── 3. 육지에 있을 수 있는가 ────────────────────────────
@@ -747,7 +764,11 @@ namespace Survive.Testing
         /// 떨구는 자리를 시나리오가 고를 수 없어서 확립된 방식이고, 줍는 절차 자체는
         /// 건너뛰지 않는다 — 조준도 프롬프트도 E도 그대로 지난다.
         /// </summary>
-        static IEnumerator 줍는다(ItemPickup pickup)
+        /// <summary>
+        /// 줍는 동작. <b>「낫은 밤에 다닌다」가 같은 절차를 다시 쓰므로 연다</b> —
+        /// 줍는 방식이 시나리오마다 다르면 "얻었다"가 서로 다른 뜻이 된다.
+        /// </summary>
+        public static IEnumerator 줍는다(ItemPickup pickup)
         {
             Vitals.Health.Modify(Vitals.Health.Max);
 

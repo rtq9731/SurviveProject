@@ -109,9 +109,19 @@ namespace Survive.Creatures
         /// </summary>
         public readonly ScytheAlert Alert;
 
+        /// <summary>
+        /// 지금 낫이 <b>나와 있는가</b> — 밤이면 참, 낮이면 거짓
+        /// (<see cref="ScytheHabitat.IsAbroad(float, ScytheAlert)"/>).
+        ///
+        /// <b>기본값이 참인 것은 회귀선이다.</b> 시간 축을 모르고 부르는 자리는
+        /// 예전처럼 밤인 것으로 친다. 그래서 이 축이 붙기 전에 쓰인 테스트와
+        /// 부름이 한 글자도 달라지지 않는다.
+        /// </summary>
+        public readonly bool Abroad;
+
         public ScytheSituation(bool detected, LightVerdict light, bool closing,
                                bool playerNearFixedLight = false, bool pushedByFlare = false,
-                               ScytheAlert alert = ScytheAlert.Calm)
+                               ScytheAlert alert = ScytheAlert.Calm, bool abroad = true)
         {
             Detected = detected;
             Light = light;
@@ -119,6 +129,7 @@ namespace Survive.Creatures
             PlayerNearFixedLight = playerNearFixedLight;
             PushedByFlare = pushedByFlare;
             Alert = alert;
+            Abroad = abroad;
         }
     }
 
@@ -151,6 +162,16 @@ namespace Survive.Creatures
             // 월드다 — 여기서 빠져나갈 길을 하나라도 두면 짐을 든 채 덤비는 프레임이
             // 생기고, 그러면 "꼬리가 무기인데 짐을 들었다"는 형태의 약속이 깨진다.
             if (current == ScytheState.Retrieve) return ScytheState.Retrieve;
+
+            // <b>낮이면 사람을 보지 않는다</b> (세계관 §5 "밤에 움직인다").
+            // 물러나 있는 개체는 감지하든 말든 순찰뿐이다 — 쫓지도 덤비지도 않는다.
+            // 여기서 끊지 않고 서식 범위만 좁히면, 낮에도 낫이 물 위에서 사람을
+            // 쫓아다니며 꼬리를 들고 있게 된다. 물러난다는 것은 자리만이 아니라
+            // <b>관심</b>도 거두는 것이다.
+            //
+            // 회수보다 뒤에 두는 것은 월드가 건 지시가 시계보다 세기 때문이다.
+            // 발령도 마찬가지로 세지만, 그것은 Abroad를 만들 때 이미 접혔다.
+            if (!situation.Abroad) return ScytheState.Patrol;
 
             switch (current)
             {
@@ -231,7 +252,7 @@ namespace Survive.Creatures
         /// 실제로 올라갈 수 있는지는 여전히 <see cref="ScytheHabitat.CanEnter"/>가
         /// 경계 등급으로 가른다 — <b>상태가 범위를 넓히고 등급이 그것을 허가한다.</b>
         /// 두 물음을 하나로 접으면 "따라붙는 중이면 평시에도 육지로 올라온다"가 되어
-        /// A섬 내륙이 안전하다는 약속이 깨진다.
+        /// 안쪽 뭍이 안전하다는 약속이 깨진다.
         /// </summary>
         public static bool RangesInland(ScytheState state) => state != ScytheState.Patrol;
 

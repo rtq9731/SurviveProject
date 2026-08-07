@@ -5,6 +5,7 @@ using Survive.Interaction;
 using Survive.Items;
 using Survive.Player;
 using Survive.Progression;
+using Survive.World;
 
 namespace Survive.Creatures
 {
@@ -51,6 +52,7 @@ namespace Survive.Creatures
         }
 
         CreatureBrain _brain;
+        HoverDrifter _drifter;
         RelicShedSO _rule;
         PlayerInventory _player;
 
@@ -68,6 +70,8 @@ namespace Survive.Creatures
         void Awake()
         {
             _brain = GetComponent<CreatureBrain>();
+
+            _drifter = GetComponent<HoverDrifter>();
 
             var health = GetComponent<Survive.Combat.CreatureHealth>();
             _rule = health != null && health.Definition != null ? health.Definition.relicShed : null;
@@ -92,7 +96,18 @@ namespace Survive.Creatures
             if (_brain == null) return;
             if (_brain.State != CreatureState.Wander && _brain.State != CreatureState.Idle) return;
 
-            if (!사람이_보는_거리인가()) return;
+            // <b>제자리에 있을 때만 흘린다.</b> 서식지 밖으로 밀려나 돌아가는 중인
+            // 개체는 순찰하는 것이 아니다. 그리고 실무적으로, 돌아가는 동안에는
+            // 몸이 지형 막힘을 무시하고 가로지르므로(HoverDrifter.Glide) 그때 굴림이
+            // 걸리면 <b>유물이 육지에 떨어진다</b> — 「낫의 영역에 떨어졌다」가 거짓이 되고,
+            // 액면 보행 장비 없이 줍는 순환 해소가 지도 위에서 성립하지 않는다.
+            if (_drifter != null && _drifter.Returning) return;
+
+            // <b>어둠이 조건이다.</b> 곁에 있는 것만으로는 모자라고, 그 사람이
+            // 빛 밖에 서 있어야 한다 — 이 게임에서 가장 무서운 행동(칠흑 속에서
+            // 랜턴을 끄는 것)이 곧 진행 조건이라는 것이 여기서 성립한다.
+            // 판정은 Domain에 있다(<see cref="RelicDropRule.CanShed"/>).
+            if (!RelicDropRule.CanShed(사람이_보는_거리인가(), 사람이_빛_안인가())) return;
 
             var inventory = 소지품();
             var ledger = BlueprintGate.Active;
@@ -120,6 +135,19 @@ namespace Survive.Creatures
         /// 아니라 있고 없음의 판정이라, 여럿이 되어도 규칙이 그대로다. 지금은 언제나
         /// 하나뿐이므로 답도 예전과 같다.
         /// </summary>
+        /// <summary>
+        /// 사람이 지금 밝은 구역 안인가. <b>랜턴이든 화톳불이든 가리지 않는다</b> —
+        /// 묻는 것이 "무엇이 밝히는가"가 아니라 "보이는가"이기 때문이다.
+        /// 재는 곳은 하나여야 하므로 <see cref="LitZoneRegistry"/>에 그대로 묻는다.
+        /// </summary>
+        bool 사람이_빛_안인가()
+        {
+            if (_player == null) GameServices.TryGet(out _player);
+            if (_player == null) return false;
+
+            return LitZoneRegistry.IsLit(_player.transform.position);
+        }
+
         bool 사람이_보는_거리인가()
         {
             if (_player == null) GameServices.TryGet(out _player);

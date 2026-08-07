@@ -124,6 +124,9 @@ namespace Survive.Testing
 
         static IEnumerator 준비()
         {
+            // 낫은 밤에만 나온다(스펙 §8). 밤은 이 시나리오의 전제이지 주어가 아니다.
+            E2EScytheNight.밤에_세운다();
+
             var dir = Object.FindAnyObjectByType<ChapterDirector>(FindObjectsInactive.Exclude);
             yield return E2EHarness.WaitUntil(() => dir != null && dir.Current != null,
                                               "챕터가 시작된다", 8f);
