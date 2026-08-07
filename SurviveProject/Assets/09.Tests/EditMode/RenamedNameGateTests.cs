@@ -1,9 +1,12 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using UnityEditor;
 using Survive.Crafting;
+using Survive.Harvesting;
 using Survive.Items;
+using Survive.Localization;
 using Survive.Progression;
 
 /// <summary>
@@ -46,10 +49,110 @@ public class RenamedNameGateTests
         "submer" + "sible",   // 첫 id
         "잠" + "항",           // 첫 한국어 이름
         "breach_" + "craft",  // 두 번째 id. craft가 이 저장소에서 "제작"과 부딪혔다
+
+        // A섬에 서 있던 채집물의 옛 이름(2026-08-07 개명). 여기만은 <b>구절 전체</b>를
+        // 본다 — "매크로늄"이라는 낱말 자체는 살아 있는 말이고(매크로늄 석영·매크로늄
+        // 아이템), 앞 두 글자만 잡으면 멀쩡한 것이 통째로 걸린다.
+        "매크로늄" + " 광맥",
     };
 
     /// <summary>새 이름. 훑개가 눈을 뜨고 있는지 확인하는 데 쓴다.</summary>
     const string 새id = "breach_pod";
+
+    // ── A섬 채집물의 개명 (2026-08-07 회신 ①) ────────────────────
+    //
+    // 회신 ①이 A섬에서 매크로늄을 없앴다. A섬은 스크랩과 기계 부품만 나오는
+    // 학습·준비 구간이고 새 물질은 B섬부터다. 그런데 A섬 씬에는 매크로늄의
+    // 이름을 단 채집물이 열세 곳 서 있었다 — 그것이 실제로 떨구는 것은
+    // 매크로늄이 아니라 <b>외계 합금</b>인데도.
+    //
+    // 물건은 어긋나지 않았고 화면만 어긋났다. 그래서 고친 것도 표시 이름뿐이다.
+    // id(<c>ore_vein</c>)와 에셋 파일 이름은 그대로 둔다 — E2E까지 걸린 문자열을
+    // 지금 바꾸는 것은 비용 대비 이득이 없다(회신 ⑬과 같은 판단).
+
+    const string 채집물에셋 = "Assets/08.Data/HarvestNodes/OreVein.asset";
+    const string 잔해에셋 = "Assets/08.Data/HarvestNodes/Debris.asset";
+    const string 새채집물이름 = "합금 더미";
+    const string 채집물폴더 = "Assets/08.Data/HarvestNodes";
+
+    /// <summary>
+    /// <b>새 이름이 에셋에도 표에도 있고, 조회 경로 끝에서 그것이 나온다.</b>
+    ///
+    /// 에셋만 고치면 화면은 안 바뀐다 — 표가 있으면 표가 이기기 때문이다
+    /// (<c>DataTextGateTests.표에_있으면_표가_이긴다</c>). 그래서 조회 경로를
+    /// 실제로 밟아 본다. 초안 갱신 메뉴를 안 돌렸으면 여기서 옛 이름이 나온다.
+    /// </summary>
+    [Test]
+    public void 채집물의_새_이름이_에셋에도_표에도_있다()
+    {
+        var 노드 = AssetDatabase.LoadAssetAtPath<HarvestNodeSO>(채집물에셋);
+        Assert.IsNotNull(노드, 채집물에셋 + "를 못 읽었다");
+
+        Assert.AreEqual(새채집물이름, 노드.displayName,
+            "에셋 원문이 새 이름이 아니다. 표가 없는 배포본에서는 이 값이 그대로 화면에 나간다");
+
+        Assert.AreEqual(새채집물이름, DataText.Name(노드),
+            "표를 거친 값이 새 이름이 아니다 — Tools/Survive/번역/데이터 에셋 초안 갱신 을 돌렸는가");
+    }
+
+    /// <summary>
+    /// <b>이름이 서로 달라야 이름이다.</b> 처음 잡았던 후보는 「부품 더미」였는데,
+    /// 이미 있는 「기계 잔해」와 결이 너무 가까워 플레이어가 둘을 구별하지 못하고,
+    /// 게다가 <c>machine_part</c>(기계 부품)는 <b>그쪽이 떨구는 물건의 이름</b>이다.
+    /// 이 검사는 그런 겹침이 다시 들어오는 것을 막는다.
+    /// </summary>
+    [Test]
+    public void 채집물_이름은_서로_겹치지_않는다()
+    {
+        var 노드들 = 채집노드들();
+
+        var 겹친것 = 노드들
+            .GroupBy(n => (n.displayName ?? "").Trim())
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .ToList();
+
+        Assert.IsEmpty(겹친것, "채집물 이름이 겹친다:\n  " + string.Join("\n  ", 겹친것));
+
+        var 잔해 = AssetDatabase.LoadAssetAtPath<HarvestNodeSO>(잔해에셋);
+        Assert.IsNotNull(잔해, 잔해에셋 + "를 못 읽었다");
+        Assert.AreNotEqual(잔해.displayName, 새채집물이름,
+            "기계 잔해와 새 이름이 같아졌다 — 둘은 떨구는 것이 다르다 " +
+            "(잔해: 스크랩·기계 부품 / 이쪽: 외계 합금)");
+    }
+
+    /// <summary>
+    /// <b>음성 확인.</b> 옛 이름 0건은 훑개가 죽어 있어도 나온다. 그래서 훑개가
+    /// <b>한글을</b> — 그것도 <c>\u...</c>로 감춰진 에셋 본문과 표 양쪽에서 —
+    /// 실제로 찾아내는지 같이 본다. 위의 <see cref="훑개는_있는_이름을_실제로_찾아낸다"/>는
+    /// 라틴 문자 id로만 확인하므로 유니코드를 푸는 쪽이 망가지면 조용히 눈이 먼다.
+    /// </summary>
+    [Test]
+    public void 훑개는_한글_새_이름도_실제로_찾아낸다()
+    {
+        var 찾은것 = AssetTextScan.찾는다(new[] { 새채집물이름 });
+
+        Assert.IsNotEmpty(찾은것, $"훑개가 「{새채집물이름}」조차 못 찾는다면 옛 이름 0건은 아무 뜻이 없다");
+
+        foreach (var 갈래 in new[] { "Assets/08.Data", "Assets/Resources/Localization" })
+            Assert.IsTrue(찾은것.Any(자리 => 자리.StartsWith(갈래)),
+                          $"{갈래} 아래에서 새 이름을 못 찾았다:\n  " + string.Join("\n  ", 찾은것));
+    }
+
+    /// <summary>채집 노드 전부. 목록을 손으로 적으면 새로 만든 노드가 검사에서 샌다.</summary>
+    static List<HarvestNodeSO> 채집노드들()
+    {
+        var nodes = Directory
+            .GetFiles(Path.Combine(Directory.GetCurrentDirectory(), 채집물폴더),
+                      "*.asset", SearchOption.AllDirectories)
+            .Select(p => p.Substring(Directory.GetCurrentDirectory().Length + 1).Replace('\\', '/'))
+            .Select(AssetDatabase.LoadAssetAtPath<HarvestNodeSO>)
+            .Where(n => n != null)
+            .ToList();
+
+        Assert.IsNotEmpty(nodes, $"{채집물폴더} 아래에서 채집 노드를 하나도 못 읽었다");
+        return nodes;
+    }
 
     [Test]
     public void 옛_이름이_코드에도_데이터에도_표에도_없다()
