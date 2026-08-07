@@ -2,6 +2,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using DG.Tweening;
+using Survive.Localization;
 
 namespace Survive.Narrative
 {
@@ -92,12 +93,23 @@ namespace Survive.Narrative
 
         void OnDestroy() => group?.DOKill();
 
+        /// <summary>
+        /// 자막 한 줄을 띄운다. 넘어오는 <paramref name="speaker"/>·<paramref name="text"/>는
+        /// 이미 표를 거친 값이다.
+        ///
+        /// <b>화자와 자막을 잇는 꼴도 표에서 나온다.</b> <c>" : "</c>를 코드에 박으면
+        /// 그 기호가 언어마다 다르다는 사실을 표현할 자리가 없어진다 — 중국어·일본어는
+        /// 전각 기호를 쓰고, 언어에 따라 화자를 뒤에 붙이는 편이 자연스러울 수도 있다
+        /// (docs/번역-체계.md §3). 자리표 순서를 바꿀 수 있게 통짜 문장으로 둔다.
+        /// </summary>
         public void Show(string speaker, string text)
         {
             gameObject.SetActive(true);   // Awake가 여기서 처음 돌 수 있다
 
             if (label != null)
-                label.text = string.IsNullOrEmpty(speaker) ? text : $"{speaker} : {text}";
+                label.text = string.IsNullOrEmpty(speaker)
+                    ? text
+                    : Loc.F("UI", "subtitle_line", speaker, text);
 
             if (group != null)
             {

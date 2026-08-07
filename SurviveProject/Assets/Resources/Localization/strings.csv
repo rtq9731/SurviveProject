@@ -204,6 +204,13 @@ Inv,equip_light,조명,Light,비어 있는 조명 장비 슬롯에 적히는 이
 Feed,pickup_one,{0} 획득,Picked up {0},{0}=아이템 이름
 Feed,pickup_many,{0} {1}개 획득,Picked up {0} ×{1},{0}=아이템 이름 {1}=얻은 개수
 #
+# ── 자막 한 줄 (Narrative/SubtitleView) ────────────────────
+# 화면 아래쪽 자막판에 뜨는 한 줄. 화자와 대사를 잇는 기호까지 이 칸에 있다 —
+# 중국어·일본어는 전각 기호를 쓰고, 언어에 따라 화자를 뒤에 붙이는 편이
+# 자연스러울 수도 있다. 화자가 없는 자막은 이 틀을 쓰지 않고 대사만 나간다.
+# 두 자리 모두 이미 표를 거친 값이다 (Sequence/... 또는 Discovery/...).
+UI,subtitle_line,{0} : {1},{0} : {1},{0}=화자 이름 {1}=대사 한 줄
+#
 # ── 레이더 (Domain/Instruments/RadarText) ──────────────────
 # G를 누르면 그 자리에 서서 전자파를 쌓는다. 쌓는 동안 무방비이고 배터리가 준다.
 # 움직이면 위상 기준을 잃어 끊긴다 — 규칙이 아니라 저주파의 성질이다.
@@ -500,18 +507,18 @@ Scene,start_scene.name,프롤로그 · 이름 없는 행성,,
 #
 # ---- Sequence ----
 #   연출 자막. .line1부터 <b>재생 순서대로</b>다. 순서가 곧 맥락이다.
-Sequence,prologue_intro.line1.speaker,우주복 AI,,
+Sequence,prologue_intro.line1.speaker,우주복 AI,Suit AI,
 #   1번째 자막
-Sequence,prologue_intro.line1.text,착륙 완료. 성간 항행에 쓸 연료는 남지 않았습니다.,,
-Sequence,prologue_intro.line2.speaker,우주복 AI,,
+Sequence,prologue_intro.line1.text,착륙 완료. 성간 항행에 쓸 연료는 남지 않았습니다.,Landing complete. No fuel remains for interstellar flight.,
+Sequence,prologue_intro.line2.speaker,우주복 AI,Suit AI,
 #   2번째 자막 (앞 줄: 착륙 완료. 성간 항행에 쓸 연료는 남지 않...)
-Sequence,prologue_intro.line2.text,광역 측량 결과 : 기준이 되는 별이 하나도 잡히지 않았습니다.,,
-Sequence,prologue_intro.line3.speaker,우주복 AI,,
+Sequence,prologue_intro.line2.text,광역 측량 결과 : 기준이 되는 별이 하나도 잡히지 않았습니다.,Wide-area survey result : not one reference star was detected.,
+Sequence,prologue_intro.line3.speaker,우주복 AI,Suit AI,
 #   3번째 자막 (앞 줄: 광역 측량 결과 : 기준이 되는 별이 하나도...)
-Sequence,prologue_intro.line3.text,주의 : 지표를 덮은 액체가 데이터베이스에 없습니다. 접촉을 피하십시오.,,
-Sequence,prologue_intro.line4.speaker,우주복 AI,,
+Sequence,prologue_intro.line3.text,주의 : 지표를 덮은 액체가 데이터베이스에 없습니다. 접촉을 피하십시오.,Caution : the liquid covering the surface is not in the database. Avoid contact.,
+Sequence,prologue_intro.line4.speaker,우주복 AI,Suit AI,
 #   4번째 자막 (앞 줄: 주의 : 지표를 덮은 액체가 데이터베이스에 ...)
-Sequence,prologue_intro.line4.text,파일럿의 생존을 위해 주변 탐색을 실시합니다...,,
+Sequence,prologue_intro.line4.text,파일럿의 생존을 위해 주변 탐색을 실시합니다...,Commencing a local survey to sustain the pilot...,
 #
 # ---- Vital ----
 #   생명 수치 이름. HUD 게이지에 붙는다.
