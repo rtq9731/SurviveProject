@@ -1,14 +1,18 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Text;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
+using Survive.Core;
 using Survive.Creatures;
 using Survive.Player;
 using Survive.World;
+using Debug = UnityEngine.Debug;
 
 namespace Survive.Testing
 {
@@ -280,6 +284,91 @@ namespace Survive.Testing
             foreach (var d in _muted)
                 if (d != null && d.added) InputSystem.EnableDevice(d);
             _muted.Clear();
+        }
+
+        // ── 저장 슬롯 격리 ───────────────────────────────────────
+        //
+        // 진짜 장치를 떼어 놓는 것과 같은 종류의 일이다. 저장 경로
+        // (LocalLow/DefaultCompany/SurviveProject)는 이 기계의 에디터 전부와
+        // 사람이 직접 플레이하는 창까지 공유한다. 검사가 챕터 목표를 하나 넘기면
+        // 자동 저장이 걸리고, 그것이 사람의 이어하기를 그대로 덮는다 —
+        // 2026-08-07에 save_auto.json이 커진 것을 보고 알아냈다.
+        //
+        // 규칙 자체는 SaveSlots(Domain)에 있고 여기 있는 것은 그것을 켜고 끄는 손,
+        // 그리고 자기 슬롯을 치우는 뒷정리다.
+
+        static string _isolatedSlot;
+
+        /// <summary>지금 검사가 쓰고 있는 슬롯. 격리 중이 아니면 null.</summary>
+        public static string IsolatedSlot => _isolatedSlot;
+
+        /// <summary>
+        /// 이 에디터의 세션 번호. <b>프로세스 아이디를 쓴다</b> — 클론 셋이 동시에
+        /// 돌면 슬롯 이름까지 같아져 서로의 검사를 밟기 때문이다.
+        /// </summary>
+        public static int SessionId => Process.GetCurrentProcess().Id;
+
+        /// <summary>파일 자리. 슬롯 이름을 풀이하지 않고 <b>준 이름 그대로</b> 본다.</summary>
+        public static string SlotPath(string slot) =>
+            Path.Combine(Application.persistentDataPath, SaveSlots.FileNameOf(slot));
+
+        /// <summary>
+        /// 파일 지문 — <b>있는가 · 몇 바이트인가 · 언제 썼는가</b>를 한 줄로.
+        ///
+        /// 시나리오 앞뒤로 이것을 재서 같으면 「한 바이트도 안 썼다」가 성립한다.
+        /// 크기만 재면 같은 크기로 덮어쓴 경우를 놓치므로 쓴 시각을 함께 담는다.
+        /// </summary>
+        public static string Fingerprint(string slot)
+        {
+            var path = SlotPath(slot);
+            if (!File.Exists(path)) return "없음";
+
+            var info = new FileInfo(path);
+            return $"{info.Length}바이트 @{info.LastWriteTimeUtc.Ticks}";
+        }
+
+        /// <summary>
+        /// 지금부터 저장은 이 세션의 전용 슬롯으로 간다.
+        ///
+        /// <b>자동 저장을 끄지 않는다.</b> 끄면 안전해지지만 그 순간 자동 저장이
+        /// 어느 검사도 지나가지 않는 길이 된다 — 사각지대를 만들어 안전을 사는 셈이다.
+        /// 저장은 그대로 돌리고 <b>쓰는 자리만</b> 옮긴다.
+        /// </summary>
+        public static void IsolateSave()
+        {
+            if (_isolatedSlot != null) return;
+
+            _isolatedSlot = SaveSlots.IsolatedNameFor(SessionId);
+            SaveSlots.Isolate(_isolatedSlot);
+
+            // 앞 실행이 재생 강제 종료 따위로 뒷정리를 못 했을 수 있다.
+            // 시나리오는 빈 자리에서 시작해야 한다.
+            DeleteSlotFile(_isolatedSlot);
+        }
+
+        /// <summary>격리를 풀고 <b>자기 슬롯을 지운다.</b> 검사가 남긴 파일은 검사가 치운다.</summary>
+        public static void ReleaseSave()
+        {
+            if (_isolatedSlot == null) return;
+
+            DeleteSlotFile(_isolatedSlot);
+            _isolatedSlot = null;
+            SaveSlots.Release();
+        }
+
+        static void DeleteSlotFile(string slot)
+        {
+            try
+            {
+                var path = SlotPath(slot);
+                if (File.Exists(path)) File.Delete(path);
+            }
+            catch (Exception e)
+            {
+                // 지우지 못한 것으로 검사를 세울 일은 아니다. 다만 조용히 넘기면
+                // 다음 시나리오가 앞 판의 저장본 위에서 시작한 이유를 알 수 없다.
+                Debug.LogWarning($"[E2EHarness] 격리 슬롯 '{slot}'을 지우지 못했다: {e.Message}");
+            }
         }
 
         // ── 세계 격리 ────────────────────────────────────────────
