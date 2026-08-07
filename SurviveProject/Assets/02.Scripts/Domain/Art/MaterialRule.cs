@@ -56,6 +56,13 @@ namespace Survive.Domain.Art
             // 먼 거리에서 정확히 사라지는 원인이었다. 이 셰이더는 안개 매크로를 아예 쓰지
             // 않으므로, 이 셰이더로만 그 결함을 없앨 수 있다.
             "Survive/LightShaft",
+            // 무광버섯(Assets/03.Materials/MatteRim.shader). URP/Lit에는 프레넬 항을
+            // 노출하는 프로퍼티가 없다 — 램버트 확산과 GGX 반사뿐이고, 무광 밴드(0.1)에서
+            // GGX 로브는 완전히 퍼져 실루엣 테두리에 아무것도 남기지 않는다. 이 물건에
+            // 필요한 것은 정확히 그 반대다: 면은 배경과 같은 검정으로 두고 시선에 스치는
+            // 테두리에만 받은 빛을 튕기는 것(검토회신 ⑤). 에미션 맵으로 흉내 내면 UV에
+            // 고정되어 카메라가 돌 때 따라오지 않는다 — 실루엣은 시점이 정한다.
+            "Survive/MatteRim",
         };
 
         public static bool IsAllowedShader(string shaderName)
