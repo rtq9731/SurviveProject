@@ -197,7 +197,7 @@ namespace Survive.Testing
             var r = 레시피찾기(돌파정);
             if (r == null) yield break;
 
-            // 재료를 넉넉히 채운다. 매크로늄 광맥의 배치는 §8-4의 일이라 아직 캘 곳이 없다 —
+            // 재료를 넉넉히 채운다. 매크로늄을 캘 곳의 배치는 §8-4의 일이라 아직 캘 곳이 없다 —
             // 여기서 볼 것은 채집이 아니라 "마지막 섬의 자원이 출구의 재료가 되는가"다.
             foreach (var need in r.ingredients)
             {

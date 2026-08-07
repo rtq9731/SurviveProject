@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99d0b41fca8332c4f9cdc243b9e67839, type: 3}
   m_Name: OreVein
   m_EditorClassIdentifier: Survive.Domain::Survive.Harvesting.HarvestNodeSO
-  displayName: "\uB9E4\uD06C\uB85C\uB284 \uAD11\uB9E5"
+  displayName: "\uD569\uAE08 \uB354\uBBF8"
   requiredTool: 1
   requiredTier: 1
   baseDuration: 1.4

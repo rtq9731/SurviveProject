@@ -92,7 +92,7 @@ UI,codex_empty_body,이 갈래에 등록된 항목이 없습니다.,Nothing is r
 #   그 키가 처음 필요해지는 순간에 한 번씩 뜨고 스스로 사라지는 한 줄.
 #   대괄호 안은 키 이름이라 번역하지 않는다.
 UI,hint_basics,[WASD] 이동   [E] 상호작용   [Tab] 소지품   [J] 분석 기록,[WASD] Move   [E] Interact   [Tab] Inventory   [J] Analysis Log,
-UI,hint_pickaxe,[Q] 도구를 손에 든다 · 곡괭이로 광맥을 부순다,[Q] Take a tool in hand · break ore veins with the pickaxe,
+UI,hint_pickaxe,[Q] 도구를 손에 든다 · 곡괭이로 잔해와 합금을 부순다,[Q] Take a tool in hand · break debris and alloy with the pickaxe,
 UI,hint_axe,[Q] 도구를 손에 든다 · 도끼로 거대 버섯을 벤다,[Q] Take a tool in hand · fell giant mushrooms with the axe,
 UI,hint_lantern,[F] 랜턴 켜기 / 끄기,[F] Lantern on / off,
 #
@@ -344,11 +344,11 @@ Harvest,loose_scrap.name,흩어진 잔해,,
 Harvest,macronium_quartz.name,매크로늄 석영,,
 Harvest,matte_mushroom.name,무광버섯,,
 Harvest,mushroom.name,발광 버섯,,
-Harvest,ore_vein.name,매크로늄 광맥,,
+Harvest,ore_vein.name,합금 더미,,
 #
 # ---- Item ----
 #   아이템 이름(.name)과 설명(.desc). 설명은 소지품 쪽지에 뜬다.
-Item,alien_alloy.desc,화성인이 만든 고강도 구조재. 매크로늄 광맥과 낫의 잔해에서 나온다. 쓸 데는 아직 밝혀지지 않았다.,,
+Item,alien_alloy.desc,화성인이 만든 고강도 구조재. 합금 더미와 낫의 잔해에서 나온다. 쓸 데는 아직 밝혀지지 않았다.,,
 Item,alien_alloy.name,외계 합금,,
 Item,axe.desc,거대 버섯을 베는 도구. 돌은 이것으로 깨지지 않는다.,,
 Item,axe.name,도끼,,
