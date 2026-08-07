@@ -14,7 +14,8 @@ namespace Survive.Creatures
     /// 밝은가"를 답하는 것과 같은 종류의 창구다. 인스턴스를 두면 그 인스턴스를
     /// 누가 들고 있느냐가 다시 개체별 문제가 된다.
     ///
-    /// <b>올리는 것은 누구인가.</b> 지금은 아무도 아니다 — 무엇이 각성(먼 뭍 도착)과
+    /// <b>올리는 것은 누구인가.</b> 각성은 이 파일이 든 구역 판정이 올린다
+    /// (<see cref="ObserveAt"/>). 발령은 아직 아무도 아니다 — 무엇이 각성(먼 뭍 도착)과
     /// 발령(코어 탈취)을 거는지는 스펙 §5·§21의 몫이고, 여기서는 <b>자리와 소유권만</b>
     /// 세운다. 다만 그 자리가 <b>개체 바깥</b>이라는 것이 이번에 정해진 것이다.
     /// </summary>
@@ -39,6 +40,68 @@ namespace Survive.Creatures
         /// 평시로 되돌린다. 씬 전환과 검증 사이에 부른다 —
         /// 정적 하나이므로 앞 판의 발령이 다음 판으로 새면 안 된다.
         /// </summary>
-        public static void Reset() => Alert = ScytheAlert.Calm;
+        public static void Reset()
+        {
+            Alert = ScytheAlert.Calm;
+            _awakening = default;
+        }
+
+        // ══ 개체수 ═════════════════════════════════════════════
+
+        /// <summary>
+        /// 지금 세계에 있어야 할 낫의 수. <b>등급의 함수이지 따로 저장하는 값이 아니다</b>
+        /// (<see cref="ScytheCensus"/>). 몸(<c>ScytheSpawner</c>)이 이 수를 보고 맞춘다.
+        ///
+        /// <b>원장을 새로 두지 않은 근거가 여기 한 줄로 있다.</b> 저장할 것은 등급
+        /// 하나이고, 그것은 이미 이 파일이 든다. 수를 따로 저장하면 "등급은 발령인데
+        /// 수는 하나"인 상태가 만들어질 수 있고 그것을 막는 코드를 또 써야 한다.
+        /// </summary>
+        public static int Population => ScytheCensus.CountFor(Alert);
+
+        // ══ 각성 방아쇠 ════════════════════════════════════════
+
+        /// <summary>
+        /// 각성을 거는 구역 판정. <b>방아쇠 구역이 비어 있다</b> —
+        /// 어느 자리인지는 지형이 선 뒤에 사람이 정한다
+        /// (<see cref="Survive.World.ZoneArrival"/>).
+        /// </summary>
+        static Survive.World.ZoneArrival _awakening;
+
+        /// <summary>
+        /// 각성 방아쇠가 정해져 있는가. <b>지금은 거짓이고, 그것이 정상이다.</b>
+        /// 검증이 이 값을 물어 "아직 미결"을 값으로 남긴다 — 정해지는 날 그 테스트가
+        /// 먼저 빨개져서, 방아쇠가 생긴 것이 사고가 아니라 결정이었음을 남긴다.
+        /// </summary>
+        public static bool AwakeningArmed => _awakening.HasTarget;
+
+        /// <summary>
+        /// <b>사람이 자리를 정하는 날 고칠 곳은 이 한 줄이다.</b>
+        /// <c>ArmAwakening(SurfaceZone.어디)</c>를 세계가 세워질 때 한 번 부르면 된다.
+        ///
+        /// 함수로 열어 두는 것은 검증이 방아쇠를 세워 보고 되돌릴 수 있어야 하기
+        /// 때문이다. 게임 코드에서는 아직 아무도 부르지 않는다.
+        /// </summary>
+        public static void ArmAwakening(Survive.World.SurfaceZone zone) =>
+            _awakening = Survive.World.ZoneArrival.Watching(zone);
+
+        /// <summary>
+        /// 사람이 지금 이 자리에 있다고 알려 준다. <b>방아쇠 구역에 처음 닿는 순간</b>
+        /// 평시가 각성으로 오른다.
+        ///
+        /// <b>내려가지 않는다.</b> 각성은 낫이 사람을 알아본 것이지 사람이 어디에
+        /// 서 있는가가 아니다 — 돌아가면 풀린다면 한 발 물러서는 것이 위협을 끄는
+        /// 스위치가 된다.
+        ///
+        /// <b>발령을 덮지 않는다.</b> 이미 발령이면 각성으로 내려올 이유가 없다.
+        /// </summary>
+        /// <returns>이번에 각성이 걸렸으면 참.</returns>
+        public static bool ObserveAt(UnityEngine.Vector3 position)
+        {
+            if (!_awakening.ObserveAt(position)) return false;
+            if (Alert == ScytheAlert.Alarmed) return false;
+
+            Alert = ScytheAlert.Awake;
+            return true;
+        }
     }
 }
