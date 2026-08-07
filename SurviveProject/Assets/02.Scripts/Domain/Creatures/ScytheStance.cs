@@ -35,6 +35,18 @@ namespace Survive.Creatures
         /// 육지 진입과 교전이 여기다.
         /// </summary>
         Furled,
+
+        /// <summary>
+        /// 짐을 들었다. 코어를 꼬리로 물고 둥지로 가는 중이다
+        /// (기획서 §4.5 "회수 연출", <see cref="ScytheState.Retrieve"/>).
+        ///
+        /// <b>공격 태세와 반드시 갈려야 한다.</b> 기획서가 이 연출에 건 약속은
+        /// "꼬리가 무기인데 짐을 들고 있으므로 <b>공격할 수 없다는 것이 형태로
+        /// 읽힌다</b>"이다. 회수 중인 개체가 <see cref="Furled"/>로 보이면 그 약속이
+        /// 정확히 거꾸로 읽힌다 — 가장 위험해 보이는 실루엣이 실은 때리지 못하는
+        /// 상태가 된다.
+        /// </summary>
+        Laden,
     }
 
     /// <summary>
@@ -109,36 +121,63 @@ namespace Survive.Creatures
                                                CreatureState state, HabitatZone zone,
                                                ScytheAlert alert)
         {
+            // <b>규칙은 이제 여기 없다.</b> 낫이 지금 무엇을 하는 중인지는 §20의
+            // 4상태가 답하고, 이 함수는 그 답을 자세로 옮기기만 한다. 우선순위 if
+            // 체인을 그대로 두고 옆에 상태 기계를 세우면 둘이 어긋난 프레임이 생긴다 —
+            // 이 파일이 처음부터 경계하던 것이 그것이므로, 세우는 대신 <b>여기를
+            // 그 위로 옮겼다</b>. 옮긴 뒤에도 답이 한 글자도 달라지지 않는다는 것은
+            // ScytheStanceTests가 입력을 전수로 돌려 못 박는다.
+            bool detected = CreatureDecision.IsDetected(senses.DistanceToThreat,
+                                                        traits.DetectRadius);
+            var scythe = ScytheFsm.FromCreatureState(state, detected, senses.AggroLeft, alert);
+
+            return PostureFrom(scythe, state, zone);
+        }
+
+        /// <summary>
+        /// 4상태에서 자세로 (스펙 §20 "PostureFor를 새 4상태에서 파생하도록 잇는다").
+        ///
+        /// 상태와 자세를 <b>따로 두지 않고 유도한 이유</b>는 하나다 — 자세는 규칙이
+        /// 아니라 <b>규칙을 읽는 방식</b>이기 때문이다. 둘을 독립으로 두면 "지금 상태는
+        /// Beware인데 꼬리는 내려가 있다"가 만들어질 수 있고, 그 프레임에 화면이
+        /// 거짓말을 한다. 꼬리가 곧 경고이므로 거짓말의 값이 가장 비싼 자리다.
+        ///
+        /// <b>상태 넷 위에 자리와 죽음이 얹힌다.</b> 순서가 곧 우선순위다.
+        /// </summary>
+        /// <param name="scythe">§20의 네 상태.</param>
+        /// <param name="creatureState">범용 상태. <b>죽었는가</b>만 여기서 본다.</param>
+        /// <param name="zone">지금 어디에 있는가.</param>
+        public static ScythePosture PostureFrom(ScytheState scythe, CreatureState creatureState,
+                                                HabitatZone zone)
+        {
             // 죽으면 힘이 빠져 늘어진다. 자세는 <b>살아 있는 것의 신호</b>이므로,
             // 시체가 공격 태세로 굳어 있으면 그 신호가 거짓이 된다.
-            if (state == CreatureState.Dead) return ScythePosture.Trailing;
+            if (creatureState == CreatureState.Dead) return ScythePosture.Trailing;
+
+            // <b>짐이 자리보다 세다.</b> 회수 중인 개체는 육지 수로를 지나 둥지로
+            // 가므로 아래 육지 규칙에 그대로 걸리는데, 그러면 때리지 못하는 개체가
+            // 가장 위험한 실루엣으로 보인다(<see cref="ScythePosture.Laden"/>).
+            if (scythe == ScytheState.Retrieve) return ScythePosture.Laden;
 
             // 육지에 있다는 것 자체가 은폐 프로토콜을 버렸다는 뜻이다(<see cref="ScytheHabitat"/>).
             // 무엇을 하던 중인지는 묻지 않는다 — 평생 육지에 오지 않던 것이 올라온
             // 그 사실이 이미 종막의 압력이다.
             if (zone == HabitatZone.Inland) return ScythePosture.Furled;
 
-            // 교전. 쫓는 것과 때리는 것은 플레이어 쪽에서 보면 같은 일이다.
-            if (state == CreatureState.Chase || state == CreatureState.Attack)
-                return ScythePosture.Furled;
+            switch (scythe)
+            {
+                // 교전. 쫓는 것과 때리는 것은 플레이어 쪽에서 보면 같은 일이다.
+                case ScytheState.Attack:
+                    return ScythePosture.Furled;
 
-            // 발령. 아직 물 위여도 작업은 이미 끝났다 — 다섯이 전부 꼬리를 들고 온다.
-            if (alert == ScytheAlert.Alarmed) return ScythePosture.Raised;
+                // 작업을 멈췄다. 발령·감지·어그로 여운·물러남이 전부 여기로 접힌다 —
+                // 어느 쪽이든 사람 눈에는 <b>꼬리를 들었다</b> 하나로 보여야 한다.
+                case ScytheState.Beware:
+                    return ScythePosture.Raised;
 
-            // 보고 있다. <b>여기가 "AI 경고보다 먼저 온다"는 말의 내용이다</b> —
-            // 감지 반경에 들어온 그 프레임에 꼬리가 올라간다. 아직 쫓지 않는다.
-            if (CreatureDecision.IsDetected(senses.DistanceToThreat, traits.DetectRadius))
-                return ScythePosture.Raised;
-
-            // 방금까지 보고 있었다. <b>어그로가 곧 여운이다</b> — 시야를 벗어난 순간
-            // 꼬리가 툭 떨어지면 경고가 깜빡이는 등처럼 보인다. 타이머를 새로 만들지
-            // 않고 이미 있는 것을 쓴다(낫은 6초).
-            if (senses.AggroLeft > 0f) return ScythePosture.Raised;
-
-            // 물러나는 중이면 작업 중이 아니다. 빛에 밀려 도는 프레임이 여기 걸린다.
-            if (state == CreatureState.Flee) return ScythePosture.Raised;
-
-            return ScythePosture.Trailing;
+                default:
+                    return ScythePosture.Trailing;
+            }
         }
 
         /// <summary>
@@ -174,6 +213,18 @@ namespace Survive.Creatures
         /// <summary>몸에 붙어 응축된 날. 어둠 속에서 이것만 남는다.</summary>
         public const float BladeFurled = 1f;
 
+        /// <summary>
+        /// 짐을 든 꼬리의 호. 코어를 감아 쥐느라 반쯤 접히므로 든 것과 같다.
+        /// </summary>
+        public const float ArcLaden = ArcRaised;
+
+        /// <summary>
+        /// 짐을 든 날. <b>작업 중보다도 어둡지 않다</b> — 지금 이 꼬리는 무기가 아니라
+        /// 손이고, 날이 밝게 응축되면 공격 태세로 잘못 읽힌다. 어둠 속에서 눈에 띄는
+        /// 것은 날이 아니라 <b>물고 가는 코어의 자홍</b>이어야 한다(기획서 §2.1).
+        /// </summary>
+        public const float BladeLaden = BladeTrailing;
+
         /// <summary>이 자세·이 자리에서 무엇이 얼마나 빛나는가.</summary>
         public static ScytheGlow GlowFor(ScythePosture posture, HabitatZone zone)
         {
@@ -186,6 +237,12 @@ namespace Survive.Creatures
 
                 case ScythePosture.Raised:
                     return new ScytheGlow(ArcRaised, contact, BladeRaised);
+
+                // 짐을 들었다. <see cref="Skims"/>가 이미 false이므로 접점 빛은 0이고,
+                // 그래서 액면 위를 지나도 <b>수면을 긋는 자국이 남지 않는다</b> —
+                // 멀리서 보면 순찰과 구별된다.
+                case ScythePosture.Laden:
+                    return new ScytheGlow(ArcLaden, contact, BladeLaden);
 
                 default:
                     return new ScytheGlow(ArcFurled, contact, BladeFurled);

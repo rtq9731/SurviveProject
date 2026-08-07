@@ -83,10 +83,15 @@ namespace Survive.Creatures
         /// <summary>
         /// 지금 경계 태세. 이 값이 <see cref="ScytheAlert.Alarmed"/>일 때만 육지로 올라온다.
         ///
-        /// <b>지금은 아무도 올리지 않는다.</b> 무엇이 발령을 거는가(코어 탈취)는
-        /// 스펙 §5의 몫이고, 여기서는 그 자리만 열어 둔다.
+        /// <b>읽기만 한다 — 이 몸은 등급을 갖고 있지 않다</b>(스펙 §0-2 ⑨ · §20).
+        /// 값의 주인은 월드 하나(<see cref="ScytheWatch"/>)다. 개체마다 하나씩 들고
+        /// 있으면 같은 프레임에 한 마리는 평시이고 다른 마리는 발령인 상태가 만들어질
+        /// 수 있고, 그때 "다섯이 전부 꼬리를 들고 온다"는 종막의 그림이 개체별로 흩어진다.
+        ///
+        /// <b>setter를 두지 않는 것이 규칙의 내용이다.</b> 있으면 언젠가 개체 쪽 코드가
+        /// 그것을 쓰고, 그 순간 소유권이 다시 갈라진다.
         /// </summary>
-        public ScytheAlert Alert { get; set; } = ScytheAlert.Calm;
+        public ScytheAlert Alert => ScytheWatch.Alert;
 
         /// <summary>지금 서 있는 자리가 무엇인가. 검증이 눈이 아니라 값으로 확인하라고 연다.</summary>
         public HabitatZone Zone { get; private set; } = HabitatZone.Liquid;
