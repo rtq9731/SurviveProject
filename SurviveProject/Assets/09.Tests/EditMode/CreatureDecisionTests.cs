@@ -328,6 +328,92 @@ public class CreatureDecisionTests
         Assert.AreEqual(CreatureAction.Idle, CreatureDecision.ActionFor(CreatureState.Dead));
     }
 
+    // ── 땅에 놓인 것에 닿는 판정은 수평이다 ────────────────────────────
+    //
+    // 기획서 §3.4의 순환 두 번째·네 번째 단계(먹는다·회수한다)가 통째로 이
+    // 경계 하나에 걸려 있다. 3차원으로 재던 시절에는 열매게가 재양치 바로
+    // 앞(수평 1.35m)에 서서도 높이차 1.22m 때문에 1.6m 밖으로 판정됐고,
+    // 순항 고도가 +2.5m로 묶인 날개는 어느 자리에서도 먹지 못했다.
+
+    [Test]
+    public void 높이차는_수평_사거리를_깎지_않는다()
+    {
+        // 수평 1.35m · 높이차 1.22m — 3차원으로는 1.82m라 1.6m 밖이지만
+        // 원기둥으로는 안이다. 실측에서 순환을 멈춰 세운 바로 그 자리다.
+        Assert.IsTrue(CreatureDecision.IsWithinReach(
+            new Vector3(1.35f, 1.22f, 0f), Vector3.zero, 1.6f));
+    }
+
+    [Test]
+    public void 순항_고도만큼_얹어_주면_나는_개체도_닿는다()
+    {
+        // 날개는 지면 +2.5m에서 난다. 높이차 2.4m는 사거리 1.6m 하나로는
+        // 못 닿지만, 순항 고도를 얹은 4.1m로는 닿는다.
+        Assert.IsFalse(CreatureDecision.IsWithinReach(
+            new Vector3(1.0f, 2.4f, 0f), Vector3.zero, 1.6f));
+        Assert.IsTrue(CreatureDecision.IsWithinReach(
+            new Vector3(1.0f, 2.4f, 0f), Vector3.zero, 1.6f, 1.6f + 2.5f));
+    }
+
+    [Test]
+    public void 갓_위를_지나며_아래의_풀을_뜯지는_못한다()
+    {
+        // 수평만 보도록 고쳤더니 날개가 거대 버섯 갓 위에서 9m 아래의
+        // 재양치를 뜯었다(실측). 원기둥에 뚜껑이 있어야 하는 이유다.
+        Assert.IsFalse(CreatureDecision.IsWithinReach(
+            new Vector3(0f, 9.0f, 0f), Vector3.zero, 1.6f, 1.6f + 2.5f));
+    }
+
+    [Test]
+    public void 높이_경계_위는_닿는_것으로_친다()
+    {
+        Assert.IsTrue(CreatureDecision.IsWithinReach(
+            new Vector3(0f, 4.1f, 0f), Vector3.zero, 1.6f, 4.1f));
+        Assert.IsFalse(CreatureDecision.IsWithinReach(
+            new Vector3(0f, 4.1f + 눈금, 0f), Vector3.zero, 1.6f, 4.1f));
+    }
+
+    [Test]
+    public void 아래에_있어도_같은_높이차로_친다()
+    {
+        // 부호를 보지 않는다. 몸이 목표보다 아래일 일은 드물지만,
+        // 있다면 같은 값으로 판정해야 규칙이 하나로 남는다.
+        Assert.IsTrue(CreatureDecision.IsWithinReach(
+            new Vector3(0f, -1.2f, 0f), Vector3.zero, 1.6f));
+    }
+
+    [Test]
+    public void 수평으로_멀면_같은_높이라도_안_닿는다()
+    {
+        Assert.IsFalse(CreatureDecision.IsWithinReach(
+            new Vector3(사거리 + 눈금, 0f, 0f), Vector3.zero, 사거리));
+    }
+
+    [Test]
+    public void 닿는_판정도_경계_위는_안쪽으로_친다()
+    {
+        // IsWithinRange와 같은 결이어야 한다 — 경계에서 둘이 갈리면
+        // 어느 쪽을 부르느냐로 감촉이 달라진다.
+        Assert.IsTrue(CreatureDecision.IsWithinReach(
+            new Vector3(사거리, 0f, 0f), Vector3.zero, 사거리));
+    }
+
+    [Test]
+    public void 대각선도_수평거리로_잰다()
+    {
+        // (0.9, 0.9)의 수평거리는 1.27이다. 축 하나만 보면 안 된다.
+        Assert.IsTrue(CreatureDecision.IsWithinReach(
+            new Vector3(0.9f, 0f, 0.9f), Vector3.zero, 1.3f, 5f));
+        Assert.IsFalse(CreatureDecision.IsWithinReach(
+            new Vector3(0.9f, 0f, 0.9f), Vector3.zero, 1.2f, 5f));
+    }
+
+    [Test]
+    public void 같은_자리는_사거리가_0이어도_닿는다()
+    {
+        Assert.IsTrue(CreatureDecision.IsWithinReach(Vector3.zero, Vector3.zero, 0f));
+    }
+
     [Test]
     public void 멈춰_서는_상태는_대기와_사망뿐이다()
     {

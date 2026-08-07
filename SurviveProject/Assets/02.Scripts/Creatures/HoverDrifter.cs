@@ -124,6 +124,9 @@ namespace Survive.Creatures
 
         public float Speed { get; set; } = 3f;
 
+        /// <summary>액면 위로 띄운 높이가 곧 순항 고도다. 너울은 이 값 둘레로 흔들릴 뿐이다.</summary>
+        public float CruiseHeight => clearance;
+
         /// <summary>
         /// <b>너울을 뺀, 딛고 선 높이.</b> 화면에 보이는 몸은 여기에 너울을 더한 자리에
         /// 있지만, <b>무엇을 딛고 있는지를 물을 때는 이 값을 쓴다.</b>

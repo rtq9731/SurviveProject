@@ -2,8 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.AI;
 using Survive.Building;
+using Survive.Combat;
+using Survive.Creatures;
 using Survive.Harvesting;
+using Survive.Interaction;
 using Survive.Items;
 using Survive.World;
 
@@ -35,11 +39,33 @@ namespace Survive.Testing
             yield return 사각의_크기();
             yield return 자원_전수조사();
             yield return 산출();
+            yield return 관찰의_보상();
 
             E2EHarness.Log("");
             E2EHarness.Log("═══ 실측표 ═══");
             foreach (var line in _표) E2EHarness.Log("  " + line);
             E2EHarness.Log("=== 압박 곡선 측량 완주 ===");
+        }
+
+        /// <summary>
+        /// <b>관찰 보상 한 대목만 잰다.</b>
+        ///
+        /// 이 값은 튜닝 5값과 <b>같은 표</b>에 들어가야 한다 — "탐사 1분당 순증가"에
+        /// 직접 얹히므로 따로 잡으면 두 번 맞춰야 한다(기획서 §5.2·§3.4). 그래서
+        /// 자리는 여기이되, 왕복 사다리와 본 원정만으로 몇 분이 드는 <see cref="FullRun"/>을
+        /// 이 한 항목 때문에 통째로 돌릴 이유는 없다. 문을 둘 낸다.
+        /// </summary>
+        public static IEnumerator PayoffRun()
+        {
+            _표.Clear();
+
+            yield return 준비();
+            yield return 관찰의_보상();
+
+            E2EHarness.Log("");
+            E2EHarness.Log("═══ 실측표 (관찰 보상) ═══");
+            foreach (var line in _표) E2EHarness.Log("  " + line);
+            E2EHarness.Log("=== 관찰 보상 측량 완주 ===");
         }
 
         static void 적는다(string 항목, string 값) => _표.Add($"{항목} | {값}");
@@ -538,6 +564,408 @@ namespace Survive.Testing
 
             yield return null;
         }
+
+        // ── 6. 관찰의 보상 ──────────────────────────────────────
+
+        /// <summary>
+        /// <b>생태계를 읽으면 얼마나 이득인가</b> (기획서 §3.4).
+        ///
+        /// 순환 네 단계는 이미 코드로 돈다 — 식물이 자라고, 생산자가 먹어 쌓고,
+        /// 잡으면 쌓은 만큼 나오고, 방치하면 분해자가 가져간다. <b>남은 것은
+        /// 이득의 크기다.</b> 배부른 개체를 골라 두세 개 더 나오는 정도라면 아무도
+        /// 안 고르고, 그러면 구현되어 있으되 없는 것과 같아진다.
+        ///
+        /// 그래서 다섯을 잰다 — 지금 배율, 배부르기까지의 시간, 분해자가 가져가는
+        /// 시간, 눈으로 읽히는 정도, 그리고 「기다린 시간 대 더 얻은 것」.
+        /// <b>고르지는 않는다.</b> 여기서 하는 일은 사람이 고를 수 있도록 숫자를
+        /// 놓아 두는 것까지다.
+        /// </summary>
+        static IEnumerator 관찰의_보상()
+        {
+            E2EHarness.Log("— 관찰의 보상 (굶은 개체 대 배부른 개체, §3.4) —");
+
+            var 원본 = PayoffGlowProbe.생산자원본();
+            if (원본 == null) { E2EHarness.Log("  씬에 생산자가 없다"); yield break; }
+
+            var def = 원본.GetComponent<CreatureHealth>().Definition;
+            float 정원 = 원본.Capacity;
+            float 쿨다운 = 원본.BiteCooldown;
+            float 기본 = 기댓값(def.drops, "scrap");
+
+            yield return 규칙이_말하는_배율(def, 기본, 정원, 쿨다운);
+            yield return 몇_초에_배부른가(원본, 정원);
+            yield return 나란히_세워_잡는다(원본, 기본);
+        }
+
+        /// <summary>
+        /// 먼저 규칙에 묻는다. 세계에서 잰 값과 나란히 두어야, 갈릴 때 어느 쪽이
+        /// 거짓말을 하고 있는지 짚을 수 있다.
+        /// </summary>
+        static IEnumerator 규칙이_말하는_배율(CreatureDefinitionSO def, float 기본,
+                                              float 정원, float 쿨다운)
+        {
+            int 얹히는것 = FeedingPayoff.Bonus(정원);
+            float 배율 = FeedingPayoff.Multiplier(기본, 정원);
+
+            E2EHarness.Log($"  {def.displayName}: 기본 스크랩 기댓값 {기본:F2}개 · 정원 {정원:F0} · " +
+                           $"한 입 사이 {쿨다운:F0}초");
+            E2EHarness.Log($"  <b>가득 찬 개체는 +{얹히는것}개 = {배율:F2}배</b> " +
+                           $"(축적 1당 스크랩 {FeedingPayoff.ScrapPerNutrition:F0}개)");
+            적는다("관찰 보상 — 규칙이 말하는 배율",
+                   $"{def.displayName} 기본 {기본:F2}개 → 가득 {기본 + 얹히는것:F2}개 " +
+                   $"(<b>+{얹히는것} · {배율:F2}배</b>)");
+
+            // 종마다 기본이 다르므로 배율도 다르다. 배율만 보면 안 되는 자리다 —
+            // 실제로 더 얻는 개수는 같은데 기본이 작은 종이 더 좋아 보인다.
+            foreach (var 종 in Resources.FindObjectsOfTypeAll<CreatureDefinitionSO>()
+                                        .Where(d => d != null && d.drops != null)
+                                        .Where(d => 기댓값(d.drops, "scrap") > 0f)
+                                        .OrderBy(d => d.id))
+            {
+                float b = 기댓값(종.drops, "scrap");
+                E2EHarness.Log($"    {종.id}: 기본 {b:F2} → 가득 {b + 얹히는것:F2} " +
+                               $"({FeedingPayoff.Multiplier(b, 정원):F2}배)");
+            }
+
+            // 먹이별로 몇 입인지가 갈린다. 「몇 초 기다리는가」의 바닥이 여기서 난다.
+            foreach (var 식물 in Resources.FindObjectsOfTypeAll<PlantNodeSO>()
+                                          .Where(p => p != null).OrderBy(p => p.name))
+            {
+                int 입 = FeedingPayoff.BitesToFull(정원, 식물.nutritionPerStage);
+                float 초 = FeedingPayoff.SecondsToFull(정원, 식물.nutritionPerStage, 쿨다운);
+                float 분당 = FeedingPayoff.BonusPerMinute(정원, 식물.nutritionPerStage, 쿨다운);
+                E2EHarness.Log($"    {식물.name}(영양 {식물.nutritionPerStage:F0}, " +
+                               $"단계 {식물.maxStage}, 성장 {식물.growSeconds:F0}초) — " +
+                               $"{입}입 · 바닥 {초:F0}초 · 분당 이득 {분당:F1}개");
+                적는다($"관찰 보상 — {식물.name}으로 배 채우기",
+                       $"{입}입 · 먹는 시간만 {초:F0}초 · 분당 이득 {분당:F1}개 " +
+                       $"(찾아가기·재성장 제외한 <b>바닥</b>)");
+            }
+
+            yield return null;
+        }
+
+        /// <summary>
+        /// <b>실제로 먹여서 잰다.</b> 규칙이 내놓는 초는 입과 입 사이만 센 바닥이고,
+        /// 세계에서는 찾아가는 시간과 식물이 다시 자라는 시간이 얹힌다. 그 얹힌
+        /// 만큼이 「기다림」의 실체이므로 재지 않으면 값어치를 셈할 수 없다.
+        ///
+        /// 식물을 전부 다 자란 상태로 되돌리고 시작한다. 반쯤 뜯긴 군락에서 재면
+        /// 「먹는 데 걸리는 시간」이 아니라 「앞선 판이 남긴 것」을 재게 된다.
+        /// </summary>
+        static IEnumerator 몇_초에_배부른가(CreatureFeeding 원본, float 정원)
+        {
+            int 되돌린식물 = 0;
+            foreach (var p in Object.FindObjectsByType<PlantNode>(FindObjectsInactive.Include))
+            {
+                if (p == null) continue;
+                p.RestoreWorld(null);
+                되돌린식물++;
+            }
+            E2EHarness.Log($"  식물 {되돌린식물}그루를 다 자란 상태로 되돌렸다");
+
+            yield return 닿을_수_있는_식물이_몇_그루인가(원본);
+
+            원본.Prefill(0f);
+
+            // 이 한 마리만 깨운다. 다른 생산자가 함께 먹으면 같은 군락을 나눠 먹게
+            // 되어, 재는 것이 「한 마리가 배부르는 시간」이 아니게 된다.
+            var brain = 원본.GetComponent<CreatureBrain>();
+            if (brain != null) brain.enabled = true;
+            var agent = 원본.GetComponent<NavMeshAgent>();
+            if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh) agent.isStopped = false;
+
+            const float 제한 = 150f;
+            float t0 = Time.time;
+            float 이전 = 0f;
+            var 입시각 = new List<float>();
+
+            while (Time.time - t0 < 제한 && !원본.IsFull)
+            {
+                if (원본.Stored > 이전 + 0.001f)
+                {
+                    입시각.Add(Time.time - t0);
+                    이전 = 원본.Stored;
+                }
+                yield return null;
+            }
+
+            float 걸린 = Time.time - t0;
+            bool 찼다 = 원본.IsFull;
+            string 간격 = 입시각.Count == 0 ? "없음"
+                        : string.Join(", ", 입시각.Select(s => s.ToString("F1")));
+
+            E2EHarness.Log($"  {(찼다 ? "배가 찼다" : $"{제한:F0}초 안에 다 못 채웠다")} — " +
+                           $"{입시각.Count}입 · 축적 {원본.Stored:F1}/{정원:F0} · {걸린:F1}초");
+            E2EHarness.Log($"    입을 댄 시각(초): {간격}");
+
+            // 한 입도 못 먹었으면 <b>왜</b>인지가 곧 결과다. "느리다"와 "닿지 못한다"는
+            // 전혀 다른 이야기인데, 0이라는 숫자 하나로는 갈리지 않는다.
+            if (입시각.Count == 0) 왜_못_먹었나(원본);
+
+            float 실측분당 = 걸린 > 0f ? FeedingPayoff.Bonus(원본.Stored) / 걸린 * 60f : 0f;
+            E2EHarness.Log($"  <b>실측 분당 이득 {실측분당:F1} 스크랩/분</b> " +
+                           $"(기다린 {걸린:F0}초에 +{FeedingPayoff.Bonus(원본.Stored)}개)");
+
+            적는다("관찰 보상 — 배부르기까지 (실측)",
+                   찼다 ? $"{걸린:F0}초 · {입시각.Count}입 → +{FeedingPayoff.Bonus(원본.Stored)}개 " +
+                          $"(<b>분당 {실측분당:F1}개</b>)"
+                        : $"{제한:F0}초에 {원본.Stored:F1}/{정원:F0}만 찼다 · {입시각.Count}입 " +
+                          $"(분당 {실측분당:F1}개)");
+        }
+
+        /// <summary>
+        /// 굶은 채로 멈춰 선 개체가 <b>무엇 앞에서</b> 멈췄는지 적는다.
+        /// 수평으로 코앞인데 높이차 때문에 못 먹는 것이 이 순환의 고질이라,
+        /// 두 값을 따로 적어야 「배치」와 「사거리」가 갈린다.
+        /// </summary>
+        static void 왜_못_먹었나(CreatureFeeding 원본)
+        {
+            var 몸 = 원본.transform.position;
+            var 가까운것 = Object.FindObjectsByType<PlantNode>(FindObjectsInactive.Exclude)
+                              .Where(p => p != null && p.IsEdible)
+                              .OrderBy(p => Vector3.Distance(p.transform.position, 몸))
+                              .FirstOrDefault();
+            var 모터 = 원본.GetComponent<ICreatureMotor>();
+            float 순항 = 모터 != null ? 모터.CruiseHeight : 0f;
+
+            if (가까운것 == null) { E2EHarness.Log("    [왜 못 먹었나] 먹을 수 있는 식물이 없다"); return; }
+
+            var 밥 = 가까운것.transform.position;
+            float 수평 = Vector2.Distance(new Vector2(몸.x, 몸.z), new Vector2(밥.x, 밥.z));
+            E2EHarness.Log($"    [왜 못 먹었나] {원본.name} {몸.ToString("F1")} → " +
+                           $"{가까운것.name} {밥.ToString("F1")} · 수평 {수평:F2}m · " +
+                           $"높이차 {몸.y - 밥.y:F2}m · 순항 고도 {순항:F1}m " +
+                           "(수평이 코앞인데 높이차가 크면 <b>배치</b>가 막은 것이다)");
+            적는다("관찰 보상 — 굶은 채 멈춘 자리",
+                   $"수평 {수평:F2}m · 높이차 {몸.y - 밥.y:F2}m — " +
+                   "<b>바로 위 선반에서 멈춘다</b>");
+        }
+
+        /// <summary>
+        /// <b>세워 놓은 식물 가운데 실제로 닿을 수 있는 것이 몇 그루인가.</b>
+        ///
+        /// 사거리를 원기둥으로 고친 뒤에도 순환의 속도는 <b>배치</b>가 정한다.
+        /// 걷는 개체는 NavMesh 위로만 다니는데, 식물이 거대 버섯 갓 아래나
+        /// 턱 밑에 서 있으면 그 위 선반으로 올라가 <b>바로 위에서 굶는다</b> —
+        /// 실측에서 열매게가 재양치 수평 1.75m·높이 4.57m 위에 서서 멈춰 있었다.
+        ///
+        /// 그래서 그루 수를 센다. 이 수가 곧 순환이 돌 수 있는 자리의 수이고,
+        /// 사거리를 고쳐도 이 수가 작으면 이득은 여전히 안 생긴다.
+        /// <b>고치는 것은 배치이므로 사람의 몫(§16)이다.</b> 여기서는 센다.
+        /// </summary>
+        static IEnumerator 닿을_수_있는_식물이_몇_그루인가(CreatureFeeding 원본)
+        {
+            float 사거리 = 1.6f;                       // CreatureFeeding의 기본 먹이 사거리
+            var 식물들 = Object.FindObjectsByType<PlantNode>(FindObjectsInactive.Exclude)
+                              .Where(p => p != null && p.IsEdible).ToList();
+
+            int 닿는것 = 0;
+            var 좋은자리 = new List<(PlantNode 식물, Vector3 자리)>();
+
+            foreach (var p in 식물들)
+            {
+                if (!NavMesh.SamplePosition(p.transform.position, out var hit, 3f, NavMesh.AllAreas))
+                    continue;
+
+                if (!CreatureDecision.IsWithinReach(hit.position, p.transform.position, 사거리, 사거리))
+                    continue;
+
+                닿는것++;
+                좋은자리.Add((p, hit.position));
+            }
+
+            E2EHarness.Log($"  <b>걷는 개체가 닿을 수 있는 식물 {닿는것}/{식물들.Count}그루</b> " +
+                           "(NavMesh 위 가장 가까운 자리에서 원기둥 사거리 안)");
+            적는다("관찰 보상 — 닿을 수 있는 식물",
+                   $"{닿는것}/{식물들.Count}그루 — 나머지는 갓·턱 아래라 걷는 개체가 " +
+                   "<b>바로 위에서 굶는다</b>(배치의 몫, §16)");
+
+            // 실제로 먹을 수 있는 자리 하나를 골라, 거기서 조금 떨어뜨려 놓는다.
+            // 지형 운에 맡기면 재는 것이 「먹는 속도」가 아니라 「자리를 잘 만났는가」가 된다.
+            if (좋은자리.Count > 0)
+            {
+                var 목표 = 좋은자리[0];
+                var agent = 원본.GetComponent<NavMeshAgent>();
+                var 출발 = 목표.자리 + new Vector3(6f, 0f, 0f);
+                if (NavMesh.SamplePosition(출발, out var s, 6f, NavMesh.AllAreas)) 출발 = s.position;
+
+                if (agent != null && agent.isActiveAndEnabled) agent.Warp(출발);
+                else 원본.transform.position = 출발;
+
+                E2EHarness.Log($"  {원본.name}를 {목표.식물.name} 곁 " +
+                               $"{Vector3.Distance(출발, 목표.자리):F1}m에 놓고 시작한다");
+            }
+            else
+            {
+                E2EHarness.Log("  닿을 수 있는 식물이 하나도 없다 — 있는 자리에서 그대로 잰다");
+            }
+
+            yield return null;
+        }
+
+        /// <summary>
+        /// <b>나란히 세워 놓고 밝기를 읽고, 그대로 둘 다 잡는다.</b>
+        ///
+        /// 따로 재면 안 된다 — 두 장을 따로 찍으면 노출도 각도도 달라 "더 밝다"를
+        /// 말할 수 없고, 따로 잡으면 자리가 달라 전리품 난수(세계 시드는 <b>죽은
+        /// 자리</b>로 파생한다)까지 갈린다. 같은 무대에서 이어 재는 것이 요점이다.
+        ///
+        /// 마지막에 분해자를 붙인다. 쌓인 전리품이 <b>몇 초 만에 사라지는가</b>가
+        /// 곧 「경쟁」의 실체이고, 그것은 잡은 뒤에만 잴 수 있다.
+        /// </summary>
+        static IEnumerator 나란히_세워_잡는다(CreatureFeeding 원본, float 기본)
+        {
+            string 무대 = PayoffGlowProbe.Stage();
+            E2EHarness.Log("  무대: " + 무대);
+            if (무대.Contains("error")) yield break;
+
+            // Cinemachine이 카메라를 옮기는 데 몇 프레임 걸린다. 옮기기 전에 재면
+            // 두 개체가 화면 밖이라 조각이 배경만 담는다.
+            for (int i = 0; i < 8; i++) yield return null;
+
+            PayoffGlowProbe.SetLantern(true);
+            for (int i = 0; i < 3; i++) yield return null;
+            string 켠것 = PayoffGlowProbe.Measure();
+
+            PayoffGlowProbe.SetLantern(false);
+            for (int i = 0; i < 3; i++) yield return null;
+            string 끈것 = PayoffGlowProbe.Measure();
+
+            E2EHarness.Log("  랜턴 켬 — " + 켠것);
+            E2EHarness.Log("  랜턴 끔 — " + 끈것);
+            적는다("관찰 보상 — 눈으로 읽히는가 (랜턴 켬)", 켠것);
+            적는다("관찰 보상 — 눈으로 읽히는가 (랜턴 끔, 발광만)", 끈것);
+
+            PayoffGlowProbe.SetLantern(true);
+            yield return null;
+
+            var 굶 = PayoffGlowProbe.Starved;
+            var 배 = PayoffGlowProbe.Full;
+            if (굶 == null || 배 == null) { E2EHarness.Log("  무대가 비었다"); yield break; }
+
+            var 자리 = 배.transform.position;
+
+            int 굶스크랩 = 0, 배스크랩 = 0;
+            yield return 잡아서_센다(굶, "굶은 개체", n => 굶스크랩 = n);
+            yield return 잡아서_센다(배, "배부른 개체", n => 배스크랩 = n);
+
+            float 실측배율 = 굶스크랩 > 0 ? (float)배스크랩 / 굶스크랩 : 0f;
+            E2EHarness.Log($"  <b>실측: 굶은 것 {굶스크랩}개 대 배부른 것 {배스크랩}개 " +
+                           $"= {실측배율:F2}배 (차이 +{배스크랩 - 굶스크랩}개)</b>");
+            E2EHarness.Assert(배스크랩 > 굶스크랩,
+                              $"배부른 개체가 실제로 더 떨군다 ({굶스크랩} → {배스크랩})");
+
+            적는다("관찰 보상 — 실측 배율 (나란히 잡음)",
+                   $"굶음 {굶스크랩}개 → 가득 {배스크랩}개 = <b>{실측배율:F2}배 · +{배스크랩 - 굶스크랩}개</b> " +
+                   $"(규칙 기댓값 {기본:F2} → {기본 + FeedingPayoff.Bonus(배.Capacity):F2})");
+
+            yield return 분해자가_언제_가져가는가(자리);
+
+            PayoffGlowProbe.Teardown();
+        }
+
+        /// <summary>한 마리를 잡고 그 자리에 떨어진 스크랩을 센다.</summary>
+        static IEnumerator 잡아서_센다(CreatureFeeding who, string 이름, System.Action<int> 결과)
+        {
+            var hp = who.GetComponent<CreatureHealth>();
+            var 자리 = who.transform.position;
+            float 축적 = who.Stored;
+
+            var 이전 = new HashSet<ItemPickup>(
+                Object.FindObjectsByType<ItemPickup>());
+
+            hp.TakeDamage(new DamageInfo(hp.Definition.maxHealth * 3f, null, 자리, Vector3.up));
+
+            // 떨군 것이 튀어 오르고 내려앉는 데 시간이 든다.
+            float t = 0f;
+            while (t < 2f) { t += Time.deltaTime; yield return null; }
+
+            var 새것 = Object.FindObjectsByType<ItemPickup>()
+                            .Where(p => p != null && !이전.Contains(p))
+                            .Where(p => Vector3.Distance(p.transform.position, 자리) < 8f)
+                            .ToList();
+
+            int 스크랩 = 새것.Where(p => p.Item != null && p.Item.id == "scrap").Sum(p => p.Count);
+            int 전부 = 새것.Sum(p => p.Count);
+
+            E2EHarness.Log($"    {이름}(축적 {축적:F1}) — 스크랩 {스크랩}개 · " +
+                           $"전리품 전부 {전부}개 · 바닥에 놓인 덩이 {새것.Count}개");
+            결과(스크랩);
+        }
+
+        /// <summary>
+        /// <b>방치하면 몇 초 만에 사라지는가.</b> 이것이 「경쟁」의 실체다 —
+        /// 회수가 느리면 전투 뒤에 서두를 이유가 없고, 그러면 순환의 네 번째
+        /// 단계가 그림으로만 남는다.
+        ///
+        /// 붙여 세우지 않는다. 분해자는 <b>찾아와야</b> 하므로, 탐색 반경 안이되
+        /// 걸어와야 하는 자리에서 출발시켜야 실제로 걸리는 시간이 나온다.
+        /// </summary>
+        static IEnumerator 분해자가_언제_가져가는가(Vector3 자리)
+        {
+            var 원본 = Object.FindObjectsByType<ScavengerBehavior>(FindObjectsInactive.Exclude)
+                            .FirstOrDefault(s => s != null && !s.name.StartsWith("E2E_"));
+            if (원본 == null) { E2EHarness.Log("  씬에 분해자가 없다"); yield break; }
+
+            var 출발 = 자리 + new Vector3(8f, 0f, 0f);
+            if (NavMesh.SamplePosition(출발, out var hit, 6f, NavMesh.AllAreas)) 출발 = hit.position;
+
+            var go = Object.Instantiate(원본.gameObject, 출발 + Vector3.up * 0.2f, Quaternion.identity);
+            go.name = "E2E_분해자";
+            var brain = go.GetComponent<CreatureBrain>();
+            if (brain != null) brain.enabled = true;
+            var agent = go.GetComponent<NavMeshAgent>();
+            if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh) agent.isStopped = false;
+
+            int 처음 = 남은덩이(자리);
+            float 출발거리 = Vector3.Distance(go.transform.position, 자리);
+            E2EHarness.Log($"  분해자를 {출발거리:F1}m 밖에 놓았다 — 바닥에 덩이 {처음}개");
+
+            const float 제한 = 90f;
+            float t0 = Time.time, 첫회수 = -1f, 다사라짐 = -1f;
+            while (Time.time - t0 < 제한)
+            {
+                int 남 = 남은덩이(자리);
+                if (첫회수 < 0f && 남 < 처음) 첫회수 = Time.time - t0;
+                if (남 <= 0) { 다사라짐 = Time.time - t0; break; }
+                yield return null;
+            }
+
+            int 끝에남은 = 남은덩이(자리);
+            int 가져간것 = 처음 - 끝에남은;
+
+            // 못 가져갔으면 <b>왜</b>인지가 곧 결과다. "느리다"와 "길이 없다"는
+            // 전혀 다른 이야기인데, 개수만 적으면 둘이 같은 0으로 보인다.
+            if (가져간것 == 0 && agent != null && agent.isActiveAndEnabled)
+                E2EHarness.Log($"    [왜 못 가져갔나] 길 상태 {agent.pathStatus} · " +
+                               $"목적지 {agent.destination.ToString("F1")} · " +
+                               $"남은 거리 {agent.remainingDistance:F1} · 속도 {agent.velocity.magnitude:F2} · " +
+                               $"자리 {go.transform.position.ToString("F1")}");
+            float 잰시간 = Mathf.Min(Time.time - t0, 제한);
+            float 초당 = 잰시간 > 0f ? 가져간것 / 잰시간 : 0f;
+
+            E2EHarness.Log($"  첫 회수 {(첫회수 < 0f ? "없음" : 첫회수.ToString("F1") + "초")} · " +
+                           $"{잰시간:F0}초에 {가져간것}/{처음}개 회수 " +
+                           $"(개당 {(가져간것 > 0 ? (잰시간 / 가져간것).ToString("F1") : "-")}초)");
+            E2EHarness.Log($"  <b>{처음}개짜리 더미가 통째로 사라지는 데 " +
+                           $"{(다사라짐 >= 0f ? $"{다사라짐:F0}초" : (초당 > 0f ? $"{처음 / 초당:F0}초 환산" : "재지 못함"))}</b> " +
+                           $"(회수 간격 규칙값과 견줄 것)");
+
+            적는다("관찰 보상 — 분해자가 가져가는 속도",
+                   $"{출발거리:F0}m 밖에서 출발 · 첫 회수 " +
+                   $"{(첫회수 < 0f ? "없음" : $"{첫회수:F1}초")} · " +
+                   $"{잰시간:F0}초에 {가져간것}/{처음}개 " +
+                   $"(<b>더미 전체 " +
+                   $"{(다사라짐 >= 0f ? $"{다사라짐:F0}초" : (초당 > 0f ? $"{처음 / 초당:F0}초 환산" : "미측정"))}</b>)");
+
+            Object.Destroy(go);
+            yield return null;
+        }
+
+        static int 남은덩이(Vector3 자리) =>
+            Object.FindObjectsByType<ItemPickup>()
+                  .Count(p => p != null && Vector3.Distance(p.transform.position, 자리) < 8f);
 
         // ── 잔 도구들 ───────────────────────────────────────────
 
