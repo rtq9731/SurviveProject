@@ -13,7 +13,7 @@ using Survive.World;
 /// <summary>
 /// <b>세계가 마르지 않는다.</b>
 ///
-/// 랜턴은 매 초 배터리를 태우고 배터리는 스크랩에서 나온다. 그런데 A섬에 서 있는
+/// 랜턴은 매 초 배터리를 태우고 배터리는 스크랩에서 나온다. 그런데 지상에 서 있는
 /// 스크랩은 유한하고, 재생이 0이면 그 뒤로 순증가가 영영 0이다 — 길게 보면 반드시
 /// 음수이고, 그러면 랜턴 지속시간을 어떻게 잡든 압박 곡선이 성립하지 않는다.
 ///
@@ -427,7 +427,7 @@ public class HarvestRespawnRuleTests
     /// <summary>
     /// 씬에 이 채집물이 몇 곳 서 있는가. 씬을 열지 않고 YAML 본문을 읽는다 —
     /// EditMode에서 씬을 열면 사람이 편집 중이던 씬을 밀어낸다
-    /// (<c>AIslandResourceTests</c>와 같은 방식).
+    /// (<c>SurfaceResourceTests</c>와 같은 방식).
     /// </summary>
     static int 씬에_선_수(string 이름)
     {

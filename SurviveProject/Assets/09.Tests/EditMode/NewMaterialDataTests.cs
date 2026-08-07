@@ -13,8 +13,8 @@ using Survive.Progression;
 /// <summary>
 /// 챕터 1 재건 스펙 §7 — 신규 재료 둘.
 ///
-/// <b>무광버섯</b>은 B섬 지상에 나고 매크로늄을 빨아들여 차폐한다.
-/// <b>매크로늄 석영</b>은 B섬 지하 동굴에 작게 자라며, 지하를 밝히는 조명과
+/// <b>무광버섯</b>은 지상에 나고 매크로늄을 빨아들여 차폐한다.
+/// <b>매크로늄 석영</b>은 지하 동굴에 작게 자라며, 지하를 밝히는 조명과
 /// 같은 성분이다 — 그래서 평야 천장 석영의 복선이 되고, 나중에 조명탄이
 /// 자홍으로 터져도 광원 4색 규칙 안에 그대로 머문다.
 ///
@@ -128,7 +128,7 @@ public class NewMaterialDataTests
     [Test]
     public void 무광버섯은_맨손으로_딴다()
     {
-        // B섬 지상에 나 있는 버섯이다. 여기에 도구를 요구하면 방호복이
+        // 지상에 나 있는 버섯이다. 여기에 도구를 요구하면 방호복이
         // "도구를 만든 다음에야 볼 수 있는 것"이 되어 동선이 한 겹 늘어난다.
         var n = 노드(무광노드경로);
         Assert.AreEqual(ToolType.None, n.requiredTool);
@@ -218,7 +218,7 @@ public class NewMaterialDataTests
     static GameObject 프리팹(string path)
     {
         var go = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-        Assert.IsNotNull(go, $"{path}가 없다 — 사람이 B섬에 심을 것이 없다");
+        Assert.IsNotNull(go, $"{path}가 없다 — 사람이 씬에 심을 것이 없다");
         return go;
     }
 

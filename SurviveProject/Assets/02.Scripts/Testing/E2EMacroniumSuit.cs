@@ -32,7 +32,7 @@ namespace Survive.Testing
     ///       맨몸일 때보다 느리게 주는 것까지 재야 장비가 값어치를 한 것이다</item>
     /// </list>
     ///
-    /// <b>왜 통로를 런타임에 세우는가.</b> B섬 지하로 가는 통로의 배치는 사람의 몫이라
+    /// <b>왜 통로를 런타임에 세우는가.</b> 지하로 가는 통로의 배치는 사람의 몫이라
     /// (실행 스펙 §9) 아직 씬에 없다. 여기서 볼 것은 배치가 아니라 "무엇을 걸쳤을 때
     /// 무슨 일이 벌어지는가"이므로 통로를 곁에 세운다 — <c>E2EDescent</c>가 층을
     /// 세우는 것과 같은 이유다. 몇 미터짜리로 파야 하는지는
@@ -104,7 +104,7 @@ namespace Survive.Testing
                 E2EHarness.Assert(
                     r.ingredients != null &&
                     r.ingredients.Any(i => i?.item != null && i.item.id == 무광버섯),
-                    "방호복은 무광버섯을 요구한다 — B섬 지상의 재료가 지하로 가는 문이 된다");
+                    "방호복은 무광버섯을 요구한다 — 지상의 재료가 지하로 가는 문이 된다");
                 E2EHarness.Assert(r.requiredBlueprint != null && r.requiredBlueprint.id == 설계,
                                   "방호복 레시피가 차폐 설계에 물려 있다");
             }
@@ -267,7 +267,7 @@ namespace Survive.Testing
             var r = 레시피찾기(방호복);
             if (r == null) yield break;
 
-            // 재료를 채운다. B섬 지형이 아직 없어 무광버섯 군락을 다 캘 수는 없다 —
+            // 재료를 채운다. 지상 지형이 아직 없어 무광버섯 군락을 다 캘 수는 없다 —
             // 캐는 절차 자체는 E2ENewMaterials가 이미 본다.
             foreach (var need in r.ingredients)
             {

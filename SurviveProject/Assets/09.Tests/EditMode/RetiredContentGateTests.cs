@@ -197,7 +197,7 @@ public class RetiredContentGateTests
     /// 걸린다 — 실제로 열매게 도감 문장이 그렇다. 사람이 문장을 보고 고친다(스펙 §2)</item>
     /// <item><b>「큰 육지」(<c>kind_island</c>)</b> — 새 세계관에서도 참이다.
     /// 육지는 몇 개 더 있지만 전부 더 작거나 비슷하다(세계관 §2)</item>
-    /// <item><b><c>alien_alloy</c>·<c>IslandZone</c> 같은 식별자</b> — 금지하는 것은
+    /// <item><b><c>alien_alloy</c>·<c>SurfaceZone</c> 같은 식별자</b> — 금지하는 것은
     /// <b>화면에 나가는 표시 이름</b>이지 아이디가 아니다. 아이디까지 잡으면
     /// 열아홉 파일 마흔 자리가 한꺼번에 빨개지고, 그 빨강은 아무것도 알려 주지 않는다</item>
     /// </list>
@@ -229,21 +229,29 @@ public class RetiredContentGateTests
                                         "짙은 " + "매크로늄" },                 false,  0),
 
         // 무대는 지상 한 덩어리 + 호수 + 착륙선이다 (세계관 §8)
-        // 2026-08-07 2 -> 1. 위와 같은 자리(ArtPalette). 남은 하나는
-        // Interaction/ItemDropper의 거리 주석이다
-        ("떠 있는 땅덩이",       new[] { "부유" + "섬", "부유 " + "섬" },         false,  1),
+        // 2026-08-07 2 -> 1 -> 0. 마지막 하나는 Interaction/ItemDropper의 거리 주석이었다.
+        // 「떠 있는 땅덩이 하나의 높이」로 재던 거리를 「뭍 하나의 높이」로 다시 썼다
+        ("떠 있는 땅덩이",       new[] { "부유" + "섬", "부유 " + "섬" },         false,  0),
 
         // 군도가 없으므로 군도의 구역 이름도 없다.
         //
-        // <b>41이 아니라 44인 이유.</b> 앞 라운드가 41을 잴 때 채집물 재생과 유물
-        // 공급 갈래가 아직 main에 들어오지 않았고, 그 둘이 세 자리를 더하며 병합됐다.
-        // 그래서 상한이 세워진 그날 이미 빨갰다 — 2026-08-07에 main 88e49264에서
-        // 다시 재어 44로 맞춘다. <b>상한을 올린 것이 아니라 실측으로 되돌린 것이다.</b>
-        ("군도 구역 이름",       new[] { "A" + "섬", "B" + "섬" },               false, 43),
+        // <b>2026-08-07 43 -> 4.</b> 스펙 §9가 그릇을 옮겼다 — 열거값 일곱과 번역 키
+        // 일곱이 <c>Domain/World/SurfaceZone</c>으로 갈아엎어지면서, 그 이름들을
+        // 가리키던 주석 서른아홉 자리가 함께 새 무대를 가리키게 됐다.
+        //
+        // <b>남은 넷은 낫 갈래가 들고 있는 파일이다</b> — <c>Creatures/HoverDrifter</c>와
+        // <c>Domain/Creatures/</c> 셋. 같은 날 다른 클론이 그 파일들의 FSM을 배선하는
+        // 중이라 손대지 않았다. 주석 한 줄씩이므로 그쪽 라운드가 끝나면 0이 된다.
+        ("군도 구역 이름",       new[] { "A" + "섬", "B" + "섬" },               false,  4),
 
         // 라틴 글자 한 자 + 숫자다. 대소문자를 안 가리면 언젠가 delta-1 같은
         // 멀쩡한 말의 꼬리를 문다
-        ("군도 구역 번호",       new[] { "A-" + "1", "A-" + "2", "A-" + "3" },   true,  12),
+        //
+        // <b>2026-08-07 12 -> 0. 이 갈래는 이제 진짜 게이트다.</b> 마지막 두 자리는
+        // 코드가 아니라 <b>화면에 나가는 글</b>이었다 — <c>strings.csv</c>의 구역 이름
+        // 세 줄과 <c>08.Data/Progression/Blueprints/bp_radar</c>의 힌트. 그 힌트는
+        // 「여울 건너 물가에서 본 것」으로 다시 썼다
+        ("군도 구역 번호",       new[] { "A-" + "1", "A-" + "2", "A-" + "3" },   true,   0),
     };
 
     /// <summary>
@@ -258,6 +266,14 @@ public class RetiredContentGateTests
     /// <b>같음이 아니라 이하로 재는 이유.</b> 지금 다른 클론 둘이 채집물과 낫을
     /// 손보고 있고, 그 파일들에도 폐기어가 들어 있다. 정확히 같기를 요구하면
     /// 저쪽이 <b>고쳐서</b> 빨개진다. 줄어드는 것은 언제나 옳다.
+    ///
+    /// <b>2026-08-07 세 번째로 내렸다.</b> 57 -> 5. 스펙 §9가 <b>그릇을 옮겼다</b> —
+    /// 「군도 구역 이름·번호」 쉰다섯 자리 중 쉰하나가 여기서 빠진다. 그 자리들이
+    /// 문구 고치기로 못 없어졌던 이유는 <c>IslandZone</c> 열거값과 <c>Zone,*</c> 일곱 줄이
+    /// <b>살아 있는 코드</b>를 가리키고 있어서였고, 이번 라운드가 그 열거형을
+    /// <c>SurfaceZone</c>(착륙지·호수·수로·내륙·여울·물가·먼바다·건너편)으로 옮기면서
+    /// 주석과 코드가 같은 무대를 가리키게 됐다. 「떠 있는 땅덩이」도 마지막 한 자리가
+    /// 빠져 0이 되었다.
     ///
     /// <b>2026-08-07 두 번째로 내렸다.</b> 63 -> 57. 액체 종류 라운드(스펙 §3)가
     /// 자기 파일들을 만지는 김에 <b>「층이 둘이라는 어휘」를 0으로 끝냈다</b> -
@@ -274,9 +290,9 @@ public class RetiredContentGateTests
     /// <item><b>다른 클론이 들고 있는 파일</b> — <c>Domain/Art</c>·<c>World/</c>·
     ///       <c>Creatures/</c>. 갈래 넷에 여섯 자리가 거기 있다</item>
     /// <item><b>군도 구역 이름·번호 쉰여섯 자리</b> — 이것은 문구 고치기가 아니라
-    ///       <b>스펙 §9(지상 구역 판정)</b>의 일이다. <c>IslandZone</c> 열거값과
-    ///       <c>Zone,*</c> 일곱 줄이 살아 있는 코드를 가리키고 있어서, 새 무대가
-    ///       정해지기 전에 주석만 고치면 <b>주석이 코드를 두고 거짓말을 한다</b></item>
+    ///       <b>스펙 §9(지상 구역 판정)</b>의 일이었다. 열거값과 <c>Zone,*</c> 일곱 줄이
+    ///       살아 있는 코드를 가리키고 있어서, 새 무대가 정해지기 전에 주석만 고치면
+    ///       <b>주석이 코드를 두고 거짓말을 한다</b>. 그 라운드가 위에서 끝났다</item>
     /// </list>
     /// </summary>
     [Test]
@@ -467,7 +483,7 @@ public class RetiredContentGateTests
     /// 아무것도 알려 주지 않는다.
     ///
     /// 「큰 육지」는 새 세계관에서도 참이고(육지는 몇 개 더 있다),
-    /// <c>alien_alloy</c>·<c>IslandZone</c>은 화면에 나가지 않는 식별자이며,
+    /// <c>alien_alloy</c>·<c>SurfaceZone</c>은 화면에 나가지 않는 식별자이며,
     /// 「지하」는 폐기어가 아니라 목적지다.
     /// </summary>
     [Test]
@@ -478,7 +494,7 @@ public class RetiredContentGateTests
             "case RadarContactKind.Island: return \"kind_island\";",
             "Radar,kind_island,큰 육지,Large landmass,결과 화면에 적히는 이름",
             "Assert.IsTrue(재료.ContainsKey(\"alien_alloy\"));",
-            "public enum IslandZone { Unknown, Landing, Shoal }",
+            "public enum SurfaceZone { Landing, Lake, Inlet, Shallows }",
             "잘리고 남은 절반인 지하로 내려간다",
             "레이더가 지하 구조물을 짚어낸다",
             "주변을 감지하며 먹이를 찾는다",
@@ -503,7 +519,7 @@ public class RetiredContentGateTests
     [Test]
     public void 살아_있는_식별자는_저장소에_그대로_있다()
     {
-        foreach (var 살아있는것 in new[] { "alien_alloy", "kind_island", "IslandZone" })
+        foreach (var 살아있는것 in new[] { "alien_alloy", "kind_island", "SurfaceZone" })
             Assert.IsNotEmpty(AssetTextScan.찾는다(new[] { 살아있는것 }),
                 $"{살아있는것}이 저장소에서 사라졌다. 표시 이름만 고치기로 한 " +
                 "약속이 깨졌거나, 훑개가 눈이 멀었다");
