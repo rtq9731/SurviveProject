@@ -9,10 +9,13 @@ using Survive.World;
 namespace Survive.Vitals
 {
     /// <summary>
-    /// 죽으면 마지막 화톳불에서, 화톳불이 없으면 시작 지점에서 다시 일어선다.
+    /// 죽으면 마지막 화톳불에서, 타는 불이 없으면 착륙선에서, 배도 없으면
+    /// 시작 지점에서 다시 일어선다.
     ///
     /// <b>어디로 돌려보낼지는 여기서 정하지 않는다.</b> 그 규칙은
-    /// <see cref="Survive.World.RespawnRule"/>에 있고 Unity 없이 테스트된다.
+    /// <see cref="Survive.World.RespawnRule"/>(어느 화톳불인가)과
+    /// <see cref="Survive.World.HomeBaseRule"/>(화톳불인가 배인가)에 있고
+    /// 둘 다 Unity 없이 테스트된다.
     /// 이 컴포넌트가 하는 일은 사망 시점을 잡아 후보를 모아 규칙에 묻고,
     /// 나온 자리로 몸을 옮겨 바이탈을 돌려주는 것뿐이다.
     ///
@@ -34,8 +37,18 @@ namespace Survive.Vitals
         /// <summary>마지막으로 되살아난 자리. 검증에서 결과를 집기 위한 것이다.</summary>
         public static Vector3 LastRespawnPoint { get; private set; }
 
-        /// <summary>마지막 부활이 화톳불이었는가. false면 시작 지점으로 돌아갔다는 뜻이다.</summary>
+        /// <summary>
+        /// 마지막 부활이 화톳불이었는가.
+        ///
+        /// <b>거점이 둘이 되었으므로 false의 뜻이 갈렸다</b> — 시작 지점일 수도 있고
+        /// 착륙선일 수도 있다. 어느 쪽인지는 <see cref="LastRespawnSite"/>가 말한다.
+        /// 이 손잡이를 남겨 두는 것은 앞서 선 검사들이 이것으로 화톳불을 가리기
+        /// 때문이고, 그 물음("화톳불이었나")의 답은 갈리지 않았다.
+        /// </summary>
         public static bool LastRespawnWasCampfire { get; private set; }
+
+        /// <summary>마지막으로 일어선 곳의 격. 전진 기지인가 본거지인가 맨바닥인가.</summary>
+        public static RespawnSite LastRespawnSite { get; private set; } = RespawnSite.StartPoint;
 
         /// <summary>부활한 횟수. 사망 한 번에 한 번만 오르는지 보려는 것이다.</summary>
         public static int RespawnCount { get; private set; }
@@ -142,22 +155,25 @@ namespace Survive.Vitals
             if (_vitals == null) return;
             if (_body == null) _body = BodyOf(_vitals);
 
-            var point = ChooseRespawnPoint(out bool atCampfire);
+            var point = ChooseRespawnPoint(out var site);
             MoveTo(point);
             _vitals.Revive();
 
             LastRespawnPoint = point;
-            LastRespawnWasCampfire = atCampfire;
+            LastRespawnSite = site;
+            LastRespawnWasCampfire = site == RespawnSite.ForwardCamp;
             RespawnCount++;
 
-            Debug.Log($"[RespawnService] 부활 — {(atCampfire ? "마지막 화톳불" : "시작 지점")} " +
+            // 자리 이름을 여기 인라인으로 적는다. 따로 뺀 함수에 넣으면 그 한글이
+            // 「화면에 나가는 글」로 잡히는데(LocSentenceGateTests), 콘솔 진단문은
+            // 사람 눈이 아니라 개발자 눈에 닿는 글이라 표로 옮기면 오히려 손해다.
+            Debug.Log($"[RespawnService] 부활 — " +
+                      $"{(site == RespawnSite.ForwardCamp ? "마지막 화톳불" : site == RespawnSite.Home ? "착륙선" : "시작 지점")} " +
                       $"{point.ToString("F1")}");
         }
 
-        Vector3 ChooseRespawnPoint(out bool atCampfire)
+        Vector3 ChooseRespawnPoint(out RespawnSite site)
         {
-            atCampfire = false;
-
             var fires = Object.FindObjectsByType<Campfire>(FindObjectsInactive.Exclude);
             var anchors = new List<RespawnAnchor>(fires.Length);
             for (int i = 0; i < fires.Length; i++)
@@ -167,16 +183,29 @@ namespace Survive.Vitals
                 anchors.Add(new RespawnAnchor(f.transform.position, f.KindledAt, f.IsBurning));
             }
 
-            if (RespawnRule.TryChoose(anchors, out int chosen))
-            {
-                atCampfire = true;
-                return BesideTheFire(fires[chosen].transform.position);
-            }
+            // 아직 플레이어를 한 번도 못 잡았다면 옮길 곳을 모르므로 지금 자리를 쓴다.
+            var fallback = _hasStartPoint ? _startPoint
+                                          : (_body != null ? _body.position : Vector3.zero);
 
-            // 화톳불이 없으면 시작 지점. 아직 플레이어를 한 번도 못 잡았다면
-            // 옮길 곳을 모르므로 지금 자리에 그대로 둔다.
-            return _hasStartPoint ? _startPoint
-                                  : (_body != null ? _body.position : Vector3.zero);
+            site = HomeBaseRule.Choose(anchors, LanderBase.CurrentHome(), fallback,
+                                       out var point, out int chosen);
+
+            // 불 곁에 서는 보정은 화톳불에만 건다. 배는 자기가 설 자리를 이미 알고
+            // 있고(LanderBase.HomeStandPoint), 화톳불처럼 사방으로 물러설 수도 없다 —
+            // 배 뒤쪽은 액면일 수 있다.
+            return site == RespawnSite.ForwardCamp
+                       ? BesideTheFire(fires[chosen].transform.position)
+                       : (site == RespawnSite.Home ? OnTheGround(point) : point);
+        }
+
+        /// <summary>배가 알려 준 자리를 지면 위로 내려놓는다.</summary>
+        static Vector3 OnTheGround(Vector3 spot)
+        {
+            if (Physics.Raycast(spot + Vector3.up * 3f, Vector3.down, out var hit, 12f,
+                                ~0, QueryTriggerInteraction.Ignore))
+                spot.y = hit.point.y + FootLift;
+
+            return spot;
         }
 
         /// <summary>불 속이 아니라 불 곁, 그리고 지면 위에 세운다.</summary>

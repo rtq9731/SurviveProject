@@ -77,8 +77,14 @@ namespace Survive.Testing
             E2EHarness.Log($"  시작 지점 {시작.ToString("F1")}");
         }
 
-        /// <summary>재료와 떨굴 것을 채운다. 죽을 때마다 비므로 매번 다시 채운다.</summary>
-        static void 채운다()
+        /// <summary>
+        /// 재료와 떨굴 것을 채운다. 죽을 때마다 비므로 매번 다시 채운다.
+        ///
+        /// <b>착륙선 시나리오가 같은 것을 쓴다.</b> 「화톳불을 세우고 죽는다」는
+        /// 대목이 글자 그대로 같은데 사본을 두면 한쪽만 고쳐지고, 그러면 두 검사가
+        /// 서로 다른 세계를 재게 된다.
+        /// </summary>
+        public static void 채운다()
         {
             var db = E2EHarness.Player.Inventory.Database;
             if (db == null) return;
@@ -388,7 +394,7 @@ namespace Survive.Testing
         /// 동굴 지형에 막히면 옮겨서라도 떨어뜨린다 — 여기서 보려는 것은
         /// 보행이 아니라 <b>떨어진 자리에서 죽으면 어디로 돌아오는가</b>다.
         /// </summary>
-        static IEnumerator 멀어진다(Vector3 from, float meters)
+        public static IEnumerator 멀어진다(Vector3 from, float meters)
         {
             for (int a = 0; a < 8; a++)
             {
@@ -415,7 +421,7 @@ namespace Survive.Testing
         /// 실제 조작으로 세운다 — 목록에서 고르고, 놓을 자리를 조준하고, 좌클릭한다.
         /// <see cref="E2EBaseBuilding"/>과 같은 경로이되 화톳불 하나만 본다.
         /// </summary>
-        static IEnumerator 화톳불을_세운다(System.Action<Campfire> result)
+        public static IEnumerator 화톳불을_세운다(System.Action<Campfire> result)
         {
             var placer = Placer;
             E2EHarness.Assert(placer != null, "BuildPlacer가 있다");
