@@ -165,6 +165,46 @@ namespace Survive.Creatures
         /// <summary>사거리 <b>안쪽 또는 경계 위</b>면 닿는 것으로 본다. 먹이·수집 범위도 같은 규칙이다.</summary>
         public static bool IsWithinRange(float distance, float range) => distance <= range;
 
+        /// <summary>
+        /// <b>땅에 놓인 것에 몸이 닿았는가 — 원기둥으로 잰다.</b>
+        /// 수평은 <paramref name="range"/>, 위아래는 <paramref name="verticalReach"/>.
+        ///
+        /// <b>구(3차원 거리)로 재면 영영 닿지 않는 개체가 생긴다.</b> 길찾기는
+        /// 수평면에서 수렴하고(<c>NavMeshAgent</c>는 수평 목적지에 닿으면 멈춘다),
+        /// 몸은 언제나 목표 위쪽에 있다 — 걷는 개체는 제 키만큼, 나는 개체는 순항
+        /// 고도만큼. 그 높이차가 그대로 수평 사거리를 깎아 먹는다.
+        ///
+        /// <b>실측(2026-08-07).</b> 열매게가 재양치 <b>바로 앞</b>(수평 1.35m)에 서
+        /// 있는데 높이차 1.22m 때문에 3차원 거리가 1.82m가 되어 먹이 사거리 1.6m
+        /// 밖이었다. 날개는 순항 고도가 지면 +2.5m라 높이차가 2.2~2.4m,
+        /// <b>세계 어느 자리에서도</b> 먹을 수 없었다. 세 마리를 150초 지켜본 축적이
+        /// 전부 0이었고, 기획서 §3.4의 순환 두 번째 단계가 그래서 한 번도 돌지 않았다.
+        ///
+        /// <b>그렇다고 높이를 통째로 눈감으면 안 된다.</b> 수평만 보도록 고쳐 놓고
+        /// 다시 재니 날개가 거대 버섯 갓 위(지면이 갓이므로 순항 고도는 그대로 2.5m)를
+        /// 지나며 <b>9m 아래의 재양치를 뜯었다</b>. 그래서 원기둥이고, 그 높이를
+        /// 정하는 것은 판단하는 쪽이 아니라 떠 있는 쪽이다
+        /// (<see cref="ICreatureMotor.CruiseHeight"/>).
+        ///
+        /// 수평만 보는 <see cref="NestRule.AtHome"/>과 갈리는 것은 대상이 달라서다 —
+        /// 코어는 낫의 꼬리에 매달려 지나갈 수 있어야 하고, 풀은 그러면 안 된다.
+        /// </summary>
+        public static bool IsWithinReach(Vector3 body, Vector3 target, float range, float verticalReach)
+        {
+            if (Mathf.Abs(body.y - target.y) > verticalReach) return false;
+
+            float dx = body.x - target.x;
+            float dz = body.z - target.z;
+            return dx * dx + dz * dz <= range * range;
+        }
+
+        /// <summary>
+        /// 위아래로도 사거리만큼만 허용하는 판. 발이 땅에 붙은 몸이 쓴다 —
+        /// 순항 고도가 0이므로 더 얹을 것이 없다.
+        /// </summary>
+        public static bool IsWithinReach(Vector3 body, Vector3 target, float range) =>
+            IsWithinReach(body, target, range, range);
+
         /// <summary>쿨다운이 끝났는가. 정확히 그 시각이면 끝난 것으로 본다.</summary>
         public static bool IsReady(float now, float nextActionTime) => now >= nextActionTime;
 

@@ -37,6 +37,9 @@ namespace Survive.Creatures
 
         public float Speed { get; set; } = 3f;
 
+        /// <summary>지면 위로 유지하는 높이가 곧 순항 고도다. 흔들림은 이 값 둘레의 진폭일 뿐이다.</summary>
+        public float CruiseHeight => hoverHeight;
+
         Vector3 _velocity;
         float _bobPhase;
         bool _halted;

@@ -96,10 +96,14 @@ namespace Survive.Combat
 
             // 생산자가 먹어서 축적한 스크랩을 더한다.
             // 배부른 개체를 노리면 더 얻는다 — 관찰에 대한 보상이다.
+            //
+            // <b>셈은 여기 두지 않는다</b> (<see cref="Survive.Creatures.FeedingPayoff"/>).
+            // 이 한 줄이 기획서 §3.4의 차별화 축이 서느냐를 정하는 배율이라, 묻어 두면
+            // 지금 몇 배인지도 잴 수 없다. 규칙으로 세워 두어야 실측이 값을 읽는다.
             var feeding = GetComponent<Survive.Creatures.CreatureFeeding>();
-            if (feeding != null && feeding.Stored > 0f && _scrapItem != null)
+            if (feeding != null && _scrapItem != null)
             {
-                int added = Mathf.RoundToInt(feeding.Stored);
+                int added = Survive.Creatures.FeedingPayoff.Bonus(feeding.Stored);
                 if (added > 0) loot.Add(new Survive.Items.ItemStack(_scrapItem, added));
             }
 

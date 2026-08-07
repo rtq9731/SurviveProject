@@ -23,8 +23,9 @@ namespace Survive.Creatures
     [DisallowMultipleComponent]
     public class NestSite : MonoBehaviour
     {
-        /// <summary>코어를 문 개체가 둥지에 이만큼 다가오면 놓은 것으로 친다(m).</summary>
-        const float DeliverRadius = 2f;
+        // 놓은 것으로 치는 반경은 여기 없다. <see cref="NestRule.HomeRadius"/> 하나뿐이고
+        // 판정도 <see cref="NestRule.AtHome"/>이 한다 — 여기에 같은 뜻의 상수를 하나 더
+        // 두면 둘 중 어느 쪽이 진짜인지를 코드가 말하지 못한다.
 
         /// <summary>다시 세어 보는 간격(초). 매 프레임 훑을 이유가 없다.</summary>
         const float CheckSeconds = 0.25f;
