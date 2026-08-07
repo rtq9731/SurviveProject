@@ -124,6 +124,25 @@ namespace Survive.Creatures
 
         public float Speed { get; set; } = 3f;
 
+        /// <summary>
+        /// <b>너울을 뺀, 딛고 선 높이.</b> 화면에 보이는 몸은 여기에 너울을 더한 자리에
+        /// 있지만, <b>무엇을 딛고 있는지를 물을 때는 이 값을 쓴다.</b>
+        ///
+        /// <b>왜 갈랐는가 (2026-08-07).</b> 예전에는 구역 판정이 <c>transform.position.y</c>를
+        /// 그대로 썼고, 거기에는 ±0.1m 너울이 섞여 있었다. 그 y는 <see cref="Sample"/>의
+        /// 지형 광선 시작 높이가 되므로, 물가에서 위로 까딱인 프레임에 광선이 한 뼘
+        /// 높은 데서 출발해 <b>발밑에 없는 것을 지형으로 읽는</b> 일이 생겼다 —
+        /// 「낫 꼬리」가 세던 「육지로 읽힌 프레임」이 그것이다.
+        ///
+        /// <b>너울은 보여 주기 위한 것이지 딛고 선 높이가 아니다.</b> 그것이 판정에
+        /// 들어가 있던 것 자체가 결함이었고, 위상을 결정적으로 만든 것은 그 결함을
+        /// <b>드러냈을 뿐</b>이다(늘 같은 위상이면 늘 같은 프레임에 흔들린다).
+        /// 그래서 시드를 되돌리지 않고 <b>커플링을 끊었다</b> — 무작위로 돌려놓으면
+        /// 흔들림이 판마다 다른 자리에서 다시 나타난다.
+        /// </summary>
+        float _baseY;
+        bool _baseSet;
+
         Vector3 _velocity;
         Vector3 _target;
         float _swellPhase;
@@ -149,6 +168,13 @@ namespace Survive.Creatures
             _swellPhase = (float)rng.NextDouble() * Mathf.PI * 2f;
         }
 
+        /// <summary>
+        /// 이 자리를 <b>딛고 선 높이로</b> 다시 적은 것. 구역·지형을 묻는 모든 자리가
+        /// 이것을 거친다 — 묻는 것이 "무엇을 딛고 있는가"이지 "지금 몇 미터에
+        /// 떠 있는가"가 아니기 때문이다.
+        /// </summary>
+        Vector3 딛고선자리(Vector3 p) => _baseSet ? new Vector3(p.x, _baseY, p.z) : p;
+
         public void MoveTowards(Vector3 target)
         {
             _halted = false;
@@ -165,7 +191,21 @@ namespace Survive.Creatures
             _swellPhase += dt * swellFrequency * Mathf.PI * 2f;
 
             Vector3 here = transform.position;
-            var sample = Sample(here);
+
+            // <b>누가 몸을 옮겼으면 딛고 선 높이도 따라간다.</b> 이 값은 제 걸음으로만
+            // 조금씩 움직이는데, 검증이나 다른 부품이 순간이동시키면 옛 높이가 남아
+            // 광선이 엉뚱한 데서 출발한다 — 육지에 올려 놓았는데 발밑이 비어
+            // 「액면」으로 읽히는 일이 그것이다(실측: 다섯 판 연속).
+            //
+            // 가르는 자는 <b>너울 폭</b>이다. 그보다 크게 벌어졌으면 제가 흔들린 것이
+            // 아니라 남이 옮긴 것이므로, 새 자리에 맞춰 다시 앉는다.
+            if (!_baseSet || Mathf.Abs(here.y - _baseY) > swellAmplitude * 2f)
+            {
+                _baseY = here.y;
+                _baseSet = true;
+            }
+
+            var sample = Sample(딛고선자리(here));
             Zone = sample.Zone;
 
             // 서식지 밖에 놓였으면 무엇을 쫓든 먼저 돌아간다. 은폐 프로토콜은
@@ -223,10 +263,15 @@ namespace Survive.Creatures
 
             // 높이는 옮겨 간 자리에서 다시 잰다. 해안선으로 올라서는 순간 기준면이
             // 액면에서 지형으로 바뀌므로, 옮기기 전 값을 쓰면 한 프레임씩 파묻힌다.
-            var at = step.sqrMagnitude > 1e-8f ? Sample(next) : sample;
-            float wantedY = at.FloatY + Mathf.Sin(_swellPhase) * swellAmplitude;
+            var at = step.sqrMagnitude > 1e-8f ? Sample(딛고선자리(next)) : sample;
 
-            next.y = Mathf.Lerp(here.y, wantedY, Mathf.Clamp01(dt * riseLerp));
+            // <b>딛고 선 높이는 너울을 빼고 따라간다.</b> 너울을 여기 섞으면
+            // 그것이 다음 프레임의 지형 광선 시작 높이가 되어 판정으로 새어 든다.
+            if (!_baseSet) { _baseY = at.FloatY; _baseSet = true; }
+            _baseY = Mathf.Lerp(_baseY, at.FloatY, Mathf.Clamp01(dt * riseLerp));
+
+            // 보이는 몸에만 너울을 얹는다.
+            next.y = _baseY + Mathf.Sin(_swellPhase) * swellAmplitude;
             transform.position = next;
         }
 
@@ -273,7 +318,7 @@ namespace Survive.Creatures
         /// </summary>
         bool CanStand(Vector3 p)
         {
-            var s = Sample(p);
+            var s = Sample(딛고선자리(p));
             if (!ScytheHabitat.CanEnter(s.Zone, Alert, Abroad)) return false;
             if (Alert == ScytheAlert.Alarmed) return true;
             return s.EdgeRoom > EdgeMargin;

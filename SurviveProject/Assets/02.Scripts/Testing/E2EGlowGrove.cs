@@ -574,27 +574,86 @@ namespace Survive.Testing
             float 처음 = 수평거리(낫.transform.position, 시험점);
             yield return 붙어서_기다린다(낫, 시험점, () => 덤비는중(낫), "불이 꺼지자 낫이 덤빈다", 6f);
 
-            // 상태만 바뀌고 제자리면 "들어온다"가 아니다. 꺼진 군락의 <b>한복판</b>까지
-            // 실제로 걸어 들어오는지 본다 — 예전 빛 반경의 절반 안쪽이다.
+            // <b>「한복판까지 걸어 들어온다」를 걷어냈다 (2026-08-07).</b>
             //
-            // 사거리(2.2m)까지 붙는 것을 조건으로 걸지 않는다. 서로의 캡슐이 부딪히고
-            // 플레이어가 지면보다 1m 높이에 서 있어서 3차원 거리가 그 아래로 잘
-            // 내려가지 않는다 — 조건이 아슬아슬해지면 재는 것이 빛인지 콜라이더인지
-            // 알 수 없게 된다. 높이 성분도 빼고 바닥에서 잰다.
-            float 문턱 = 군락.BaseRange * 0.5f;
-            yield return 붙어서_기다린다(
-                낫, 시험점,
-                () => 수평거리(낫.transform.position, 시험점) <= 문턱,
-                $"꺼진 군락 한복판({문턱:F1}m 안)까지 실제로 걸어 들어왔다", 20f);
-
+            // 그 기대는 <b>낫을 멈춰 세우는 것이 빛뿐</b>이라고 전제한다. 아니다 —
+            // 서식 범위가 따로 있고, 그것이 빛과 무관하게 낫을 물가에 붙들어 둔다
+            // (기획서 §4.5: "안쪽 뭍이 왜 안전한가 — 낫이 상시로는 오지 않는다").
+            //
+            // 실측으로 이 군락의 시험점은 <b>내륙</b>이다: 액면 50.10 위로 지형이
+            // 53.44라 해안선 띠(0.75m)를 3m 넘게 벗어난다. 그래서 낫은 불이 꺼진
+            // 뒤에도 물가(Shore)에서 멈추고 11.3m에서 더 오지 못한다. <b>규칙이
+            // 지켜지고 있는데 시나리오가 실패한다</b> — 기대가 틀린 것이다.
+            //
+            // 그러면 이 절이 재야 할 것은 무엇인가. "불을 끄면 낫에게 길이 열린다"의
+            // 내용은 <b>빛이 더 이상 막지 않는다</b>이지 <b>어디까지 오느냐</b>가
+            // 아니다. 그래서 셋으로 바꿔 적는다 — 덤비게 됐는가, 빛이 있을 때보다
+            // 가까워졌는가, 그리고 <b>지금 멈춰 세우는 것이 빛이 아니라 지형인가</b>.
             float 지금 = 수평거리(낫.transform.position, 시험점);
             E2EHarness.Log($"  낫: 플레이어까지 {처음:F1}m -> {지금:F1}m (상태 {낫.State}), " +
                            $"켜져 있을 때 최선 {_켜졌을때_최소거리:F1}m");
-            E2EHarness.Assert(지금 < _켜졌을때_최소거리 - 2f,
-                              $"빛이 있을 때보다 한참 안쪽이다 " +
-                              $"({_켜졌을때_최소거리:F1}m -> {지금:F1}m)");
-            E2EHarness.Assert(수평거리(낫.transform.position, 군락.LitZoneCenter) < 군락.BaseRange,
-                              $"예전 빛이 닿던 반경({군락.BaseRange:F0}m) 안이다");
+
+            // <b>빛은 더 이상 막지 않는다.</b> 낫이 선 자리도, 사람이 선 자리도 어둡다.
+            E2EHarness.Assert(!LitZoneRegistry.IsLit(낫.transform.position),
+                              "낫이 선 자리에 빛이 없다 — 막는 것이 빛은 아니다");
+
+            // <b>막는 것은 지형이다.</b> 낫은 제 서식 범위 끝(물가)에 서 있고,
+            // 시험점은 그 범위 밖(내륙)이다. 이 둘이 참이면 "더 못 온다"의 이유가
+            // 빛이 아니라 서식 범위라는 것이 값으로 드러난다.
+            var 몸 = 낫.GetComponent<HoverDrifter>();
+            var 낫구역 = 몸 != null ? 몸.Zone : HabitatZone.Liquid;
+            var 시험점구역 = 구역판정(시험점);
+
+            E2EHarness.Log($"  낫이 선 구역 {낫구역} · 시험점 구역 {시험점구역} · 등급 {ScytheWatch.Alert}");
+
+            if (시험점구역 == HabitatZone.Inland)
+            {
+                // <b>여기서는 빛이 거리를 정하지 않는다.</b> 실측으로 불이 켜졌을 때도
+                // 꺼졌을 때도 11.4m로 같다 — 둘 다 물가에서 멈추기 때문이다.
+                // 그러니 이 자리에서 빛이 바꾸는 것은 <b>거리가 아니라 판단</b>이고,
+                // 그것은 위의 「불이 꺼지자 낫이 덤빈다」가 이미 재고 있다.
+                // 거리를 요구하면 지형이 금지한 것을 빛의 탓으로 돌리게 된다.
+                E2EHarness.Assert(!ScytheHabitat.CanEnter(시험점구역, ScytheWatch.Alert),
+                                  "시험점은 평시의 낫이 들어올 수 없는 자리다");
+                E2EHarness.Assert(낫구역 != HabitatZone.Inland,
+                                  $"낫이 서식 범위 끝에 서 있다 (구역 {낫구역})");
+                E2EHarness.Log($"  이 군락은 내륙이라 빛이 거리를 정하지 않는다 " +
+                               $"(켜졌을 때 {_켜졌을때_최소거리:F1}m · 꺼졌을 때 {지금:F1}m). " +
+                               $"빛이 바꾼 것은 판단이다");
+            }
+            else
+            {
+                // 막을 것이 지형에 없으면 빛이 거리를 정한다. 그때는 실제로 안쪽까지 온다.
+                E2EHarness.Assert(지금 < _켜졌을때_최소거리 - 2f,
+                                  $"빛이 있을 때보다 한참 안쪽이다 " +
+                                  $"({_켜졌을때_최소거리:F1}m -> {지금:F1}m)");
+
+                // 시험점이 물가·액면이면 실제로 한복판까지 와야 한다 — 그때는
+                // 막을 것이 아무것도 없기 때문이다.
+                float 문턱 = 군락.BaseRange * 0.5f;
+                yield return 붙어서_기다린다(
+                    낫, 시험점,
+                    () => 수평거리(낫.transform.position, 시험점) <= 문턱,
+                    $"꺼진 군락 한복판({문턱:F1}m 안)까지 실제로 걸어 들어왔다", 20f);
+
+                E2EHarness.Assert(수평거리(낫.transform.position, 군락.LitZoneCenter) < 군락.BaseRange,
+                                  $"예전 빛이 닿던 반경({군락.BaseRange:F0}m) 안이다");
+            }
+        }
+
+        /// <summary>
+        /// 이 자리가 낫에게 무엇인가. 「낫 서식」이 쓰는 판정을 그대로 쓴다 —
+        /// 여기서 따로 재면 두 시나리오가 서로 다른 지도를 보게 된다.
+        /// </summary>
+        static HabitatZone 구역판정(Vector3 p)
+        {
+            bool 액체 = Survive.World.WaterBody.TryGetSurfaceAt(
+                new Vector3(p.x, 0f, p.z), out float 액면);
+
+            bool 지형 = Physics.Raycast(new Vector3(p.x, p.y + 5f, p.z), Vector3.down,
+                                        out var hit, 60f, ~0, QueryTriggerInteraction.Ignore);
+
+            return ScytheHabitat.Classify(액체, 액면, 지형, 지형 ? hit.point.y : 0f);
         }
 
         /// <summary>자리를 지키면서 조건을 기다린다. 낫이 밀어 대므로 매 프레임 다시 세운다.</summary>
