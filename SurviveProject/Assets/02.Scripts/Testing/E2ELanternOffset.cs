@@ -384,6 +384,19 @@ namespace Survive.Testing
                 {
                     다음정렬 = t + 0.4f;
                     yield return 자리를_잡는다(마주본다);
+
+                    // <b>낫이 무대에 남아 있는 것은 전제다.</b> 오프셋이 6.5m로 오른 뒤로
+                    // 정면 도달(14.5m)이 낫의 감지 반경(14m)을 넘었다. 그래서 낫이
+                    // 사람의 앞쪽으로 흘러 들어오면 <b>감지 밖까지</b> 밀려나고, 그대로
+                    // 배회하면 관찰창이 끝나도록 돌아오지 않는다 — 실측으로 등진 판이
+                    // 쫓은 프레임 0으로 끝난 판이 셋 중 둘이었다. 재려는 것은
+                    // "앞이냐 뒤냐"이지 "낫이 돌아왔느냐"가 아니므로 무대를 다시 세운다.
+                    float 감지 = _def != null ? _def.detectRadius : 14f;
+                    if (Vector3.Distance(_낫.transform.position, 사람자리) > 감지)
+                    {
+                        _낫.transform.position = _바다;
+                        E2EHarness.SyncPhysics();
+                    }
                 }
 
                 var p = _낫.transform.position;
