@@ -36,6 +36,11 @@ namespace Survive.Testing
         {
             E2EHarness.RestoreInput();
             E2EHarness.RestoreWorld();
+
+            // 재생을 도중에 끄면 RunGuarded의 끝을 지나지 못한다. 격리를 풀지 않고
+            // 나가면 다음 재생까지 사람의 슬롯이 검사 슬롯을 가리킨 채로 남고,
+            // 검사가 남긴 파일도 그대로 쌓인다.
+            E2EHarness.ReleaseSave();
         }
 
         /// <summary>씬에 러너가 없으면 만든다.</summary>
@@ -71,6 +76,10 @@ namespace Survive.Testing
             // 진짜 키보드·마우스를 떼어 놓는다. 창이 앞에 없으면 그 상태가 얼어붙어
             // 가상 입력을 덮어쓴다 — E2EHarness.IsolateInput에 자세히 적어 두었다.
             E2EHarness.IsolateInput();
+
+            // 사람의 저장본을 떼어 놓는다. 시나리오가 자동 저장을 걸든 Save()를
+            // 직접 부르든 Delete()를 부르든, 닿는 파일은 이 세션의 전용 슬롯이다.
+            E2EHarness.IsolateSave();
 
             var sw = Stopwatch.StartNew();
             E2EHarness.Log("=== " + name + " 시작 ===");
@@ -111,6 +120,7 @@ namespace Survive.Testing
                     E2EHarness.RemoveDevice();
                     E2EHarness.RestoreInput();
                     E2EHarness.RestoreWorld();
+                    E2EHarness.ReleaseSave();
             // 시나리오가 시간을 멈춘 채 끝나면 다음 실행이 얼어붙는다. 되돌린다.
             Time.timeScale = 1f;
                     yield break;
@@ -129,6 +139,7 @@ namespace Survive.Testing
             E2EHarness.RemoveDevice();
             E2EHarness.RestoreInput();
             E2EHarness.RestoreWorld();
+            E2EHarness.ReleaseSave();
             // 시나리오가 시간을 멈춘 채 끝나면 다음 실행이 얼어붙는다. 되돌린다.
             Time.timeScale = 1f;
         }

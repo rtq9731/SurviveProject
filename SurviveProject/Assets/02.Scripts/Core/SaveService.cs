@@ -24,8 +24,18 @@ namespace Survive.Core
 
         public void Unregister(ISaveable s) => _saveables.Remove(s);
 
+        /// <summary>
+        /// 이 슬롯의 파일 자리.
+        ///
+        /// <b>이름을 그대로 쓰지 않고 <see cref="SaveSlots.Resolve"/>를 지난다.</b>
+        /// 저장 경로는 이 기계의 에디터 전부가 공유하므로, 검사가 도는 동안에는
+        /// 기본 슬롯을 콕 집은 요청조차 전용 슬롯으로 가야 한다. 그 판정을 여기
+        /// 한 곳에 두었기 때문에 <b>쓰기·읽기·존재 확인·삭제가 전부 같은 답</b>을
+        /// 얻는다 — 하나라도 빠지면 "지우기만 사람 저장본을 지운다" 같은 구멍이 난다.
+        /// </summary>
         static string PathFor(string slot) =>
-            Path.Combine(Application.persistentDataPath, $"save_{slot}.json");
+            Path.Combine(Application.persistentDataPath,
+                         SaveSlots.FileNameOf(SaveSlots.Resolve(slot)));
 
         public bool HasSave(string slot) => File.Exists(PathFor(slot));
 

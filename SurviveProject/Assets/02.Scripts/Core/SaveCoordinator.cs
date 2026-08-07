@@ -18,7 +18,12 @@ namespace Survive.Core
     [DisallowMultipleComponent]
     public class SaveCoordinator : MonoBehaviour
     {
-        public const string DefaultSlot = "auto";
+        /// <summary>
+        /// 이름을 안 주면 가는 곳. <b>여기서 파일이 정해지지는 않는다</b> —
+        /// 실제로 어느 파일에 닿는지는 <see cref="SaveSlots.Resolve"/>가 정한다
+        /// (검사가 도는 동안에는 전용 슬롯으로 간다).
+        /// </summary>
+        public const string DefaultSlot = SaveSlots.Default;
 
         [Tooltip("목표를 하나 끝낼 때마다 자동 저장한다")]
         [SerializeField] bool autoSaveOnObjective = true;

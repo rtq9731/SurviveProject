@@ -26,7 +26,7 @@ namespace Survive.Vitals
     /// 프리팹을 열 수 있는 날이 오면 네 개를 같은 방식으로 맞추면 된다.
     /// </summary>
     [DisallowMultipleComponent]
-    public class PlayerVitals : MonoBehaviour
+    public class PlayerVitals : MonoBehaviour, ISaveable
     {
         [SerializeField] VitalDefinitionSO healthDefinition;
         [SerializeField] VitalDefinitionSO oxygenDefinition;
@@ -51,6 +51,7 @@ namespace Survive.Vitals
         readonly List<IOxygenModifier> _oxygenModifiers = new List<IOxygenModifier>();
 
         readonly List<Vital> _all = new List<Vital>();
+        readonly List<string> _ids = new List<string>();
         readonly Dictionary<string, Vital> _byId = new Dictionary<string, Vital>();
 
         public Vital Health { get; private set; }
@@ -65,6 +66,9 @@ namespace Survive.Vitals
         /// <summary>이 몸이 가진 게이지 전부. 세이브·화면·검증이 훑는 자리다.</summary>
         public IReadOnlyList<Vital> All => _all;
 
+        /// <summary><see cref="All"/>과 <b>같은 순서의</b> 아이디. 저장본이 이 짝으로 적힌다.</summary>
+        public IReadOnlyList<string> Ids => _ids;
+
         /// <summary>아이디로 집는다. 없으면 거짓 — <b>조용히 새 게이지를 만들지 않는다.</b></summary>
         public bool TryGet(string id, out Vital vital) => _byId.TryGetValue(id, out vital);
 
@@ -76,6 +80,7 @@ namespace Survive.Vitals
         void Awake()
         {
             _all.Clear();
+            _ids.Clear();
             _byId.Clear();
 
             Health    = Add("health", healthDefinition, 100f);
@@ -88,8 +93,34 @@ namespace Survive.Vitals
         {
             var vital = Create(def, defaultMax);
             _all.Add(vital);
+            _ids.Add(id);
             _byId[id] = vital;
             return vital;
+        }
+
+        // ── 저장 ────────────────────────────────────────────────
+        //
+        // 규칙은 VitalsSave(Domain)에 있다 — 무엇을 담고 무엇을 무시하며 왜
+        // 「가득 채워 주지 않는가」가 전부 거기 적혀 있고, Unity 없이 시험된다.
+        // 여기 남은 것은 이 몸의 게이지 목록을 그 규칙에 넘기는 일뿐이다.
+        //
+        // 씬에 놓인 컴포넌트이므로 SaveCoordinator.Collect()가 알아서 집어 간다.
+        // 프리팹을 열지 않고 저장 대상이 되는 길이 이것뿐이기도 하다.
+
+        public string SaveKey => VitalsSave.Key;
+
+        public object CaptureState() => VitalsSave.Capture(_ids, _all);
+
+        public void RestoreState(object state)
+        {
+            if (state is not VitalsSaveState saved) return;
+
+            for (int i = 0; i < _all.Count && i < _ids.Count; i++)
+                VitalsSave.RestoreInto(saved, _ids[i], _all[i]);
+
+            // 체력이 0인 저장본을 열면 다음 Update가 사망을 보고한다. 걸쇠를 여기서
+            // 미리 세우지 않는 이유는 그것이 옳기 때문이다 — 죽은 몸을 저장했으면
+            // 죽은 몸으로 열려야 하고, 그 뒤는 RespawnService가 늘 하던 대로 한다.
         }
 
         /// <summary>
