@@ -87,14 +87,14 @@ namespace Survive.World
     /// 그것은 규칙이 아니라 경사다. 한 번 풀어 주면 <b>"이 물이 어떤 물인지 봐야 한다"</b>를
     /// 배우게 된다. 종류 축이 그 수업을 한 겹 더 두껍게 만든다 - 이제 봐야 하는 것이
     /// 깊이만이 아니라 색이기도 하다(청록인가 자홍인가).
-    /// 이 역전은 설계이므로 <c>IslandZoneTests</c>가 못 박아 둔다.
+    /// 이 역전은 설계이므로 <c>SurfaceZoneTests</c>가 못 박아 둔다.
     /// </summary>
     public static class LiquidCrossing
     {
         /// <summary>
         /// 발이 잠기기 시작하는 깊이(m). <c>PlayerSwimming.wadeDepth</c>의 기본값과 같다 -
         /// 판정을 Domain에서 하려면 그 수가 여기에도 있어야 하고, 둘이 갈라지면
-        /// 규칙과 몸이 다른 말을 하게 된다. <c>IslandZoneTests</c>가 대조한다.
+        /// 규칙과 몸이 다른 말을 하게 된다. <c>SurfaceZoneTests</c>가 대조한다.
         /// </summary>
         public const float WadeDepth = 0.35f;
 

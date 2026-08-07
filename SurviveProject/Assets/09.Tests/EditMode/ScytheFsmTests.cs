@@ -306,7 +306,7 @@ public class ScytheFsmTests
         Assert.IsTrue(ScytheFsm.RangesInland(ScytheState.Retrieve));
 
         // 다만 실제로 올라갈 수 있는지는 여전히 등급이 가른다. 둘을 하나로 접으면
-        // "따라붙는 중이면 평시에도 육지로 온다"가 되어 A섬 내륙이 안전하지 않다.
+        // "따라붙는 중이면 평시에도 육지로 온다"가 되어 내륙이 안전하지 않다.
         Assert.IsFalse(ScytheHabitat.CanEnter(HabitatZone.Inland, ScytheAlert.Calm));
         Assert.IsTrue(ScytheHabitat.CanEnter(HabitatZone.Inland, ScytheAlert.Alarmed));
     }

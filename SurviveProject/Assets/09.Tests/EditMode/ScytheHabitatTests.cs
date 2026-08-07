@@ -9,7 +9,7 @@ using Survive.Creatures;
 ///
 /// <b>이 규칙 하나가 챕터 1의 뼈대를 셋 지탱한다.</b>
 /// <list type="number">
-/// <item>A섬 내륙과 B섬 지하가 안전한 이유 — 평시에는 육지로 올라오지 않는다</item>
+/// <item>내륙과 지하가 안전한 이유 — 평시에는 육지로 올라오지 않는다</item>
 /// <item>액면 보행 장비 없이 첫 유물을 얻는 길 — 해안선까지는 나오므로
 ///       육지에 선 채로 가장자리에서 줍는다. 순환이 여기서 풀린다</item>
 /// <item>종막의 압력 — 평생 육지에 오지 않던 것이 발령에 올라온다</item>
@@ -88,7 +88,7 @@ public class ScytheHabitatTests
     {
         Assert.IsFalse(ScytheHabitat.CanEnter(HabitatZone.Inland, ScytheAlert.Calm));
         Assert.IsFalse(ScytheHabitat.CanOccupy(true, 액면, true, 액면 + 1.45f, ScytheAlert.Calm),
-                       "A섬 지형 중앙값 높이");
+                       "지상 지형 중앙값 높이");
     }
 
     [Test]
@@ -121,12 +121,12 @@ public class ScytheHabitatTests
     // ── 실제 지형의 경계값 ──────────────────────────────────
 
     [Test]
-    public void 실측한_A섬_물가는_해안선이고_스폰_일대는_육지다()
+    public void 실측한_지상_물가는_해안선이고_스폰_일대는_육지다()
     {
         // MainScene 실측 (액면 50.1): 걸을 수 있는 지형 334곳을 재니 최고 52.32,
         // 중앙값 51.55, 물가가 50.3~50.8이었다. 이 둘이 서로 다른 구역으로 갈리지
         // 않으면 규칙이 지도 위에서 아무것도 하지 않는다 — 띠가 넓으면 섬의 절반이
-        // 해안선이 되어 "A섬 내륙이 안전하다"가 그냥 거짓이 된다.
+        // 해안선이 되어 "내륙이 안전하다"가 그냥 거짓이 된다.
         foreach (float 물가 in new[] { 50.3f, 50.4f, 50.5f, 50.7f, 50.8f })
             Assert.AreEqual(HabitatZone.Shore, 판정(물가), $"물가 {물가}");
 
@@ -138,7 +138,7 @@ public class ScytheHabitatTests
     public void 해안선_띠는_한_걸음_턱을_넘지_않는다()
     {
         // 넓어지면 내륙이 위험해지고, 0이면 물가에서 유물을 못 줍는다.
-        // 실측한 A섬 지형의 중앙값이 액면 위 1.45m이므로, 띠가 그보다 넓으면
+        // 실측한 지상 지형의 중앙값이 액면 위 1.45m이므로, 띠가 그보다 넓으면
         // 섬의 절반이 낫의 영역이 된다.
         Assert.Greater(ScytheHabitat.ShoreRise, 0f);
         Assert.Less(ScytheHabitat.ShoreRise, 1.45f);

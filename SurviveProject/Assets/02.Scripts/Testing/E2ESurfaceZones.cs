@@ -9,28 +9,32 @@ using Survive.World;
 namespace Survive.Testing
 {
     /// <summary>
-    /// A섬 안에서 액체가 <b>세 번 다른 얼굴</b>로 나온다 (스펙 §21).
+    /// 지상에서 액체가 <b>세 번 다른 얼굴</b>로 나온다 (스펙 §9).
     ///
-    /// 규칙 자체는 <c>IslandZoneTests</c>가 Unity 없이 본다. 여기서 보는 것은
+    /// 규칙 자체는 <c>SurfaceZoneTests</c>가 Unity 없이 본다. 여기서 보는 것은
     /// <b>그 규칙이 실제 지형 위에서 실제 조작으로 같은 답을 내는가</b>다 —
     /// 셋을 <b>한 시나리오 안에 나란히</b> 놓는 것이 요점이다. 따로 돌리면
     /// 각자 통과하면서도 셋이 서로 다른 답을 낸다는 사실은 아무도 확인하지 않는다.
     ///
     /// <list type="number">
-    /// <item><b>얕은 바다</b> — 발을 담근 채 걸어서 건넌다. 체력 손실 0</item>
-    /// <item><b>강</b> — 헤엄쳐 건너면 깎이지만 살아서 닿는다.
+    /// <item><b>여울</b> — 발을 담근 채 걸어서 건넌다. 체력 손실 0</item>
+    /// <item><b>수로</b> — 헤엄쳐 건너면 깎이지만 살아서 닿는다.
     ///       잃은 양이 <see cref="LiquidCrossing.Toll"/>이 예측한 값과 맞는가까지 본다</item>
-    /// <item><b>바다</b> — 규칙이 「못 건넌다」고 한 폭만큼 헤엄치면 실제로 죽는다</item>
-    /// <item><b>통로</b> — A-1에서 A-2, A-2에서 A-3까지 걸어서 이어지는가 (캡슐 스윕)</item>
+    /// <item><b>먼바다</b> — 규칙이 「못 건넌다」고 한 폭만큼 헤엄치면 실제로 죽는다</item>
+    /// <item><b>통로</b> — 뭍에서 뭍으로 걸어서 이어지는가 (캡슐 스윕)</item>
     /// </list>
     ///
-    /// <b>지형이 아직 임시다(§16).</b> 새 지도의 구역 다섯은 아직 놓이지 않았고,
-    /// 지금 서 있는 것은 옛 네 섬이다. 그래서 여기서는 좌표를 적어 두지 않고
+    /// <b>지형이 아직 임시다(스펙 §13).</b> 새 지도의 구역은 아직 놓이지 않았고,
+    /// 지금 서 있는 것은 옛 뭍덩이들이다. 그래서 여기서는 좌표를 적어 두지 않고
     /// <b>매번 지형에 물어</b> 얕은 자리·물가·깊은 자리를 찾는다. 못 찾으면
     /// 조용히 넘어가지 않고 <b>무엇을 못 찾았는지 로그로 남긴다</b> — 그것이
     /// 사람에게 넘길 목록이다.
+    ///
+    /// <b>다만 「씬에 그 물건이 있는가」는 로그가 아니라 단언이다.</b> 뭍덩이를
+    /// 못 찾는 것은 지형이 덜 만들어진 것이 아니라 <b>이 시나리오가 눈이 먼 것</b>이므로,
+    /// <see cref="E2ELandmass"/>가 그 자리에서 던진다.
     /// </summary>
-    public static class E2EIslandZones
+    public static class E2ESurfaceZones
     {
         static PlayerVitals Vitals => E2EHarness.Player.Vitals;
 
@@ -48,23 +52,23 @@ namespace Survive.Testing
 
             yield return 준비();
 
-            yield return 얕은_바다는_걸어서_건너도_무해하다();
-            yield return 강은_헤엄치면_깎이지만_건넌다();
-            yield return 바다는_헤엄치면_죽는다();
+            yield return 여울은_걸어서_건너도_무해하다();
+            yield return 수로는_헤엄치면_깎이지만_건넌다();
+            yield return 먼바다는_헤엄치면_죽는다();
             yield return 통로가_걸어서_이어지는가();
 
-            E2EHarness.Log("=== 세 액체 요약 ===");
-            foreach (var 구역 in IslandZones.Order)
-                E2EHarness.Log($"  {구역,-11} 위험도 {IslandZones.Risk(구역),6:F1} " +
-                               $"판정 {IslandZones.Verdict(구역, 맨몸)}");
+            E2EHarness.Log("=== 액체 넷 요약 ===");
+            foreach (var 구역 in SurfaceZones.Order)
+                E2EHarness.Log($"  {구역,-11} 위험도 {SurfaceZones.Risk(구역),6:F1} " +
+                               $"판정 {SurfaceZones.Verdict(구역, 맨몸)}");
 
             if (_사람의몫.Count > 0)
             {
-                E2EHarness.Log("=== 진짜 지형을 기다리는 것 (§16) ===");
+                E2EHarness.Log("=== 진짜 지형을 기다리는 것 (스펙 §13) ===");
                 foreach (var 줄 in _사람의몫) E2EHarness.Log("  " + 줄);
             }
 
-            E2EHarness.Log("=== A섬 구역 다섯 완주 ===");
+            E2EHarness.Log("=== 지상 구역 완주 ===");
         }
 
         static readonly List<GearCapability> 맨몸 = new List<GearCapability>();
@@ -81,31 +85,40 @@ namespace Survive.Testing
             E2EHarness.Assert(Swim != null, "PlayerSwimming이 있다");
             E2EHarness.Assert(MacroniumSeaService.Instance != null, "바다 서비스가 스스로 서 있다");
             E2EHarness.Assert(E2EWaterProbe.TryFindSurface(out _surface, out var water),
-                              "바다가 씬에 있다");
+                              "액면이 씬에 있다");
             E2EHarness.Log($"  액면 y={_surface:F2} ({(water == null ? "?" : water.name)})");
 
-            // 생물이 물어서 준 피해를 바다가 준 것으로 세면 "체력 손실 0"이 거짓이 된다.
+            // 뭍덩이가 실제로 서 있는지 여기서 한 번에 확인한다. 아래 두 대목이 이것을
+            // 쓰는데, 각자 찾다 각자 넘어가면 "재지 않았다"가 로그에 흩어진다.
+            foreach (var 이름 in new[] { E2ELandmass.StartName, E2ELandmass.AcrossName,
+                                        E2ELandmass.BeyondName })
+            {
+                var b = E2ELandmass.RequireBounds(이름);
+                E2EHarness.Log($"  뭍 {이름} 중심 {b.center.ToString("F1")} 크기 {b.size.ToString("F1")}");
+            }
+
+            // 생물이 물어서 준 피해를 액체가 준 것으로 세면 "체력 손실 0"이 거짓이 된다.
             E2EHarness.SleepWildCreatures();
 
             Vitals.Revive();
             yield return null;
         }
 
-        // ── ① 얕은 바다 — 걸어서 건넌다, 체력 손실 0 ────────────
+        // ── ① 여울 — 걸어서 건넌다, 체력 손실 0 ─────────────────
 
-        static IEnumerator 얕은_바다는_걸어서_건너도_무해하다()
+        static IEnumerator 여울은_걸어서_건너도_무해하다()
         {
-            E2EHarness.Log("— 얕은 바다를 장비 없이 걸어서 건넌다 —");
+            E2EHarness.Log("— 여울을 장비 없이 걸어서 건넌다 —");
 
             // 규칙이 먼저 답한다. 세계가 그 답과 같은지를 아래에서 본다.
-            E2EHarness.AssertEqual(IslandZones.Verdict(IslandZone.ShallowSea, 맨몸),
-                                   CrossingVerdict.Harmless, "규칙이 얕은 바다를 무해하다고 답한다");
+            E2EHarness.AssertEqual(SurfaceZones.Verdict(SurfaceZone.Shallows, 맨몸),
+                                   CrossingVerdict.Harmless, "규칙이 여울을 무해하다고 답한다");
 
             if (!얕은_구간을_찾는다(out Vector3 시작, out Vector3 끝, out float 최대수심))
             {
-                _사람의몫.Add("걸어서 건널 수 있는 얕은 바다 구간이 임시 지형에 없다 — " +
-                            "구 1·2섬 사이는 바닥이 없는 깊은 물이다");
-                E2EHarness.Assert(false, "얕은 바다 구간을 찾았다");
+                _사람의몫.Add("걸어서 건널 수 있는 여울이 임시 지형에 없다 — " +
+                            "뭍덩이 사이는 바닥이 없는 깊은 액면이다");
+                E2EHarness.Assert(false, "여울 구간을 찾았다");
                 yield break;
             }
 
@@ -152,27 +165,27 @@ namespace Survive.Testing
             float 바다가낸것 = MacroniumSeaService.TotalDamage - 전바다;
 
             E2EHarness.Log($"  {t:F1}초 걸었다 (물에 잠긴 시간 {잠긴시간:F1}초, " +
-                           $"헤엄친 시간 {헤엄친시간:F1}초) — 체력 -{잃은것:F1}, 그중 바다 {바다가낸것:F1}");
+                           $"헤엄친 시간 {헤엄친시간:F1}초) — 체력 -{잃은것:F1}, 그중 액체 {바다가낸것:F1}");
 
             E2EHarness.Assert(닿았다, $"걸어서 반대편에 닿았다 ({폭:F1}m)");
             E2EHarness.Assert(잠긴시간 > 1f, "실제로 물에 발을 담근 채 걸었다");
             E2EHarness.Assert(헤엄친시간 < 0.5f, $"헤엄치지 않고 걸었다 (헤엄 {헤엄친시간:F1}초)");
-            E2EHarness.Assert(바다가낸것 <= 0.001f, $"바다가 한 번도 물지 않았다 ({바다가낸것:F1})");
+            E2EHarness.Assert(바다가낸것 <= 0.001f, $"액체가 한 번도 물지 않았다 ({바다가낸것:F1})");
             E2EHarness.Assert(잃은것 <= 0.001f, $"체력 손실 0 (실제 {잃은것:F2})");
         }
 
-        // ── ② 강 — 헤엄치면 깎이지만 건넌다 ─────────────────────
+        // ── ② 수로 — 헤엄치면 깎이지만 건넌다 ───────────────────
 
-        static IEnumerator 강은_헤엄치면_깎이지만_건넌다()
+        static IEnumerator 수로는_헤엄치면_깎이지만_건넌다()
         {
-            E2EHarness.Log("— 강을 헤엄쳐 건넌다 —");
+            E2EHarness.Log("— 수로를 헤엄쳐 건넌다 —");
 
-            E2EHarness.AssertEqual(IslandZones.Verdict(IslandZone.River, 맨몸),
-                                   CrossingVerdict.Costly, "규칙이 강을 「깎이지만 건넌다」고 답한다");
+            E2EHarness.AssertEqual(SurfaceZones.Verdict(SurfaceZone.Inlet, 맨몸),
+                                   CrossingVerdict.Costly, "규칙이 수로를 「깎이지만 건넌다」고 답한다");
 
             if (!횡단_구간을_찾는다(out Vector3 출발, out Vector3 도착))
             {
-                _사람의몫.Add("A섬을 가로지르는 강이 임시 지형에 없다 — 구 1↔2섬 물목으로 대신했다");
+                _사람의몫.Add("뭍을 파고든 수로가 임시 지형에 없다 — 뭍덩이 사이의 물목으로 대신했다");
                 E2EHarness.Assert(false, "헤엄쳐 건널 물목을 찾았다");
                 yield break;
             }
@@ -217,14 +230,14 @@ namespace Survive.Testing
             float 바다가낸것 = MacroniumSeaService.TotalDamage - 전바다;
 
             // 규칙이 이 폭에 대해 예측한 값. 세계가 그 근처인지 본다.
-            float 예측 = LiquidCrossing.Toll(new LiquidBody(IslandZones.KindOf(IslandZone.River),
-                                                             IslandZones.RiverDepth, 폭));
+            float 예측 = LiquidCrossing.Toll(new LiquidBody(SurfaceZones.KindOf(SurfaceZone.Inlet),
+                                                             SurfaceZones.InletDepth, 폭));
 
-            E2EHarness.Log($"  {t:F1}초 (잠김 {잠김:F1}초) — 체력 -{잃은것:F1}, 그중 바다 {바다가낸것:F1} " +
+            E2EHarness.Log($"  {t:F1}초 (잠김 {잠김:F1}초) — 체력 -{잃은것:F1}, 그중 액체 {바다가낸것:F1} " +
                            $"/ 규칙의 예측 {예측:F1}");
 
             E2EHarness.Assert(닿았다, "헤엄쳐서 건너편 물가에 닿았다");
-            E2EHarness.Assert(!Vitals.Health.IsEmpty, "강은 죽이지 않는다 — 값을 매길 뿐이다");
+            E2EHarness.Assert(!Vitals.Health.IsEmpty, "수로는 죽이지 않는다 — 값을 매길 뿐이다");
             E2EHarness.Assert(바다가낸것 > 0f, "헤엄치는 동안 실제로 깎였다");
             E2EHarness.Assert(Mathf.Abs(잃은것 - 바다가낸것) < 0.01f,
                               $"잃은 체력은 전부 액체가 낸 것이다 (잃음 {잃은것:F1}, 액체 {바다가낸것:F1})");
@@ -235,27 +248,28 @@ namespace Survive.Testing
                               $"실측이 규칙의 예측과 같은 자리에 있다 (실측 {바다가낸것:F1}, 예측 {예측:F1})");
         }
 
-        // ── ③ 바다 — 헤엄치면 죽는다 ────────────────────────────
+        // ── ③ 먼바다 — 헤엄치면 죽는다 ──────────────────────────
 
-        static IEnumerator 바다는_헤엄치면_죽는다()
+        static IEnumerator 먼바다는_헤엄치면_죽는다()
         {
-            E2EHarness.Log("— 바다를 헤엄친다 —");
+            E2EHarness.Log("— 먼바다를 헤엄친다 —");
 
-            E2EHarness.AssertEqual(IslandZones.Verdict(IslandZone.Sea, 맨몸),
-                                   CrossingVerdict.Fatal, "규칙이 바다를 「못 건넌다」고 답한다");
+            E2EHarness.AssertEqual(SurfaceZones.Verdict(SurfaceZone.OpenWater, 맨몸),
+                                   CrossingVerdict.Fatal, "규칙이 먼바다를 「못 건넌다」고 답한다");
 
-            // 임시 지형에는 「바다」라는 이름의 구간이 없다. 있는 것은 바닥 없는 열린 물이고,
-            // 그것이 바로 규칙이 말하는 바다다 — 건너편이 헤엄쳐 닿을 거리에 없는 물.
+            // 임시 지형에는 「먼바다」라는 이름의 구간이 없다. 있는 것은 바닥 없는 열린
+            // 액면이고, 그것이 바로 규칙이 말하는 먼바다다 — 건너편이 헤엄쳐 닿을 거리에
+            // 없는 물.
             if (!바닥_없는_자리를_찾는다(out Vector3 한가운데))
             {
-                _사람의몫.Add("바닥 없는 열린 물을 찾지 못했다");
-                E2EHarness.Assert(false, "바다 한가운데를 찾았다");
+                _사람의몫.Add("바닥 없는 열린 액면을 찾지 못했다");
+                E2EHarness.Assert(false, "먼바다 한가운데를 찾았다");
                 yield break;
             }
 
-            float 규칙이준시간 = LiquidCrossing.CrossingSeconds(IslandZones.LiquidAt(IslandZone.Sea));
-            E2EHarness.Log($"  {한가운데.ToString("F1")} — 바다 폭 {IslandZones.SeaWidth:F1}m는 " +
-                           $"헤엄쳐 {규칙이준시간:F1}초 거리다 (하한 {IslandZones.SeaMinimumWidth:F1}m)");
+            float 규칙이준시간 = LiquidCrossing.CrossingSeconds(SurfaceZones.LiquidAt(SurfaceZone.OpenWater));
+            E2EHarness.Log($"  {한가운데.ToString("F1")} — 먼바다 폭 {SurfaceZones.OpenWaterWidth:F1}m는 " +
+                           $"헤엄쳐 {규칙이준시간:F1}초 거리다 (하한 {SurfaceZones.OpenWaterMinimumWidth:F1}m)");
 
             Vitals.Revive();
             E2EHarness.Teleport(한가운데);
@@ -278,7 +292,7 @@ namespace Survive.Testing
                            $"— 체력 {전체력:F1} → {Vitals.Health.Current:F1}");
 
             E2EHarness.Assert(죽었다,
-                $"바다에 잠긴 채 {한계:F0}초를 버티면 죽는다 (규칙: {규칙이준시간:F1}초 거리)");
+                $"먼바다에 잠긴 채 {한계:F0}초를 버티면 죽는다 (규칙: {규칙이준시간:F1}초 거리)");
             E2EHarness.Assert(t <= 규칙이준시간 + 0.5f,
                 $"죽기까지 걸린 시간이 규칙이 예측한 횡단 시간 안이다 (실측 {t:F1}초, 예측 {규칙이준시간:F1}초)");
 
@@ -289,33 +303,27 @@ namespace Survive.Testing
         // ── ④ 통로 — 걸어서 이어지는가 ──────────────────────────
 
         /// <summary>
-        /// A-1 → A-2 → A-3이 걸어서 이어지는가를 캡슐 스윕으로 실측한다.
+        /// 뭍에서 뭍으로 걸어서 이어지는가를 캡슐 스윕으로 실측한다.
         ///
-        /// <b>실패해도 시나리오를 죽이지 않는다.</b> 임시 지형에서는 이어지지 않는 것이
-        /// 정상이고(§16), 여기서 알고 싶은 것은 <b>어디서 끊기는가</b>다.
+        /// <b>「이어지는가」가 실패해도 시나리오를 죽이지 않는다.</b> 임시 지형에서는
+        /// 끊기는 것이 정상이고(스펙 §13), 여기서 알고 싶은 것은 <b>어디서 끊기는가</b>다.
+        /// <b>그러나 「뭍이 있는가」는 다르다</b> — 그것이 거짓이면 스윕이 잰 것이
+        /// 아무것도 없다는 뜻이므로 <see cref="E2ELandmass.Require"/>가 던진다.
         /// </summary>
         static IEnumerator 통로가_걸어서_이어지는가()
         {
             E2EHarness.Log("— 통로 캡슐 스윕 —");
 
-            var 구간 = new (string 이름, string 출발섬, string 도착섬)[]
+            var 구간 = new (string 이름, string 출발뭍, string 도착뭍)[]
             {
-                ("A-1 → A-2", "Island1_Landing", "Island2_Shoal"),
-                ("A-2 → A-3", "Island2_Shoal", "Island3_Far"),
+                ("착륙지 → 건너편 뭍", E2ELandmass.StartName,  E2ELandmass.AcrossName),
+                ("건너편 뭍 → 더 먼 뭍", E2ELandmass.AcrossName, E2ELandmass.BeyondName),
             };
 
-            foreach (var (이름, 출발섬, 도착섬) in 구간)
+            foreach (var (이름, 출발뭍, 도착뭍) in 구간)
             {
-                var a = GameObject.Find(출발섬);
-                var b = GameObject.Find(도착섬);
-                if (a == null || b == null)
-                {
-                    E2EHarness.Log($"  [건너뜀] {이름}: {출발섬} 또는 {도착섬}이 없다");
-                    continue;
-                }
-
-                Vector3 출발 = 뭍_위의_한_점(a);
-                Vector3 도착 = 뭍_위의_한_점(b);
+                Vector3 출발 = 뭍_위의_한_점(E2ELandmass.RequireBounds(출발뭍));
+                Vector3 도착 = 뭍_위의_한_점(E2ELandmass.RequireBounds(도착뭍));
 
                 List<Vector3> 길 = null;
                 yield return E2ETerrainPath.Find(출발, 도착, r => 길 = r,
@@ -393,15 +401,18 @@ namespace Survive.Testing
             return 최고 >= 최소폭;
         }
 
-        /// <summary>물가에서 물가로 헤엄쳐 건널 수 있는 한 쌍. 임시 지형의 두 섬 사이를 쓴다.</summary>
+        /// <summary>
+        /// 물가에서 물가로 헤엄쳐 건널 수 있는 한 쌍. 임시 지형의 두 뭍 사이를 쓴다.
+        ///
+        /// <b>뭍이 없으면 여기서 던진다</b> — 「못 찾았다」와 「없는 것을 찾았다」는
+        /// 다른 사건이고, 뒤엣것은 사람이 고쳐야 할 것이다.
+        /// </summary>
         static bool 횡단_구간을_찾는다(out Vector3 출발, out Vector3 도착)
         {
             출발 = 도착 = Vector3.zero;
 
-            var 섬1 = GameObject.Find("Island1_Landing");
-            var 섬2 = GameObject.Find("Island2_Shoal");
-            if (섬1 == null || 섬2 == null) return false;
-            if (!경계(섬1, out Bounds b1) || !경계(섬2, out Bounds b2)) return false;
+            Bounds b1 = E2ELandmass.RequireBounds(E2ELandmass.StartName);
+            Bounds b2 = E2ELandmass.RequireBounds(E2ELandmass.AcrossName);
 
             float 최소 = float.MaxValue;
             float minZ = Mathf.Max(b1.min.z, b2.min.z) - 20f;
@@ -440,7 +451,7 @@ namespace Survive.Testing
             return 찾았다;
         }
 
-        /// <summary>바닥이 없는 열린 물. 규칙이 말하는 「바다」가 임시 지형에서는 이것이다.</summary>
+        /// <summary>바닥이 없는 열린 액면. 규칙이 말하는 「먼바다」가 임시 지형에서는 이것이다.</summary>
         static bool 바닥_없는_자리를_찾는다(out Vector3 자리)
         {
             자리 = Vector3.zero;
@@ -476,23 +487,11 @@ namespace Survive.Testing
 
         // ── 잔손 ────────────────────────────────────────────────
 
-        static Vector3 뭍_위의_한_점(GameObject 섬)
+        static Vector3 뭍_위의_한_점(Bounds b)
         {
-            경계(섬, out Bounds b);
             float bed = E2EWaterProbe.BedAt(b.center.x, b.center.z, _surface);
             if (float.IsNaN(bed)) bed = _surface + 1f;
             return new Vector3(b.center.x, bed + 0.5f, b.center.z);
-        }
-
-        static bool 경계(GameObject go, out Bounds bounds)
-        {
-            bounds = default;
-            var rends = go.GetComponentsInChildren<Renderer>(true);
-            if (rends.Length == 0) return false;
-
-            bounds = rends[0].bounds;
-            for (int i = 1; i < rends.Length; i++) bounds.Encapsulate(rends[i].bounds);
-            return true;
         }
 
         static void 겨눈다(PlayerCameraRig rig, Transform body, Vector3 목표)

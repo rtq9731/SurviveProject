@@ -16,7 +16,7 @@ using Survive.Progression;
 /// 한 마디라도 끊기면 강 건너 작은 섬에 가도 아무 일이 없거나, AI가 말은 하는데
 /// 만들 수 있는 것이 늘지 않는다.
 ///
-/// <b>배치는 사람의 몫이다</b>(스펙 §16·§17). A섬 작은 섬이 아직 없으므로 트리거를
+/// <b>배치는 사람의 몫이다</b>(스펙 §13). 그 작은 뭍이 아직 없으므로 트리거를
 /// 씬에 심는 것은 여기서 하지 않는다. 여기서 하는 것은 심는 순간 조용히 아무 일도
 /// 안 일어나는 상태가 없게 못 박는 것까지다.
 /// </summary>
@@ -31,7 +31,7 @@ public class RadarDataTests
     const string 발견id = "disc_radar_islet";
 
     /// <summary>
-    /// A섬 강 건너 작은 섬. <b>이 문자열이 계약이다</b> — 사람이 씬에
+    /// 여울 건너 물가. <b>이 문자열이 계약이다</b> — 사람이 씬에
     /// <c>LocationDiscoveryTrigger</c>를 심을 때 여기에 이 값을 적어야 한다.
     /// </summary>
     const string 장소id = "a_islet";
@@ -277,11 +277,11 @@ public class RadarDataTests
     }
 
     [Test]
-    public void 레이더_재료가_A섬에서_구할_수_있는_것들이다()
+    public void 레이더_재료가_지상에서_구할_수_있는_것들이다()
     {
-        // §14 3단계에서 얻는 장비다. B섬 재료를 요구하면 순서가 뒤집혀
-        // 레이더 없이 B섬에 먼저 닿아야 한다.
-        var A섬재료 = new[] { "scrap", "machine_part", "fern_fiber", "mushroom_wood", "battery_cell" };
+        // 진행 순서상 먼저 얻는 장비다. 지하 재료를 요구하면 순서가 뒤집혀
+        // 레이더 없이 먼저 내려가야 한다.
+        var 지상재료 = new[] { "scrap", "machine_part", "fern_fiber", "mushroom_wood", "battery_cell" };
 
         var r = 제작법();
         Assert.IsNotEmpty(r.ingredients, "재료가 없으면 제작이 아니라 버튼이다");
@@ -290,8 +290,8 @@ public class RadarDataTests
         {
             Assert.IsNotNull(i?.item, "재료 칸이 비어 있다");
             Assert.Greater(i.count, 0, $"{i.item.id}의 수량이 0이다");
-            Assert.Contains(i.item.id, A섬재료,
-                $"{i.item.id}는 A섬에서 구할 수 없다 — 레이더보다 먼저 얻어야 하는 것이 생긴다");
+            Assert.Contains(i.item.id, 지상재료,
+                $"{i.item.id}는 지상에서 구할 수 없다 — 레이더보다 먼저 얻어야 하는 것이 생긴다");
         }
     }
 

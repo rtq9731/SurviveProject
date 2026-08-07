@@ -262,16 +262,18 @@ World,tool_generic,도구,Tool,
 World,loot_container_default,잔해,Wreckage,
 World,storage_default,보관함,Storage,
 #
-# ── 구역 이름 (Domain/World/IslandZones) ──────────────────────
-# A섬은 구역 다섯으로 갈린다. 갈라 놓은 것은 지면이 아니라 액체다 (기획서 2.1).
+# ── 구역 이름 (Domain/World/SurfaceZones) ─────────────────────
+# 지상은 한 덩어리이고 그것을 가르는 것은 지면이 아니라 액체다 (기획서 2.1).
+# 이름은 자리가 아니라 성격이다 - 지형이 서면 볼륨만 갖다 놓으면 된다.
 # 코드는 키만 들고 있고 글자는 여기에만 있다.
-Zone,a1,A-1,A-1,시작 지점
-Zone,river,강,River,A섬 내부를 가로지른다. 헤엄쳐 건너면 살이 깎인다
-Zone,a2,A-2,A-2,강 건너
-Zone,shallow_sea,얕은 바다,Shallow sea,발목 깊이. 걸어서 건넌다
-Zone,a3,A-3,A-3,레이더가 있는 자리
-Zone,sea,바다,Sea,A섬과 B섬 사이. 헤엄쳐서는 못 건넌다
-Zone,island_b,B섬,Island B,
+Zone,landing,착륙지,Landing,배가 선 자리. 첫 거점
+Zone,lake,호수,Lake,내려 고인 진짜 물. 마실 수 있다
+Zone,inlet,수로,Inlet,액면이 뭍을 파고들었다. 좁지만 깊다
+Zone,inland,내륙,Inland,액면에서 먼 안쪽
+Zone,shallows,여울,Shallows,발이 바닥에 닿는다. 걸어서 건넌다
+Zone,shore,물가,Shore,먼바다 앞 마지막 뭍
+Zone,open_water,먼바다,Open water,넓고 깊다. 헤엄쳐서는 못 건넌다
+Zone,farside,건너편,Far side,먼바다 너머
 #
 # ══════════════════════════════════════════════════════════════
 # 데이터 에셋에서 자동으로 붙는 이름표는 이 아래에 둔다
@@ -291,7 +293,7 @@ Blueprint,bp_fibercraft.hint,양치 섬유를 손에 넣으면 알게 된다,,
 Blueprint,bp_fibercraft.name,섬유 세공,,
 Blueprint,bp_macronium_suit.hint,무광버섯을 처음 쥐면 알게 된다,,
 Blueprint,bp_macronium_suit.name,차폐 설계,,
-Blueprint,bp_radar.hint,강 건너 A-3에서 본 것,,
+Blueprint,bp_radar.hint,여울 건너 물가에서 본 것,,
 Blueprint,bp_radar.name,전파 관측,,
 Blueprint,bp_salvaged_mechanism.hint,기계 부품을 손에 넣으면 알게 된다,,
 Blueprint,bp_salvaged_mechanism.name,부품 재조립,,

@@ -15,8 +15,8 @@ namespace Survive.Testing
     /// 그 규칙이 <b>실제 지형 위에서 실제 조작으로 무엇을 만드는가</b>다:
     ///
     /// <list type="number">
-    /// <item>2번 섬 해안에서 발을 담그고 선 채로는 아무 일도 없다 — 채집이 잡무가 되면 안 된다</item>
-    /// <item>1번 섬에서 2번 섬까지 실제로 헤엄쳐 건너면 체력이 실제로 준다</item>
+    /// <item>건너편 물가에서 발을 담그고 선 채로는 아무 일도 없다 — 채집이 잡무가 되면 안 된다</item>
+    /// <item>이쪽 물가에서 건너편 물가까지 실제로 헤엄쳐 건너면 체력이 실제로 준다</item>
     /// <item>Shift로 건너면 유의미하게 덜 든다 — 가속이 생존기다</item>
     /// <item>잠긴 채 버티면 죽고, 가방을 남기고, 다시 일어선다</item>
     /// </list>
@@ -89,7 +89,7 @@ namespace Survive.Testing
         /// <summary>
         /// 바닥을 딛고 설 만큼 얕은 물에 들어가 가만히 있는다.
         ///
-        /// 여기서 체력이 한 점이라도 줄면 2번 섬 해안 채집이 곧바로 잡무가 된다 —
+        /// 여기서 체력이 한 점이라도 줄면 물가 채집이 곧바로 잡무가 된다 —
         /// 양치 섬유 하나 뜯을 때마다 체력을 내야 하는 세계는 사용자가 정한 것이 아니다.
         /// </summary>
         static IEnumerator 해안에_발을_담근_채로는_아무_일도_없다()
@@ -171,21 +171,24 @@ namespace Survive.Testing
         // ── 2. 건너면 값을 치른다 ───────────────────────────────
 
         /// <summary>
-        /// 1번 섬 물가에서 2번 섬 물가까지 실제로 키를 눌러 건넌다.
+        /// 이쪽 물가에서 건너편 물가까지 실제로 키를 눌러 건넌다.
         ///
         /// 순간이동으로 물 한가운데 넣고 시간을 재면 "값이 매겨지는가"는 보이지만
         /// <b>그 값이 실제 지형에서 얼마인가</b>는 보이지 않는다. 후자가 이 기능의 전부다 —
-        /// 너무 싸면 바다가 아무것도 아니고, 너무 비싸면 2번 섬이 갈 수 없는 곳이 된다.
+        /// 너무 싸면 액면이 아무것도 아니고, 너무 비싸면 건너편이 갈 수 없는 곳이 된다.
+        ///
+        /// <b>못 찾으면 건너뛰지 않는다(2026-08-07).</b> 여기는 오래 「건너뜀」을 찍고
+        /// 초록불로 지나갔는데, 그 로그를 읽는 사람이 없으면 이 대목은 <b>있으면서 없는
+        /// 검사</b>다. 뭍이 없으면 <see cref="E2ELandmass"/>가 던지고, 뭍은 있는데 물목이
+        /// 없으면 여기서 단언이 깨진다 — 둘 다 사람이 봐야 하는 사건이다.
         /// </summary>
         static IEnumerator 헤엄쳐_건너면_값을_치른다()
         {
-            E2EHarness.Log("— 1번 섬에서 2번 섬으로 건넌다 —");
+            E2EHarness.Log("— 이쪽 물가에서 건너편 물가로 건넌다 —");
 
-            if (!횡단_구간을_찾는다(out Vector3 출발, out Vector3 도착))
-            {
-                E2EHarness.Log("  [건너뜀] 두 섬 사이 횡단 구간을 찾지 못했다");
-                yield break;
-            }
+            bool 찾았다 = 횡단_구간을_찾는다(out Vector3 출발, out Vector3 도착);
+            E2EHarness.Assert(찾았다,
+                $"두 뭍({E2ELandmass.StartName}·{E2ELandmass.AcrossName}) 사이 횡단 구간을 찾았다");
 
             float 폭 = 평면거리(출발, 도착);
             E2EHarness.Log($"  {출발.ToString("F1")} → {도착.ToString("F1")} ({폭:F1}m)");
@@ -205,7 +208,7 @@ namespace Survive.Testing
             E2EHarness.Assert(보통 / 최대 >= 0.2f,
                               $"횡단이 너무 싸다 ({보통 / 최대:P0}) — 바다가 아무것도 아니게 된다");
             E2EHarness.Assert(보통 / 최대 <= 0.4f,
-                              $"횡단이 너무 비싸다 ({보통 / 최대:P0}) — 2번 섬이 갈 수 없는 곳이 된다");
+                              $"횡단이 너무 비싸다 ({보통 / 최대:P0}) — 건너편이 갈 수 없는 곳이 된다");
 
             // 가속이 생존기여야 한다. 몇 퍼센트 아끼는 정도면 아무도 누르지 않는다.
             E2EHarness.Assert(가속 < 보통 * 0.85f,
@@ -290,23 +293,23 @@ namespace Survive.Testing
         }
 
         /// <summary>
-        /// 두 섬 사이에서 가장 가까운 물가 한 쌍.
+        /// 두 뭍 사이에서 가장 가까운 물가 한 쌍.
         ///
-        /// 좌표를 적어 두지 않는 이유: 지형은 §8-4에서 다시 다듬어진다. 그때 이 시나리오가
-        /// 조용히 물속 벽을 향해 헤엄치게 두느니, 매번 지형에 물어 찾는 편이 낫다.
+        /// 좌표를 적어 두지 않는 이유: 지형은 통째로 다시 만들어진다(스펙 §13). 그때 이
+        /// 시나리오가 조용히 물속 벽을 향해 헤엄치게 두느니, 매번 지형에 물어 찾는 편이 낫다.
+        ///
+        /// <b>뭍 자체가 없으면 여기서 던진다.</b> 이름이 하나 바뀐 것을 「물목이 없다」로
+        /// 읽으면 시나리오가 눈이 먼 채로 초록불이 된다 — <see cref="E2ELandmass"/> 참고.
         /// </summary>
         static bool 횡단_구간을_찾는다(out Vector3 출발, out Vector3 도착)
         {
             출발 = Vector3.zero;
             도착 = Vector3.zero;
 
-            var 섬1 = GameObject.Find("Island1_Landing");
-            var 섬2 = GameObject.Find("Island2_Shoal");
-            if (섬1 == null || 섬2 == null) return false;
+            Bounds b1 = E2ELandmass.RequireBounds(E2ELandmass.StartName);
+            Bounds b2 = E2ELandmass.RequireBounds(E2ELandmass.AcrossName);
 
-            if (!경계(섬1, out Bounds b1) || !경계(섬2, out Bounds b2)) return false;
-
-            // 두 섬 사이의 중간선. 이 선을 기준으로 물가를 양쪽으로 가른다.
+            // 두 뭍 사이의 중간선. 이 선을 기준으로 물가를 양쪽으로 가른다.
             float 가름 = (b1.max.x + b2.min.x) * 0.5f;
 
             var 왼쪽 = new System.Collections.Generic.List<Vector3>();
@@ -339,17 +342,6 @@ namespace Survive.Testing
                 도착 = b;
             }
             return best < float.MaxValue;
-        }
-
-        static bool 경계(GameObject go, out Bounds bounds)
-        {
-            bounds = default;
-            var rs = go.GetComponentsInChildren<Renderer>();
-            if (rs.Length == 0) return false;
-
-            bounds = rs[0].bounds;
-            foreach (var r in rs) bounds.Encapsulate(r.bounds);
-            return true;
         }
 
         // ── 3. 버티면 죽는다 ────────────────────────────────────
