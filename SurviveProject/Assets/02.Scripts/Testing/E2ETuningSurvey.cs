@@ -201,7 +201,7 @@ namespace Survive.Testing
             if (전체 <= 0f || 돈곳.Count == 0) { E2EHarness.Log("  잴 것이 없었다"); yield break; }
 
             float 분당산출 = 스크랩 / 전체 * 60f;
-            float 분당비용 = LanternRule.Tier1DrainPerSecond * 60f / LanternRule.BatteryPerCell * 5f;
+            float 분당비용 = HarvestRespawnRule.ScrapBurnedPerMinute(1);
             E2EHarness.Log($"  {돈곳.Count}곳 · 총 {전체:F1}초 (걷기 {전체 - 캐는데:F1} + 캐기 {캐는데:F1}) · " +
                            $"스크랩 {스크랩:F1}개");
             E2EHarness.Log($"  <b>분당 산출 {분당산출:F1} − 랜턴 비용 {분당비용:F1} = " +
@@ -211,8 +211,8 @@ namespace Survive.Testing
                    $"{돈곳.Count}곳 {전체:F1}초 · 산출 {분당산출:F1} − 랜턴 {분당비용:F1} = " +
                    $"<b>순증가 {분당산출 - 분당비용:F1}/분</b>");
             적는다("랜턴이 태우는 스크랩",
-                   $"{LanternRule.Tier1DrainPerSecond:F2} 배터리/s ÷ {LanternRule.BatteryPerCell:F0} × 스크랩 5개 " +
-                   $"= {분당비용 / 60f:F3}/s = {분당비용:F1}/분");
+                   $"{LanternRule.Tier1DrainPerSecond:F2} 배터리/s ÷ {LanternRule.BatteryPerCell:F0} × 스크랩 " +
+                   $"{HarvestRespawnRule.ScrapPerBatteryCell}개 = {분당비용 / 60f:F3}/s = {분당비용:F1}/분");
         }
 
         /// <summary>스크랩이 나오는 노드 중 여기서 가장 가깝고 아직 안 들른 곳.</summary>
@@ -366,7 +366,9 @@ namespace Survive.Testing
             적는다("사각 (빛 밖 ∩ 낫 사거리)",
                    $"넓이 {잰넓이:F2}m² · 각도 {규칙각도:F1}도 · 여유 {여유:F2}m");
             적는다("IsBlindSide가 참인 넓이 (같은 원 안)",
-                   $"{읽힌넓이:F2}m² / {전체칸 * 눈금 * 눈금:F2}m² — 규칙은 반경이 아니라 <b>반평면</b>이다");
+                   $"{읽힌넓이:F2}m² / {전체칸 * 눈금 * 눈금:F2}m²");
+
+            yield return 사각이_등_뒤로_얼마나_뻗는가(자리, 앞, 옆, r, o, 사거리);
 
             // 오프셋을 얼마나 밀면 사각이 열리는가.
             float 필요오프셋 = LanternRule.OffsetThatOpensDark(r, 사거리);
@@ -377,6 +379,49 @@ namespace Survive.Testing
                    $"오프셋 > {필요오프셋:F2}m 또는 낫 사거리 > {필요사거리:F2}m");
 
             E2EHarness.RestoreAmbientLitZones();
+            yield return null;
+        }
+
+        /// <summary>
+        /// <b>사각이 등 뒤로 어디까지 뻗는가.</b> 낫 사거리 안만 훑으면 이 물음에
+        /// 답할 수 없다 — 사거리(2.2m)가 재려는 것보다 짧아서, 그 안에서는 반평면이든
+        /// 원이든 똑같이 "뒤는 전부 참"으로 보인다.
+        ///
+        /// 그래서 여기서는 <b>훨씬 멀리까지</b> 뒤로 걸어 나가며 IsBlindSide가
+        /// 언제 거짓이 되는지를 찾는다. 지금 이 값은 <b>무한</b>이어야 한다
+        /// (반평면이므로 뒤로는 끝이 없다). 다음 라운드가 사각을 원형 범위로
+        /// 고치면 여기가 유한한 숫자로 바뀌고, <b>그 차이가 그 변경의 크기다</b>.
+        /// 재는 자를 미리 놓아 두는 것이 이 함수가 하는 일의 전부다.
+        /// </summary>
+        static IEnumerator 사각이_등_뒤로_얼마나_뻗는가(Vector3 자리, Vector3 앞, Vector3 옆,
+                                                     float r, float o, float 사거리)
+        {
+            const float 눈금 = 0.1f;
+            const float 끝까지 = 40f;
+
+            float 뒤끝 = -1f;
+            for (float d = 눈금; d <= 끝까지; d += 눈금)
+            {
+                if (!LitZoneRegistry.IsBlindSide(자리 - 앞 * d)) { 뒤끝 = d; break; }
+            }
+
+            // 옆으로도 같은 것을 잰다. 반평면이면 사람 바로 옆(정확히 90도)에서
+            // 끊기고, 원이면 그 원의 반지름에서 끊긴다.
+            float 옆끝 = -1f;
+            for (float d = 눈금; d <= 끝까지; d += 눈금)
+            {
+                if (!LitZoneRegistry.IsBlindSide(자리 - 앞 * 0.1f + 옆 * d)) { 옆끝 = d; break; }
+            }
+
+            string 뒤말 = 뒤끝 < 0f ? $"{끝까지:F0}m까지 계속 참 (끝이 없다 = 반평면)" : $"{뒤끝:F1}m에서 끊긴다";
+            string 옆말 = 옆끝 < 0f ? $"{끝까지:F0}m까지 계속 참" : $"{옆끝:F1}m에서 끊긴다";
+
+            E2EHarness.Log($"  IsBlindSide의 등 뒤 도달: {뒤말} · 옆으로: {옆말}");
+            E2EHarness.Log($"    (견줄 값 — 반경 {r:F1}m · 오프셋 {o:F1}m · 낫 사거리 {사거리:F2}m)");
+
+            적는다("IsBlindSide가 등 뒤로 뻗는 거리", 뒤말);
+            적는다("IsBlindSide가 옆으로 뻗는 거리", 옆말);
+
             yield return null;
         }
 
@@ -416,10 +461,23 @@ namespace Survive.Testing
             }
             foreach (var n in 노드들) 최원 = Mathf.Max(최원, 평면거리(_거점, n.transform.position));
 
-            E2EHarness.Log($"  <b>세계 전체의 스크랩 {총스크랩:F1}개</b>, 가장 먼 것이 {최원:F1}m — " +
-                           $"랜턴 하나(62.5초)가 태우는 스크랩은 5개다");
-            적는다("스크랩의 지리", $"전부 {총스크랩:F1}개 · 가장 먼 노드 {최원:F1}m · " +
-                                    "재생 0초(한 번 캐면 끝) — 깊이 축이 없다");
+            E2EHarness.Log($"  <b>세계에 서 있는 스크랩 {총스크랩:F1}개</b>, 가장 먼 것이 {최원:F1}m");
+
+            // 재고와 <b>소득</b>은 다른 것이다. 재고는 한 번 캐면 끝이고, 압박 곡선을
+            // 정하는 것은 재생이 내놓는 분당 산출이다.
+            float 공급 = 0f;
+            foreach (var grp in 노드들.GroupBy(n => n.Definition))
+                공급 += HarvestRespawnRule.SupplyPerMinute(
+                    기댓값(grp.Key.drops, "scrap"), grp.Count(), grp.Key.respawnSeconds);
+            float 소모 = HarvestRespawnRule.ScrapBurnedPerMinute(1);
+
+            E2EHarness.Log($"  <b>정상 상태 공급 {공급:F2}/분 − 랜턴 {소모:F2}/분 = " +
+                           $"{공급 - 소모:F2}/분</b> (공급이 소모의 {공급 / 소모:F2}배)");
+            적는다("스크랩의 지리", $"서 있는 재고 {총스크랩:F1}개 · 가장 먼 노드 {최원:F1}m — " +
+                                    "재생을 켜도 <b>거리에 비례해 커지지는 않는다</b>(배치의 몫, §16)");
+            적는다("스크랩 정상 상태 공급",
+                   $"분당 {공급:F2}개 − 랜턴 {소모:F2} = 순증가 {공급 - 소모:F2}/분 " +
+                   $"(소모의 {공급 / 소모:F2}배)");
 
             yield return null;
         }
