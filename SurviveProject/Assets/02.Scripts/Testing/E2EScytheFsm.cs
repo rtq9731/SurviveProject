@@ -189,6 +189,8 @@ namespace Survive.Testing
             var 본상태 = new HashSet<ScytheState>();
             while (t < 5f)
             {
+                if (!E2EHarness.Lantern.IsOn) E2EHarness.LightLantern();
+
                 if (Vector3.Distance(_낫.transform.position, 사람자리) > _def.detectRadius * 0.9f)
                     yield return 낫을_사람_옆에_세운다(거리);
 
@@ -288,6 +290,10 @@ namespace Survive.Testing
             // 아니라 사각이 아니므로 빛이 앞을 막고, 낫은 따라붙기에 머문다.
             // 재등장이 실제로 도는 자리가 여기다.
             float 거리 = 10f;
+
+            // 고리가 육지에 걸리면 고를 자리가 0이 된다. 트인 자리로 무대를 옮긴다.
+            if (트인_무대를_고른다(거리, out var 트인자리)) _사람시작 = 트인자리;
+
             yield return 낫을_사람_옆에_세운다(거리);
             E2EHarness.LightLantern();
             yield return null;
@@ -317,6 +323,15 @@ namespace Survive.Testing
             float t = 0f;
             while (t < 한계 && 돈각들.Count < 3)
             {
+                // <b>불을 꺼뜨리지 않는다 — 이 절의 전제다.</b> 티어 1 배터리는 100을
+                // 초당 1.6씩 태우므로 62.5초면 바닥난다. 그런데 이 절은 재등장 셋을
+                // 보려고 최대 92초를 지켜본다 — 그 사이에 불이 꺼지면 낫을 막던 것이
+                // 사라져 곧바로 교전으로 올라가고, 그러면 무대를 다시 세워도 다시
+                // 교전이라 「다시 따라붙는다」가 영영 오지 않는다(실측: 이 자리에서
+                // 다섯 라운드를 넘겼다). 재려는 것은 <b>랜턴이 켜져 있는 동안의
+                // 재등장</b>이므로, 꺼지면 다시 켠다.
+                if (!E2EHarness.Lantern.IsOn) E2EHarness.LightLantern();
+
                 // <b>사람은 한 방향을 보고 서 있는다.</b> 낫을 눈으로 좇게 하면
                 // 웅덩이가 그쪽으로 밀려 낫을 삼키고(정면 도달 14.5m), 그러면 낫이
                 // 제 빛에 잠겨 물러나다 감지 밖으로 나간다. 사람이 한쪽을 보는 동안
@@ -400,6 +415,58 @@ namespace Survive.Testing
         /// 정확히 옆은 등 뒤가 아니라 사각도 아니므로, 빛이 앞을 막아 낫이 따라붙기에
         /// 머문다 — 재등장이 도는 유일한 상태다.
         /// </summary>
+        /// <summary>
+        /// <b>재등장이 돌 수 있는 무대를 고른다.</b> 사람 둘레 <paramref name="거리"/>m 고리
+        /// 위에 <b>낫이 설 수 있는 자리가 몇 곳이나 되는지</b>를 세어 가장 트인 곳을 고른다.
+        ///
+        /// <b>왜 이것이 필요한가.</b> 재등장 후보는 사람을 중심으로 한 고리 위에서 뽑히는데,
+        /// 그 고리가 육지에 걸리면 후보가 전부 서식지 밖으로 걸러져 <b>고를 자리가 0</b>이
+        /// 된다. 그때 낫은 규칙대로 <b>머무는데</b>, 이 절은 「자리를 바꾸는가」를 재려는
+        /// 것이므로 잴 것이 없어진다 — 실측으로 92초를 지켜보고 0회였다.
+        /// 무대가 트여 있는 것은 이 절의 <b>전제</b>이지 주어가 아니다.
+        /// </summary>
+        static bool 트인_무대를_고른다(float 거리, out Vector3 사람자리후보)
+        {
+            사람자리후보 = _사람시작;
+
+            var 몸 = _낫 != null ? _낫.GetComponent<HoverDrifter>() : null;
+            if (몸 == null) return false;
+
+            int 가장많이 = -1;
+            var 뒤져볼자리 = new List<Vector3> { _사람시작 };
+
+            // 바다를 중심으로 사방을 훑는다. 사람이 설 자리는 낫의 서식지가 아니어도
+            // 되지만, 그 둘레 고리는 낫이 설 수 있어야 한다.
+            for (int i = 0; i < 12; i++)
+            {
+                float rad = i * 30f * Mathf.Deg2Rad;
+                for (float r = 6f; r <= 18f; r += 6f)
+                    뒤져볼자리.Add(_바다 + new Vector3(Mathf.Sin(rad) * r, 0.6f, Mathf.Cos(rad) * r));
+            }
+
+            foreach (var 자리 in 뒤져볼자리)
+            {
+                int 셀수있는곳 = 0;
+                for (int i = 0; i < 24; i++)
+                {
+                    float rad = i * 15f * Mathf.Deg2Rad;
+                    var p = new Vector3(자리.x + Mathf.Sin(rad) * 거리,
+                                        _바다.y,
+                                        자리.z + Mathf.Cos(rad) * 거리);
+                    if (몸.CanOccupy(p)) 셀수있는곳++;
+                }
+
+                if (셀수있는곳 <= 가장많이) continue;
+                가장많이 = 셀수있는곳;
+                사람자리후보 = 자리;
+            }
+
+            E2EHarness.Log($"  무대: 사람 {사람자리후보.ToString("F1")} · " +
+                           $"둘레 {거리:F0}m 고리에서 낫이 설 수 있는 자리 {가장많이}/24");
+
+            return 가장많이 >= 6;
+        }
+
         static IEnumerator 낫을_사람_옆에_세운다(float 거리)
         {
             // <b>사람을 시나리오를 연 자리로 되돌린다.</b> 앞 절들이 사람을 화톳불
