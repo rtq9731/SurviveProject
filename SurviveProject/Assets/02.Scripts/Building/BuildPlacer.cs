@@ -44,6 +44,13 @@ namespace Survive.Building
 
         public BuildableSO Selected => _selected;
 
+        /// <summary>
+        /// 청사진 목록. <b>생성 목록이 「무엇으로 다시 세우는가」를 여기서 찾는다</b>
+        /// (<c>Survive.World.SpawnLedgerStage</c>) — 저장본에 실린 것은 아이디라는
+        /// 글자뿐이고, 그 글자를 프리팹으로 바꿔 주는 표가 이것 하나다.
+        /// </summary>
+        public BuildCatalogSO Catalog => catalog;
+
         /// <summary>지금 놓을 수 있는지. UI가 사유를 띄운다.</summary>
         public PlacementResult LastResult { get; private set; } = PlacementResult.NoSurface;
 

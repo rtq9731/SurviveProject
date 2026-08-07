@@ -34,25 +34,65 @@ namespace Survive.Interaction
                                       GameObject prefab = null, float spread = 0.9f,
                                       int occasion = 0)
         {
+            var go = Build(item, count, origin, prefab, out var pickup);
+            if (go == null) return null;
+
+            var 착지 = Scatter(go.transform, origin, spread, occasion);
+            pickup.Adopt(착지);
+            return go;
+        }
+
+        /// <summary>
+        /// <b>튀어 오르지 않고 그 자리에 바로 놓는다.</b> 저장본이 적어 둔 낙하물을
+        /// 되살릴 때 쓴다 (<c>Survive.World.SpawnLedgerStage</c>).
+        ///
+        /// <b>왜 <see cref="Drop"/>을 다시 부르지 않는가.</b> 저쪽은 착지 지점을
+        /// 세계 시드에서 <b>다시 뽑는다</b>. 그런데 실제 착지 지점은 시드만으로
+        /// 정해지지 않는다 — 뽑은 자리에서 아래로 광선을 쏘아 <b>그때 거기 있던
+        /// 몸이 아닌 것</b> 위에 얹기 때문이다. 그때 거기 있던 것과 불러오는
+        /// 순간 거기 있는 것이 같다는 보장이 없으므로, 다시 뽑으면 물건이
+        /// 저장할 때와 다른 자리에 놓인다. 그래서 목록은 <b>내려앉은 자리를
+        /// 그대로 적고</b>, 이 문은 그 자리에 그대로 놓기만 한다.
+        /// </summary>
+        public static GameObject Place(ItemDataSO item, int count, Vector3 restAt,
+                                       GameObject prefab = null)
+        {
+            var go = Build(item, count, restAt, prefab, out var pickup);
+            if (go == null) return null;
+
+            go.transform.position = restAt;
+            pickup.Adopt(restAt);
+            Idle(go.transform, restAt);
+            return go;
+        }
+
+        /// <summary>
+        /// 겉모습을 세우고 줍기 대상으로 만든다. 떨구는 길과 되살리는 길이
+        /// 여기까지는 같다 — 갈리는 것은 <b>어떻게 그 자리에 가는가</b>뿐이다.
+        /// </summary>
+        static GameObject Build(ItemDataSO item, int count, Vector3 at, GameObject prefab,
+                                out ItemPickup pickup)
+        {
+            pickup = null;
             if (item == null || count <= 0) return null;
 
             GameObject go;
             switch (DropVisualRule.Choose(item, prefab != null))
             {
                 case DropVisualKind.WorldPrefab:
-                    go = Object.Instantiate(item.worldPrefab, origin, Random.rotation);
+                    go = Object.Instantiate(item.worldPrefab, at, Random.rotation);
                     break;
 
                 case DropVisualKind.SpawnerPrefab:
-                    go = Object.Instantiate(prefab, origin, Random.rotation);
+                    go = Object.Instantiate(prefab, at, Random.rotation);
                     break;
 
                 case DropVisualKind.IconBillboard:
-                    go = BuildIconBillboard(item, origin);
+                    go = BuildIconBillboard(item, at);
                     break;
 
                 default:
-                    go = BuildFallbackBlock(origin);
+                    go = BuildFallbackBlock(at);
                     break;
             }
 
@@ -63,11 +103,9 @@ namespace Survive.Interaction
             if (col != null) col.isTrigger = true;
             else go.AddComponent<SphereCollider>().isTrigger = true;
 
-            var pickup = go.GetComponent<ItemPickup>();
+            pickup = go.GetComponent<ItemPickup>();
             if (pickup == null) pickup = go.AddComponent<ItemPickup>();
             pickup.Setup(item, count);
-
-            Scatter(go.transform, origin, spread, occasion);
             return go;
         }
 
@@ -257,7 +295,8 @@ namespace Survive.Interaction
         /// 반면 구르는 각도(<see cref="Random"/>의 회전들)는 눈에만 보이는
         /// 것이라 그대로 둔다 — 파티클과 소리가 매번 같으면 그것이 더 나쁘다.
         /// </summary>
-        static void Scatter(Transform t, Vector3 origin, float spread, int occasion)
+        /// <returns>내려앉은 자리. 생성 목록이 적는 값이다.</returns>
+        static Vector3 Scatter(Transform t, Vector3 origin, float spread, int occasion)
         {
             var rng = Survive.World.WorldSeed.Rng(
                 Survive.World.WorldSeedBranch.DropScatter, origin, occasion);
@@ -278,6 +317,8 @@ namespace Survive.Interaction
              .OnComplete(() => Idle(t, target));
             t.DORotate(new Vector3(0f, Random.Range(180f, 540f), 0f), 0.5f, RotateMode.LocalAxisAdd)
              .SetLink(t.gameObject);
+
+            return target;
         }
 
         /// <summary>땅에서 이만큼 띄워 놓는다. 반쯤 박혀 있으면 무엇인지 안 읽힌다.</summary>

@@ -297,6 +297,28 @@ namespace Survive.Building
             return true;
         }
 
+        // ── 저장본에서 되살아날 때 ───────────────────────────────
+
+        /// <summary>
+        /// 저장본이 적어 둔 불의 상태를 앉힌다. 생성 목록이 몸을 다시 세운
+        /// 직후에 부른다 (<c>Survive.World.SpawnLedgerStage</c>).
+        ///
+        /// <b><see cref="KindledAt"/>을 함께 받는 이유.</b> 이 값은 여러 불 중
+        /// 「마지막 것」을 고르는 비교에 쓰이고(<c>RespawnRule</c>), 안 받으면
+        /// <see cref="ApplyLight"/>가 방금을 적는다 — 그러면 불러온 세계의
+        /// 모든 불이 <b>같은 순간에 지펴진 것</b>이 되어 부활 지점이 아무 데나
+        /// 잡힌다. 사람이 마지막으로 머문 자리가 저장을 못 건너는 것이다.
+        ///
+        /// <see cref="ApplyLight"/>가 그 값을 지금으로 덮으므로 <b>뒤에서</b>
+        /// 되돌린다. 순서를 뒤집으면 아무 일도 일어나지 않는다.
+        /// </summary>
+        public void Adopt(float fuelSeconds, float kindledAt)
+        {
+            _fuel = Mathf.Clamp(fuelSeconds, 0f, MaxFuel);
+            ApplyLight();
+            KindledAt = kindledAt;
+        }
+
         // ── 상호작용 ─────────────────────────────────────────────
 
         /// <summary>

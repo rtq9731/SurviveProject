@@ -166,4 +166,120 @@ public static class AssetTextScan
 
     static string 상대경로(string 절대) =>
         절대.Substring(Directory.GetCurrentDirectory().Length + 1).Replace('\\', '/');
+
+    // ══ 이름을 훑는다 ═══════════════════════════════════════════
+    //
+    // <b>여기가 위의 훑개가 원리적으로 못 보던 자리다.</b> 위쪽은 <b>글</b>을 찾는다 —
+    // 폐기된 개념은 한글로 적히므로 한글 금지어로 잡힌다. 그런데 씬과 프리팹의
+    // 오브젝트 이름은 <b>라틴 글자</b>라 한글 금지어에 걸릴 수가 없다.
+    //
+    // <b>실제로 사고가 있었다.</b> 폐기된 기상의 파티클 넷이 빌드 인덱스 0인 씬
+    // 안에서 초당 8씩 산소를 깎으며 돌고 있었는데, 이름이 라틴 글자여서 게이트는
+    // 초록이었다. 사람이 씬 하나를 손으로 훑어 막았고, 그때 이렇게 적어 두었다 —
+    // "같은 종류의 구멍이 다른 씬·프리팹에 더 있을 수 있다."
+    //
+    // 그 구멍을 이제 기계가 센다.
+
+    /// <summary>
+    /// <b>이름</b>을 훑는 자리. 글을 훑는 <see cref="검사범위"/>와 겹치되 같지 않다.
+    ///
+    /// <b>C#과 번역표는 없다.</b> 거기 있는 것은 이름이 아니라 식별자와 문장이고,
+    /// 식별자까지 잡으면 살아 있는 <c>alien_alloy</c>·<c>kind_island</c>가 통째로
+    /// 빨개진다 — 그 빨강은 아무것도 알려 주지 않는다.
+    ///
+    /// <b>머티리얼은 있다.</b> 이름을 짓는 자리이고, 폐기된 무대의 이름이
+    /// 실제로 거기 남아 있다. 사 온 아트 팩(<c>Assets/Other Assets</c>,
+    /// <c>Assets/polyperfect</c>)은 <see cref="검사범위"/>와 같은 이유로 밖이다.
+    /// </summary>
+    public static readonly (string 폴더, string 무늬)[] 이름_검사범위 =
+    {
+        ("Assets/01.Scenes",    "*.unity"),
+        ("Assets/05.Prefabs",   "*.prefab"),
+        ("Assets/05.Prefabs",   "*.mat"),
+        ("Assets/08.Data",      "*.asset"),
+        ("Assets/03.Materials", "*.mat"),
+    };
+
+    /// <summary>
+    /// 저장소가 들고 있는 <b>모든 오브젝트 이름</b>. <c>경로:줄</c>과 이름이 짝이다.
+    ///
+    /// <b>프리팹 인스턴스가 덮어쓴 이름도 함께 본다.</b> 씬은 프리팹을 갖다 놓고
+    /// 이름만 바꿀 수 있는데(<c>propertyPath: m_Name</c>), 그 자리를 안 보면
+    /// 프리팹 이름만 고쳐 놓고 씬에서 되살려 둔 것을 놓친다.
+    /// </summary>
+    public static List<(string 자리, string 이름)> 이름들()
+    {
+        var 모은것 = new List<(string, string)>();
+
+        foreach (var (폴더, 무늬) in 이름_검사범위)
+        {
+            string 절대경로 = Path.Combine(Directory.GetCurrentDirectory(), 폴더);
+            if (!Directory.Exists(절대경로))
+            {
+                Assert.Fail($"이름 검사 범위에 적힌 폴더가 없다: {폴더}");
+                continue;
+            }
+
+            foreach (var 파일 in Directory.GetFiles(절대경로, 무늬, SearchOption.AllDirectories))
+            {
+                var 줄들 = File.ReadAllLines(파일);
+                for (int i = 0; i < 줄들.Length; i++)
+                {
+                    string 이름 = 이름을_뽑는다(줄들, i);
+                    if (string.IsNullOrEmpty(이름)) continue;
+                    모은것.Add(($"{상대경로(파일)}:{i + 1}", 이름));
+                }
+            }
+        }
+
+        return 모은것;
+    }
+
+    /// <summary>
+    /// <paramref name="금지어"/>가 든 <b>이름</b>이 있는 자리들.
+    /// 한 줄이 여러 말에 걸려도 한 번만 센다 — 세는 것은 말이 아니라 <b>고칠 이름</b>이다.
+    /// </summary>
+    public static List<string> 이름을_찾는다(IEnumerable<string> 금지어)
+    {
+        var 말들 = 금지어.ToArray();
+        var 걸린것 = new List<string>();
+
+        foreach (var (자리, 이름) in 이름들())
+        {
+            foreach (var 말 in 말들)
+            {
+                if (!걸리는가(이름, 말)) continue;
+                걸린것.Add($"{자리}  {이름}");
+                break;
+            }
+        }
+
+        return 걸린것;
+    }
+
+    static readonly Regex 이름줄 = new Regex(@"^\s*m_Name:\s*(.*?)\s*$");
+    static readonly Regex 덮어쓴이름 = new Regex(@"^\s*propertyPath:\s*m_Name\s*$");
+    static readonly Regex 값줄 = new Regex(@"^\s*value:\s*(.*?)\s*$");
+
+    /// <summary>이 줄이 이름을 적고 있으면 그 이름. 아니면 null.</summary>
+    static string 이름을_뽑는다(string[] 줄들, int i)
+    {
+        var m = 이름줄.Match(줄들[i]);
+        if (m.Success) return 다듬는다(m.Groups[1].Value);
+
+        // 프리팹 인스턴스가 이름을 덮어쓴 자리. 값은 바로 다음 줄에 온다.
+        if (!덮어쓴이름.IsMatch(줄들[i]) || i + 1 >= 줄들.Length) return null;
+
+        var v = 값줄.Match(줄들[i + 1]);
+        return v.Success ? 다듬는다(v.Groups[1].Value) : null;
+    }
+
+    /// <summary>YAML이 씌운 따옴표를 벗기고, 유니코드로 숨은 글자를 푼다.</summary>
+    static string 다듬는다(string 값)
+    {
+        string s = 유니코드를_푼다(값).Trim();
+        if (s.Length >= 2 && s[0] == '"' && s[s.Length - 1] == '"')
+            s = s.Substring(1, s.Length - 2);
+        return s;
+    }
 }

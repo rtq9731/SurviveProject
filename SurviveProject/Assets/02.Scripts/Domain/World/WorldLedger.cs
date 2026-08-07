@@ -62,6 +62,21 @@ namespace Survive.World
         public int seed;
 
         public List<WorldRecord> records = new List<WorldRecord>();
+
+        /// <summary>
+        /// <b>생성 목록</b> — 씬에 없던 것이 지금 세계에 있다는 기록
+        /// (<see cref="SpawnLedger"/>). 「달라진 것」을 담는
+        /// <see cref="records"/>와 <b>다른 물건</b>인데도 같은 절에 실리는
+        /// 이유는 <see cref="SpawnLedger"/>에 적어 두었다 —
+        /// 이쪽이 <see cref="clockSeconds"/>·<see cref="seed"/>가 앉은 <b>뒤</b>라야
+        /// 옳게 되살아나기 때문이고, 한 절에 담으면 그 순서가 사실이 된다.
+        ///
+        /// <b>덧붙임이지 형식 변경이 아니다.</b> 이 칸이 없던 저장본을 읽으면
+        /// <c>JsonUtility</c>가 기본 생성자가 놓아둔 빈 목록을 그대로 남긴다 —
+        /// 곧 「사람이 세운 것이 하나도 없는 세계」이고, 실제로 그 저장본을
+        /// 쓰던 세계에는 정말로 하나도 남아 있지 않았다.
+        /// </summary>
+        public SpawnLedgerState spawned = new SpawnLedgerState();
     }
 
     /// <summary>

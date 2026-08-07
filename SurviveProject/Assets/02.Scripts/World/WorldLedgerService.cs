@@ -16,6 +16,13 @@ namespace Survive.World
     /// 모양 그대로다. 물건이 하는 일은 <b>등록과 응답</b>뿐이다
     /// (<see cref="WorldLedgerRegistry"/>).
     ///
+    /// <b>절 하나에 원장이 둘 있다.</b> <see cref="Ledger"/>는 씬이 놓은 것의
+    /// <b>변화</b>를 담고, <see cref="Spawns"/>는 씬에 없던 것의 <b>존재</b>를
+    /// 담는다. 규율이 정반대라 한 물건에 넣을 수 없었지만
+    /// (<see cref="SpawnLedger"/>에 자세히 적었다), 창구는 하나여야 한다 —
+    /// 그래야 시계·시드·변화·존재의 복원 <b>순서</b>가 저장본의 줄 순서에
+    /// 달리지 않고 이 파일 안에서 정해진다.
+    ///
     /// <b>씬을 고치지 않는다.</b> MainScene은 병합할 수 없는 단일 파일이라
     /// <see cref="DayNightService"/>·<see cref="GlowGroveService"/>와 같은 방식으로
     /// 실행 시점에 스스로 붙는다. <c>SaveCoordinator.Collect()</c>는
@@ -49,10 +56,22 @@ namespace Survive.World
         /// <summary>원장. 검증이 안을 들여다볼 때 쓴다.</summary>
         public WorldLedger Ledger => _ledger;
 
+        readonly SpawnLedger _spawns = new SpawnLedger();
+
+        /// <summary>
+        /// <b>생성 목록</b> — 원장의 나머지 절반. 원장이 「씬이 놓은 것의 변화」를
+        /// 담는다면 이쪽은 「없던 것의 존재」를 담는다. <b>두 물건인데 창구가
+        /// 하나인</b> 이유는 <see cref="SpawnLedger"/>에 적어 두었다.
+        /// </summary>
+        public SpawnLedger Spawns => _spawns;
+
         /// <summary>
         /// 마지막 불러오기에서 되돌려 준 줄 수. 검증이 "정말 이어졌는가"를 집는다.
         /// </summary>
         public int LastRestored { get; private set; }
+
+        /// <summary>마지막 불러오기에서 <b>다시 세운</b> 것의 수(생성 목록 쪽).</summary>
+        public int LastRespawned { get; private set; }
 
         void Awake()
         {
@@ -127,7 +146,22 @@ namespace Survive.World
                                " — 세계 물건은 여럿이므로 자리로 신원을 짓는다. " +
                                $"{WorldId.Grid}m보다 가깝게 겹쳐 세우지 말 것.", this);
 
-            return _ledger.Capture(WorldClock.Seconds, WorldSeed.Value);
+            var state = _ledger.Capture(WorldClock.Seconds, WorldSeed.Value);
+
+            // 「없던 것의 존재」는 같은 절에 함께 실린다. 절을 가르면 두 절의
+            // 복원 순서를 저장본이 정하게 되는데, 생성 목록은 시계와 시드가
+            // 앉은 뒤라야 옳게 되살아난다 — 그 순서를 여기서 사실로 만든다.
+            SpawnLedgerStage.Sweep(_spawns);
+            state.spawned = _spawns.Capture();
+
+            if (_spawns.Overflowed.Count > 0)
+                Debug.LogError($"[SpawnLedger] 건축물이 상한 " +
+                               $"{SpawnLedgerRule.StructureCap}줄을 넘어 " +
+                               $"{_spawns.Overflowed.Count}개를 못 실었다: " +
+                               string.Join(", ", _spawns.Overflowed) +
+                               " — 정상 플레이로 닿는 수가 아니다.", this);
+
+            return state;
         }
 
         public void RestoreState(object state)
@@ -168,6 +202,12 @@ namespace Survive.World
             }
 
             LastRestored = n;
+
+            // <b>생성 목록은 맨 뒤다.</b> 시계와 시드가 앉은 뒤라야 화톳불의
+            // 「다 타는 시각」을 지금과 견줄 수 있고, 원장을 먼저 돌려야 되살아난
+            // 건축물이 이미 정리된 세계 위에 선다.
+            _spawns.Restore(s.spawned);
+            LastRespawned = SpawnLedgerStage.Rebuild(_spawns);
         }
     }
 }
