@@ -30,6 +30,17 @@ namespace Survive.Building
 
         /// <summary>지을 줄 모른다 — 청사진이 아직 안 열렸다.</summary>
         NotResearched,
+
+        /// <summary>
+        /// 진한 매크로늄 층이 드러난 자리가 아니다. <b>돌파정만 이 사유를 낸다</b>
+        /// (스펙 §6).
+        ///
+        /// <b>왜 <see cref="WrongSurface"/>로 때우지 않는가.</b> 그쪽은 "지면이냐
+        /// 구조물이냐"를 틀렸다는 말이고, 고치는 법은 <b>다른 곳을 보는 것</b>이다.
+        /// 이쪽이 틀렸을 때 해야 할 일은 다르다 — B섬 지하로 내려가 층이 드러난
+        /// 자리를 찾는 것이다. 같은 문구로 두 말을 하면 플레이어는 발밑을 뒤진다.
+        /// </summary>
+        NotDenseLayer,
     }
 
     public static class PlacementCheckText
@@ -51,6 +62,7 @@ namespace Survive.Building
             PlacementResult.NoAnchor => Loc.T("Build", "reject_no_anchor"),
             PlacementResult.SlotTaken => Loc.T("Build", "reject_slot_taken"),
             PlacementResult.NotResearched => Loc.T("Build", "reject_not_researched"),
+            PlacementResult.NotDenseLayer => Loc.T("Build", "reject_not_dense_layer"),
             _ => "",
         };
     }

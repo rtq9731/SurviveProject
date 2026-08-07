@@ -183,6 +183,8 @@ Build,reject_wrong_surface,여기엔 놓을 수 없다,Cannot place it here,
 Build,reject_no_anchor,붙일 곳이 없다: 토대부터 놓아라,Nothing to attach to: place a foundation first,
 Build,reject_slot_taken,그 자리엔 이미 있다,That slot is already taken,
 Build,reject_not_researched,지을 줄 모른다: 청사진이 없다,You do not know how: no blueprint,
+Build,reject_not_dense_layer,진한 층이 드러난 자리에만 놓을 수 있다,It only sits where the dense layer is exposed,돌파정 전용 거부 사유
+Build,pod_prompt_board,[E] 돌파정에 탄다,[E] Board the breach pod,
 Build,structure_default_name,구조물,Structure,에셋이 이름을 적지 않았을 때 쓰는 이름
 #
 # ── 연구대 (Progression/ResearchStation) ──────────────────
@@ -350,7 +352,7 @@ Discovery,disc_mushroom_cap.line.speaker,우주복 AI,,
 Discovery,disc_mushroom_cap.line.text,다공성 포자 조직 분석... 기체 여과재로 사용 가능한 것으로 보입니다. 해당 물질을 사용한 제작법이 있습니다.,,
 Discovery,disc_radar_islet.line.speaker,우주복 AI,,
 #   그 자리에 처음 닿았을 때의 대사. 대상 자리: a_islet
-Discovery,disc_radar_islet.line.text,지각 아래 밀도 이상 분석... 추가 지하 구조물이 존재하며 전자파 관측으로 짚어낼 수 있는 것으로 보입니다. 해당 장비의 제작법이 있습니다.,,
+Discovery,disc_radar_islet.line.text,지각 아래 밀도 이상 분석... 전자파 관측이 권장되며 추가 지하 구조물을 짚어낼 수 있는 것으로 보입니다. 해당 장비의 제작법이 있습니다.,,
 Discovery,disc_scrap.line.speaker,우주복 AI,,
 #   재료를 처음 쥐었을 때의 대사. 대상 아이템: 스크랩 (scrap)
 Discovery,disc_scrap.line.text,외계 금속물체 분석... 에너지로 사용가능한 것으로 보입니다. 해당 물질을 사용한 제작법이 있습니다.,,
