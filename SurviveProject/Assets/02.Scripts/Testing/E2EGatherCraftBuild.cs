@@ -25,9 +25,14 @@ namespace Survive.Testing
     /// 모습으로 나타나고, 그때는 어디가 끊겼는지 알 수 없다.
     ///
     /// 그래서 여기서는 <b>재료를 한 개도 넣어 주지 않고</b> 시작한다.
-    /// 필요한 것은 전부 걸어가서 캐고, 그것으로 만들고, 그것으로 짓는다.
+    /// 필요한 것은 전부 실제로 캐고, 그것으로 만들고, 그것으로 짓는다.
     /// 각 단계에서 <b>수량이 실제로 빠졌는지</b>까지 센다 — 만들어졌는데 재료가
     /// 그대로면 그건 제작이 아니라 지급이다.
+    ///
+    /// <b>노드까지는 걷지 않고 곁에 선다</b>(<see cref="E2EHarness.StandBeside"/>).
+    /// 여기서 재는 것은 캔 것과 만든 것과 지은 것 <b>사이</b>이지 거기까지 걸어서
+    /// 닿는가가 아니다 — 그것은 <see cref="E2EWalkthrough"/>가 아무것도 옮기지 않은
+    /// 채로 따로 본다. 걸어 다니던 시절 이 시나리오는 36초 중 30초를 걷는 데 썼다.
     /// </summary>
     public static class E2EGatherCraftBuild
     {
@@ -195,7 +200,7 @@ namespace Survive.Testing
             }
         }
 
-        /// <summary>가까운 노드부터 걸어가서 캔다. 아무것도 옮기지 않는다.</summary>
+        /// <summary>가까운 노드부터 곁에 서서 캔다. 노드는 놓인 자리 그대로 둔다.</summary>
         static IEnumerator HarvestUntil(string itemId, int needed)
         {
             var tried = new HashSet<HarvestNode>();
@@ -217,23 +222,14 @@ namespace Survive.Testing
                 }
                 tried.Add(node);
 
-                yield return E2EHarness.TryWalkTo(node.transform.position, 2.0f, 40f);
-                if (!E2EHarness.LastWalkArrived)
+                // 그 노드가 실제로 조준되는 자리에 선다. 「섰다」로는 모자라다 —
+                // 사이에 낀 고사리가 잡히면 엉뚱한 것을 캐 놓고 통과로 친다.
+                bool 조준됐다 = false;
+                yield return E2EHarness.StandFacing(node, 2.0f, r => 조준됐다 = r);
+                if (!조준됐다)
                 {
-                    E2EHarness.Log($"  [배치 문제] 걸어서 닿지 못한다: {node.name} " +
+                    E2EHarness.Log($"  [배치 문제] 어느 쪽에 서도 조준되지 않는다: {node.name} " +
                                    node.transform.position.ToString("F0"));
-                    continue;
-                }
-
-                E2EHarness.LookAt(node.transform.position);
-                yield return null;
-                yield return null;
-
-                var it = E2EHarness.Player.Interactor;
-                for (int f = 0; f < 20 && it.Current == null; f++) yield return null;
-                if (it.Current == null)
-                {
-                    E2EHarness.Log($"  [배치 문제] 걸어갔으나 조준되지 않는다: {node.name}");
                     continue;
                 }
 
@@ -290,23 +286,9 @@ namespace Survive.Testing
                     .FirstOrDefault();
                 if (drop == null) yield break;
 
-                yield return E2EHarness.TryWalkTo(drop.transform.position, 1.4f, 20f);
-                if (!E2EHarness.LastWalkArrived)
-                {
-                    E2EHarness.Log("  [배치 문제] 떨어진 것에 닿지 못한다: " + drop.name);
-                    포기한것.Add(drop);
-                    Object.Destroy(drop.gameObject);
-                    yield return null;
-                    continue;
-                }
-
-                E2EHarness.LookAt(drop.transform.position);
-                yield return null;
-                yield return null;
-
-                var it = E2EHarness.Player.Interactor;
-                for (int f = 0; f < 20 && it.Current == null; f++) yield return null;
-                if (it.Current == null)
+                bool 조준됐다 = false;
+                yield return E2EHarness.StandFacing(drop, 1.4f, r => 조준됐다 = r);
+                if (!조준됐다)
                 {
                     E2EHarness.Log("  [배치 문제] 떨어진 것을 주울 수 없다: " + drop.name);
                     포기한것.Add(drop);

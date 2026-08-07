@@ -21,10 +21,11 @@ namespace Survive.Testing
     /// 플래그를 코드로 세우거나 인벤토리에 아이템을 넣는 것은 통과로 치지 않는다.
     /// 걸어가서 트리거를 밟고, 홀드로 캐고, 제작 버튼을 누른다.
     ///
-    /// 유일한 예외는 <b>대상을 카메라 앞으로 옮기는 것</b>이다.
-    /// 지형 탐색이 목적이 아니라 상호작용 경로 검증이 목적이므로,
-    /// 이동은 걸어가되 조준이 막히면 대상을 앞에 둔다. 홀드 시간·재료 소모 같은
-    /// 실제 조건은 하나도 건너뛰지 않는다.
+    /// 유일한 예외는 <b>자리 잡기</b>다 — 대상을 카메라 앞으로 옮기고, 어딘가에
+    /// 서 있어야 하면 걸어가는 대신 거기 세운다(<see cref="E2EHarness.StandInside"/>).
+    /// 지형 탐색이 목적이 아니라 상호작용 경로 검증이 목적이기 때문이고,
+    /// <b>걸어서 닿는가는 <see cref="E2EWalkthrough"/>가 아무것도 옮기지 않은 채로
+    /// 따로 본다.</b> 홀드 시간·재료 소모 같은 실제 조건은 하나도 건너뛰지 않는다.
     /// </summary>
     public static class E2EChapter1
     {
@@ -67,10 +68,15 @@ namespace Survive.Testing
             var trigger = GameObject.Find("Trigger_Surveyed");
             E2EHarness.Assert(trigger != null, "탐색 트리거가 있다");
 
-            // 중심이 아니라 판 안으로 들어간다. 중심은 스폰에서 한참 떨어진 바위 위이고,
+            // 중심이 아니라 판 안에 선다. 중심은 스폰에서 한참 떨어진 바위 위이고,
             // 목표가 요구하는 것은 착지 지점을 벗어나 판을 밟는 것뿐이다.
-            E2EHarness.Log("목표1: 트리거 안으로 걸어 들어간다");
-            yield return E2EHarness.WalkInto(trigger, 60f);
+            //
+            // <b>걸어가지 않는다.</b> 여기서 재는 것은 「판을 밟으면 목표가 넘어가는가」이지
+            // 「거기까지 걸어서 닿는가」가 아니다 — 걸어서 닿는지는 E2EWalkthrough가
+            // 아무것도 옮기지 않은 채로 따로 본다. 이 시나리오는 애초에 대상을 눈앞으로
+            // 옮겨 가며 도는 쪽이고(위 요약 참조), 그 걸음에 40초를 쓸 이유가 없다.
+            E2EHarness.Log("목표1: 트리거 안에 선다");
+            yield return E2EHarness.StandInside(trigger);
 
             yield return E2EHarness.WaitUntil(
                 () => dir.CurrentIndex >= 1, "목표1 완료 (착지 이탈)", 5f);
@@ -84,8 +90,8 @@ namespace Survive.Testing
             var zone = GameObject.Find("LightZone_1");
             E2EHarness.Assert(zone != null, "버섯 군락 지대가 있다");
 
-            E2EHarness.Log("목표2: 군락 안으로 걸어 들어간다");
-            yield return E2EHarness.WalkInto(zone, 60f);
+            E2EHarness.Log("목표2: 군락 안에 선다");
+            yield return E2EHarness.StandInside(zone);
 
             yield return E2EHarness.WaitUntil(
                 () => dir.CurrentIndex >= 2, "목표2 완료 (군락 발견)", 5f);
@@ -238,22 +244,13 @@ namespace Survive.Testing
                     yield break;
                 }
 
-                // 원점이 아니라 콜라이더 한가운데를 눈앞에 둔다. 거대 버섯처럼
-                // 원점이 발밑에 있는 것은 원점을 겨누면 몸통이 전방 원뿔 위로 벗어난다.
-                //
-                // 재는 것도 옮긴 것도 물리와 맞춰 둔다. autoSyncTransforms가 꺼져 있어
-                // 앞뒤로 한 번씩 맞춰 주지 않으면 옛 중심으로 델타를 재고(이동 이중 적용),
-                // 옮긴 자리는 다음 물리 틱까지 조준 캐스트에 보이지 않는다.
-                var cam = E2EHarness.Eye;
+                // 눈앞을 먼저 비운다. 상호작용은 전방에서 가장 가까운 것을 고르므로,
+                // 눈앞에 옮겨 놓아도 그 앞에 무엇이든 있으면 그것이 잡힌다 —
+                // 군락 안에 서면 발밑 고사리가 늘 이겼다.
+                yield return E2EHarness.FaceClearSpace();
+
                 var body = node.GetComponentInChildren<Collider>(true);
-                Vector3 aim = cam.transform.position + cam.transform.forward * 2.2f;
-                if (body != null)
-                {
-                    E2EHarness.SyncPhysics();
-                    node.transform.position += aim - body.bounds.center;
-                }
-                else node.transform.position = aim;
-                E2EHarness.SyncPhysics();
+                E2EHarness.PlaceInFrontOfEye(node.transform, 2.2f);
                 yield return null;
 
                 // 조준이 <b>그 노드</b>에 걸릴 때까지 기다린다. 프레임 수로 세면 판이
@@ -327,7 +324,6 @@ namespace Survive.Testing
             float wait = 0f;
             while (wait < 0.7f) { wait += Time.deltaTime; yield return null; }
 
-            var cam = E2EHarness.Eye;
             var it = E2EHarness.Player.Interactor;
 
             for (int n = 0; n < 12; n++)
@@ -339,8 +335,8 @@ namespace Survive.Testing
                 if (drop == null) yield break;
 
                 // 조준 경로만 확인하면 되므로 눈앞으로 옮긴다. 줍는 동작은 그대로 한다.
-                drop.transform.position = cam.transform.position + cam.transform.forward * 1.8f;
-                E2EHarness.SyncPhysics();   // 옮긴 자리가 조준 캐스트에 바로 보이게 한다
+                yield return E2EHarness.FaceClearSpace();
+                E2EHarness.PlaceInFrontOfEye(drop.transform, 1.8f);
                 E2EHarness.LookAt(drop.transform.position);
                 yield return null;
 

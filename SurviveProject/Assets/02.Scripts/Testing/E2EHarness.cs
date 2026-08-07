@@ -78,7 +78,12 @@ namespace Survive.Testing
         /// </summary>
         public static void SyncPhysics() => Physics.SyncTransforms();
 
-        /// <summary>플레이어를 순간이동시킨다. CharacterController를 잠깐 끄지 않으면 밀린다.</summary>
+        /// <summary>
+        /// 플레이어를 순간이동시킨다. CharacterController를 잠깐 끄지 않으면 밀린다.
+        ///
+        /// 옮긴 자리를 곧바로 물리에 반영한다 — <c>autoSyncTransforms</c>가 꺼져 있어
+        /// 그러지 않으면 다음 물리 틱까지 조준 캐스트도 트리거 겹침도 <b>옛 자리</b>를 본다.
+        /// </summary>
         public static void Teleport(Vector3 pos)
         {
             var p = Player;
@@ -86,6 +91,7 @@ namespace Survive.Testing
             if (cc != null) cc.enabled = false;
             p.transform.position = pos;
             if (cc != null) cc.enabled = true;
+            SyncPhysics();
         }
 
         /// <summary>
@@ -99,6 +105,81 @@ namespace Survive.Testing
             rig.LookAt(worldPos);
         }
 
+        // ── 무대 세우기 — 걷지 않고 거기 서 있게 한다 ────────────
+        //
+        // <b>왜 걷는지를 가른다.</b> 시나리오가 사람을 옮기는 이유는 둘 중 하나다.
+        //
+        //   무대를 세우려고 — 저기 서 있어야 재기 시작한다        → 여기 있는 것들
+        //   걷는 것 자체가 재는 대상 — 통로가 이어지는가 따위     → WalkTo·WalkInto
+        //
+        // 블록아웃 지형에는 NavMesh가 없어 걷기가 지형을 두드리고, 막히면 우회하고,
+        // 우회가 또 막힌다. 실측에 「40회 우회 끝에 타임아웃」이 남아 있다. 그 시간은
+        // 무대를 세우는 걸음에서는 통째로 낭비다 — 재는 것이 아무것도 없기 때문이다.
+        //
+        // 걷기가 재는 대상인 시나리오는 그대로 걷는다: E2EWalkthrough(배치가 걸어서
+        // 닿는가) · E2ETuningSurvey(거리마다 몇 초인가) · E2EScenarios.WalkToTrigger
+        // (트리거까지 걸어 들어가는 것만 따로 본다) · E2ESustenance(헤엄이 깎는가).
+
+        /// <summary>몸 중심을 지면 위로 얼마나 띄워 세우는가.</summary>
+        const float FootLift = 1.0f;
+
+        /// <summary>
+        /// 그 자리의 발밑 높이. <b>자기 몸에 맞은 것은 세지 않는다.</b>
+        ///
+        /// 이것을 안 거르면 이미 그 자리에 서 있는 사람의 정수리를 지면으로 알고
+        /// 그 위에 다시 세우게 된다 — 규칙과 그 근거는 <see cref="GroundPick"/>에 있다.
+        /// </summary>
+        public static bool TryGroundY(Vector3 at, out float groundY, float from = 30f,
+                                      float span = 200f)
+        {
+            var mine = new HashSet<Collider>(Player.GetComponentsInChildren<Collider>(true));
+            var raw = Physics.RaycastAll(at + Vector3.up * from, Vector3.down, span,
+                                         ~0, QueryTriggerInteraction.Ignore);
+
+            var hits = new List<GroundProbeHit>(raw.Length);
+            for (int i = 0; i < raw.Length; i++)
+                hits.Add(new GroundProbeHit(raw[i].distance, raw[i].point.y,
+                                            mine.Contains(raw[i].collider)));
+
+            return GroundPick.TryPick(hits, out groundY);
+        }
+
+        /// <summary>
+        /// 그 지면 위에 사람 몸통이 들어가는가. <b>바위 속은 자리가 아니다.</b>
+        /// </summary>
+        public static bool CanStandAt(Vector3 groundPoint)
+        {
+            var cc = Player.GetComponent<CharacterController>();
+            float radius = cc != null ? cc.radius : 0.5f;
+            float height = cc != null ? cc.height : 1.8f;
+            var mine = new HashSet<Collider>(Player.GetComponentsInChildren<Collider>(true));
+
+            var overlap = Physics.OverlapCapsule(
+                new Vector3(groundPoint.x, groundPoint.y + radius + 0.06f, groundPoint.z),
+                new Vector3(groundPoint.x, groundPoint.y + height - radius + 0.06f, groundPoint.z),
+                radius * 0.9f, ~0, QueryTriggerInteraction.Ignore);
+
+            for (int i = 0; i < overlap.Length; i++)
+                if (!mine.Contains(overlap[i])) return false;
+            return true;
+        }
+
+        /// <summary>
+        /// <b>거기 서 있게 한다.</b> 발밑을 찾아 앉히고 물리에 반영한다.
+        ///
+        /// 좌표를 그냥 박으면 지형에 파묻히거나 공중에 뜬다. 지면을 못 찾으면
+        /// 준 높이를 그대로 쓴다 — 물속·공중처럼 일부러 띄우는 자리가 있다.
+        /// </summary>
+        /// <returns>발밑을 찾아 앉혔는가.</returns>
+        public static bool StandAt(Vector3 spot)
+        {
+            bool grounded = TryGroundY(spot, out float groundY);
+            if (grounded) spot.y = groundY + FootLift;
+
+            Teleport(spot);
+            return grounded;
+        }
+
         /// <summary>대상 앞 지정 거리에 서서 대상을 바라본다.</summary>
         public static IEnumerator StandInFrontOf(Transform target, float distance = 2.0f)
         {
@@ -106,18 +187,287 @@ namespace Survive.Testing
             d.y = 0f;
             if (d.sqrMagnitude < 0.01f) d = Vector3.back;
 
-            Vector3 standAt = target.position + d.normalized * distance;
+            StandAt(target.position + d.normalized * distance);
 
-            // 지면에 발을 붙인다
-            if (Physics.Raycast(standAt + Vector3.up * 30f, Vector3.down, out var hit, 200f,
-                                ~0, QueryTriggerInteraction.Ignore))
-                standAt.y = hit.point.y + 1.0f;
-
-            Teleport(standAt);
             yield return null;          // 카메라가 따라올 프레임을 준다
             LookAt(target.position);
             yield return null;
             yield return null;          // Cinemachine이 실제로 반영되는 데 한 프레임 더
+        }
+
+        /// <summary>
+        /// 대상 곁 <paramref name="distance"/>에 <b>설 수 있는</b> 자리를 찾아 세우고 바라본다.
+        ///
+        /// <see cref="StandInFrontOf"/>는 지금 서 있는 쪽 한 방향만 본다. 그쪽이 바위 속이면
+        /// 사람이 바위에 박히고, 그 다음 걸음부터 전부 거기서 죽는다. 여기서는 여러 각도를
+        /// 훑어 <b>몸통이 들어가는</b> 자리를 고른다 — 걷지 않으므로 한 후보당 캐스트 두 번이다.
+        /// </summary>
+        /// <param name="confirm">
+        /// 이 자리면 됐는가. 주면 <b>참이 될 때까지</b> 다른 각도를 시도한다 —
+        /// 「섰다」와 「그것이 조준된다」는 다른 말이고, 시나리오가 원하는 것은 뒤쪽이다.
+        /// </param>
+        /// <returns>설 자리를 찾아 세웠는가(confirm을 줬으면 그것까지 참인가).</returns>
+        public static IEnumerator StandBeside(Vector3 target, float distance = 2.0f,
+                                              System.Action<bool> result = null,
+                                              System.Func<bool> confirm = null)
+        {
+            Vector3 preferred = Player.transform.position - target;
+            preferred.y = 0f;
+            if (preferred.sqrMagnitude < 0.01f) preferred = Vector3.back;
+            preferred.Normalize();
+
+            bool 첫자리있음 = false;
+            Vector3 첫자리 = Vector3.zero;
+
+            foreach (float scale in new[] { 1f, 1.35f })
+            {
+                for (int i = 0; i < 8; i++)
+                {
+                    // 지금 서 있는 쪽부터 좌우로 벌려 나간다
+                    float degrees = (i % 2 == 0 ? 1f : -1f) * 45f * ((i + 1) / 2);
+                    Vector3 dir = Quaternion.Euler(0f, degrees, 0f) * preferred;
+                    Vector3 want = target + dir * (distance * scale);
+
+                    if (!TryGroundY(want, out float groundY)) continue;
+                    if (!CanStandAt(new Vector3(want.x, groundY, want.z))) continue;
+
+                    StandAt(want);
+                    if (!첫자리있음) { 첫자리있음 = true; 첫자리 = Player.transform.position; }
+
+                    yield return null;
+                    LookAt(target);
+                    yield return null;
+                    yield return null;      // Cinemachine이 반영되는 데 한 프레임 더
+
+                    if (confirm == null || confirm())
+                    {
+                        result?.Invoke(true);
+                        yield break;
+                    }
+                }
+            }
+
+            // 못 찾았다. 그래도 어딘가에는 서 있어야 다음 대목이 돈다.
+            if (첫자리있음) Teleport(첫자리);
+            else
+            {
+                Log($"  [배치 문제] {target.ToString("F1")} 곁에 설 자리가 없다 — 그대로 세운다");
+                StandAt(target + preferred * distance);
+            }
+
+            yield return null;
+            LookAt(target);
+            yield return null;
+            yield return null;
+
+            result?.Invoke(false);
+        }
+
+        /// <summary>
+        /// 대상이 <b>실제로 조준될 때까지</b> 곁의 자리를 바꿔 가며 선다.
+        ///
+        /// <b>「섰다」로는 모자라다.</b> 상호작용은 전방에서 가장 가까운 것을 고르므로
+        /// (<c>PlayerInteractor.RefreshTarget</c>), 대상 곁에 섰는데도 그 사이의 고사리가
+        /// 잡히는 일이 있다. 그대로 E를 누르면 <b>엉뚱한 것을 캐 놓고 통과로 친다</b> —
+        /// 걸어서 다가가던 시절에는 접근 방향이 하나뿐이라 이 구멍이 잘 안 드러났다.
+        /// </summary>
+        public static IEnumerator StandFacing(Component thing, float distance = 2.0f,
+                                              System.Action<bool> result = null)
+        {
+            var body = thing.GetComponentInChildren<Collider>(true);
+            Vector3 aim = body != null ? body.bounds.center : thing.transform.position;
+
+            var it = Player.Interactor;
+            yield return StandBeside(aim, distance, result,
+                                     () => ReferenceEquals(it.Current, thing));
+        }
+
+        /// <summary>
+        /// <b>눈앞이 트인 쪽</b>을 보게 한다.
+        ///
+        /// 대상을 눈앞으로 옮겨 확인하는 시나리오는 「눈앞이 비어 있다」를 말없이 전제한다.
+        /// 그런데 상호작용은 카메라 전방에서 <b>가장 가까운 것</b>을 고르므로
+        /// (<c>PlayerInteractor.RefreshTarget</c>), 옮겨 놓은 것보다 앞에 무엇이든 있으면
+        /// 그것이 잡힌다 — 발광 군락 안에 서면 발밑 고사리가 늘 이겼다. 걸어서 자리를
+        /// 잡던 시절에는 어디에 서는지가 운이라 이 전제가 <b>가끔</b> 깨졌고,
+        /// 자리를 정해 세우기 시작하면 <b>늘</b> 깨지거나 늘 성립한다.
+        /// </summary>
+        /// <param name="clearance">고른 쪽이 얼마나 트여 있는가. 막는 것이 없으면 want.</param>
+        public static IEnumerator FaceClearSpace(System.Action<float> clearance = null,
+                                                 float want = 3.0f, float radius = 0.35f)
+        {
+            var cam = Eye;
+            var rig = Player.CameraRig;
+            var mine = new HashSet<Collider>(Player.GetComponentsInChildren<Collider>(true));
+
+            Vector3 forward = cam.transform.forward;
+            forward.y = 0f;
+            if (forward.sqrMagnitude < 1e-4f) forward = Vector3.forward;
+            forward.Normalize();
+
+            float bestRoom = -1f;
+            Vector3 best = forward;
+
+            // 지금 보는 쪽부터 좌우로 벌려 나간다. 트인 쪽이 나오면 거기서 멈춘다.
+            for (int i = 0; i < 12; i++)
+            {
+                float degrees = (i % 2 == 0 ? 1f : -1f) * 30f * ((i + 1) / 2);
+                Vector3 dir = Quaternion.Euler(0f, degrees, 0f) * forward;
+
+                float room = want;
+                var hits = Physics.SphereCastAll(cam.transform.position, radius, dir, want,
+                                                 ~0, QueryTriggerInteraction.Collide);
+                for (int h = 0; h < hits.Length; h++)
+                {
+                    if (mine.Contains(hits[h].collider)) continue;
+                    if (hits[h].distance <= 0f) continue;      // 몸이 이미 겹친 것은 조준을 막지 않는다
+                    if (hits[h].distance < room) room = hits[h].distance;
+                }
+
+                if (room > bestRoom) { bestRoom = room; best = dir; }
+                if (room >= want) break;
+            }
+
+            rig.SetLook(Mathf.Atan2(best.x, best.z) * Mathf.Rad2Deg, 0f);
+            yield return null;
+            yield return null;      // Cinemachine이 실제로 반영되는 데 한 프레임 더
+
+            clearance?.Invoke(bestRoom);
+        }
+
+        /// <summary>
+        /// 대상을 눈앞에 <b>가장 먼저 잡히도록</b> 둔다.
+        ///
+        /// 막는 것이 있으면 그보다 앞에 놓는다. 원점이 아니라 콜라이더 한가운데를 맞춘다 —
+        /// 거대 버섯처럼 원점이 발밑인 것은 원점을 겨누면 몸통이 전방 원뿔 위로 벗어난다.
+        /// </summary>
+        public static void PlaceInFrontOfEye(Transform thing, float preferred = 2.2f,
+                                             float minimum = 0.8f)
+        {
+            var cam = Eye;
+            var mine = new HashSet<Collider>(Player.GetComponentsInChildren<Collider>(true));
+            var his = new HashSet<Collider>(thing.GetComponentsInChildren<Collider>(true));
+
+            float distance = preferred;
+            var hits = Physics.SphereCastAll(cam.transform.position, 0.3f, cam.transform.forward,
+                                             preferred, ~0, QueryTriggerInteraction.Collide);
+            for (int i = 0; i < hits.Length; i++)
+            {
+                if (mine.Contains(hits[i].collider) || his.Contains(hits[i].collider)) continue;
+                if (hits[i].distance <= 0f) continue;
+                if (hits[i].distance < distance) distance = hits[i].distance;
+            }
+            distance = Mathf.Max(minimum, distance - 0.35f);
+
+            Vector3 aim = cam.transform.position + cam.transform.forward * distance;
+
+            // 재는 것도 옮긴 것도 물리와 맞춰 둔다. autoSyncTransforms가 꺼져 있어
+            // 앞뒤로 맞춰 주지 않으면 옛 중심으로 델타를 재고(이동 이중 적용),
+            // 옮긴 자리는 다음 물리 틱까지 조준 캐스트에 보이지 않는다.
+            var body = thing.GetComponentInChildren<Collider>(true);
+            if (body != null)
+            {
+                SyncPhysics();
+                thing.position += aim - body.bounds.center;
+            }
+            else thing.position = aim;
+            SyncPhysics();
+        }
+
+        /// <summary>
+        /// 볼륨 <b>안에</b> 세운다. <see cref="WalkInto"/>의 순간이동 짝이다.
+        ///
+        /// 판 안에서 사람이 실제로 설 수 있는 자리를 골라 거기 세운다 — 중심이 아니다.
+        /// 넓은 판의 중심은 바위 위인 경우가 흔하고, 게임이 요구하는 것은 판을 밟는 것뿐이다.
+        /// 콜라이더를 껐다 켜면서 옮기므로 <c>OnTriggerEnter</c>도 정상으로 다시 들어온다.
+        /// </summary>
+        /// <returns>볼륨 안에 섰는가. 부르는 쪽이 판정에 쓸 수 있게 남긴다.</returns>
+        public static IEnumerator StandInside(GameObject volume, System.Action<bool> result = null)
+        {
+            if (volume == null) throw new InvalidOperationException("들어갈 볼륨이 없습니다");
+
+            var col = volume.GetComponent<Collider>() ?? volume.GetComponentInChildren<Collider>();
+            if (col == null)
+            {
+                Log($"  {volume.name}에 콜라이더가 없다 — 중심에 세운다");
+                StandAt(volume.transform.position);
+                yield return null;
+                result?.Invoke(true);
+                yield break;
+            }
+
+            var box = col.bounds;
+            bool Inside() => box.Contains(Player.transform.position);
+
+            if (!Inside())
+            {
+                var spots = StandableSpotsInside(box);
+                if (spots.Count == 0)
+                {
+                    Log($"  [배치 문제] {volume.name} 안에 설 자리가 없다 — 중심에 세운다");
+                    spots.Add(volume.transform.position);
+                }
+
+                // 첫 자리가 판 밖으로 밀려나는 수가 있다(발밑이 판 아래인 가장자리).
+                // 몇 곳만 차례로 시도한다 — 걷지 않으므로 한 곳당 비용은 프레임 한둘이다.
+                for (int i = 0; i < 4 && i < spots.Count && !Inside(); i++)
+                {
+                    StandAt(spots[i]);
+                    yield return null;
+                }
+            }
+
+            // 트리거는 물리 틱에서 들어온다. 옮긴 자리가 실제로 겹침으로 읽힐 틈을 준다.
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+            bool inside = Inside();
+            Log(inside
+                ? $"  {volume.name} 안에 섰다 ({Player.transform.position.ToString("F1")})"
+                : $"  [배치 문제] {volume.name} 안에 서지 못했다 " +
+                  $"({Player.transform.position.ToString("F1")})");
+            result?.Invoke(inside);
+        }
+
+        /// <summary>
+        /// 몇 걸음 비켜선다 — <b>옮겨서</b>.
+        ///
+        /// 방금 세운 것 위에 다음 것을 지으려 하면 시나리오가 스스로 만든 장애물에 걸린다.
+        /// 그래서 자리를 비우는 것뿐이고, 여기서 재는 것은 아무것도 없다.
+        /// 세 시나리오(거점 건설·스폰 원장·저장 완전성)가 같은 일을 저마다 걸어서 하고 있었다.
+        /// </summary>
+        /// <returns>실제로 비켜섰는가.</returns>
+        public static IEnumerator StepAside(float meters = 5f, System.Action<bool> result = null)
+        {
+            var from = Player.transform.position;
+
+            for (int a = 0; a < 8; a++)
+            {
+                var dir = Quaternion.Euler(0f, a * 45f + 20f, 0f) * Vector3.forward;
+                var want = from + dir * meters;
+
+                // NavMesh가 있으면 그 위를 고르고, 없으면 지형을 그대로 쓴다.
+                // 블록아웃 지형에는 NavMesh가 없는 구역이 많고, 비켜서는 데는
+                // 걸어갈 수 있는 면일 필요가 없다 — 설 수 있으면 된다.
+                if (NavMesh.SamplePosition(want, out var nav, 3f, NavMesh.AllAreas))
+                    want = nav.position;
+
+                // 옮기기 <b>전에</b> 설 수 있는지 본다. 먼저 옮겨 놓고 아니면 다음을 보는 식은
+                // 못 서는 자리를 한 번씩 거쳐 가고, 마지막 후보가 나쁘면 거기 남는다.
+                if (!TryGroundY(want, out float groundY)) continue;
+                if (!CanStandAt(new Vector3(want.x, groundY, want.z))) continue;
+
+                StandAt(want);
+                yield return null;
+                if (Vector3.Distance(Player.transform.position, from) > meters * 0.5f)
+                {
+                    result?.Invoke(true);
+                    yield break;
+                }
+            }
+
+            Log("  [배치 문제] 옆으로 비켜설 곳이 없다");
+            result?.Invoke(false);
         }
 
         // ── 입력 ─────────────────────────────────────────────────
