@@ -47,25 +47,36 @@ public class WorldLedgerTests
     /// </summary>
     static readonly (string 갈래, string 왜_안_담는가)[] 안_담는_이유 =
     {
-        (WorldLedgerScope.Structure,
-            "실행 중에 태어난 것이라 「달라진 것」이 아니라 「없던 것」이다. " +
-            "되살리려면 무엇으로 다시 세우는지(청사진 신원·자세·스냅 관계)가 필요하고, " +
-            "그것은 원장이 아니라 생성 목록이라는 다른 물건이다. 자리만 열어 둔다."),
-
-        (WorldLedgerScope.Drop,
-            "같은 이유로 실행 중에 태어난 것이고, 게다가 낙하물은 물리로 굴러다녀 " +
-            "자리가 신원이 되지 못한다. 자리가 신원이 아니면 열쇠를 지을 수 없다 — " +
-            "이쪽은 「어디에 무엇이 몇 개」를 통째로 적는 생성 목록이 맞다."),
-
-        (WorldLedgerScope.CampfireFuel,
-            "화톳불은 사람이 세우는 물건이라 씬에 하나도 놓여 있지 않다. " +
-            "몸이 원장 밖에 있는데 연료만 적으면 불러온 세계에는 그 연료를 " +
-            "돌려줄 불이 없다. 건축물 갈래가 열리는 날 함께 열린다."),
-
         (WorldLedgerScope.Population,
             "「구역 도달 → 낫 2마리」의 방아쇠 구역이 아직 정해지지 않았다(사람의 몫). " +
             "개체수는 분명히 세계 상태이고 코드가 0줄이라 지금 세우는 값이 싸지만, " +
             "방아쇠를 모른 채 세우면 무엇을 세어야 하는지 모르는 칸이 된다. 자리만 열어 둔다."),
+    };
+
+    /// <summary>
+    /// <b>생성 목록이 담기로 한 것마다 이유.</b> 위의 표와 짝이다 —
+    /// 저쪽이 「왜 아무도 안 담는가」를 요구한다면 이쪽은 <b>「왜 원장이 아니라
+    /// 저쪽인가」</b>를 요구한다. 둘을 갈라 두지 않으면 다음 사람은 담기는 갈래를
+    /// 전부 한 물건에 몰아넣고, 그러면 규율이 정반대인 둘이 한 상자에 들어가
+    /// 「돌아온 자리」와 「철거된 건축물」이 같은 뜻이 된다.
+    /// </summary>
+    static readonly (string 갈래, string 왜_생성_목록인가)[] 생성_목록의_이유 =
+    {
+        (WorldLedgerScope.Structure,
+            "실행 중에 태어난 것이라 「달라진 것」이 아니라 「없던 것」이다. " +
+            "되살릴 몸이 씬에 없으므로 무엇으로 다시 세우는지(청사진 신원·자세)를 " +
+            "목록이 직접 들어야 하고, 그것은 차이만 적는 원장이 할 수 없는 일이다."),
+
+        (WorldLedgerScope.Drop,
+            "같은 이유로 실행 중에 태어난 것이고, 게다가 낙하물은 굴러다녀 " +
+            "자리가 신원이 되지 못한다. 자리가 신원이 아니면 열쇠를 지을 수 없다 — " +
+            "이쪽은 「어디에 무엇이 몇 개」를 통째로 적는 목록이라 열쇠가 아예 필요 없다."),
+
+        (WorldLedgerScope.CampfireFuel,
+            "화톳불은 사람이 세우는 물건이라 씬에 하나도 놓여 있지 않다. " +
+            "몸이 목록 밖에 있으면 불러온 세계에 그 연료를 돌려줄 불이 없으므로, " +
+            "몸을 싣는 건축물 갈래가 열리는 날 함께 열린다 — 그날이 왔다. " +
+            "제 줄은 없고 건축물 줄에 실린다(SpawnLedgerRule.HasRow)."),
     };
 
     [Test]
@@ -90,15 +101,68 @@ public class WorldLedgerTests
     }
 
     [Test]
-    public void 실행_중에_태어난_것은_일부러_뺐다()
+    public void 생성_목록이_담기로_한_것에는_전부_이유가_적혀_있다()
+    {
+        var 이유없는것 = WorldLedgerScope.Spawned
+            .Where(k => !생성_목록의_이유.Any(r => r.갈래 == k && r.왜_생성_목록인가.Length >= 40))
+            .ToList();
+
+        Assert.IsEmpty(이유없는것,
+            "생성 목록이 담기로 한 갈래에 이유가 없다. 「원장이 아니라 왜 저쪽인가」를 " +
+            "글로 남기지 않으면 다음 사람이 둘을 도로 합친다:\n  " +
+            string.Join("\n  ", 이유없는것));
+
+        var 없는갈래를_설명한것 = 생성_목록의_이유
+            .Where(r => !WorldLedgerScope.Spawned.Contains(r.갈래))
+            .Select(r => r.갈래)
+            .ToList();
+
+        Assert.IsEmpty(없는갈래를_설명한것,
+            "생성 목록이 안 담는 갈래의 변명이 남아 있다. 표는 줄기만 해야 한다:\n  " +
+            string.Join("\n  ", 없는갈래를_설명한것));
+    }
+
+    /// <summary>
+    /// <b>실행 중에 태어난 것은 원장이 아니라 생성 목록이 담는다.</b>
+    /// 예전에는 셋 다 「자리만 열어 둔 갈래」였다 — 원장은 씬이 놓은 것의
+    /// <b>차이</b>만 담고, 없던 것을 되살리려면 무엇으로 다시 만드는지가
+    /// 필요했기 때문이다. 그 다른 물건이 <see cref="SpawnLedger"/>다.
+    /// </summary>
+    [Test]
+    public void 실행_중에_태어난_것은_생성_목록이_담는다()
     {
         foreach (var kind in new[] { WorldLedgerScope.Structure, WorldLedgerScope.Drop,
                                      WorldLedgerScope.CampfireFuel })
         {
-            Assert.IsFalse(WorldLedgerScope.Carries(kind), $"{kind}는 아직 담지 않는다");
-            Assert.IsTrue(WorldLedgerScope.ExcludedOnPurpose(kind),
-                $"{kind}는 일부러 뺀 것이어야 한다");
+            Assert.IsTrue(WorldLedgerScope.Spawns(kind), $"{kind}는 생성 목록이 담는다");
+            Assert.IsFalse(WorldLedgerScope.Carries(kind),
+                $"{kind}는 원장이 담지 않는다 — 원장은 차이만 담는다");
+            Assert.IsFalse(WorldLedgerScope.ExcludedOnPurpose(kind),
+                $"{kind}는 이제 담기므로 「일부러 뺀 것」이 아니다");
         }
+    }
+
+    /// <summary>
+    /// <b>한 갈래를 둘이 담지 않는다.</b> 겹치면 불러올 때 어느 쪽이 이기는지가
+    /// 저장본의 줄 순서에 달리고, 두 원장의 규율이 정반대라 그 승패에 따라
+    /// 같은 자리가 서 있기도 없기도 한다.
+    /// </summary>
+    [Test]
+    public void 원장과_생성_목록이_같은_갈래를_담지_않는다()
+    {
+        var 겹친것 = WorldLedgerScope.Carried
+            .Where(k => WorldLedgerScope.Spawns(k))
+            .ToList();
+
+        Assert.IsEmpty(겹친것, "두 물건이 같은 갈래를 놓고 다툰다:\n  " +
+                               string.Join("\n  ", 겹친것));
+
+        var 담기면서_뺀것 = WorldLedgerScope.Excluded
+            .Where(k => WorldLedgerScope.Carries(k) || WorldLedgerScope.Spawns(k))
+            .ToList();
+
+        Assert.IsEmpty(담기면서_뺀것, "담으면서 일부러 뺐다고 적힌 갈래가 있다:\n  " +
+                                     string.Join("\n  ", 담기면서_뺀것));
     }
 
     /// <summary>
