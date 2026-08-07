@@ -76,6 +76,8 @@ namespace Survive.Interaction
         //
         // 보관함은 여러 개가 생긴다. SaveKey가 겹치면 나중 것이 앞의 것을 덮어쓴다.
         // 위치를 키에 넣어 구분한다 — 옮길 수 없는 물건이라 위치가 곧 신원이다.
+        //
+        // <b>다만 세운 보관함은 이 문으로 안 나간다.</b> 아래 CaptureState를 보라.
 
         [Serializable]
         public class SaveState
@@ -84,6 +86,19 @@ namespace Survive.Interaction
             public List<int> counts = new List<int>();
         }
 
+        /// <summary>
+        /// <b>이 몸의 주인이 씬인가.</b> 씬이면 제 절을 갖고, 사람이 세운 것이면
+        /// 생성 목록의 줄이 내용물까지 함께 싣는다.
+        ///
+        /// <b>왜 갈라야 하는가.</b> 세운 보관함은 씬에 몸이 없어서 불러올 때
+        /// 생성 목록이 다시 만든다. 그 몸이 태어나는 시점은 「세계」 절을 되돌리는
+        /// 도중인데, 저장본의 <c>storage_x_y_z</c> 줄은 <b>그 절보다 앞일 수도 뒤일
+        /// 수도 있다</b> — 앞이면 아직 없는 몸을 찾다 실패하고, 저장이 물건을 먹는다.
+        /// 몸을 만드는 쪽이 내용물도 실으면 순서라는 물음 자체가 없어진다.
+        /// </summary>
+        bool 씬이_놓은_것 =>
+            !TryGetComponent<Survive.Building.BuiltStructure>(out var built) || !built.Spawned;
+
         public string SaveKey =>
             string.IsNullOrEmpty(saveIdOverride)
                 ? $"storage_{Mathf.RoundToInt(transform.position.x)}_" +
@@ -91,8 +106,20 @@ namespace Survive.Interaction
                   $"{Mathf.RoundToInt(transform.position.z)}"
                 : "storage_" + saveIdOverride;
 
+        /// <summary>
+        /// 씬이 놓은 보관함만 제 절을 쓴다. 세운 것은 <c>null</c>을 내어
+        /// 저장본에서 아예 빠진다 — <b>내용물의 창구가 하나여야</b> 하기 때문이다.
+        /// 둘이 쓰면 같은 물건이 두 곳에 실리고, 그 둘이 어긋나는 날 어느 쪽이
+        /// 참인지 아무도 모른다.
+        ///
+        /// <b>읽는 문은 안 닫는다.</b> 아래 <see cref="RestoreState"/>는 그대로다 —
+        /// 세운 보관함의 내용물이 제 절에 실려 있던 <b>옛 저장본</b>이 있고,
+        /// 그것들은 그 문으로 그냥 열려야 한다.
+        /// </summary>
         public object CaptureState()
         {
+            if (!씬이_놓은_것) return null;
+
             var s = new SaveState();
             foreach (var slot in Contents.Slots)
             {
