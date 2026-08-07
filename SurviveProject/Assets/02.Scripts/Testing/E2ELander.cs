@@ -93,9 +93,9 @@ namespace Survive.Testing
         /// </summary>
         static LanderBase 임시_착륙선을_세운다(Vector3 at)
         {
-            if (Physics.Raycast(at + Vector3.up * 30f, Vector3.down, out var hit, 80f,
-                                ~0, QueryTriggerInteraction.Ignore))
-                at.y = hit.point.y;
+            // 자기 몸을 거르는 창구로 묻는다. 여기서 쓰는 <paramref name="at"/>는 대개
+            // 사람이 서 있는 자리 근처라, 직접 쏘면 정수리를 지면으로 읽고 배가 뜬다.
+            if (E2EHarness.TryGroundY(at, out float 발밑, 30f, 80f)) at.y = 발밑;
 
             var go = new GameObject("E2E_TempLander");
             go.transform.position = at;

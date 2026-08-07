@@ -153,11 +153,12 @@ namespace Survive.Testing
                 var dir = Quaternion.Euler(0f, a * 30f, 0f) * Vector3.forward;
                 var probe = from + dir * (2.5f + ring * 1.5f);
 
-                if (!Physics.Raycast(probe + Vector3.up * 3f, Vector3.down, out var g, 10f, ~0,
-                                     QueryTriggerInteraction.Ignore))
-                    continue;
+                // 자기 몸을 거르는 창구로 발밑을 잰다. 첫 고리는 2.5m라 사람 캡슐이
+                // 걸릴 수 있고, 그러면 정수리를 지면으로 알고 허공을 겨눈다.
+                if (!E2EHarness.TryGroundY(probe, out float 발밑, 3f, 10f)) continue;
+                var 지면 = new Vector3(probe.x, 발밑, probe.z);
 
-                E2EHarness.LookAt(g.point);
+                E2EHarness.LookAt(지면);
                 yield return null;
                 yield return null;
 
@@ -219,12 +220,12 @@ namespace Survive.Testing
 
             // 붙일 자리에서 한참 떨어진 지면을 본다
             var away = origin + new Vector3(30f, 0f, 30f);
-            if (Physics.Raycast(away + Vector3.up * 20f, Vector3.down, out var g, 60f, ~0,
-                                QueryTriggerInteraction.Ignore))
+            if (E2EHarness.TryGroundY(away, out float 발밑, 20f, 60f))
             {
-                E2EHarness.Teleport(g.point + new Vector3(0f, 1.6f, -3f));
+                var 지면 = new Vector3(away.x, 발밑, away.z);
+                E2EHarness.Teleport(지면 + new Vector3(0f, 1.6f, -3f));
                 yield return null;
-                E2EHarness.LookAt(g.point);
+                E2EHarness.LookAt(지면);
                 yield return null;
                 yield return null;
 
