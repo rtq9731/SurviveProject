@@ -12,7 +12,7 @@ using Survive.Vitals;
 namespace Survive.World
 {
     /// <summary>
-    /// 짙은 매크로늄 층 하나. 돌파정을 걸치고 여기를 <b>끝까지 내려가면 챕터가 끝난다</b>
+    /// 매크로늄이 가장 짙은 구간 하나. 돌파정을 걸치고 여기를 <b>끝까지 내려가면 챕터가 끝난다</b>
     /// (기획서 §6.2 "종막 — 뚫고 내려간다").
     ///
     /// <b>무엇이 새로운가.</b> 예전 종막은 남이 놔둔 외계 장치를 켜고 떠나는 이야기였고,
@@ -189,7 +189,7 @@ namespace Survive.World
                 GameServices.TryGet<ChapterDirector>(out var director) && director != null)
                 director.SetFlag(flagKey, 1);
 
-            Debug.Log($"[DescentZone] 짙은 매크로늄 층을 뚫고 내려갔다 — " +
+            Debug.Log($"[DescentZone] 매크로늄이 가장 짙은 구간을 뚫고 내려갔다. " +
                       $"윗면 {TopY:F2}, 두께 {layerThickness:F1}m ({name})");
 
             StartCoroutine(Finale());

@@ -217,7 +217,8 @@ namespace Survive.Testing
             float 바다가낸것 = MacroniumSeaService.TotalDamage - 전바다;
 
             // 규칙이 이 폭에 대해 예측한 값. 세계가 그 근처인지 본다.
-            float 예측 = LiquidCrossing.Toll(new LiquidBody(IslandZones.RiverDepth, 폭));
+            float 예측 = LiquidCrossing.Toll(new LiquidBody(IslandZones.KindOf(IslandZone.River),
+                                                             IslandZones.RiverDepth, 폭));
 
             E2EHarness.Log($"  {t:F1}초 (잠김 {잠김:F1}초) — 체력 -{잃은것:F1}, 그중 바다 {바다가낸것:F1} " +
                            $"/ 규칙의 예측 {예측:F1}");

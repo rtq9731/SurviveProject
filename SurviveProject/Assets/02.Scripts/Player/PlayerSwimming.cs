@@ -13,7 +13,13 @@ namespace Survive.Player
     ///   Wading     발은 물에 잠겼지만 머리는 밖. 느려질 뿐 걷는다
     ///   Swimming   몸이 뜬다. 중력이 사라지고 위아래로 움직인다
     ///
-    /// 머리까지 잠기면 산소가 닳는다 — 지하 대기는 호흡할 수 있지만 물속은 아니다.
+    /// 머리까지 잠기면 산소가 닳는다 - 대기는 호흡할 수 있지만 액체 속은 아니다.
+    ///
+    /// <b>액체의 종류는 이동을 바꾸지 않는다.</b> 호수든 매크로늄 바다든 똑같이
+    /// 헤엄치고 똑같이 숨이 막힌다(<see cref="LiquidKind"/>). 종류가 답을 바꾸는 것은
+    /// 부식 하나뿐이므로, 여기서는 <b>지금 잠긴 액체가 무엇인지 알려 주기만</b> 하고
+    /// 그것으로 무엇을 할지는 <see cref="Survive.World.MacroniumSeaService"/>가 정한다.
+    /// 종류를 여기서 판정에 쓰기 시작하면 임계가 둘로 갈린다.
     /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(CharacterController))]
@@ -44,14 +50,31 @@ namespace Survive.Player
         State _state = State.Dry;
         float _surfaceY = float.MinValue;
         bool _inWater;
+        LiquidKind _kind;
         bool _headSubmerged;
 
         public State Current => _state;
         public bool IsSwimming => _state == State.Swimming;
         public bool IsWading => _state == State.Wading;
 
-        /// <summary>머리까지 잠겼는가. 산소 소모 판정에 쓴다.</summary>
+        /// <summary>
+        /// 머리까지 잠겼는가. 산소 소모 판정에 쓴다.
+        ///
+        /// <b>종류를 보지 않는다.</b> 호수에서 잠수해도 산소는 똑같이 준다 - 숨은
+        /// 액체의 성분이 아니라 머리가 잠겼는가의 문제이고, 여기서 종류를 보기
+        /// 시작하면 "호수에서는 숨을 쉴 수 있다"가 되어 버린다(기획서 §5.1).
+        /// </summary>
         public bool IsHeadSubmerged => _headSubmerged;
+
+        /// <summary>
+        /// 지금 몸이 든 액체가 무엇인가. 물 밖이면 false.
+        /// <b>부식을 매기는 쪽이 종류를 묻는 유일한 창구다.</b>
+        /// </summary>
+        public bool TryGetLiquid(out LiquidKind kind)
+        {
+            kind = _kind;
+            return _inWater;
+        }
 
         /// <summary>발바닥 기준 잠긴 깊이. 물이 없으면 0.</summary>
         public float SubmergedDepth =>
@@ -73,7 +96,7 @@ namespace Survive.Player
 
         void Update()
         {
-            _inWater = WaterBody.TryGetSurfaceAt(transform.position, out _surfaceY);
+            _inWater = WaterBody.TryGetAt(transform.position, out _surfaceY, out _kind);
 
             var prev = _state;
             var prevHead = _headSubmerged;

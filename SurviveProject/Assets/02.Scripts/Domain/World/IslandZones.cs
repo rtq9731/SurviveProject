@@ -3,12 +3,16 @@ using System.Collections.Generic;
 namespace Survive.World
 {
     /// <summary>
-    /// 구역 다섯의 <b>데이터</b>. 어느 구역이 어떤 액체를 품는가, 그 액체가 얼마나
-    /// 깊고 넓은가.
+    /// 구역 다섯의 <b>데이터</b>. 어느 구역이 어떤 액체를 품는가, 그 액체가 무엇으로
+    /// 되어 있고 얼마나 깊고 넓은가.
     ///
     /// <b>여기에는 규칙이 없다.</b> 판정은 전부 <see cref="LiquidCrossing"/>이 하고,
     /// 이 표는 그 판정에 넣을 수만 들고 있다. 구역이 늘거나 폭이 바뀌어도 규칙은
-    /// 그대로다 — 그것이 "세 특례가 아니라 한 규칙의 세 값"의 실제 모습이다.
+    /// 그대로다 - 그것이 "세 특례가 아니라 한 규칙의 세 값"의 실제 모습이다.
+    ///
+    /// <b>이 표의 액체는 셋 다 매크로늄이다</b>(<see cref="KindOf"/>). 진짜 물만 내려
+    /// 고인 호수는 아직 지형에 없고, 그것은 사람이 파는 것이다(스펙 §13). 다만
+    /// 규칙 쪽은 이미 종류를 받으므로, 호수가 놓이는 날 표에 한 줄을 더하면 된다.
     ///
     /// <b>수는 임시다(§16).</b> 강이 어디를 어떻게 가로지르는지, 얕은 바다가 얼마나
     /// 넓은지는 눈으로 정해지는 것이고 아직 정해지지 않았다. 다만 <b>규칙이 요구하는
@@ -74,10 +78,11 @@ namespace Survive.World
         public const float SeaDepth = 20f;
 
         /// <summary>
-        /// 바다가 바다이려면 이보다 넓어야 한다(m). <b>규칙에서 나온 수다</b> —
+        /// 바다가 바다이려면 이보다 넓어야 한다(m). <b>규칙에서 나온 수다</b> -
         /// 맨몸으로 헤엄쳐 건널 수 있는 한계가 곧 하한이다.
         /// </summary>
-        public static float SeaMinimumWidth => LiquidCrossing.LethalWidth(FullHealth);
+        public static float SeaMinimumWidth =>
+            LiquidCrossing.LethalWidth(LiquidKind.Macronium, FullHealth);
 
         /// <summary>
         /// 하한에 두는 여유(배). 경계에 딱 맞추면 "헤엄쳐서 못 건넌다"가
@@ -95,15 +100,41 @@ namespace Survive.World
         public static bool IsLiquid(IslandZone zone) =>
             zone == IslandZone.River || zone == IslandZone.ShallowSea || zone == IslandZone.Sea;
 
-        /// <summary>이 구역의 액체. 뭍이면 깊이도 폭도 0이다.</summary>
-        public static LiquidBody LiquidAt(IslandZone zone)
+        /// <summary>
+        /// 이 구역의 액체가 무엇으로 되어 있는가.
+        ///
+        /// <b>뭍에는 답이 없다.</b> 「액체가 없는 자리의 액체 종류」를 물으면 던진다 -
+        /// 물이나 매크로늄 중 하나를 조용히 돌려주면, 종류를 안 정한 구역이 생겨도
+        /// 아무도 모른 채 지나간다. 부르기 전에 <see cref="IsLiquid"/>로 갈라라.
+        /// </summary>
+        public static LiquidKind KindOf(IslandZone zone)
         {
             switch (zone)
             {
-                case IslandZone.River:      return new LiquidBody(RiverDepth, RiverWidth);
-                case IslandZone.ShallowSea: return new LiquidBody(ShallowSeaDepth, ShallowSeaWidth);
-                case IslandZone.Sea:        return new LiquidBody(SeaDepth, SeaWidth);
-                default:                    return new LiquidBody(0f, 0f);
+                case IslandZone.River:
+                case IslandZone.ShallowSea:
+                case IslandZone.Sea:
+                    return LiquidKind.Macronium;
+                default:
+                    // 글이 영어인 이유는 Liquid.Unknown의 주석과 같다 - 화면이 아니라
+                    // 개발자 콘솔에만 닿는 진단문이고, 이 폴더는 한글 리터럴 금지 범위다.
+                    throw new System.ArgumentOutOfRangeException(
+                        nameof(zone), zone,
+                        "Dry land holds no liquid. Ask IsLiquid before asking for one.");
+            }
+        }
+
+        /// <summary>
+        /// 이 구역의 액체. <b>뭍을 물으면 던진다</b> - 이유는 <see cref="KindOf"/>와 같다.
+        /// </summary>
+        public static LiquidBody LiquidAt(IslandZone zone)
+        {
+            var kind = KindOf(zone);
+            switch (zone)
+            {
+                case IslandZone.River:      return new LiquidBody(kind, RiverDepth, RiverWidth);
+                case IslandZone.ShallowSea: return new LiquidBody(kind, ShallowSeaDepth, ShallowSeaWidth);
+                default:                    return new LiquidBody(kind, SeaDepth, SeaWidth);
             }
         }
 
