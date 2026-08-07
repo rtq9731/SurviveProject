@@ -53,6 +53,9 @@ namespace Survive.Creatures
 
         CreatureBrain _brain;
         HoverDrifter _drifter;
+
+        /// <summary>이 개체가 이 자리에서 몇 번째로 굴렸는가. 같은 자리에서 같은 답이 나오지 않게 한다.</summary>
+        int _rolls;
         RelicShedSO _rule;
         PlayerInventory _player;
 
@@ -114,10 +117,19 @@ namespace Survive.Creatures
 
             // 전부 가졌으면 아무것도 떨구지 않는다. 유물의 쓸모는 연구 하나뿐이라
             // 다 밝혀낸 뒤로는 바닥에 쌓이기만 한다.
-            int 자리 = RelicDropRule.Pick(_options, inventory, ledger, Random.value);
+            // <b>난수에 주인이 있다.</b> 굴리는 자리는 낫이 선 자리이고, 몇 번째
+            // 굴림인지가 함께 들어간다 — 같은 시드·같은 자리·같은 회차면 같은
+            // 유물이 나온다. UnityEngine.Random을 쓰면 앞선 누군가가 몇 번 굴렸는지에
+            // 답이 딸려 가고, 그러면 저장본을 건너온 세계가 달라진다.
+            var 자리시드 = transform.position;
+            var rng = Survive.World.WorldSeed.Rng(
+                Survive.World.WorldSeedBranch.RelicShed, 자리시드, _rolls);
+            _rolls++;
+
+            int 자리 = RelicDropRule.Pick(_options, inventory, ledger, (float)rng.NextDouble());
             if (자리 < 0 || 자리 >= _items.Count) return;
 
-            if (Random.value > _rule.chance) return;
+            if ((float)rng.NextDouble() > _rule.chance) return;
 
             var item = _items[자리];
             if (item == null) return;

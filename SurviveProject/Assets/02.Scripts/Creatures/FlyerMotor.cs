@@ -41,7 +41,18 @@ namespace Survive.Creatures
         float _bobPhase;
         bool _halted;
 
-        void Start() => _bobPhase = Random.value * Mathf.PI * 2f;
+        /// <summary>
+        /// 까딱임의 시작 위상. <b>이쪽은 눈뿐이다</b> — 나는 몸은 서식 구역을 묻지
+        /// 않으므로(<c>HoverDrifter</c>와 다른 자리다) 이 값이 판정에 닿지 않는다.
+        /// 그래도 주인 있는 난수로 뽑는 것은 <b>「난수는 전부 주인이 있다」</b>가
+        /// 예외를 두는 순간 다시 새기 때문이다 — 예외를 기억하는 것보다 규칙 하나가 싸다.
+        /// </summary>
+        void Start()
+        {
+            var rng = Survive.World.WorldSeed.Rng(
+                Survive.World.WorldSeedBranch.Wander, transform.position, occasion: 2);
+            _bobPhase = (float)rng.NextDouble() * Mathf.PI * 2f;
+        }
 
         public void MoveTowards(Vector3 target)
         {

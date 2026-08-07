@@ -375,6 +375,28 @@ namespace Survive.Creatures
             return false;
         }
 
+        /// <summary>이 개체가 배회를 몇 번 굴렸는가. 같은 자리에서 같은 답이 나오지 않게 한다.</summary>
+        int _wanderRolls;
+
+        /// <summary>
+        /// 단위 구 안의 한 점. <c>Random.insideUnitSphere</c>가 하던 일을
+        /// <b>주인 있는 난수</b>로 다시 쓴 것이다.
+        ///
+        /// 거절 표집(reject sampling)을 쓰지 않는 것은 <b>굴림 횟수가 답에 따라
+        /// 달라지면 안 되기 때문</b>이다 — 그러면 같은 시드에서도 뒤따르는 굴림이
+        /// 밀린다. 방향과 반지름을 따로 뽑아 <b>언제나 세 번</b>만 굴린다.
+        /// 반지름에 세제곱근을 씌우는 것은 구 안에 고르게 퍼뜨리기 위한 것이다.
+        /// </summary>
+        static Vector3 구_안의_한_점(System.Random rng)
+        {
+            float z = (float)(rng.NextDouble() * 2.0 - 1.0);
+            float t = (float)(rng.NextDouble() * System.Math.PI * 2.0);
+            float r = Mathf.Pow((float)rng.NextDouble(), 1f / 3f);
+
+            float ring = Mathf.Sqrt(Mathf.Max(0f, 1f - z * z));
+            return new Vector3(ring * Mathf.Cos(t), ring * Mathf.Sin(t), z) * r;
+        }
+
         void TransitionTo(CreatureState next)
         {
             if (!CreatureDecision.ShouldTransition(_state, next, _stateTimer)) return;
@@ -386,11 +408,25 @@ namespace Survive.Creatures
             switch (next)
             {
                 case CreatureState.Wander:
+                {
+                    // <b>난수에 주인이 있다.</b> 배회는 <b>지금 선 자리</b>에서 굴린다 —
+                    // 집을 기준으로 굴리면 한 개체가 평생 같은 곳만 돈다.
+                    // 회차를 함께 넣어 같은 자리에 다시 서도 다른 답이 나오게 한다.
+                    //
+                    // <b>이 자리가 「낫 꼬리」 36% 플레이크의 진범이었다.</b> 시나리오
+                    // 쪽에서 무대를 붙들어 고쳤는데, 뿌리를 막으면 그 부류가 통째로
+                    // 사라진다 — 같은 시드로 다시 돌리면 같은 배회가 나온다.
+                    var rng = Survive.World.WorldSeed.Rng(
+                        Survive.World.WorldSeedBranch.Wander, transform.position, _wanderRolls);
+                    _wanderRolls++;
+
                     _destination = CreatureNavigation.WanderDestination(
-                        _homePosition, Random.insideUnitSphere, wanderRadius);
-                    wanderDuration = Random.Range(CreatureStateDurations.WanderMinSeconds,
-                                                  CreatureStateDurations.WanderMaxSeconds);
+                        _homePosition, 구_안의_한_점(rng), wanderRadius);
+                    wanderDuration = Mathf.Lerp(CreatureStateDurations.WanderMinSeconds,
+                                                CreatureStateDurations.WanderMaxSeconds,
+                                                (float)rng.NextDouble());
                     break;
+                }
 
                 case CreatureState.Flee:
                     // 빛에 밀려 물러나는 것이면 빛에서 멀어져야 한다. 플레이어에게서
