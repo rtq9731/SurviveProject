@@ -180,7 +180,13 @@ namespace Survive.Creatures
             for (int i = 0; i < _mine.Count; i++)
                 _distances.Add(Vector3.Distance(_mine[i].transform.position, _player.position));
 
-            var 물릴것 = ScytheCensus.PickDespawn(_distances, 몇마리);
+            // <b>코어를 물고 가는 개체는 흩어지지 않는다.</b> 그것이 §4.5의 그림이고,
+            // 거리만 보면 둥지에 닿은 그 개체가 사람에게서 가장 멀어 먼저 지워진다.
+            int 남길것 = NestSite.Instance != null
+                       ? NestSite.Instance.남길자리(_mine)
+                       : ScytheCensus.NoOne;
+
+            var 물릴것 = ScytheCensus.PickDespawn(_distances, 몇마리, 남길것);
 
             // 뒤에서부터 지운다. 앞에서 지우면 남은 자리 번호가 밀린다.
             물릴것.Sort();
