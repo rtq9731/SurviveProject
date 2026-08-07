@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using Survive.Creatures;
+using Survive.Harvesting;
 using Survive.Localization;
 
 namespace Survive.Progression
@@ -20,6 +21,18 @@ namespace Survive.Progression
 
         /// <summary>마주친 것들.</summary>
         Creature = 3,
+
+        /// <summary>
+        /// 자라는 것들. <b>도감에서 갈래를 갖는 유일한 예외다</b>(검토회신 ⑪).
+        ///
+        /// 나머지는 전부 미분류로 둔다 — 무엇인지 판정하지 않는 것이 §4.7의 규칙이다.
+        /// 식물만 따로 묶는 이유는 그것이 <b>감출 것이 없는 갈래</b>이기 때문이다.
+        /// 움직이지 않고, 위협이 아니고, 보는 순간 식물인 줄 안다. 감춰서 얻는 것이
+        /// 없는 사실을 감추면 화면만 불친절해진다. 그리고 여기서 갈리는 것은
+        /// <b>이름표가 아니라 갈래</b>다 — 다른 것에 「미분류」라고 적어 주는 것이
+        /// 아니라, 식물이 자기 자리를 갖는다.
+        /// </summary>
+        Plant = 4,
     }
 
     /// <summary>도감 한 줄. 화면은 이것만 받아 그린다.</summary>
@@ -64,6 +77,27 @@ namespace Survive.Progression
         public const string CreatureKeyPrefix = "codex_";
 
         /// <summary>
+        /// 식물 관찰 기록의 열쇠 접두. <c>plant_&lt;에셋 이름 슬러그&gt;</c>다.
+        ///
+        /// <b>생물과 접두를 나눈 이유.</b> 두 갈래가 같은 접두를 쓰면 원장 하나에서
+        /// 서로를 덮을 수 있고, 무엇보다 "식물은 따로 묶인다"는 것이 열쇠 모양에서
+        /// 부터 읽히지 않는다. <see cref="PlantNodeSO"/>에는 <c>id</c> 필드가 없어
+        /// 이름 슬러그를 쓴다 — <see cref="DataText.IdOf(PlantNodeSO)"/>와 같은 규칙이라
+        /// 번역 열쇠와 원장 열쇠가 늘 같은 글자에서 나온다.
+        /// </summary>
+        public const string PlantKeyPrefix = "plant_";
+
+        /// <summary>
+        /// 도감을 열면 여기부터 보인다.
+        ///
+        /// <b>식물 탭이 아니다.</b> 식물은 「전부 미분류, 단 식물만 따로」에서
+        /// 떼어낸 예외이고(검토회신 ⑪), 예외가 첫 화면이 되면 그것이 본문 행세를
+        /// 한다. 그리고 이 게임에서 도감을 처음 여는 이유는 대개 방금 주운 물질이
+        /// 무엇인지 보려는 것이다.
+        /// </summary>
+        public const CodexSection DefaultSection = CodexSection.Discovery;
+
+        /// <summary>
         /// 잠긴 항목의 이름 자리. 실루엣만 남긴다.
         /// 글자가 아니라 기호라서 번역할 것이 없다 — 그래서 여기만 <c>const</c>다.
         /// </summary>
@@ -75,6 +109,7 @@ namespace Survive.Progression
         public static string UnknownBlueprintBody => Loc.T("Codex", "unknown_blueprint");
         public static string UnknownResearchBody => Loc.T("Codex", "unknown_research");
         public static string UnknownCreatureBody => Loc.T("Codex", "unknown_creature");
+        public static string UnknownPlantBody => Loc.T("Codex", "unknown_plant");
 
         /// <summary>생물 하나의 관측 기록 열쇠. id가 없으면 null.</summary>
         public static string CreatureKey(string creatureId) =>
@@ -82,6 +117,13 @@ namespace Survive.Progression
 
         public static string CreatureKey(CreatureDefinitionSO definition) =>
             definition == null ? null : CreatureKey(definition.id);
+
+        /// <summary>식물 하나의 관찰 기록 열쇠. 이름이 없으면 null.</summary>
+        public static string PlantKey(string plantSlug) =>
+            string.IsNullOrWhiteSpace(plantSlug) ? null : PlantKeyPrefix + plantSlug;
+
+        public static string PlantKey(PlantNodeSO definition) =>
+            definition == null ? null : PlantKey(DataText.IdOf(definition));
 
         /// <summary>갈래 이름. 탭에 적힌다.</summary>
         public static string SectionTitle(CodexSection section)
@@ -92,6 +134,7 @@ namespace Survive.Progression
                 case CodexSection.Blueprint: return Loc.T("Codex", "section_blueprint");
                 case CodexSection.Research:  return Loc.T("Codex", "section_research");
                 case CodexSection.Creature:  return Loc.T("Codex", "section_creature");
+                case CodexSection.Plant:     return Loc.T("Codex", "section_plant");
                 default:                     return Loc.T("Codex", "section_other");
             }
         }
@@ -373,6 +416,80 @@ namespace Survive.Progression
                 case LocomotionType.Hovering: return Loc.T("Codex", "locomotion_hovering");
                 default:                      return Loc.T("Codex", "locomotion_ground");
             }
+        }
+
+        // ── 식물 관찰 ────────────────────────────────────────────────
+
+        /// <summary>
+        /// 자라는 것들 (검토회신 ⑪).
+        ///
+        /// <b>여기서도 무엇인지는 판정하지 않는다.</b> 식물이 자기 탭을 갖는 것과
+        /// 식물에 계층 이름을 붙이는 것은 다른 일이다. 탭은 <b>갈래</b>이고 §4.7이
+        /// 금지한 것은 <b>이름표</b>다. 그래서 여기 실리는 것도 개체 관측과 똑같이
+        /// <b>눈으로 본 것</b>까지다 — 몇 단계로 자랐는가, 한 단계에 얼마나 걸렸는가,
+        /// 손으로 따는 데 얼마나 걸렸는가. 무엇의 무엇인지는 적지 않는다.
+        ///
+        /// <b>서사를 새로 쓰지 않는다.</b> <see cref="PlantNodeSO"/>에는 설명문 칸이
+        /// 없고, 일부러 만들지 않았다. 칸을 만들면 누군가 거기에 "1차 생산자"라고
+        /// 적게 되고 ⑩이 걷어낸 것이 옆문으로 돌아온다. 잰 값만 적으면 그럴 자리가
+        /// 아예 없다.
+        /// </summary>
+        public static void BuildPlants(PlantBookSO book, UnlockLedger ledger,
+                                       List<CodexEntry> into)
+        {
+            if (into == null) return;
+            into.Clear();
+            if (book?.plants == null) return;
+
+            foreach (var p in book.plants)
+            {
+                var key = PlantKey(p);
+                if (key == null) continue;
+
+                bool seen = ledger != null && ledger.IsUnlocked(key);
+                into.Add(new CodexEntry
+                {
+                    Section = CodexSection.Plant,
+                    Key = key,
+                    Unlocked = seen,
+                    Title = seen ? NameOf(p) : UnknownTitle,
+                    Body = seen ? DescribePlant(p) : UnknownPlantBody,
+                });
+            }
+        }
+
+        /// <summary>
+        /// 식물 한 포기를 관찰 기록 한 편으로 적는다. 줄바꿈은 코드가 넣는다 —
+        /// <see cref="DescribeCreature"/>와 같은 이유다(표의 한 칸에 CRLF가 딸려 온다).
+        /// </summary>
+        public static string DescribePlant(PlantNodeSO p)
+        {
+            if (p == null) return "";
+
+            var culture = CultureInfo.InvariantCulture;
+            string stages = p.maxStage.ToString(NumberFormat, culture);
+            string grow = p.growSeconds.ToString(NumberFormat, culture);
+            string harvest = p.harvestSeconds.ToString(NumberFormat, culture);
+
+            var report = new StringBuilder();
+            report.Append(Loc.F("Codex", "plant_observed", stages, grow));
+            report.Append('\n');
+            report.Append(Loc.F("Codex", "plant_stats", harvest));
+
+            // 시들지 않는 식물도 있을 수 있다. 그때 "0초 뒤에 시든다"고 적으면 거짓이다.
+            if (p.witherSeconds > 0f)
+            {
+                string wither = p.witherSeconds.ToString(NumberFormat, culture);
+                report.Append('\n').Append(Loc.F("Codex", "plant_withers", wither));
+            }
+
+            return report.ToString();
+        }
+
+        static string NameOf(PlantNodeSO p)
+        {
+            var name = DataText.Name(p);
+            return string.IsNullOrWhiteSpace(name) ? DataText.IdOf(p) : name;
         }
 
         public static string BehaviorName(BehaviorProfile profile)

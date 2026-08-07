@@ -6,6 +6,7 @@ using Survive.Domain.Audio;
 using Survive.Interaction;
 using Survive.Localization;
 using Survive.Player;
+using Survive.Progression;
 
 namespace Survive.Harvesting
 {
@@ -99,6 +100,28 @@ namespace Survive.Harvesting
         }
 
         /// <summary>
+        /// 손으로 한 번 따 본 식물을 도감에 적는다 (검토회신 ⑪).
+        ///
+        /// <b>왜 채집이 관찰의 기준인가.</b> 보는 것만으로 열면 지나가다 눈에 스친
+        /// 것까지 다 열려 목록이 처음부터 가득 찬다. 물질 분석이 「손에 쥐어 본 것」을
+        /// 기준으로 삼는 것과 같은 선이고, 도감이 적는 값(자라는 단계·따는 데 걸린
+        /// 시간)도 실제로 따 봐야 알 수 있는 것들이다.
+        ///
+        /// <b>먹힌 것은 세지 않는다.</b> <see cref="Eat"/>는 생산자가 부르는 길이라
+        /// 사람이 본 적이 없다. 여기서만 적는 것이 곧 그 구분이다.
+        ///
+        /// 원장이 아직 서지 않았으면 조용히 넘긴다 — 도감 한 줄 때문에 채집이
+        /// 실패하는 것이 더 나쁘다.
+        /// </summary>
+        void RecordObservation()
+        {
+            var key = CodexCatalog.PlantKey(definition);
+            if (key == null) return;
+
+            UnlockService.Instance?.Ledger?.Unlock(key);
+        }
+
+        /// <summary>
         /// 생산자가 한 입 먹는다. 플레이어의 채집과 같은 경로를 쓰되 전리품은 주지 않는다.
         /// </summary>
         /// <returns>얻은 영양가. 먹을 수 없으면 0.</returns>
@@ -156,6 +179,7 @@ namespace Survive.Harvesting
                 }
             }
 
+            RecordObservation();
             Consumed?.Invoke(this);
         }
     }

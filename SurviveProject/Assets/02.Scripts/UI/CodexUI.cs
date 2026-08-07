@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using Survive.Core;
 using Survive.Creatures;
+using Survive.Harvesting;
 using Survive.Localization;
 using Survive.Progression;
 
@@ -35,6 +36,9 @@ namespace Survive.UI
         /// <summary>Resources 아래에서 생물 목록을 찾는 이름.</summary>
         public const string CreatureBookResourceName = "CreatureBook";
 
+        /// <summary>Resources 아래에서 식물 목록을 찾는 이름.</summary>
+        public const string PlantBookResourceName = "PlantBook";
+
         static CodexUI _instance;
         public static CodexUI Instance => _instance;
 
@@ -55,10 +59,14 @@ namespace Survive.UI
 
         // ── 상태 ─────────────────────────────────────────────────
 
+        // 식물 탭은 <b>맨 끝</b>이다. 도감의 기본 갈래는 물질 분석이고, 식물은
+        // 「전부 미분류, 단 식물만 따로」에서 떼어낸 예외라 일반 목록 뒤에 선다
+        // (검토회신 ⑪). 첫 탭을 식물로 바꾸면 예외가 본문 행세를 하게 된다.
         static readonly CodexSection[] Sections =
         {
             CodexSection.Discovery, CodexSection.Blueprint,
             CodexSection.Research, CodexSection.Creature,
+            CodexSection.Plant,
         };
 
         readonly List<CodexEntry> _entries = new List<CodexEntry>();
@@ -70,7 +78,7 @@ namespace Survive.UI
         readonly Dictionary<CodexSection, TMP_Text> _tabLabels = new Dictionary<CodexSection, TMP_Text>();
         readonly Dictionary<CodexSection, Image> _tabFrames = new Dictionary<CodexSection, Image>();
 
-        CodexSection _section = CodexSection.Discovery;
+        CodexSection _section = CodexCatalog.DefaultSection;
         int _selected;
         bool _isOpen;
         bool _dirty;
@@ -78,6 +86,7 @@ namespace Survive.UI
         DiscoveryBookSO _discoveries;
         ResearchBookSO _research;
         CreatureBookSO _creatures;
+        PlantBookSO _plants;
         UnlockLedger _bound;
 
         Survive.Player.PlayerContext _player;
@@ -241,6 +250,9 @@ namespace Survive.UI
 
             if (_creatures == null)
                 _creatures = Resources.Load<CreatureBookSO>(CreatureBookResourceName);
+
+            if (_plants == null)
+                _plants = Resources.Load<PlantBookSO>(PlantBookResourceName);
         }
 
         void Refresh()
@@ -256,6 +268,8 @@ namespace Survive.UI
                     CodexCatalog.BuildResearch(_research, ledger, _entries); break;
                 case CodexSection.Creature:
                     CodexCatalog.BuildCreatures(_creatures, ledger, _entries); break;
+                case CodexSection.Plant:
+                    CodexCatalog.BuildPlants(_plants, ledger, _entries); break;
                 default:
                     CodexCatalog.BuildDiscoveries(_discoveries, ledger, _entries); break;
             }
@@ -284,6 +298,8 @@ namespace Survive.UI
                             CodexCatalog.BuildResearch(_research, ledger, _scratch); break;
                         case CodexSection.Creature:
                             CodexCatalog.BuildCreatures(_creatures, ledger, _scratch); break;
+                        case CodexSection.Plant:
+                            CodexCatalog.BuildPlants(_plants, ledger, _scratch); break;
                         default:
                             CodexCatalog.BuildDiscoveries(_discoveries, ledger, _scratch); break;
                     }
@@ -400,7 +416,8 @@ namespace Survive.UI
             if (_entries.Count == 0)
             {
                 _detailTitle.text = Loc.T("UI", "codex_empty_title");
-                _detailBody.text = Loc.T("UI", "codex_empty_body");
+                // 빈 뜻은 갈래마다 다르다. 고르는 자리는 Domain에 둔다(MenuListing).
+                _detailBody.text = MenuListing.CodexEmptyBody(_section);
                 if (_summary != null) _summary.text = "";
                 return;
             }

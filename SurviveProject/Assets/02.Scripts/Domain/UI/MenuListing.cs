@@ -60,6 +60,28 @@ namespace Survive.UI
         /// </summary>
         public static string NothingKnownToResearch => Loc.T("UI", "research_empty");
 
+        /// <summary>
+        /// 도감 식물 탭에 한 줄도 실리지 않을 때 그 자리에 남기는 말 (검토회신 ⑪).
+        ///
+        /// 도감의 다른 갈래는 <b>모르는 것도 실루엣으로 남긴다</b> — 무엇이 있는지는
+        /// 보여야 찾아 나설 수 있기 때문이다. 그래서 이 자리는 "아직 못 본 식물이
+        /// 많다"는 뜻이 아니라 <b>목록 자체가 서지 않았다</b>는 뜻이다.
+        /// 여기서도 몇 개가 잠겨 있는지는 세지 않는다 — 위 셋과 같은 규율이다.
+        /// </summary>
+        public static string NothingSeenAmongPlants => Loc.T("UI", "plant_empty");
+
+        /// <summary>
+        /// 도감에서 목록이 빈 갈래에 적을 말. 갈래마다 빈 뜻이 다르므로 갈래가 고른다.
+        ///
+        /// 고르는 자리를 화면이 아니라 여기 둔 이유는 <b>증명하기 위해서</b>다.
+        /// 화면에 나갈 수 있는 문자열이 전부 이 파일에서 나오면 도감의 빈 자리도
+        /// Unity 없이 단언할 수 있다.
+        /// </summary>
+        public static string CodexEmptyBody(CodexSection section)
+            => section == CodexSection.Plant
+                ? NothingSeenAmongPlants
+                : Loc.T("UI", "codex_empty_body");
+
         // ── 무엇이 실리는가 ──────────────────────────────────────
 
         /// <summary>
