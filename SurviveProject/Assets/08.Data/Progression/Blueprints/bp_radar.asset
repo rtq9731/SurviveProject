@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Survive.Domain::Survive.Progression.BlueprintSO
   id: bp_radar
   displayName: "\uC804\uD30C \uAD00\uCE21"
-  hint: "\uAC15 \uAC74\uB108 \uC791\uC740 \uC12C\uC5D0\uC11C \uBCF8 \uAC83"
+  hint: "\uAC15 \uAC74\uB108 A-3\uC5D0\uC11C \uBCF8 \uAC83"

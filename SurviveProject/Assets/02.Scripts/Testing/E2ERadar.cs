@@ -307,7 +307,7 @@ namespace Survive.Testing
             E2EHarness.Assert(service != null, "해금 서비스가 서 있다");
             E2EHarness.Assert(service.Book != null, "발견 목록이 실렸다");
 
-            // A섬 작은 섬은 아직 세계에 없다(스펙 §16 — 배치는 사람의 몫).
+            // A-3(내부 id는 여전히 a_islet)은 아직 세계에 없다(스펙 §16 — 배치는 사람의 몫).
             // 사람이 심을 그 물건을 여기서 임시로 세워 배선이 살아 있는지만 본다.
             _trigger = new GameObject("E2E_IsletTrigger");
 

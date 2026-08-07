@@ -260,6 +260,17 @@ World,tool_generic,도구,Tool,
 World,loot_container_default,잔해,Wreckage,
 World,storage_default,보관함,Storage,
 #
+# ── 구역 이름 (Domain/World/IslandZones) ──────────────────────
+# A섬은 구역 다섯으로 갈린다. 갈라 놓은 것은 지면이 아니라 액체다 (기획서 2.1).
+# 코드는 키만 들고 있고 글자는 여기에만 있다.
+Zone,a1,A-1,A-1,시작 지점
+Zone,river,강,River,A섬 내부를 가로지른다. 헤엄쳐 건너면 살이 깎인다
+Zone,a2,A-2,A-2,강 건너
+Zone,shallow_sea,얕은 바다,Shallow sea,발목 깊이. 걸어서 건넌다
+Zone,a3,A-3,A-3,레이더가 있는 자리
+Zone,sea,바다,Sea,A섬과 B섬 사이. 헤엄쳐서는 못 건넌다
+Zone,island_b,B섬,Island B,
+#
 # ══════════════════════════════════════════════════════════════
 # 데이터 에셋에서 자동으로 붙는 이름표는 이 아래에 둔다
 # (Item/{id}.name, Blueprint/{id}.hint 등). 위쪽 UI 구역과 섞지 마라.
@@ -278,7 +289,7 @@ Blueprint,bp_fibercraft.hint,양치 섬유를 손에 넣으면 알게 된다,,
 Blueprint,bp_fibercraft.name,섬유 세공,,
 Blueprint,bp_macronium_suit.hint,무광버섯을 처음 쥐면 알게 된다,,
 Blueprint,bp_macronium_suit.name,차폐 설계,,
-Blueprint,bp_radar.hint,강 건너 작은 섬에서 본 것,,
+Blueprint,bp_radar.hint,강 건너 A-3에서 본 것,,
 Blueprint,bp_radar.name,전파 관측,,
 Blueprint,bp_salvaged_mechanism.hint,기계 부품을 손에 넣으면 알게 된다,,
 Blueprint,bp_salvaged_mechanism.name,부품 재조립,,
