@@ -126,9 +126,9 @@ public class MacroniumSeaTests
     [Test]
     public void 한_입의_피해는_간격만큼의_초당_피해다()
     {
-        Assert.AreEqual(MacroniumSea.CorrosionPerSecond * MacroniumSea.BiteInterval,
+        Assert.AreEqual(MacroniumSea.CorrosionPerSecond * LiquidCrossing.BiteInterval,
                         MacroniumSea.BiteDamage, 0.0001f);
-        Assert.Greater(MacroniumSea.BiteInterval, 0f, "간격이 0이면 매 프레임 연출이 터진다");
+        Assert.Greater(LiquidCrossing.BiteInterval, 0f, "간격이 0이면 매 프레임 연출이 터진다");
     }
 
     [Test]

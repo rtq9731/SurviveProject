@@ -285,7 +285,7 @@ public class RetiredContentGateTests
     ///
     /// <b>2026-08-07 두 번째로 내렸다.</b> 63 -> 57. 액체 종류 라운드(스펙 §3)가
     /// 자기 파일들을 만지는 김에 <b>「층이 둘이라는 어휘」를 0으로 끝냈다</b> -
-    /// <c>World/DescentZone</c>·<c>World/MacroniumSeaService</c> 두 자리가 마지막이었다.
+    /// <c>World/DescentZone</c>·<c>World/LiquidContactService</c> 두 자리가 마지막이었다.
     /// 「지표를 덮은 기상」은 <c>World/OxygenZone</c> 한 자리가 빠져 2가 되었고,
     /// 「군도 구역 이름」은 <c>Domain/World/LiquidCrossing</c>의 주석을 새 무대에 맞춰
     /// 다시 쓰며 한 자리가 빠졌다.

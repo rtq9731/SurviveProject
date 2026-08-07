@@ -114,6 +114,101 @@ namespace Survive.Testing
             E2EHarness.Log("=== 사람의 저장본을 밟지 않았다 ===");
         }
 
+        /// <summary>
+        /// <b>격리를 걸지 않아도 사람의 저장본은 안 밟힌다.</b>
+        ///
+        /// <see cref="DefaultSlotUntouched"/>가 재는 것은 <b>하네스를 지나는 실행</b>이다.
+        /// 그런데 우리는 시나리오 없이도 재생을 켠다 — 실측·스크린샷·눈으로 확인.
+        /// 그때는 슬롯 격리가 걸리지 않고 <c>autoSaveOnObjective</c>가 기본 슬롯에 쓴다.
+        /// 그 한 번이 사람의 이어하기를 덮었다(2026-08-07, 지문이 실제로 바뀌었다).
+        ///
+        /// 그래서 이 시나리오는 <b>일부러 격리를 푼다.</b> 슬롯 규칙을 전부 끄고,
+        /// 기본 슬롯에 자동 저장과 손 저장과 삭제를 다 걸고 나서, <b>공유 자리의
+        /// 파일 지문</b>이 그대로인지 본다. 지켜 주는 것은 이제 슬롯이 아니라
+        /// <b>폴더가 갈렸다는 사실</b>뿐이다(<see cref="SaveLocation"/>).
+        ///
+        /// <b>남의 자리를 되돌려 놓고 나간다.</b> 이 갈래 폴더의 기본 슬롯은 이
+        /// 에디터의 진짜 이어하기다 — 검사가 쓰고 갔으면 검사가 되돌린다.
+        /// </summary>
+        public static IEnumerator SharedDefaultUntouched()
+        {
+            // ── 갈래가 실제로 걸려 있는가 (음성 확인) ───────────
+            // 이것이 거짓이면 아래 단언들은 전부 같은 파일을 두 번 보는 것이고,
+            // 그러면 통과해도 아무것도 증명하지 못한다.
+            string 공유폴더 = Application.persistentDataPath;
+            E2EHarness.Assert(SaveService.Root != 공유폴더,
+                              $"에디터의 저장 폴더가 공유 폴더와 갈렸다\n" +
+                              $"    공유: {공유폴더}\n    이 에디터: {SaveService.Root}");
+            E2EHarness.Assert(SaveService.Root.StartsWith(공유폴더),
+                              "갈래 폴더는 공유 폴더 아래에 있다 (밖으로 나가지 않는다)");
+
+            string 사람파일 = E2EHarness.SharedSlotPath(SaveSlots.Default);
+            string 이곳파일 = E2EHarness.SlotPath(SaveSlots.Default);
+            E2EHarness.Assert(사람파일 != 이곳파일, "사람의 파일과 이 에디터의 파일이 다른 자리다");
+
+            string 시작지문 = E2EHarness.FingerprintOf(사람파일);
+            E2EHarness.Log($"  사람의 저장본: {사람파일}");
+            E2EHarness.Log($"  시작 지문: {시작지문}");
+            E2EHarness.Log($"  이 에디터의 기본 슬롯: {이곳파일}");
+
+            // ── 이 갈래의 기본 슬롯을 잠시 빌린다 ───────────────
+            bool 있었나 = File.Exists(이곳파일);
+            string 원래것 = 있었나 ? File.ReadAllText(이곳파일) : null;
+
+            var coordinator = Object.FindAnyObjectByType<SaveCoordinator>(FindObjectsInactive.Exclude);
+            E2EHarness.Assert(coordinator != null, "SaveCoordinator가 있다");
+            var chapter = Object.FindAnyObjectByType<ChapterDirector>(FindObjectsInactive.Exclude);
+            E2EHarness.Assert(chapter != null, "ChapterDirector가 있다");
+            yield return E2EHarness.WaitUntil(() => chapter.Current != null, "챕터가 시작된다", 8f);
+
+            // ── 격리를 푼다. 여기서부터가 「그냥 재생」이다 ──────
+            E2EHarness.ReleaseSave();
+            E2EHarness.Assert(!SaveSlots.IsIsolated, "슬롯 격리를 풀었다");
+            E2EHarness.Assert(SaveSlots.TouchesDefault(null),
+                              "이름 없는 저장이 기본 슬롯으로 간다 (규칙이 아무것도 안 막는 상태)");
+            E2EHarness.AssertEqual(SaveSlots.Resolve(SaveSlots.Default), SaveSlots.Default,
+                                   "기본 슬롯 요청이 기본 슬롯 그대로다");
+
+            // ── 밟힐 만한 짓을 전부 한다 ────────────────────────
+            chapter.ForceCompleteCurrent();      // 자동 저장 — 원래 사고의 모양
+            yield return null;
+            yield return null;
+
+            coordinator.Save();                  // 이름 없는 손 저장
+            yield return null;
+            coordinator.Save(SaveCoordinator.DefaultSlot);   // 기본 슬롯을 콕 집은 저장
+            yield return null;
+
+            E2EHarness.Assert(File.Exists(이곳파일),
+                              "저장이 실제로 일어났다 (이 에디터의 갈래 폴더에)");
+            E2EHarness.Log($"  이 에디터의 기본 슬롯: {E2EHarness.FingerprintOf(이곳파일)}");
+
+            coordinator.Delete(SaveCoordinator.DefaultSlot); // 기본 슬롯을 콕 집은 삭제
+            yield return null;
+            E2EHarness.Assert(!File.Exists(이곳파일), "삭제도 갈래 폴더로 갔다");
+
+            // ── 이 시나리오의 본체 ──────────────────────────────
+            string 끝지문 = E2EHarness.FingerprintOf(사람파일);
+            E2EHarness.Log($"  끝 지문: {끝지문}");
+            E2EHarness.AssertEqual(끝지문, 시작지문,
+                                   시작지문 == "없음"
+                                       ? "사람의 저장본은 생기지도 않았다"
+                                       : "사람의 저장본은 크기도 쓴 시각도 그대로다");
+
+            // ── 빌린 자리를 되돌린다 ────────────────────────────
+            if (있었나) File.WriteAllText(이곳파일, 원래것);
+            E2EHarness.AssertEqual(File.Exists(이곳파일), 있었나,
+                                   "이 에디터의 기본 슬롯을 원래대로 돌려놓았다");
+
+            // 러너의 뒷정리가 격리를 기대하므로 다시 건다.
+            E2EHarness.IsolateSave();
+            E2EHarness.Assert(SaveSlots.IsIsolated, "다시 격리했다");
+
+            E2EHarness.AssertEqual(E2EHarness.FingerprintOf(사람파일), 시작지문,
+                                   "뒷정리를 지나고도 사람의 저장본은 그대로다");
+            E2EHarness.Log("=== 격리 없이도 사람의 저장본을 밟지 않았다 ===");
+        }
+
         // ══ 과제 둘 — 게이지가 저장을 넘긴다 ════════════════════
 
         /// <summary>

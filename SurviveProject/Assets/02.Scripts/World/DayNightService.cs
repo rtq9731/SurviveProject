@@ -11,7 +11,7 @@ namespace Survive.World
     ///
     /// <b>씬을 고치지 않는다.</b> MainScene은 병합할 수 없는 단일 파일이라 여러 갈래가
     /// 동시에 손대면 한쪽을 버려야 한다. <see cref="GlowGroveService"/>·
-    /// <see cref="MacroniumSeaService"/>와 같은 방식으로 실행 시점에 스스로 붙는다.
+    /// <see cref="LiquidContactService"/>와 같은 방식으로 실행 시점에 스스로 붙는다.
     ///
     /// <b>태양은 새로 만들지 않고 씬에 있던 것을 쓴다.</b> MainScene에는 꺼진 채로
     /// Directional Light가 하나 놓여 있다 — 그림자 설정과 방위가 이미 손으로 잡혀

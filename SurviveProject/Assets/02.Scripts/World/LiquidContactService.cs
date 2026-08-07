@@ -9,6 +9,14 @@ namespace Survive.World
     /// <summary>
     /// 액체에 몸을 담그고 있는 동안 살을 깎는다 (백로그 32).
     ///
+    /// <b>이름이 왜 바뀌었나 (2026-08-07).</b> 이 컴포넌트는 <c>MacroniumSeaService</c>였다.
+    /// 종류 축이 서기 전에는 잴 것이 매크로늄 바다 하나뿐이었으니 맞는 이름이었지만,
+    /// 지금은 <b>호수에 들어가도 이것이 돈다</b> — <see cref="LastLiquid"/>·
+    /// <see cref="LastInLiquid"/>·<see cref="LastExposed"/>는 물에서도 답을 낸다.
+    /// 「매크로늄일 때만 문다」는 여전히 참이지만 <b>「매크로늄만 잰다」는 거짓</b>이고,
+    /// 이름이 반만 참이면 다음 사람은 물 판정을 여기가 아닌 곳에 새로 만든다.
+    /// 재는 것을 그대로 부른다: <b>액체에 닿아 있는 몸</b>.
+    ///
     /// <b>얼마나 깎이는지는 여기서 정하지 않는다.</b> 그 규칙은
     /// <see cref="LiquidCrossing.DamagePerSecond"/>에 있고 Unity 없이 시험된다.
     /// 이 컴포넌트가 하는 일은 지금 몸이 <b>무슨 액체에 어떻게</b> 잠겨 있는지를
@@ -38,11 +46,11 @@ namespace Survive.World
     /// 대가가 없고, 물에 잠긴 <i>다음</i>부터 이 서비스가 세기 시작한다.
     /// </summary>
     [DisallowMultipleComponent]
-    public class MacroniumSeaService : MonoBehaviour
+    public class LiquidContactService : MonoBehaviour
     {
-        static MacroniumSeaService _instance;
+        static LiquidContactService _instance;
 
-        public static MacroniumSeaService Instance => _instance;
+        public static LiquidContactService Instance => _instance;
 
         /// <summary>가장 최근에 읽은 잠긴 정도. 검증에서 상태를 집기 위한 것이다.</summary>
         public static SeaImmersion LastImmersion { get; private set; }
@@ -88,9 +96,9 @@ namespace Survive.World
             TotalDamage = 0f;
             Bites = 0;
 
-            var go = new GameObject("MacroniumSeaService");
+            var go = new GameObject("LiquidContactService");
             DontDestroyOnLoad(go);
-            _instance = go.AddComponent<MacroniumSeaService>();
+            _instance = go.AddComponent<LiquidContactService>();
         }
 
         PlayerVitals _vitals;
@@ -135,9 +143,9 @@ namespace Survive.World
             if (!corroding || _vitals.Health.IsEmpty) { _pending = 0f; return; }
 
             _pending += Time.deltaTime;
-            if (_pending < MacroniumSea.BiteInterval) return;
+            if (_pending < LiquidCrossing.BiteInterval) return;
 
-            _pending -= MacroniumSea.BiteInterval;
+            _pending -= LiquidCrossing.BiteInterval;
             Bite();
         }
 
@@ -211,7 +219,7 @@ namespace Survive.World
 
             // 한 입의 크기는 종류가 정한 초당 값에서 나온다. 상수를 그대로 쓰면
             // 종류가 늘 때마다 여기가 거짓말을 시작한다.
-            float bite = _perSecond * MacroniumSea.BiteInterval;
+            float bite = _perSecond * LiquidCrossing.BiteInterval;
 
             Bites++;
             TotalDamage += bite;

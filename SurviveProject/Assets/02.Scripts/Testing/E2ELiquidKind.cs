@@ -60,7 +60,7 @@ namespace Survive.Testing
 
             E2EHarness.Assert(Swim != null, "PlayerSwimming이 있다");
             E2EHarness.Assert(Vitals != null, "PlayerVitals가 있다");
-            E2EHarness.Assert(MacroniumSeaService.Instance != null, "액체 서비스가 스스로 서 있다");
+            E2EHarness.Assert(LiquidContactService.Instance != null, "액체 서비스가 스스로 서 있다");
 
             E2EHarness.Assert(E2EWaterProbe.TryFindSurface(out _바다수면, out var 액체),
                               "씬에 액체가 있다");
@@ -211,7 +211,7 @@ namespace Survive.Testing
                               "안 잠긴 채 「안 깎였다」를 말하면 아무것도 잰 것이 아니다");
             E2EHarness.Assert(_호수피해 <= 0.001f,
                               $"호수에서는 체력이 한 점도 줄지 않는다 (실측 {_호수피해:F2})");
-            E2EHarness.Assert(MacroniumSeaService.Bites == _건너기전_물린횟수,
+            E2EHarness.Assert(LiquidContactService.Bites == _건너기전_물린횟수,
                               "호수는 한 번도 물지 않았다");
         }
 
@@ -245,7 +245,7 @@ namespace Survive.Testing
             }
             E2EHarness.Assert(swim.IsHeadSubmerged,
                               $"Ctrl로 가라앉아 머리가 잠긴다 ({가라앉음:F1}초)");
-            E2EHarness.AssertEqual(MacroniumSeaService.LastLiquid, LiquidKind.Water,
+            E2EHarness.AssertEqual(LiquidContactService.LastLiquid, LiquidKind.Water,
                                    "잠긴 곳은 호수다");
 
             float 전산소 = Vitals.Oxygen.Current;
@@ -314,8 +314,8 @@ namespace Survive.Testing
             yield return null;
 
             float 전체력 = Vitals.Health.Current;
-            float 전피해 = MacroniumSeaService.TotalDamage;
-            _건너기전_물린횟수 = MacroniumSeaService.Bites;
+            float 전피해 = LiquidContactService.TotalDamage;
+            _건너기전_물린횟수 = LiquidContactService.Bites;
 
             yield return E2EHarness.PressKey(Key.W);
 
@@ -330,10 +330,10 @@ namespace Survive.Testing
 
                 // 종류를 묻지 않는 「노출」로 잰다. 부식으로 재면 호수 쪽 시간이
                 // 언제나 0이 되어 "안 깎였다"와 "안 잠겼다"를 가를 수 없다.
-                if (MacroniumSeaService.LastExposed)
+                if (LiquidContactService.LastExposed)
                 {
                     잠김 += Time.deltaTime;
-                    if (MacroniumSeaService.LastLiquid == 기대종류) 종류를봤다 = true;
+                    if (LiquidContactService.LastLiquid == 기대종류) 종류를봤다 = true;
                 }
 
                 if (잠김 > 0.5f && 평면거리(body.position, _도착) < 4f) { 닿았다 = true; break; }
@@ -345,7 +345,7 @@ namespace Survive.Testing
             yield return E2EHarness.ReleaseAllKeys();
 
             float 잃은것 = 전체력 - Vitals.Health.Current;
-            float 액체가낸것 = MacroniumSeaService.TotalDamage - 전피해;
+            float 액체가낸것 = LiquidContactService.TotalDamage - 전피해;
 
             E2EHarness.Log($"    {기대종류}: {t:F1}초 (헤엄 {잠김:F1}초) " +
                            $"{_출발.ToString("F1")} → {body.position.ToString("F1")} " +

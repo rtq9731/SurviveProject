@@ -18,7 +18,7 @@ namespace Survive.Player
     /// <b>액체의 종류는 이동을 바꾸지 않는다.</b> 호수든 매크로늄 바다든 똑같이
     /// 헤엄치고 똑같이 숨이 막힌다(<see cref="LiquidKind"/>). 종류가 답을 바꾸는 것은
     /// 부식 하나뿐이므로, 여기서는 <b>지금 잠긴 액체가 무엇인지 알려 주기만</b> 하고
-    /// 그것으로 무엇을 할지는 <see cref="Survive.World.MacroniumSeaService"/>가 정한다.
+    /// 그것으로 무엇을 할지는 <see cref="Survive.World.LiquidContactService"/>가 정한다.
     /// 종류를 여기서 판정에 쓰기 시작하면 임계가 둘로 갈린다.
     /// </summary>
     [DisallowMultipleComponent]

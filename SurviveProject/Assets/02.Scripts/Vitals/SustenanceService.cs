@@ -11,14 +11,14 @@ namespace Survive.Vitals
     /// <b>얼마나 줄고 얼마나 차는지는 여기서 정하지 않는다.</b> 그 규칙은
     /// <see cref="Sustenance"/>에 있고 Unity 없이 시험된다. 이 컴포넌트가 하는 일은
     /// 지금 몸이 <b>무슨 액체에 닿아 있는지</b>를 재서 규칙에 묻고, 나온 값을
-    /// 게이지에 반영하는 것뿐이다 — <see cref="MacroniumSeaService"/>와 같은 모양이다.
+    /// 게이지에 반영하는 것뿐이다 — <see cref="LiquidContactService"/>와 같은 모양이다.
     ///
     /// <b>키를 만들지 않았다. 물가에 서 있으면 저절로 채워진다.</b>
     /// 이 항목의 설계 목표가 「잡무가 되지 않는 것」인데, 마시는 데 단추를 하나
     /// 배정하면 그 단추가 곧 잡무다. 거점이 호수 옆이므로 <b>돌아오면 저절로
     /// 채워져 있는 것</b>이 「돌아가는 김에 채운다」의 가장 정직한 구현이다.
     ///
-    /// <b>왜 씬에 놓지 않고 스스로 붙는가.</b> <see cref="MacroniumSeaService"/>·
+    /// <b>왜 씬에 놓지 않고 스스로 붙는가.</b> <see cref="LiquidContactService"/>·
     /// <see cref="DeathDropService"/>와 같은 이유다 — 플레이어 프리팹과 MainScene은
     /// 병합할 수 없는 단일 파일이라 여러 갈래로 나뉘어 일하는 동안 손대지 않는다.
     ///

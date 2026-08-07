@@ -115,18 +115,18 @@ namespace Survive.Testing
             yield return null;
 
             float 전체력 = Vitals.Health.Current;
-            float 전바다 = MacroniumSeaService.TotalDamage;
+            float 전바다 = LiquidContactService.TotalDamage;
 
             float t = 0f, 잠김 = 0f;
             while (t < 5f)
             {
-                if (MacroniumSeaService.IsCorroding) 잠김 += Time.deltaTime;
+                if (LiquidContactService.IsCorroding) 잠김 += Time.deltaTime;
                 t += Time.deltaTime;
                 yield return null;
             }
 
             float 잃은것 = 전체력 - Vitals.Health.Current;
-            float 바다가낸것 = MacroniumSeaService.TotalDamage - 전바다;
+            float 바다가낸것 = LiquidContactService.TotalDamage - 전바다;
 
             E2EHarness.Log($"  물에 잠긴 채 {t:F1}초 (그중 깎인 시간 {잠김:F1}초) — " +
                            $"체력 {전체력:F1} → {Vitals.Health.Current:F1}, 그중 바다 {바다가낸것:F1}");
