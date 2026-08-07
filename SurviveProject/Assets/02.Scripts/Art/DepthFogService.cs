@@ -100,6 +100,12 @@ namespace Survive.Art
         {
             RenderPipelineManager.beginCameraRendering -= OnBeginCamera;
             if (_eye != null && _sceneFar > 0f) _eye.farClipPlane = _sceneFar;
+
+            // 하늘도 우리가 세운 것이므로 우리가 치운다. 실행 중 사본을 남겨 두면
+            // 다음 재생이 앞 판의 시각으로 시작한다.
+            SkyDome.Hide(_eye);
+            SkyDome.Restore();
+
             _body = null;
             _swim = null;
         }
@@ -117,8 +123,11 @@ namespace Survive.Art
         {
             if (!Acquire()) return;
 
-            // 잠긴 동안은 UnderwaterView의 것이다.
-            if (_swim != null && _swim.IsHeadSubmerged) return;
+            // 잠긴 동안은 UnderwaterView의 것이다. 하늘만 먼저 치운다 —
+            // 저쪽도 카메라를 단색으로 돌리지만 그것은 잠기는 <b>순간 한 번</b>이고,
+            // 여기서 매 프레임 확인해 두어야 어느 쪽이 먼저 돌든 물속에
+            // 자홍 그라데이션이 뜨지 않는다.
+            if (_swim != null && _swim.IsHeadSubmerged) { SkyDome.Hide(_eye); return; }
 
             Color color, sky;
             float density;
@@ -163,9 +172,21 @@ namespace Survive.Art
 
             if (_eye == null) return;
 
-            // 배경색이 곧 하늘이다. 원거리 평면 밖은 이 색으로 지워지므로
-            // 잘라 낸 자리가 "대기 저편"으로 자연스럽게 읽힌다.
-            if (_eye.clearFlags == CameraClearFlags.SolidColor) _eye.backgroundColor = sky;
+            // <b>지상에서는 스카이박스가 배경을 그린다.</b> 같은 규칙
+            // (<see cref="DepthFog.SkyColor"/>)을 화소마다 부르므로, 한 화면 안에서
+            // 지평선의 자홍과 천정의 검정이 <b>동시에</b> 선다 — 단색 배경으로는
+            // 그 대비가 한 장 안에 들어오지 않았다.
+            //
+            // 지하와 물속에는 하늘이 없다. 그때는 예전 그대로 안개색으로 지운다.
+            bool 하늘이_섰다 = onSurface && SkyDome.Show(_eye, LastDaylight);
+            if (!하늘이_섰다)
+            {
+                SkyDome.Hide(_eye);
+
+                // 배경색이 곧 하늘이다. 원거리 평면 밖은 이 색으로 지워지므로
+                // 잘라 낸 자리가 "대기 저편"으로 자연스럽게 읽힌다.
+                if (_eye.clearFlags == CameraClearFlags.SolidColor) _eye.backgroundColor = sky;
+            }
 
             LastFarClip = TrimFarClip ? DepthFog.FarClipFor(density, _sceneFar) : _sceneFar;
         }
