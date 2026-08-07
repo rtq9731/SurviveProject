@@ -21,9 +21,10 @@ namespace Survive.Domain.Art
     /// 사라진다. 내는 것이 아니라 <b>튕기는 것</b>이라는 뜻이 형태로 남는다.
     ///
     /// <b>왜 밝은 구역이 되지 않는가.</b> 이것은 셰이더 안에서만 일어나는 일이라
-    /// <see cref="UnityEngine.Light"/> 컴포넌트가 없다. <c>FixedLightZoneService</c>는
-    /// Light를 훑어 <c>LitZoneRegistry</c>에 올리므로, 광원이 아닌 이 림은 애초에
-    /// 그 그물에 걸리지 않는다. 걸리면 버섯 옆이 안전지대가 되어 설계가 뒤집힌다.
+    /// <see cref="UnityEngine.Light"/> 컴포넌트가 없고, 자기를 <c>LitZoneRegistry</c>에
+    /// 올리는 컴포넌트도 달고 있지 않다. 이 세계에서 밝은 구역은 <b>주인이 직접
+    /// 등록해야</b> 생긴다 — 화톳불·랜턴·발광 군락이 그렇게 한다. 걸리면 버섯 옆이
+    /// 안전지대가 되어 설계가 뒤집힌다.
     ///
     /// 값은 셰이더(<c>Assets/03.Materials/MatteRim.shader</c>)와 머티리얼이 함께 쓰고,
     /// <c>MatteRimTests</c>가 셋이 어긋나지 않는지 지킨다.

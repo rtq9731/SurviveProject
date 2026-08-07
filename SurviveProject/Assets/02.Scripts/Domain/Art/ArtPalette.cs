@@ -4,9 +4,15 @@ using UnityEngine;
 namespace Survive.Domain.Art
 {
     /// <summary>
-    /// 지하에서 빛나는 것은 넷뿐이다 — 빛기둥·발광 버섯·불꽃·매크로늄.
+    /// 이 세계에서 빛나는 것은 넷뿐이다 — 지표광·발광 버섯·불꽃·매크로늄.
     /// 그 외의 발광은 금지한다. 이것이 출처가 섞인 저폴리 에셋 팩들을
     /// 한 세계로 묶는 가장 강한 규칙이다.
+    ///
+    /// <b>첫 칸의 뜻이 옮겨졌다 (2026-08-07).</b> 그 색을 쓰던 물건은 없어졌지만
+    /// <b>색은 남는다</b> — 무대가 지상으로 나온 지금 지표광 회백은 곧 <b>햇빛</b>이다
+    /// (<c>DayNightCycle.SunColor</c>). 값도 이름도 그대로 두고 뜻만 옮긴다.
+    /// <c>MaterialRule</c>·<c>LightRule</c>이 이 배열을 검증 기준으로 삼으므로
+    /// 칸을 빼면 네 색 규칙 전체가 흔들린다.
     ///
     /// 값을 바꾸려면 코드가 아니라
     /// docs/superpowers/specs/2026-08-03-p0-art-direction-design.md 를 먼저 고친다.
@@ -14,7 +20,7 @@ namespace Survive.Domain.Art
     public static class ArtPalette
     {
         // 광원 — 색상환에 고르게 떨어뜨려 어둠 속에서 색만으로 구분되게 한다
-        public static readonly Color LightShaft = FromHex(0xE8D5A8);         // 추락 구멍. 모래폭풍에 걸러진 지표광
+        public static readonly Color LightShaft = FromHex(0xE8D5A8);         // 지표광 회백. 지상에서는 이것이 곧 햇빛이다
         public static readonly Color Glowshroom = FromHex(0x2FE6C8);         // 발광 버섯. 생명·안전·무료 충전
         public static readonly Color Flame = FromHex(0xFF9A2E);              // 랜턴·화톳불. 내 빛이자 카운트다운
         public static readonly Color Macronium = FromHex(0xA12EE0);          // MARSO의 인공물. 가로막는 것
