@@ -3,3 +3,6 @@
 /assets/generated/
 
 .superpowers/
+
+# E2E 스윕 작업 폴더 (tools/e2e-sweep/gen.sh 로 언제든 재생성)
+/.sweep/
