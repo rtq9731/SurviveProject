@@ -18,4 +18,4 @@ MonoBehaviour:
   baseDuration: 1
   durability: 16
   drops: {fileID: 11400000, guid: f12c36fc11e41a0448d6c4fdef85f6fc, type: 2}
-  respawnSeconds: 0
+  respawnSeconds: 300

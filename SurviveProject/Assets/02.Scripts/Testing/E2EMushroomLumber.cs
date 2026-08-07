@@ -339,6 +339,9 @@ namespace Survive.Testing
 
             E2EHarness.Log($"  대상: {tree.name} (내구도 {tree.Definition.durability})");
 
+            // 벤 뒤에 남는 밑동이 정말 납작해졌는지 견주려면 베기 전의 크기가 필요하다.
+            var 벤전크기 = tree.transform.localScale;
+
             // 발광 개체면 빛이 함께 꺼져야 한다. 밑동만 남은 자리가 여전히 환하면
             // 무엇을 벤 것인지 알 수 없다. 씬의 발광 버섯 중에는 라이트가 꺼진 채
             // 놓인 것도 있어(장식), 켜져 있던 것만 상대로 삼는다.
@@ -393,8 +396,16 @@ namespace Survive.Testing
 
             E2EHarness.Assert(tree.gameObject.activeInHierarchy,
                               "그루터기는 남는다 — 오브젝트째 꺼지면 다시 자랄 수 없다");
+
+            // 벤 자리에 <b>흔적</b>이 남는다. 통째로 사라졌다가 튀어나오면 세계가
+            // 가짜로 보이고, 무엇보다 어디가 되살아나는 자리인지 배울 방법이 없다
+            // (HarvestRespawnRule.RemnantScale).
             var 겉 = tree.GetComponentsInChildren<Renderer>(true);
-            E2EHarness.Assert(겉.All(r => !r.enabled), "베인 자리에서 버섯이 사라졌다");
+            E2EHarness.Assert(겉.Any(r => r.enabled), "벤 자리에 밑동이 남는다");
+            E2EHarness.Assert(tree.transform.localScale.y < 벤전크기.y * 0.5f,
+                              $"밑동은 납작하다 ({벤전크기.y:F2} → {tree.transform.localScale.y:F2})");
+            var 몸들 = tree.GetComponentsInChildren<Collider>(true);
+            E2EHarness.Assert(몸들.All(c => !c.enabled), "밑동은 겨눠지지 않는다");
             if (빛나던가) E2EHarness.Assert(!빛.enabled, "발광 개체는 빛도 함께 꺼진다");
 
             // 떨어진 것을 실제로 줍는다. 부수는 것과 줍는 것은 다른 동작이다.
@@ -404,12 +415,23 @@ namespace Survive.Testing
             E2EHarness.Assert(Inv.CountOf(WoodId) >= MushroomLumberRule.MinYield,
                               $"한 그루에서 {MushroomLumberRule.MinYield}개 이상 나온다");
 
-            // 그루터기에서 다시 자란다.
-            E2EHarness.Log($"  {검증용재생초}초 뒤 다시 자라는지 본다");
+            // 그루터기에서 다시 자란다. <b>보고 있는 앞에서는 자라지 않는다</b> —
+            // 눈앞에서 나무가 솟는 것은 규칙이 아니라 사고로 읽힌다. 그래서
+            // 돌아선다. 이 한 줄이 없으면 아래 대기가 그대로 시간 초과다.
+            var 눈 = E2EHarness.Eye.transform.position;
+            var 밑동 = 때릴자리(tree);
+            var 그루터기 = 밑동 != null ? 밑동.bounds.center : tree.transform.position;
+            var 반대 = 눈 - 그루터기;
+            반대.y = 0f;
+            if (반대.sqrMagnitude < 0.01f) 반대 = -E2EHarness.Eye.transform.forward;
+            E2EHarness.LookAt(눈 + 반대.normalized * 10f);
+            yield return null;
+            E2EHarness.Log($"  등을 돌리고 {검증용재생초}초 뒤 다시 자라는지 본다");
             yield return E2EHarness.WaitUntil(() => !tree.IsDepleted,
                                               "그루터기에서 거대 버섯이 다시 자랐다",
-                                              검증용재생초 + 4f);
+                                              검증용재생초 + 6f);
             E2EHarness.Assert(겉.All(r => r.enabled), "다시 자란 버섯이 보인다");
+            E2EHarness.Assert(몸들.All(c => c.enabled), "다시 자란 버섯은 다시 겨눠진다");
             if (빛나던가) E2EHarness.Assert(빛.enabled, "빛도 돌아왔다");
         }
 

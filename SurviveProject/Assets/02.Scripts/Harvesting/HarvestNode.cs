@@ -59,9 +59,34 @@ namespace Survive.Harvesting
         PlayerToolHolder _toolHolder;
         Tween _shake;
         Vector3 _baseScale;
+        Vector3 _visualBaseScale;
+        float _respawnOverride = -1f;
+        float _depletedAt;
+        Tween _regrow;
 
         public HarvestNodeSO Definition => definition;
         public bool IsDepleted => _depleted;
+
+        /// <summary>
+        /// 이 노드가 실제로 쓰는 재생 주기(초). 0이면 돌아오지 않는다.
+        /// 보통은 정의가 들고 있는 값이고, 검증이 덮어쓴 값이 있으면 그쪽이 이긴다.
+        /// </summary>
+        public float RespawnSeconds =>
+            _respawnOverride >= 0f ? _respawnOverride
+            : definition != null ? definition.respawnSeconds : 0f;
+
+        /// <summary>
+        /// 이 노드 하나의 재생 주기를 바꾼다. <b>검증에서만 쓴다</b> —
+        /// 300초를 실시간으로 기다리는 검사는 아무도 돌리지 않게 된다.
+        /// 정의(에셋)는 건드리지 않는다. 에셋을 고치면 에디터가 그것을
+        /// 디스크에 저장해 버려, 검증 한 번이 게임의 수치를 바꾼다.
+        /// </summary>
+        public void OverrideRespawnSeconds(float seconds) => _respawnOverride = Mathf.Max(0f, seconds);
+
+        /// <summary>돌아오기까지 남은 초. 다 캐지 않았으면 0이다.</summary>
+        public float RespawnRemaining => !_depleted
+            ? 0f
+            : HarvestRespawnRule.Remaining(_depletedAt, Time.time, RespawnSeconds);
 
         /// <summary>
         /// 실행 시점에 노드를 세우는 서비스가 정의를 물려 준다.
@@ -98,9 +123,14 @@ namespace Survive.Harvesting
         {
             if (visual == null) visual = gameObject;
             _baseScale = transform.localScale;
+            _visualBaseScale = visual.transform.localScale;
         }
 
-        void OnDestroy() => _shake?.Kill();
+        void OnDestroy()
+        {
+            _shake?.Kill();
+            _regrow?.Kill();
+        }
 
         ToolItemSO equipped => _toolHolder != null ? _toolHolder.EquippedTool : null;
 
@@ -309,51 +339,118 @@ namespace Survive.Harvesting
             AudioService.Play(AudioCueBookSO.Or(breakCue, book != null ? book.harvestBreak : null),
                               dropAt ?? transform.position);
 
+            _depletedAt = Time.time;
             SetVisible(false);
 
-            if (definition.respawnSeconds > 0f) StartCoroutine(Respawn());
+            if (RespawnSeconds > 0f) StartCoroutine(Respawn());
         }
 
+        /// <summary>
+        /// 흔적으로 남아 있다가 조건이 맞으면 다시 찬다.
+        ///
+        /// <b>기다리는 것이 둘이다.</b> 하나는 시간(<see cref="HarvestRespawnRule.HasRespawned"/>),
+        /// 다른 하나는 <b>사람이 보고 있지 않은 순간</b>이다. 눈앞에서 물체가 튀어나오는
+        /// 것은 규칙이 아니라 사고로 읽힌다. 두 번째 조건 때문에 <c>WaitForSeconds</c>
+        /// 한 번으로는 끝낼 수 없어 되물어 본다 — 주기를 다 채운 뒤에도 사람이 붙어
+        /// 서 있으면 <b>그대로 기다린다</b>. 시계를 되돌리지는 않는다. 되돌리면 노드
+        /// 옆에 서 있는 것만으로 그 자리를 영구히 죽일 수 있다.
+        /// </summary>
         IEnumerator Respawn()
         {
-            yield return new WaitForSeconds(definition.respawnSeconds);
+            var 간격 = new WaitForSeconds(HarvestRespawnRule.PollSeconds);
+
+            while (true)
+            {
+                yield return 간격;
+                if (RespawnSeconds <= 0f) yield break;      // 검증이 도중에 껐다
+                if (!HarvestRespawnRule.HasRespawned(_depletedAt, Time.time, RespawnSeconds)) continue;
+                if (!Unseen()) continue;
+                break;
+            }
+
             SetVisible(true);
-            _health = definition.durability;
+            _health = definition != null ? definition.durability : 1f;
             _depleted = false;
         }
 
         /// <summary>
-        /// 캔 자리를 감추거나 되돌린다.
+        /// 지금 이 자리가 사람 눈에 안 잡히는가. 보는 주체는 카메라다 —
+        /// 사람이 어디에 서 있느냐가 아니라 <b>화면에 무엇이 담기느냐</b>가
+        /// 판정을 정해야 하기 때문이다. 카메라가 없으면(검증·로딩 중) 막지 않는다.
+        /// </summary>
+        bool Unseen()
+        {
+            var eye = Camera.main;
+            if (eye == null) return true;
+
+            var t = eye.transform;
+            return HarvestRespawnRule.IsUnseen(t.position, t.forward, VisualCenter());
+        }
+
+        /// <summary>흔적의 한가운데. 겉모습이 없으면 발밑 좌표.</summary>
+        Vector3 VisualCenter()
+        {
+            var r = visual != null ? visual.GetComponentInChildren<Renderer>(true) : null;
+            return r != null ? r.bounds.center : transform.position;
+        }
+
+        /// <summary>
+        /// 캔 자리를 감추거나 되돌린다. <b>돌아올 것과 안 돌아올 것이 다르게 사라진다.</b>
         ///
-        /// <b>왜 통째로 끄지 않는 경우가 있는가.</b> <see cref="visual"/>이 이 오브젝트
-        /// 자신인데 재생까지 해야 하면, 오브젝트를 끄는 순간 <see cref="Respawn"/>
-        /// 코루틴이 함께 죽어 <b>영영 돌아오지 않는다</b>. 그래서 그때만은 보이는 것과
-        /// 만져지는 것만 끈다 — <c>GlowCapCluster</c>가 같은 이유로 택한 방식이다.
+        /// <list type="number">
+        /// <item><b>돌아오지 않는 것</b>(합금 더미)은 전과 같이 자취 없이 사라진다.
+        ///   다 캔 매장지에 남길 것이 없다.</item>
+        /// <item><b>돌아오는 것</b>은 <see cref="HarvestRespawnRule.RemnantScale"/>만큼
+        ///   납작하게 눌린 <b>흔적</b>으로 남는다. 흔적이 하는 일이 둘이다 —
+        ///   통째로 사라졌다가 튀어나오는 것을 막고, "여기는 다시 찬다"를
+        ///   플레이어에게 <b>가르친다</b>. 세계에서 유일하게 되살아나는 자리를
+        ///   아무 표시 없이 두면 배울 방법이 없다.</item>
+        /// </list>
+        ///
+        /// 어느 쪽이든 <b>오브젝트를 끄지는 않는다</b> — 끄는 순간 <see cref="Respawn"/>
+        /// 코루틴이 함께 죽어 영영 돌아오지 않는다(<c>GlowCapCluster</c>가 같은 이유로
+        /// 택한 방식이다). 콜라이더를 끄므로 흔적은 겨눠지지도, 부딪히지도 않는다.
         ///
         /// 빛도 함께 끈다. 발광하는 거대 버섯을 베면 그 자리의 빛도 사라져야 한다.
         /// 밑동만 남은 자리가 여전히 환하면 무엇을 벤 것인지 알 수 없다.
-        ///
-        /// 재생하지 않는 노드(씬에 놓인 광맥·잔해 마흔 남짓)는 전과 똑같이
-        /// 오브젝트째 끈다. 돌아오지 않을 것에 굳이 다른 길을 낼 이유가 없다.
         /// </summary>
         void SetVisible(bool on)
         {
-            if (visual != gameObject || definition == null || definition.respawnSeconds <= 0f)
-            {
-                visual.SetActive(on);
-                return;
-            }
+            bool 돌아온다 = RespawnSeconds > 0f;
 
             if (_renderers == null) _renderers = GetComponentsInChildren<Renderer>(true);
             if (_colliders == null) _colliders = GetComponentsInChildren<Collider>(true);
             if (_lights == null) _lights = GetComponentsInChildren<Light>(true);
 
             for (int i = 0; i < _renderers.Length; i++)
-                if (_renderers[i] != null) _renderers[i].enabled = on;
+                if (_renderers[i] != null) _renderers[i].enabled = on || 돌아온다;
             for (int i = 0; i < _colliders.Length; i++)
                 if (_colliders[i] != null) _colliders[i].enabled = on;
             for (int i = 0; i < _lights.Length; i++)
                 if (_lights[i] != null) _lights[i].enabled = on;
+
+            if (!돌아온다)
+            {
+                // 재생하지 않는 노드는 통째로 끈다. 코루틴도 돌 일이 없다.
+                if (visual != null) visual.SetActive(on);
+                return;
+            }
+
+            _regrow?.Kill();
+            var target = on
+                ? _visualBaseScale
+                : Vector3.Scale(_visualBaseScale, HarvestRespawnRule.RemnantScale);
+
+            if (!on)
+            {
+                // 캐는 순간은 즉시 줄어든다. 사람이 한 일의 결과라 지체가 곧 무반응으로 읽힌다.
+                visual.transform.localScale = target;
+                return;
+            }
+
+            // 돌아올 때는 <b>부풀어 오른다</b>. 값이 툭 바뀌면 조건을 다 지켜도 팝으로 읽힌다.
+            _regrow = visual.transform.DOScale(target, HarvestRespawnRule.RegrowTweenSeconds)
+                                      .SetEase(Ease.OutBack);
         }
 
         Renderer[] _renderers;
