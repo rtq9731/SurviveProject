@@ -497,16 +497,13 @@ Sequence,prologue_intro.line1.speaker,우주복 AI,,
 Sequence,prologue_intro.line1.text,착륙 완료. 성간 항행에 쓸 연료는 남지 않았습니다.,,
 Sequence,prologue_intro.line2.speaker,우주복 AI,,
 #   2번째 자막 (앞 줄: 착륙 완료. 성간 항행에 쓸 연료는 남지 않...)
-Sequence,prologue_intro.line2.text,주의 : 현재 생명 유지 장치가 위험 상태입니다.,,
+Sequence,prologue_intro.line2.text,광역 측량 결과 : 기준이 되는 별이 하나도 잡히지 않았습니다.,,
 Sequence,prologue_intro.line3.speaker,우주복 AI,,
-#   3번째 자막 (앞 줄: 주의 : 현재 생명 유지 장치가 위험 상태입...)
+#   3번째 자막 (앞 줄: 광역 측량 결과 : 기준이 되는 별이 하나도...)
 Sequence,prologue_intro.line3.text,주의 : 지표를 덮은 액체가 데이터베이스에 없습니다. 접촉을 피하십시오.,,
 Sequence,prologue_intro.line4.speaker,우주복 AI,,
 #   4번째 자막 (앞 줄: 주의 : 지표를 덮은 액체가 데이터베이스에 ...)
 Sequence,prologue_intro.line4.text,파일럿의 생존을 위해 주변 탐색을 실시합니다...,,
-Sequence,prologue_intro.line5.speaker,우주복 AI,,
-#   5번째 자막 (앞 줄: 파일럿의 생존을 위해 주변 탐색을 실시합니다...)
-Sequence,prologue_intro.line5.text,근처에 적절한 피난처 감지. 표시합니다...,,
 #
 # ---- Vital ----
 #   생명 수치 이름. HUD 게이지에 붙는다.

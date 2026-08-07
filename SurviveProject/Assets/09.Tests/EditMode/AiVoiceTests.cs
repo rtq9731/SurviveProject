@@ -48,13 +48,21 @@ public class AiVoiceTests
                        AiVoice.MaxSentences);
     }
 
-    /// <summary>연출 자막은 분석 보고가 아니지만 문장 상한은 같이 지킨다.</summary>
+    /// <summary>
+    /// 연출 자막은 분석 보고가 아니지만 문장 상한은 같이 지킨다.
+    ///
+    /// <b>표본은 지금 프롤로그에 실제로 있는 세 줄이다</b>(2026-08-07). 예전에는
+    /// 폐기된 무대의 자막("근처에 적절한 피난처 감지" — 동굴로 피신하던 시절의 것)을
+    /// 표본으로 들고 있었다. 그 줄이 자막에서 빠진 뒤에도 여기 남으면
+    /// <b>이 파일만이 폐기된 대사를 붙들게 되고</b>, 저장소 훑개는 그것을
+    /// "그냥 테스트 문자열"로 지나친다. 표본은 살아 있는 것으로 든다.
+    /// </summary>
     [Test]
     public void 프롤로그_자막의_문장_수를_센다()
     {
         Assert.AreEqual(2, AiVoice.SentenceCount("착륙 완료. 성간 항행에 쓸 연료는 남지 않았습니다."));
-        Assert.AreEqual(1, AiVoice.SentenceCount("주의 : 현재 생명 유지 장치가 위험 상태입니다."));
-        Assert.AreEqual(2, AiVoice.SentenceCount("근처에 적절한 피난처 감지. 표시합니다..."));
+        Assert.AreEqual(1, AiVoice.SentenceCount("광역 측량 결과 : 기준이 되는 별이 하나도 잡히지 않았습니다."));
+        Assert.AreEqual(2, AiVoice.SentenceCount("주의 : 지표를 덮은 액체가 데이터베이스에 없습니다. 접촉을 피하십시오."));
     }
 
     [Test]
