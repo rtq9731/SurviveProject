@@ -49,6 +49,18 @@ namespace Survive.World
         /// <summary>이 세계를 세운 시각(초). 원장의 <c>at</c>들이 이 시계로 적혀 있다.</summary>
         public float clockSeconds;
 
+        /// <summary>
+        /// 이 세계의 난수 시드(<see cref="WorldSeed"/>). <b>시각과 같은 이유로
+        /// 여기 실린다</b> — 불러온 세계가 다른 것을 떨구면 그것은 같은 세계가
+        /// 아니고, 저장 직전에 본 「저 덤불에는 무엇이 있다」가 불러오는 순간
+        /// 거짓이 된다.
+        ///
+        /// <b>0은 「시드를 적기 전의 저장본」이다.</b> 그때는 이번 판이 뽑은
+        /// 시드를 그대로 쓴다 — 옛 저장본 전부를 시드 0의 <b>같은 세계</b>로
+        /// 만들어 버리는 것보다 낫다. <see cref="WorldSeed.Fresh"/>는 0을 내지 않는다.
+        /// </summary>
+        public int seed;
+
         public List<WorldRecord> records = new List<WorldRecord>();
     }
 
@@ -201,9 +213,9 @@ namespace Survive.World
         }
 
         /// <summary>저장본에 실을 모양으로. 순서는 적힌 순서 그대로다.</summary>
-        public WorldLedgerState Capture(float clockSeconds)
+        public WorldLedgerState Capture(float clockSeconds, int seed = 0)
         {
-            var state = new WorldLedgerState { clockSeconds = clockSeconds };
+            var state = new WorldLedgerState { clockSeconds = clockSeconds, seed = seed };
             for (int i = 0; i < _order.Count; i++)
                 state.records.Add(_byId[_order[i]]);
             return state;

@@ -40,6 +40,17 @@ namespace Survive.Harvesting
         float _witherTimer;
         bool _gone;
 
+        /// <summary>신원을 지은 자리. 난수도 같은 자리로 파생한다.</summary>
+        Vector3 _site;
+
+        /// <summary>
+        /// 이 식물에서 몇 번째 수확인가. <b>단계를 쓰지 않는 이유</b>는 단계가
+        /// 다시 자라며 되풀이되기 때문이다 — 3단계에서 딸 때마다 같은 것이
+        /// 나오면 그것은 변주가 아니라 표다. 저장하지 않는 이유는
+        /// <c>HarvestNode._rolls</c>에 적어 두었다.
+        /// </summary>
+        int _rolls;
+
         public PlantNodeSO Definition => definition;
         public int Stage => _stage;
         public bool IsEdible => !_gone && _stage > 0;
@@ -54,7 +65,8 @@ namespace Survive.Harvesting
             RefreshScale();
 
             // 신원은 깨어날 때의 자리로 짓고 그 뒤로 바꾸지 않는다.
-            _worldId = Survive.World.WorldId.At(WorldLedgerScope.Plant, transform.position);
+            _site = transform.position;
+            _worldId = Survive.World.WorldId.At(WorldLedgerScope.Plant, _site);
             WorldLedgerRegistry.Register(this);
         }
 
@@ -181,7 +193,13 @@ namespace Survive.Harvesting
 
             if (definition.dropsPerStage != null)
             {
-                foreach (var stack in definition.dropsPerStage.Roll(new System.Random()))
+                // 난수의 주인은 세계 시드다 (WorldSeed). 여기서 새 난수를 만들면
+                // 같은 세계를 두 번 돌려도 같은 것이 안 나온다.
+                var 굴림 = definition.dropsPerStage.Roll(
+                    WorldSeed.Rng(WorldSeedBranch.PlantLoot, _site, _rolls));
+                _rolls++;
+
+                foreach (var stack in 굴림)
                 {
                     int remaining = player.Inventory.Add(stack.item, stack.count);
                     if (remaining > 0)

@@ -84,7 +84,15 @@ namespace Survive.Combat
         {
             if (definition?.drops == null) return;
 
-            var loot = definition.drops.Roll(new System.Random());
+            // <b>난수의 주인은 세계 시드다</b> (<see cref="Survive.World.WorldSeed"/>).
+            // 자리는 <b>죽은 자리</b>다 — 생물은 옮겨 다니므로 고정된 자리가 없고,
+            // 죽은 자리는 그 판에서 실제로 일어난 일의 좌표라 재현할 수 있는
+            // 유일한 값이다. 같은 세계를 두 번 돌려 같은 자리에서 죽으면 같은 것을
+            // 떨군다. 다만 <b>죽는 자리 자체</b>는 배회 난수가 정하고, 그쪽은 아직
+            // 주인이 없다 — 그날까지 이 굴림의 재현성은 거기에 걸려 있다.
+            var loot = definition.drops.Roll(
+                Survive.World.WorldSeed.Rng(Survive.World.WorldSeedBranch.CreatureLoot,
+                                            transform.position));
 
             // 생산자가 먹어서 축적한 스크랩을 더한다.
             // 배부른 개체를 노리면 더 얻는다 — 관찰에 대한 보상이다.
@@ -96,10 +104,13 @@ namespace Survive.Combat
             }
 
             // 떨구는 방식은 채집물 파괴와 같아야 한다. ItemDropper에 모아 두었다.
+            // 한 자리에서 여럿을 떨구므로 흩뿌림에는 순번을 준다. 같은 번호를 주면
+            // 파생이 같아져 전부 한 점에 겹쳐 떨어진다.
             var origin = transform.position + Vector3.up * 0.3f;
+            int 떨군수 = 0;
             foreach (var stack in loot)
                 for (int i = 0; i < stack.count; i++)
-                    ItemDropper.Drop(stack.item, 1, origin, pickupPrefab);
+                    ItemDropper.Drop(stack.item, 1, origin, pickupPrefab, occasion: 떨군수++);
         }
     }
 }

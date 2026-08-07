@@ -109,10 +109,19 @@ public class LootTableTests
         Assert.AreEqual(0, t.Roll(new System.Random(0)).Count);
     }
 
+    /// <summary>
+    /// <b>이 검사는 뒤집혔다.</b> 예전에는 <c>rng가_null이어도_동작한다</c>였고,
+    /// 그것이 뒷문을 <b>계약으로</b> 못 박고 있었다 — 굴림이 스스로
+    /// <c>new System.Random()</c>(시각 시드)을 만들어 메웠으므로 호출자 셋이
+    /// 전부 주인 없는 난수를 넘겨도 아무도 알아채지 못했다.
+    ///
+    /// 이제 난수의 주인은 <c>WorldSeed</c> 하나이고, 안 주면 실패한다.
+    /// 자세한 것은 <c>WorldSeedTests</c>에 있다.
+    /// </summary>
     [Test]
-    public void rng가_null이어도_동작한다()
+    public void rng를_주지_않으면_실패한다()
     {
         var t = 표(항목("scrap", 1, 1, 1f));
-        Assert.DoesNotThrow(() => t.Roll(null));
+        Assert.Throws<System.ArgumentNullException>(() => t.Roll(null));
     }
 }

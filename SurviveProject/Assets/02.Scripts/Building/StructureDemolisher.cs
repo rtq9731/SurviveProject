@@ -46,6 +46,10 @@ namespace Survive.Building
         {
             var d = _structure != null ? _structure.Definition : null;
 
+            // 착지 지점은 세계 시드에서 파생한다. 같은 자리에서 여럿을 떨구므로
+            // 순번을 주지 않으면 전부 한 점에 겹쳐 떨어진다.
+            int 떨군수 = 0;
+
             if (d?.cost != null && player?.Inventory != null)
             {
                 foreach (var c in d.cost)
@@ -57,7 +61,8 @@ namespace Survive.Building
                     // 인벤토리가 가득 차면 바닥에 떨군다. 조용히 사라지면 안 된다.
                     int left = player.Inventory.Add(c.item, give);
                     if (left > 0)
-                        ItemDropper.Drop(c.item, left, transform.position + Vector3.up * 0.4f);
+                        ItemDropper.Drop(c.item, left, transform.position + Vector3.up * 0.4f,
+                                         occasion: 떨군수++);
                 }
             }
 
@@ -69,7 +74,8 @@ namespace Survive.Building
                 foreach (var slot in storage.Contents.Slots)
                 {
                     if (slot.IsEmpty) continue;
-                    ItemDropper.Drop(slot.item, slot.count, transform.position + Vector3.up * 0.5f);
+                    ItemDropper.Drop(slot.item, slot.count, transform.position + Vector3.up * 0.5f,
+                                     occasion: 떨군수++);
                 }
             }
 
