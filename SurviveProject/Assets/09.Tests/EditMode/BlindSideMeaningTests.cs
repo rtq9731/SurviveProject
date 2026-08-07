@@ -4,40 +4,37 @@ using Survive.Creatures;
 using Survive.World;
 
 /// <summary>
-/// <b>「등 뒤 사각」이 지금 무슨 뜻인가</b>를 못 박는 자리.
+/// <b>「등 뒤 사각」이 무슨 뜻인가</b>를 못 박는 자리.
 ///
-/// 이 저장소에는 사각을 판정하는 곳이 <b>둘</b>이고, 둘의 뜻이 다르다.
-/// <list type="bullet">
-/// <item><see cref="LanternRule.IsBlindSpot"/> — <b>뒤이면서 빛 원 밖</b>.
-///       경계가 있는 좁은 영역이다</item>
-/// <item><see cref="LitZoneRegistry.IsBlindSide"/> — <b>뒤이기만 하면 된다</b>.
-///       거리를 보지 않는 <b>반평면</b>이고, <b>낫이 실제로 읽는 것은 이쪽</b>이다</item>
-/// </list>
+/// <b>2026-08-07에 뒤집혔다. 이 파일은 그 전후를 둘 다 기록한다</b> — 조용히 바뀌는
+/// 것이 최악이라고 적어 두고 세운 파일이므로, 뒤집힌 사실 자체가 여기 남아야 한다.
 ///
-/// <b>왜 갈렸는가.</b> 레지스트리 쪽이 일부러 원 밖 조건을 뺐다. 그 주석이 근거를
-/// 적어 두었다 — 넣었더니 등 뒤 5m 언저리로 새는 빛 때문에 낫이 영영 닿지 못하고
-/// 2.77m에서 정체했고, 기획서 §5는 "랜턴은 앞쪽만 지키고 등 뒤를 내준다"이지
-/// "등 뒤 5m는 지킨다"가 아니다.
+/// <b>전(前) — 반평면.</b> <see cref="LitZoneRegistry.IsBlindSide"/>가 거리를 보지 않고
+/// "사람보다 뒤이기만 하면 사각"이었다. 그렇게 둔 데에는 이유가 있었다: 원 조건을
+/// 넣었더니 낫이 등 뒤 5m 언저리에서 오르내리기만 하고 끝내 닿지 못했다(실측 2.77m 정체).
 ///
-/// <b>결과로 나온 실측</b>(클론 A 튜닝 측량, 2026-08-07): 반경 8 · 오프셋 3 ·
-/// 사거리 2.2에서 <b>기하학적 사각(빛 밖 ∩ 사거리 안)은 0.00 m²</b>인데
-/// <see cref="LitZoneRegistry.IsBlindSide"/>가 참인 넓이는 사거리 원의 정확히 절반인
-/// 7.70 m²였고, 낫이 때리는 시간의 96.4%를 「빛 안」에 서 있었다.
+/// <b>진단이 절반이었다.</b> 닿지 못한 진짜 원인은 원 조건이 아니라 <b>오프셋이
+/// 작았던 것</b>이다. 반경 8 · 오프셋 3이면 등 뒤 도달이 5m인데 낫 공격 거리는 2.2m라,
+/// 어두운 자리에 서서는 애초에 팔이 닿지 않았다. 반평면은 그 부호를 가려 준 것뿐이고,
+/// 대가로 <b>낫이 때리는 시간의 96.4%를 빛 안에 서 있게</b> 했다(튜닝 라운드 실측).
+/// 그리고 뒤쪽이 통째로 사각이라 낫의 재등장이 고를 자리가 없어져,
+/// <b>§19「마주 보면 안전」과 §20「자리를 바꿔 가며 나타난다」가 동시에 성립하지 못했다.</b>
 ///
-/// <b>어느 뜻이 참인가는 사람이 정한다.</b> 이 파일이 하는 일은 <b>지금 무엇이
-/// 참인지를 값으로 적어 두는 것</b>뿐이다. 누가 반평면을 반경 제한으로 바꾸면
-/// 여기가 먼저 빨개져서, 그것이 사고가 아니라 <b>결정</b>이었음을 남긴다.
-/// 조용히 바뀌는 것이 최악이다.
+/// <b>후(後) — 원.</b> 사용자 판단(2026-08-07): <b>"내 약간 뒤까지 커버하는 원형 범위가
+/// 있다고 보면 됨."</b> 그래서 원 조건을 되살리고 <b>오프셋을 3m에서 6.5m로 함께 올렸다</b>.
+/// 둘 중 하나만 하면 사각이 사라지거나(원만) 뒤가 통째로 열린 채로 남는다(오프셋만).
+/// 지금은 <see cref="LitZoneRegistry.IsBlindSide"/>와 <see cref="LanternRule.IsBlindSpot"/>이
+/// <b>같은 뜻</b>이다 — 앞 판본에서 둘이 갈려 있던 것이 이 라운드에 합쳐졌다.
 /// </summary>
 public class BlindSideMeaningTests
 {
-    /// <summary>사람이 든 랜턴 하나를 흉내 낸다. 값만 들고 있는 그릇이다.</summary>
+    /// <summary>사람이 든 랜턴 하나를 흉내 낸다. <b>수는 게임에서 읽어 온다.</b></summary>
     sealed class 랜턴흉내 : IOffsetLitSource
     {
         public Vector3 Anchor;
         public Vector3 Forward = Vector3.forward;
-        public float Radius = 8f;      // 티어 1 실측
-        public float Offset = 3f;      // 티어 1 실측
+        public float Radius = LanternRule.Tier1Radius;
+        public float Offset = LanternRule.Tier1ForwardOffset;
 
         public Vector3 LitZoneCenter => Anchor + Forward.normalized * Offset;
         public float LitZoneRadius => Radius;
@@ -46,7 +43,7 @@ public class BlindSideMeaningTests
         public Vector3 LitForward => Forward;
     }
 
-    /// <summary>앞뒤가 없는 광원 — 화톳불·빛기둥.</summary>
+    /// <summary>앞뒤가 없는 광원 — 화톳불.</summary>
     sealed class 화톳불흉내 : ILitZoneSource
     {
         public Vector3 Center;
@@ -56,7 +53,12 @@ public class BlindSideMeaningTests
         public bool IsLit => true;
     }
 
+    const float 낫사거리 = 2.2f;   // 08.Data/Creatures/낫.asset
+
     랜턴흉내 _랜턴;
+
+    /// <summary>원이 등 뒤로 덮는 거리 = 반경 − 오프셋.</summary>
+    static float 뒤덮개 => Mathf.Max(0f, LanternRule.Tier1Radius - LanternRule.Tier1ForwardOffset);
 
     [SetUp]
     public void 세운다()
@@ -72,143 +74,169 @@ public class BlindSideMeaningTests
     static Vector3 뒤로(float m) => new Vector3(0f, 0f, -m);
     static Vector3 앞으로(float m) => new Vector3(0f, 0f, m);
 
-    // ── 지금 참인 것: 반평면 ────────────────────────────────────
+    // ── 지금 참인 것: 원 ───────────────────────────────────────
 
     [Test]
-    public void 낫이_읽는_사각은_거리를_보지_않는_반평면이다()
+    public void 낫이_읽는_사각은_원_밖이다()
     {
-        // <b>이것이 지금의 뜻이다.</b> 사람 바로 뒤 30cm도, 100m 뒤도 똑같이 사각이다.
-        Assert.IsTrue(LitZoneRegistry.IsBlindSide(뒤로(0.3f)), "코앞 뒤");
-        Assert.IsTrue(LitZoneRegistry.IsBlindSide(뒤로(2.2f)), "사거리 위");
-        Assert.IsTrue(LitZoneRegistry.IsBlindSide(뒤로(5f)), "등 뒤 도달선(반경 8 − 오프셋 3)");
+        // <b>이것이 지금의 뜻이다.</b> 사람 바로 뒤는 원이 덮으므로 사각이 아니고,
+        // 원이 끝나는 데부터 사각이다.
+        Assert.Less(뒤덮개, 낫사거리,
+                    "덮개가 사거리보다 멀면 낫이 어둠에 선 채로 닿을 수 없다");
+
+        Assert.IsFalse(LitZoneRegistry.IsBlindSide(뒤로(뒤덮개 * 0.5f)), "덮개 안쪽");
+        Assert.IsTrue(LitZoneRegistry.IsBlindSide(뒤로(뒤덮개 + 0.2f)), "덮개 바로 너머");
         Assert.IsTrue(LitZoneRegistry.IsBlindSide(뒤로(100f)), "아주 멀리");
 
-        // 앞쪽은 어디든 사각이 아니다.
+        // 앞쪽은 어디든 사각이 아니다. 이쪽은 뒤집히지 않았다.
         Assert.IsFalse(LitZoneRegistry.IsBlindSide(앞으로(0.3f)));
         Assert.IsFalse(LitZoneRegistry.IsBlindSide(앞으로(100f)));
     }
 
     [Test]
-    public void 반평면이라_사거리_안의_절반이_사각이다()
+    public void 두_판정이_이제_같은_뜻이다()
     {
-        // 클론 A의 실측(사거리 원의 정확히 절반)을 격자로 다시 센다.
-        // 반평면이 반경 제한으로 바뀌면 이 비율이 0에 가까워진다.
-        const float 사거리 = 2.2f;
+        // <b>앞 판본에서 여기가 갈려 있었다.</b> 레지스트리는 "뒤이기만 하면 사각",
+        // 랜턴 규칙은 "뒤이고 원 밖". 이제 레지스트리가 랜턴 규칙을 그대로 부른다.
+        foreach (float d in new[] { 0.2f, 0.5f, 1f, 뒤덮개, 뒤덮개 + 0.5f, 3f, 8f, 40f })
+        foreach (float x in new[] { -6f, -1f, 0f, 1f, 6f })
+        foreach (float z in new[] { -d, d })
+        {
+            var p = new Vector3(x, 0f, z);
+
+            Assert.AreEqual(
+                LanternRule.IsBlindSpot(_랜턴.Anchor, _랜턴.Forward,
+                                        _랜턴.Radius, _랜턴.Offset, p),
+                LitZoneRegistry.IsBlindSide(p),
+                $"두 판정이 갈렸다 {p}");
+        }
+    }
+
+    [Test]
+    public void 사거리_안에서_사각이_유한하고_양수다()
+    {
+        // 반평면이던 시절 이 비율은 정확히 0.5였고, 원 조건만 넣고 오프셋을 그대로
+        // 두면 <b>0</b>이었다(그래서 Beware → Attack이 사라졌다). 지금은 그 사이다.
         int 안 = 0, 사각 = 0;
 
         for (int ix = -40; ix <= 40; ix++)
         for (int iz = -40; iz <= 40; iz++)
         {
             var p = new Vector3(ix * 0.05f, 0f, iz * 0.05f);
-            if (p.sqrMagnitude > 사거리 * 사거리) continue;
+            if (p.sqrMagnitude > 낫사거리 * 낫사거리) continue;
 
             안++;
             if (LitZoneRegistry.IsBlindSide(p)) 사각++;
         }
 
         float 비율 = (float)사각 / 안;
-        Assert.That(비율, Is.EqualTo(0.5f).Within(0.02f),
-                    $"사거리 안에서 사각인 비율 {비율:P1} — 반평면이면 절반이다");
+        Assert.Greater(사각, 0, "사거리 안에 사각이 한 점도 없으면 낫이 영영 못 때린다");
+        Assert.Less(비율, 0.5f, "원인데 반평면만큼 넓으면 원이 아니다");
     }
 
     [Test]
-    public void 같은_자리를_다른_규칙은_사각이_아니라고_답한다()
+    public void 오프셋을_밀면_사각이_넓어진다()
     {
-        // <b>둘의 뜻이 갈려 있다는 사실 자체</b>를 적어 둔다.
-        // 사거리(2.2m) 안의 등 뒤 한 점: 레지스트리는 사각, 랜턴 규칙은 아니다.
+        // <b>이쪽이 반평면 시절과 가장 크게 갈리는 자리다.</b> 예전에는 오프셋을
+        // 아무리 밀어도 반평면이라 답이 그대로였다. 이제 기획서 §9의 등호
+        // "랜턴 오프셋 = 등 뒤 사각의 크기"가 실제로 성립한다.
         var p = 뒤로(2f);
 
-        Assert.IsTrue(LitZoneRegistry.IsBlindSide(p),
-                      "낫이 읽는 쪽 — 뒤이므로 사각");
-        Assert.IsFalse(LanternRule.IsBlindSpot(_랜턴.Anchor, _랜턴.Forward,
-                                               _랜턴.Radius, _랜턴.Offset, p),
-                       "랜턴 규칙 쪽 — 아직 빛 원 안이므로 사각이 아니다");
-    }
+        _랜턴.Offset = 1f;    // 덮개 7m — 2m 뒤는 아직 원 안
+        Assert.IsFalse(LitZoneRegistry.IsBlindSide(p), "덜 밀면 아직 지켜 준다");
 
-    [Test]
-    public void 오프셋을_아무리_밀어도_반평면은_바뀌지_않는다()
-    {
-        // <b>「오프셋이 사각의 크기를 정한다」가 지금 코드에서 참이 아니다.</b>
-        // 기획서 §9의 등호는 LanternRule.BlindSpotDepth 쪽에서만 성립한다.
-        var p = 뒤로(2f);
+        _랜턴.Offset = 6.5f;  // 덮개 1.5m — 2m 뒤는 원 밖
+        Assert.IsTrue(LitZoneRegistry.IsBlindSide(p), "밀면 내준다");
 
-        foreach (float 오프셋 in new[] { 0.5f, 3f, 7.9f })
-        {
-            _랜턴.Offset = 오프셋;
-            Assert.IsTrue(LitZoneRegistry.IsBlindSide(p), $"오프셋 {오프셋}");
-        }
-
-        // 다만 오프셋이 0이면 사각이 아예 없다. 그 가지는 살아 있다 —
+        // 오프셋 0이면 사각이 아예 없다. 이 회귀선은 그대로 살아 있다 —
         // 웅덩이가 사람을 가운데 두면 내준 쪽이 없기 때문이다.
         _랜턴.Offset = 0f;
         Assert.IsFalse(LitZoneRegistry.IsBlindSide(p), "오프셋 0이면 내준 쪽도 없다");
     }
 
     [Test]
-    public void 고정_조명은_반평면을_통째로_메운다()
+    public void 고정_조명은_원_밖까지_메운다()
     {
-        // 이쪽은 반평면이어도 성립하는 규칙이다 — 화톳불 안이면 뒤라도 사각이 아니다.
+        // 이쪽은 뒤집히지 않았다 — 화톳불 안이면 뒤라도 사각이 아니다.
         // 낫의 따라붙기를 푸는 것과 같은 사실의 다른 얼굴이다(스펙 §20).
-        _랜턴.Offset = 3f;
-        Assert.IsTrue(LitZoneRegistry.IsBlindSide(뒤로(2f)));
+        Assert.IsTrue(LitZoneRegistry.IsBlindSide(뒤로(6f)));
 
         LitZoneRegistry.Register(new 화톳불흉내 { Center = Vector3.zero, Radius = 9f });
-        Assert.IsFalse(LitZoneRegistry.IsBlindSide(뒤로(2f)),
+        Assert.IsFalse(LitZoneRegistry.IsBlindSide(뒤로(6f)),
                        "고정 조명 안이면 누구의 등 뒤라도 내준 쪽이 아니다");
     }
 
     // ── 이 뜻이 FSM에 무엇을 하는가 ─────────────────────────────
 
     [Test]
-    public void 반평면이라서_교전이_열린다()
+    public void 원이라도_교전이_열린다()
     {
-        // <b>Pounces가 기대는 것이 정확히 이 뜻이다.</b> 사거리 안의 등 뒤가 사각이므로
-        // JudgeLight가 Clear를 내고, 그래서 낫이 랜턴을 켠 사람을 때릴 수 있다.
-        // 반경 제한이 들어오면 사거리 안 사각이 0 m²가 되어 이 전이가 사실상 사라진다.
-        var 낫 = new CreatureTraits(BehaviorProfile.Aggressive, 14f, 2.2f, avoidsLight: true);
+        // <b>이 라운드가 지키려는 것.</b> 원으로 좁히면서 오프셋을 함께 올렸으므로,
+        // 사거리 안 등 뒤에 여전히 어두운 자리가 있고 낫이 거기서 때릴 수 있다.
+        // 오프셋을 안 올렸다면 여기가 0점이 되어 이 전이가 통째로 사라졌다.
+        var 낫 = new CreatureTraits(BehaviorProfile.Aggressive, 14f, 낫사거리, avoidsLight: true);
 
-        var 등뒤 = new CreatureSenses(2f, 0f, 0f, false,
+        var 자리 = 뒤로(낫사거리 - 0.05f);
+        Assert.IsTrue(LitZoneRegistry.IsBlindSide(자리), "사거리 끝의 등 뒤가 어둡다");
+
+        var 등뒤 = new CreatureSenses(낫사거리 - 0.05f, 0f, 0f, false,
                                      threatInLight: true,
-                                     threatBlindSide: LitZoneRegistry.IsBlindSide(뒤로(2f)));
+                                     threatBlindSide: LitZoneRegistry.IsBlindSide(자리));
         Assert.AreEqual(LightVerdict.Clear, CreatureDecision.JudgeLight(낫, 등뒤));
 
         var 상황 = new ScytheSituation(detected: true, CreatureDecision.JudgeLight(낫, 등뒤),
                                       closing: true);
         Assert.AreEqual(ScytheState.Attack, ScytheFsm.Next(ScytheState.Beware, 상황));
+    }
 
-        // 정면은 그대로 막힌다. 사람의 방어는 여전히 몸을 돌리는 것이다.
+    [Test]
+    public void 정면은_그대로_막힌다()
+    {
+        // 사람의 방어는 여전히 몸을 돌리는 것이다(§19). 이쪽이 무너지면
+        // 원으로 바꾼 것이 그냥 난이도를 올린 것이 된다.
+        var 낫 = new CreatureTraits(BehaviorProfile.Aggressive, 14f, 낫사거리, avoidsLight: true);
+
         var 정면 = new CreatureSenses(2f, 0f, 0f, false,
                                      threatInLight: true,
                                      threatBlindSide: LitZoneRegistry.IsBlindSide(앞으로(2f)));
         Assert.AreEqual(LightVerdict.Blocked, CreatureDecision.JudgeLight(낫, 정면));
 
-        var 정면상황 = new ScytheSituation(detected: true, CreatureDecision.JudgeLight(낫, 정면),
-                                          closing: true);
-        Assert.AreEqual(ScytheState.Beware, ScytheFsm.Next(ScytheState.Beware, 정면상황));
+        var 상황 = new ScytheSituation(detected: true, CreatureDecision.JudgeLight(낫, 정면),
+                                      closing: true);
+        Assert.AreEqual(ScytheState.Beware, ScytheFsm.Next(ScytheState.Beware, 상황));
     }
 
     [Test]
-    public void 반경_제한이_들어오면_무엇이_깨지는지_적어_둔다()
+    public void 옆도_원_밖이면_사각이_아니다()
     {
-        // <b>이 테스트는 미래의 결정을 위한 계산이다.</b> 반평면 대신
-        // LanternRule.IsBlindSpot(= 뒤 && 빛 원 밖)을 쓰면 사거리 안에서 사각이
-        // 몇 점이나 남는지를 센다. 답이 0이면, 그 규칙으로 바꾸는 순간
-        // Beware → Attack 전이가 <b>랜턴이 켜져 있는 한 영영 일어나지 않는다</b>.
-        const float 사거리 = 2.2f;
-        int 사각 = 0;
+        // <b>원이 되면서 새로 참이 된 것.</b> 옆은 앞도 뒤도 아니므로, 원 밖이어도
+        // 사각이 아니다 — 어두울 뿐이다. 반평면 시절에도 같은 답이었지만 이유가
+        // 달랐다(그때는 "뒤가 아니라서", 지금은 "내준 쪽이 아니라서").
+        // 낫의 재등장이 고를 수 있는 자리가 바로 여기다(§20 게이트 8).
+        for (float d = 1f; d <= 20f; d += 1f)
+            Assert.IsFalse(LitZoneRegistry.IsBlindSide(new Vector3(d, 0f, 0f)), $"옆 {d}m");
+    }
 
-        for (int ix = -40; ix <= 40; ix++)
-        for (int iz = -40; iz <= 40; iz++)
+    [Test]
+    public void 재등장이_고를_자리가_실제로_남는다()
+    {
+        // <b>이 라운드의 목적이 값으로 보이는 자리.</b> 반평면이던 시절에는
+        // 「앞(보임) 제외 + 뒤(사각) 제외」의 교집합이 비어 재등장이 멎었다.
+        // 원이 되면 옆쪽 띠가 살아난다.
+        int 남은자리 = 0;
+        const int 방향수 = 24;
+
+        for (int i = 0; i < 방향수; i++)
         {
-            var p = new Vector3(ix * 0.05f, 0f, iz * 0.05f);
-            if (p.sqrMagnitude > 사거리 * 사거리) continue;
+            float r = i * (360f / 방향수) * Mathf.Deg2Rad;
+            var p = new Vector3(Mathf.Sin(r) * 10f, 0f, Mathf.Cos(r) * 10f);
 
-            if (LanternRule.IsBlindSpot(_랜턴.Anchor, _랜턴.Forward,
-                                        _랜턴.Radius, _랜턴.Offset, p)) 사각++;
+            if (LitZoneRegistry.IsLit(p)) continue;        // 빛 안이면 못 나타난다
+            if (LitZoneRegistry.IsBlindSide(p)) continue;  // 사각은 걸어서 갈 자리다
+            남은자리++;
         }
 
-        Assert.AreEqual(0, 사각,
-                        "반경 제한을 쓰면 사거리 안에 사각이 한 점도 없다 — " +
-                        "그 규칙으로 바꾸려면 반경이나 오프셋을 함께 고쳐야 한다");
+        Assert.Greater(남은자리, 0,
+                       "재등장이 고를 자리가 하나도 없으면 §20 게이트 8이 설 수 없다");
     }
 }

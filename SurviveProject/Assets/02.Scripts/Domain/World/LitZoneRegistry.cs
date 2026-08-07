@@ -84,13 +84,26 @@ namespace Survive.World
         /// 조립하게 두면 규칙이 두 군데로 갈라진다. 물어볼 것은 하나다 —
         /// 여기로 파고들 수 있는가.
         ///
-        /// <b>어둡기만 하면 되는 것이 아니라 「내준 쪽」이어야 한다.</b> 처음에는
-        /// "뒤이면서 어두운 자리"로 두었는데, 그러면 등 뒤 5m 안쪽은 랜턴 불빛이
-        /// 조금 닿는다는 이유로 다시 지켜지는 자리가 되어, 낫이 5m 언저리에서
-        /// 영원히 오르내리기만 하고 <b>끝내 닿지 못했다</b>(실측 2.77m에서 정체).
-        /// 기획서 §5는 그렇게 적혀 있지 않다 — <b>랜턴은 앞쪽만 지키므로 등 뒤를
-        /// 내주고, 붙어 있는 개체를 떼어내지 못한다.</b> 뒤쪽으로 새는 빛은 사람이
-        /// <b>보기</b> 위한 것이지 지키는 것이 아니다.
+        /// <b>뒤이기만 하면 되는 것이 아니라 빛 원 밖이어야 한다 — 2026-08-07에 뒤집혔다.</b>
+        ///
+        /// 원래는 <b>뒤쪽 반평면 전체</b>였다. 그렇게 둔 데에는 이유가 있었다. 처음에
+        /// "뒤이면서 빛 원 밖"으로 두었더니 낫이 등 뒤 5m 언저리에서 오르내리기만 하고
+        /// <b>끝내 닿지 못했고</b>(실측 2.77m에서 정체), 그래서 원 조건을 걷어냈다.
+        ///
+        /// <b>그런데 진단이 절반이었다.</b> 닿지 못한 진짜 원인은 원 조건이 아니라
+        /// <b>오프셋이 작았던 것</b>이다. 반경 8 · 오프셋 3이면 등 뒤 도달이 5m인데
+        /// 낫의 공격 거리는 2.2m라, 어두운 자리에 서서는 애초에 팔이 닿지 않았다
+        /// (<see cref="LanternRule.DarkStrikeMargin"/>가 음수). 반평면은 그 부호를
+        /// 가려 준 것뿐이고, 대신 <b>낫이 때리는 시간의 96.4%를 빛 안에 서 있게</b> 했다.
+        ///
+        /// 반평면은 값도 비쌌다. 뒤쪽이 통째로 사각이라 낫의 재등장이 고를 자리가 없어져
+        /// (§20 게이트 8), <b>§19「마주 보면 안전」과 §20「자리를 바꿔 가며 나타난다」가
+        /// 동시에 성립하지 못했다</b>.
+        ///
+        /// <b>사용자 판단(2026-08-07): "내 약간 뒤까지 커버하는 원형 범위."</b>
+        /// 반평면이 아니라 원이고, 그 원이 몸 약간 뒤까지만 덮는다. 그래서 원 조건을
+        /// 되살리고 <b>오프셋을 함께 올렸다</b> — 둘 중 하나만 하면 사각이 사라지거나
+        /// (원만) 뒤가 통째로 열린 채로 남는다(오프셋만).
         ///
         /// <b>다만 고정 조명은 메운다.</b> 화톳불은 앞뒤가 없고 사람과 함께 돌지도
         /// 않으므로, 그 안에 들어온 자리는 누구의 등 뒤라도 내준 쪽이 아니다.
@@ -98,7 +111,8 @@ namespace Survive.World
         ///
         /// <b>밀린 것이 없으면 내준 쪽도 없다.</b> 오프셋 0이면 원이 사람을 가운데
         /// 두므로 사방이 대칭이고, 그때 등 뒤가 어두운 것은 그냥 <b>먼 것</b>이다.
-        /// 그 가지가 이 규칙 전체의 회귀선이다.
+        /// 그 가지가 이 규칙 전체의 회귀선이고, <see cref="LanternRule.IsBlindSpot"/>이
+        /// 그것을 지킨다.
         /// </summary>
         public static bool IsBlindSide(Vector3 position)
         {
@@ -108,9 +122,17 @@ namespace Survive.World
             {
                 if (!(_sources[i] is IOffsetLitSource offset)) continue;
                 if (!offset.IsLit) continue;
-                if ((offset.LitZoneCenter - offset.LitAnchor).sqrMagnitude < 1e-6f) continue;
 
-                if (LanternRule.IsBehind(offset.LitAnchor, offset.LitForward, position))
+                // 밀린 거리를 광원이 실제로 놓인 자리에서 되읽는다. 티어 상수를
+                // 여기서 다시 꺼내면 <b>등록된 광원과 규칙이 다른 값을 볼 수</b> 있다.
+                float pushed = Vector3.Distance(offset.LitAnchor, offset.LitZoneCenter);
+                if (pushed < 1e-3f) continue;
+
+                // <b>판정은 한 벌이다.</b> 뒤인가와 원 밖인가를 여기서 조립하지 않고
+                // LanternRule에 그대로 묻는다 — 오프셋 0이면 사각이 없다는 가지까지
+                // 저쪽이 들고 있다.
+                if (LanternRule.IsBlindSpot(offset.LitAnchor, offset.LitForward,
+                                            offset.LitZoneRadius, pushed, position))
                     return true;
             }
             return false;
