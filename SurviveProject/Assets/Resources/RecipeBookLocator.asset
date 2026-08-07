@@ -1,0 +1,15 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11c9045e5b601fa47b5dd3b4a854641a, type: 3}
+  m_Name: RecipeBookLocator
+  m_EditorClassIdentifier: Survive.Domain::Survive.Crafting.RecipeBookLocatorSO
+  book: {fileID: 11400000, guid: f5ff3962c89b3e343a943b8a9793bfb0, type: 2}

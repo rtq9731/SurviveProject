@@ -155,20 +155,50 @@ namespace Survive.Core
                 return false;
             }
 
-            foreach (var entry in save.entries)
+            // <b>절 순서에 기대지 않는다.</b> 「세계」 절을 되돌리는 일이 생성 목록의
+            // 몸들을 태어나게 하고, 그 몸들이 그 자리에서 저장 대상으로 등록한다.
+            // 위에서 아래로 한 번만 훑으면 그 몸을 가리키는 절이 앞에 있을 때
+            // 조용히 버려진다 — 규칙과 그 이유는 <see cref="SaveRestoreRule"/>에 있다.
+            int 앉힌것 = SaveRestoreRule.Apply(save.entries, TryRestore, out int 못찾은것);
+
+            if (못찾은것 > 0)
+                Debug.Log($"[SaveService] 이 판이 모르는 절 {못찾은것}개를 건너뛰었다 " +
+                          $"({앉힌것}개 복원). 옛 저장본이거나 다른 씬의 절이다.");
+
+            return true;
+        }
+
+        /// <summary>
+        /// 절 하나를 주인에게 앉힌다.
+        ///
+        /// <b>주인이 아직 없으면 false</b> — 그것만이 「다음 바퀴에 다시 봐 달라」는
+        /// 뜻이다. 주인은 찾았는데 타입이 없거나 내용이 깨진 경우는 <b>true</b>로
+        /// 돌려준다. 그것은 기다린다고 나아지지 않고, false로 돌리면 매 바퀴 같은
+        /// 경고를 다시 찍는다.
+        /// </summary>
+        bool TryRestore(SaveEntry entry)
+        {
+            if (entry == null) return true;
+
+            var target = _saveables.Find(s => s != null && s.SaveKey == entry.key);
+            if (target == null) return false;
+
+            var t = string.IsNullOrEmpty(entry.type) ? null : Type.GetType(entry.type);
+            if (t == null)
             {
-                var target = _saveables.Find(s => s != null && s.SaveKey == entry.key);
-                if (target == null) continue;
+                Debug.LogWarning($"[SaveService] 타입을 찾지 못했습니다: {entry.type}");
+                return true;
+            }
 
-                var t = string.IsNullOrEmpty(entry.type) ? null : Type.GetType(entry.type);
-                if (t == null)
-                {
-                    Debug.LogWarning($"[SaveService] 타입을 찾지 못했습니다: {entry.type}");
-                    continue;
-                }
-
-                var state = JsonUtility.FromJson(entry.json, t);
-                target.RestoreState(state);
+            try
+            {
+                target.RestoreState(JsonUtility.FromJson(entry.json, t));
+            }
+            catch (Exception e)
+            {
+                // 한 절이 깨졌다고 나머지를 통째로 버리지 않는다. 다만 조용히
+                // 넘기면 "그것만 안 돌아왔다"의 이유를 아무도 못 찾는다.
+                Debug.LogError($"[SaveService] '{entry.key}' 절을 되돌리지 못했다: {e.Message}");
             }
             return true;
         }
