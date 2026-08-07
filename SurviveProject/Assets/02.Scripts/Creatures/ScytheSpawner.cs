@@ -58,6 +58,16 @@ namespace Survive.Creatures
 
         static ScytheSpawner _instance;
 
+        /// <summary>
+        /// <b>세우기를 잠시 멈춘다.</b> 제 낫을 손수 세워 재는 검증이 켠다.
+        ///
+        /// 왜 필요한가: 스포너가 돌기 시작하면서 <b>무대에 낫이 하나가 아니게</b> 됐다.
+        /// 유물 굴림 수(<c>RelicShedder.ShedCount</c>)처럼 온 세계가 함께 쓰는 값은
+        /// 다른 개체가 올려도 올라가므로, "내가 세운 그 낫이 흘렸다"를 못 가린다 —
+        /// 실측으로 「낫은 밤에 다닌다」가 그렇게 한 번 깨졌다.
+        /// </summary>
+        public static bool Suspended { get; set; }
+
         readonly List<ScytheMind> _mine = new List<ScytheMind>();
         readonly List<ReappearSpot> _spots = new List<ReappearSpot>(CandidateCount);
         readonly List<Vector3> _spotPositions = new List<Vector3>(CandidateCount);
@@ -138,6 +148,8 @@ namespace Survive.Creatures
         {
             청소한다();
 
+            if (Suspended) return;
+
             if (_player == null)
             {
                 var ctx = Object.FindAnyObjectByType<PlayerContext>(FindObjectsInactive.Exclude);
@@ -180,7 +192,13 @@ namespace Survive.Creatures
             for (int i = 0; i < _mine.Count; i++)
                 _distances.Add(Vector3.Distance(_mine[i].transform.position, _player.position));
 
-            var 물릴것 = ScytheCensus.PickDespawn(_distances, 몇마리);
+            // <b>코어를 물고 가는 개체는 흩어지지 않는다.</b> 그것이 §4.5의 그림이고,
+            // 거리만 보면 둥지에 닿은 그 개체가 사람에게서 가장 멀어 먼저 지워진다.
+            int 남길것 = NestSite.Instance != null
+                       ? NestSite.Instance.남길자리(_mine)
+                       : ScytheCensus.NoOne;
+
+            var 물릴것 = ScytheCensus.PickDespawn(_distances, 몇마리, 남길것);
 
             // 뒤에서부터 지운다. 앞에서 지우면 남은 자리 번호가 밀린다.
             물릴것.Sort();

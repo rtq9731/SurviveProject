@@ -81,6 +81,13 @@ namespace Survive.Testing
 
             시계.Frozen = true;
             시계.SetTimeOfDay(0.95f);
+
+            // <b>제 낫만 무대에 둔다.</b> 이 창구를 쓰는 시나리오들은 낫을 손수
+            // 세워 재는 쪽이고, 스포너가 함께 돌면 세계에 낫이 여럿이 된다 —
+            // 유물 굴림 수처럼 온 세계가 함께 쓰는 값이 남의 것에도 올라간다.
+            // 스포너 자체를 재는 시나리오는 이 뒤에 다시 켠다.
+            ScytheSpawner.Suspended = true;
+            if (ScytheSpawner.Instance != null) ScytheSpawner.Instance.전부_치운다();
         }
 
         /// <summary>세워 둔 시계를 되돌린다. 다음 시나리오가 남은 밤을 물려받지 않게.</summary>
@@ -91,6 +98,7 @@ namespace Survive.Testing
 
             시계.Frozen = false;
             시계.SetTimeOfDay(DayNightService.StartTimeOfDay);
+            ScytheSpawner.Suspended = false;
         }
 
         // ── 준비 ────────────────────────────────────────────────
@@ -195,7 +203,8 @@ namespace Survive.Testing
             E2EHarness.Assert(LitZoneRegistry.IsLit(사람자리), "사람이 빛 안에 서 있다");
             E2EHarness.Assert(!RelicDropRule.CanShed(true, true), "규칙이 흘리지 말라고 한다");
 
-            int 이전 = RelicShedder.ShedCount;
+            var 흘리개 = _낫.GetComponent<RelicShedder>();
+            int 이전 = 흘리개 != null ? 흘리개.Shed : 0;
             float t = 0f;
             while (t < 한판)
             {
@@ -204,10 +213,10 @@ namespace Survive.Testing
                 yield return null;
             }
 
-            E2EHarness.Log($"  {t:F0}초 동안 흘린 것 {RelicShedder.ShedCount - 이전}개 " +
+            int 지금 = 흘리개 != null ? 흘리개.Shed : 0;
+            E2EHarness.Log($"  {t:F0}초 동안 이 낫이 흘린 것 {지금 - 이전}개 " +
                            $"(굴림 간격 {굴림간격}초)");
-            E2EHarness.AssertEqual(RelicShedder.ShedCount, 이전,
-                                   "랜턴을 켠 채로는 한 개도 얻지 못한다");
+            E2EHarness.AssertEqual(지금, 이전, "랜턴을 켠 채로는 한 개도 얻지 못한다");
         }
 
         /// <summary>
@@ -225,25 +234,50 @@ namespace Survive.Testing
             E2EHarness.Assert(!LitZoneRegistry.IsLit(사람자리),
                               "사람이 칠흑 속에 서 있다 — 이 게임에서 가장 무서운 자리다");
 
-            int 이전 = RelicShedder.ShedCount;
+            // <b>이 낫이 흘린 것만 센다.</b> 정적 셈은 온 세계가 함께 쓰는 값이라
+            // 남의 것에도 올라간다 — 게다가 SleepWildCreatures는 두뇌만 재우므로
+            // 잠든 개체도 계속 흘린다. 실측으로 28.1m 떨어진 남의 유물을 세다
+            // 셋 중 하나꼴로 깨졌다.
+            var 흘리개 = _낫.GetComponent<RelicShedder>();
+            E2EHarness.Assert(흘리개 != null, "이 낫에 유물을 흘리는 부품이 붙어 있다");
+            if (흘리개 == null) yield break;
+
+            int 이전 = 흘리개.Shed;
             float t = 0f;
-            while (t < 한판 && RelicShedder.ShedCount == 이전)
+
+            while (t < 한판 && 흘리개.Shed == 이전)
             {
                 if (t % 1.5f < Time.deltaTime) yield return 자리를_잡는다();
                 t += Time.deltaTime;
                 yield return null;
             }
 
-            E2EHarness.Log($"  {t:F1}초 만에 흘렸다 ({RelicShedder.LastShedItemId})");
-            E2EHarness.Assert(RelicShedder.ShedCount > 이전,
+            Vector3 흘린자리 = 흘리개.LastShedPoint;
+            E2EHarness.Log($"  {t:F1}초 만에 흘렸다 ({흘리개.LastShedId}) " +
+                           $"자리 {흘린자리.ToString("F1")}");
+            E2EHarness.Assert(흘리개.Shed > 이전,
                               $"랜턴을 끄니 유물이 나왔다 ({t:F1}초)");
 
             // 손에 넣는 데까지 간다. 흘린 것과 얻은 것은 다른 일이다.
-            var pickup = 떨어진것을_찾는다();
+            var pickup = 떨어진것을_찾는다(흘린자리);
+
+            if (pickup == null)
+            {
+                int 세계에있는것 = Object.FindObjectsByType<Survive.Interaction.ItemPickup>(
+                    FindObjectsInactive.Exclude).Length;
+                float 가장가까운 = float.MaxValue;
+                foreach (var q in Object.FindObjectsByType<Survive.Interaction.ItemPickup>(
+                             FindObjectsInactive.Exclude))
+                    가장가까운 = Mathf.Min(가장가까운, Vector3.Distance(q.transform.position, 흘린자리));
+
+                E2EHarness.Log($"  못 찾았다: 세계의 낙하물 {세계에있는것}개, " +
+                               $"흘린 자리에서 가장 가까운 것 {가장가까운:F1}m");
+            }
+
             E2EHarness.Assert(pickup != null, "떨어진 유물을 찾았다");
             if (pickup == null) yield break;
 
-            string id = RelicShedder.LastShedItemId;
+            string id = 흘리개.LastShedId;
             int 전 = Inv.CountOf(id);
             yield return E2EScytheHabitat.줍는다(pickup);
 
@@ -278,7 +312,8 @@ namespace Survive.Testing
             E2EHarness.Assert(_낫 != null && _낫.gameObject.activeInHierarchy,
                               "낮에도 낫은 세계에 남아 있다 — 지운 것이 아니라 물러난 것이다");
 
-            int 이전 = RelicShedder.ShedCount;
+            var 흘리개2 = _낫.GetComponent<RelicShedder>();
+            int 이전 = 흘리개2 != null ? 흘리개2.Shed : 0;
             float t = 0f;
             var 본상태 = new System.Collections.Generic.HashSet<ScytheState>();
             while (t < 12f)
@@ -290,7 +325,7 @@ namespace Survive.Testing
             }
 
             E2EHarness.Log($"  낮 12초 동안 본 4상태: {string.Join("·", 본상태)} · " +
-                           $"흘린 것 {RelicShedder.ShedCount - 이전}개 · " +
+                           $"흘린 것 {(흘리개2 != null ? 흘리개2.Shed : 0) - 이전}개 · " +
                            $"구역 {_낫.GetComponent<HoverDrifter>()?.Zone}");
 
             E2EHarness.Assert(!본상태.Contains(ScytheState.Beware) &&
@@ -321,7 +356,7 @@ namespace Survive.Testing
             yield return null;
         }
 
-        static Survive.Interaction.ItemPickup 떨어진것을_찾는다()
+        static Survive.Interaction.ItemPickup 떨어진것을_찾는다(Vector3 흘린자리)
         {
             Survive.Interaction.ItemPickup 가장가까운 = null;
             float best = float.MaxValue;
@@ -330,7 +365,7 @@ namespace Survive.Testing
                          FindObjectsInactive.Exclude))
             {
                 if (p == null) continue;
-                float d = Vector3.Distance(p.transform.position, _낫.transform.position);
+                float d = Vector3.Distance(p.transform.position, 흘린자리);
                 if (d >= best) continue;
                 best = d;
                 가장가까운 = p;

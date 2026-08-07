@@ -129,7 +129,25 @@ namespace Survive.Creatures
         float _swellPhase;
         bool _halted = true;
 
-        void Start() => _swellPhase = Random.value * Mathf.PI * 2f;
+        /// <summary>
+        /// 너울의 시작 위상. <b>눈만의 값이 아니라 상태다 — 그래서 주인 있는 난수로 뽑는다.</b>
+        ///
+        /// 이 위상이 <see cref="swellAmplitude"/>(0.1m)만큼 몸의 Y를 흔들고, 그 Y가
+        /// <see cref="Sample"/>의 지형 광선 시작 높이로 들어가 <see cref="Zone"/>을
+        /// 정한다. 해안선 띠의 폭이 0.75m이고 가장자리 여유가 0.3m이니, 0.1m 흔들림은
+        /// 경계에 선 개체의 구역 판정을 뒤집기에 충분하다 — 「낫 꼬리」가 세던
+        /// <b>「육지로 읽힌 프레임」</b>이 그 자리다.
+        ///
+        /// 자리를 시드에 넣으므로 <b>같은 세계의 같은 자리에 선 개체는 늘 같은 위상</b>으로
+        /// 시작한다. 여럿이 한꺼번에 같은 박자로 까딱이지 않는 것은 자리가 서로 다르기
+        /// 때문이지 난수가 매번 달라서가 아니다.
+        /// </summary>
+        void Start()
+        {
+            var rng = Survive.World.WorldSeed.Rng(
+                Survive.World.WorldSeedBranch.Wander, transform.position, occasion: 1);
+            _swellPhase = (float)rng.NextDouble() * Mathf.PI * 2f;
+        }
 
         public void MoveTowards(Vector3 target)
         {

@@ -41,6 +41,22 @@ namespace Survive.Creatures
         /// <summary>지금까지 흘린 유물 수. 검증 하네스가 본다.</summary>
         public static int ShedCount { get; private set; }
 
+        /// <summary>
+        /// <b>이 개체가</b> 흘린 횟수. 위의 정적 셈과 달리 남의 것이 섞이지 않는다.
+        ///
+        /// 왜 필요한가: 세계에 낫이 하나뿐이던 시절에는 정적 셈으로 "그 낫이 흘렸다"를
+        /// 가릴 수 있었다. 이제 여럿이고, 게다가 <c>SleepWildCreatures</c>는 두뇌만
+        /// 재우므로 <b>잠든 개체도 계속 흘린다</b>. 실측으로 「낫은 밤에 다닌다」가
+        /// 28.1m 떨어진 남의 유물을 세다 셋 중 하나꼴로 깨졌다.
+        /// </summary>
+        public int Shed { get; private set; }
+
+        /// <summary>이 개체가 마지막으로 흘린 자리. 검증이 거기서 찾는다.</summary>
+        public Vector3 LastShedPoint { get; private set; }
+
+        /// <summary>이 개체가 마지막으로 흘린 것. 정적 값과 달리 남의 것이 섞이지 않는다.</summary>
+        public string LastShedId { get; private set; }
+
         /// <summary>마지막으로 흘린 유물의 id. 검증 하네스가 pity 순서를 이걸로 본다.</summary>
         public static string LastShedItemId { get; private set; }
 
@@ -53,6 +69,9 @@ namespace Survive.Creatures
 
         CreatureBrain _brain;
         HoverDrifter _drifter;
+
+        /// <summary>이 개체가 이 자리에서 몇 번째로 굴렸는가. 같은 자리에서 같은 답이 나오지 않게 한다.</summary>
+        int _rolls;
         RelicShedSO _rule;
         PlayerInventory _player;
 
@@ -114,16 +133,30 @@ namespace Survive.Creatures
 
             // 전부 가졌으면 아무것도 떨구지 않는다. 유물의 쓸모는 연구 하나뿐이라
             // 다 밝혀낸 뒤로는 바닥에 쌓이기만 한다.
-            int 자리 = RelicDropRule.Pick(_options, inventory, ledger, Random.value);
+            // <b>난수에 주인이 있다.</b> 굴리는 자리는 낫이 선 자리이고, 몇 번째
+            // 굴림인지가 함께 들어간다 — 같은 시드·같은 자리·같은 회차면 같은
+            // 유물이 나온다. UnityEngine.Random을 쓰면 앞선 누군가가 몇 번 굴렸는지에
+            // 답이 딸려 가고, 그러면 저장본을 건너온 세계가 달라진다.
+            var 자리시드 = transform.position;
+            var rng = Survive.World.WorldSeed.Rng(
+                Survive.World.WorldSeedBranch.RelicShed, 자리시드, _rolls);
+            _rolls++;
+
+            int 자리 = RelicDropRule.Pick(_options, inventory, ledger, (float)rng.NextDouble());
             if (자리 < 0 || 자리 >= _items.Count) return;
 
-            if (Random.value > _rule.chance) return;
+            if ((float)rng.NextDouble() > _rule.chance) return;
 
             var item = _items[자리];
             if (item == null) return;
 
-            ItemDropper.Drop(item, 1, transform.position + Vector3.up * 0.35f);
+            var 떨군자리 = transform.position + Vector3.up * 0.35f;
+            ItemDropper.Drop(item, 1, 떨군자리);
+
             ShedCount++;
+            Shed++;
+            LastShedPoint = 떨군자리;
+            LastShedId = item.id;
             LastShedItemId = item.id;
         }
 
