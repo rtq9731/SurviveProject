@@ -870,23 +870,10 @@ namespace Survive.Testing
             result(null);
         }
 
-        /// <summary>몇 걸음 옮긴다. 방금 자리에 다음 것을 지으면 제 자취에 걸린다.</summary>
-        static IEnumerator 비켜선다()
-        {
-            var 처음 = E2EHarness.Player.transform.position;
-
-            for (int a = 0; a < 8; a++)
-            {
-                var dir = Quaternion.Euler(0f, a * 45f + 20f, 0f) * Vector3.forward;
-                if (!UnityEngine.AI.NavMesh.SamplePosition(처음 + dir * 5f, out var hit, 3f,
-                                                           UnityEngine.AI.NavMesh.AllAreas))
-                    continue;
-
-                yield return E2EHarness.TryWalkTo(hit.position, 2.0f, 20f);
-                if (E2EHarness.LastWalkArrived &&
-                    Vector3.Distance(E2EHarness.Player.transform.position, 처음) > 3f)
-                    yield break;
-            }
-        }
+        /// <summary>
+        /// 몇 걸음 옮긴다. 방금 자리에 다음 것을 지으면 제 자취에 걸린다.
+        /// <b>자리를 비우는 것뿐이라 걷지 않는다</b> — <see cref="E2EHarness.StepAside"/>.
+        /// </summary>
+        static IEnumerator 비켜선다() => E2EHarness.StepAside();
     }
 }

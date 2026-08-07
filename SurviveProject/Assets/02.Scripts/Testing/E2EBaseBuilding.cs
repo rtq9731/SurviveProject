@@ -329,28 +329,9 @@ namespace Survive.Testing
         /// <summary>
         /// 몇 걸음 옮긴다. 방금 세운 것 위에 다음 것을 지으려 하면
         /// 시나리오가 스스로 만든 장애물에 걸린다 — 사람도 그렇게 짓지 않는다.
+        /// <b>자리를 비우는 것뿐이라 걷지 않는다</b> — <see cref="E2EHarness.StepAside"/>.
         /// </summary>
-        static IEnumerator StepAside()
-        {
-            var from = E2EHarness.Player.transform.position;
-
-            for (int a = 0; a < 8; a++)
-            {
-                var dir = Quaternion.Euler(0f, a * 45f + 20f, 0f) * Vector3.forward;
-                var want = from + dir * 6f;
-
-                if (!UnityEngine.AI.NavMesh.SamplePosition(want, out var hit, 3f,
-                                                           UnityEngine.AI.NavMesh.AllAreas))
-                    continue;
-
-                yield return E2EHarness.TryWalkTo(hit.position, 2.0f, 20f);
-                if (E2EHarness.LastWalkArrived &&
-                    Vector3.Distance(E2EHarness.Player.transform.position, from) > 3f)
-                    yield break;
-            }
-
-            E2EHarness.Log("  [배치 문제] 옆으로 비켜설 곳이 없다");
-        }
+        static IEnumerator StepAside() => E2EHarness.StepAside(6f);
 
         // ── 세운 제작대 ─────────────────────────────────────────
 
@@ -517,6 +498,10 @@ namespace Survive.Testing
         ///
         /// 코앞에 붙어 서면 카메라가 콜라이더 안으로 들어가고, 안에서 쏜 레이는
         /// 그 콜라이더를 맞히지 못한다. 철거 사거리는 4m니 3m쯤이 알맞다.
+        ///
+        /// <b>각을 찾는 동안 걷지 않는다.</b> 여기서 재는 것은 「그 자리에서 철거가
+        /// 조준되는가」이지 「그 자리까지 걸어서 닿는가」가 아니다. 걸어서 훑던 시절에는
+        /// 후보 하나에 최대 12초짜리 걸음이 붙어 스물넷을 다 돌면 몇 분이 갔다.
         /// </summary>
         static IEnumerator AimForDemolish(GameObject structure, System.Action<bool> result)
         {
@@ -535,11 +520,16 @@ namespace Survive.Testing
 
                     var dir = Quaternion.Euler(0f, a * 45f, 0f) * Vector3.forward;
 
-                    if (!UnityEngine.AI.NavMesh.SamplePosition(target + dir * dist, out var nav,
-                                                               2.0f, UnityEngine.AI.NavMesh.AllAreas))
-                        continue;
+                    var want = target + dir * dist;
+                    if (UnityEngine.AI.NavMesh.SamplePosition(want, out var nav, 2.0f,
+                                                              UnityEngine.AI.NavMesh.AllAreas))
+                        want = nav.position;
 
-                    yield return E2EHarness.TryWalkTo(nav.position, 1.5f, 12f);
+                    if (!E2EHarness.TryGroundY(want, out float 발밑)) continue;
+                    if (!E2EHarness.CanStandAt(new Vector3(want.x, 발밑, want.z))) continue;
+
+                    E2EHarness.StandAt(want);
+                    yield return null;
 
                     E2EHarness.LookAt(target);
                     yield return null;
@@ -620,8 +610,9 @@ namespace Survive.Testing
             E2EHarness.Assert(before < LanternRule.MaxBattery,
                               $"배터리에 채울 자리가 있다 ({before:F0}/{LanternRule.MaxBattery:F0})");
 
-            // 불 곁으로 간다. 충전 반경(6m) 안이어야 한다.
-            yield return E2EHarness.TryWalkTo(fire.transform.position, 2.5f, 20f);
+            // 불 곁에 선다. 충전 반경(6m) 안이어야 한다.
+            // 거기까지 걸어서 닿는가는 재는 대상이 아니다 — 재는 것은 곁에 있으면 차는가다.
+            yield return E2EHarness.StandBeside(fire.transform.position, 2.5f);
 
             float t = 0f;
             while (t < 1.5f) { t += Time.deltaTime; yield return null; }

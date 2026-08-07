@@ -370,11 +370,10 @@ namespace Survive.Testing
                     var dir = Quaternion.Euler(0f, a * 45f, 0f) * Vector3.forward;
                     var stand = 겨눌곳 + dir * dist;
 
-                    if (Physics.Raycast(stand + Vector3.up * 4f, Vector3.down, out var hit, 14f,
-                                        ~0, QueryTriggerInteraction.Ignore))
-                        stand.y = hit.point.y + 1.0f;
-
-                    E2EHarness.Teleport(stand);
+                    // 발밑은 하네스를 지난다. 여기서 직접 광선을 쏘면 <b>이미 그 자리에
+                    // 서 있는 자기 몸</b>을 먼저 맞아 부를 때마다 사람이 떠오른다
+                    // (같은 함정에 실측 5.2m까지 떴다 — Survive.World.GroundPick).
+                    E2EHarness.StandAt(stand);
                     yield return null;
                     E2EHarness.LookAt(겨눌곳);
                     yield return null;
@@ -390,29 +389,35 @@ namespace Survive.Testing
         // ── 옮겨 다니기 ─────────────────────────────────────────
 
         /// <summary>
-        /// 지정한 자리에서 멀어진다. 걸어서 가는 것을 먼저 시도하고,
-        /// 동굴 지형에 막히면 옮겨서라도 떨어뜨린다 — 여기서 보려는 것은
-        /// 보행이 아니라 <b>떨어진 자리에서 죽으면 어디로 돌아오는가</b>다.
+        /// 지정한 자리에서 멀어진다. <b>여기서 보려는 것은 보행이 아니라
+        /// 떨어진 자리에서 죽으면 어디로 돌아오는가</b>이므로 걷지 않고 옮긴다.
+        ///
+        /// 전에는 걸어서 가 보고 막히면 옮겼다. 그런데 막히는 쪽이 흔했고
+        /// (동굴 지형·NavMesh 없는 구역) 그때마다 25초짜리 걸음을 한 번 태운 뒤에야
+        /// 옮겼다 — 재는 것이 없는 자리에서 시간만 쓴 것이다.
         /// </summary>
         public static IEnumerator 멀어진다(Vector3 from, float meters)
         {
             for (int a = 0; a < 8; a++)
             {
                 var dir = Quaternion.Euler(0f, a * 45f + 20f, 0f) * Vector3.forward;
-                if (!NavMesh.SamplePosition(from + dir * meters, out var hit, 4f, NavMesh.AllAreas))
-                    continue;
-                if (평면거리(hit.position, from) < meters * 0.5f) continue;
+                var 가고싶은데 = from + dir * meters;
 
-                yield return E2EHarness.TryWalkTo(hit.position, 2.0f, 25f);
-                if (E2EHarness.LastWalkArrived) yield break;
+                // NavMesh가 있으면 그 위를 고른다. 부활 지점 판정은 「걸어갈 수 있는 자리」를
+                // 요구하지 않지만, 있는 쪽이 세계가 실제로 쓰는 자리에 가깝다.
+                if (NavMesh.SamplePosition(가고싶은데, out var hit, 4f, NavMesh.AllAreas))
+                    가고싶은데 = hit.position;
+                if (평면거리(가고싶은데, from) < meters * 0.5f) continue;
 
-                E2EHarness.Log("  걸어서 못 갔다 — 옮겨서 떨어뜨린다");
-                E2EHarness.Teleport(hit.position + Vector3.up * 0.5f);
+                if (!E2EHarness.TryGroundY(가고싶은데, out float 발밑)) continue;
+                if (!E2EHarness.CanStandAt(new Vector3(가고싶은데.x, 발밑, 가고싶은데.z))) continue;
+
+                E2EHarness.StandAt(가고싶은데);
                 yield return null;
                 yield break;
             }
 
-            E2EHarness.Log("  [주의] 멀어질 자리를 NavMesh에서 찾지 못했다");
+            E2EHarness.Log("  [주의] 멀어질 자리를 찾지 못했다");
         }
 
         // ── 화톳불 세우기 ───────────────────────────────────────
@@ -435,9 +440,19 @@ namespace Survive.Testing
                 Object.FindObjectsByType<Campfire>(FindObjectsInactive.Exclude));
 
             bool found = false;
-            yield return 놓을자리를_조준한다(placer, r => found = r);
+            var 겨눈곳 = Vector3.zero;
+            yield return 놓을자리를_조준한다(placer, r => found = r, p => 겨눈곳 = p);
             E2EHarness.Assert(found, "화톳불을 놓을 자리를 찾았다");
             if (!found) { placer.Cancel(); result(null); yield break; }
+
+            // 「놓을 수 있다」와 「놓았다」 사이에 프레임이 있다. 그 사이 시선이 한 번만
+            // 밀려도 유령은 못 놓는 자리로 가고, 클릭은 조용히 아무것도 세우지 않는다.
+            // 누르기 직전에 같은 자리를 다시 겨눠 그 틈을 닫는다.
+            for (int 다시 = 0; 다시 < 4 && placer.Evaluate(out _, out _) != PlacementResult.Ok; 다시++)
+            {
+                E2EHarness.LookAt(겨눈곳);
+                yield return null;
+            }
 
             yield return E2EHarness.ClickAttack();
             yield return null;
@@ -456,7 +471,8 @@ namespace Survive.Testing
             result(새불);
         }
 
-        static IEnumerator 놓을자리를_조준한다(BuildPlacer placer, System.Action<bool> result)
+        static IEnumerator 놓을자리를_조준한다(BuildPlacer placer, System.Action<bool> result,
+                                            System.Action<Vector3> 겨눈곳 = null)
         {
             var player = E2EHarness.Player.transform;
 
@@ -479,6 +495,7 @@ namespace Survive.Testing
 
                     if (placer.Evaluate(out _, out _) == PlacementResult.Ok)
                     {
+                        겨눈곳?.Invoke(hit.point);
                         result(true);
                         yield break;
                     }
