@@ -8,6 +8,7 @@ using Survive.Creatures;
 using Survive.Harvesting;
 using Survive.Localization;
 using Survive.Progression;
+using Survive.UI;
 
 /// <summary>
 /// 도감이 계층을 알려 주지 않는다는 것을 못 박는 게이트 (기획서 §4.7 · 스펙 §10).
@@ -184,9 +185,16 @@ public class CodexUnclassifiedGateTests
     /// 구역(<c>Plant</c>)에서 나오며 개체 관측 목록에는 실리지 않는다. 계층명을 지우면서
     /// 이 구분까지 지우면 이 검사가 무너진다.
     ///
-    /// <b>식물에게 도감 탭을 새로 만들지는 않았다.</b> 도감의 규율은 "새 데이터를 만들지
-    /// 않는다"이고(§5.13), 탭 하나를 세우려면 식물 목록 에셋과 그것을 여는 해금 경로를
-    /// 새로 지어야 한다. 스펙 §10이 시킨 일은 <b>걷어내는 것</b>이지 짓는 것이 아니다.
+    /// <b>식물에게 도감 탭이 생겼다 (검토회신 ⑪).</b> ⑩ 라운드에서는 "탭 하나를 세우려면
+    /// 식물 목록 에셋과 해금 경로를 새로 지어야 한다"는 이유로 미뤘는데, 회신이 그것을
+    /// <b>지으라고</b> 정했다 — "전부 미분류, 단 식물은 따로 분리"가 곧 식물만 갈래를
+    /// 갖는 구조라는 뜻이다. 그래서 <see cref="PlantBookSO"/>와 <c>plant_</c> 열쇠가 섰다.
+    ///
+    /// <b>그래도 이 검사는 그대로다.</b> 탭이 생긴 것과 라벨이 생긴 것은 다른 일이다.
+    /// 식물은 여전히 다른 종류의 정의이고, 이름도 자기 구역에서 나오고, 개체 관측
+    /// 목록에는 실리지 않는다. 탭이 그 구분을 대신하는 것이 아니라 <b>드러내는</b> 것이다.
+    /// 그리고 식물 탭이 내놓는 모든 문자열은 아래 훑개가 계층어로 검사한다 —
+    /// 탭이 계층명을 다시 들여오는 통로가 되면 첫 번째 검사가 잡는다.
     /// </summary>
     [Test]
     public void 식물은_여전히_생물과_따로_묶여_있다()
@@ -247,10 +255,12 @@ public class CodexUnclassifiedGateTests
         var discoveries = Resources.Load<DiscoveryBookSO>("DiscoveryBook");
         var research = Resources.Load<ResearchBookSO>("ResearchBook");
         var creatures = Resources.Load<CreatureBookSO>("CreatureBook");
+        var plants = Resources.Load<PlantBookSO>(CodexUIPlantBookName);
 
         Assert.IsNotNull(discoveries, "발견 목록을 못 읽었다");
         Assert.IsNotNull(research, "연구 목록을 못 읽었다");
         Assert.IsNotNull(creatures, "생물 목록을 못 읽었다");
+        Assert.IsNotNull(plants, "식물 목록을 못 읽었다 — 탭이 통째로 비어 검사가 헛돈다");
 
         var 모은것 = new List<(string, string)>();
         var 줄 = new List<CodexEntry>();
@@ -269,11 +279,13 @@ public class CodexUnclassifiedGateTests
                 모은것.Add(($"{locale} 잠긴 청사진", CodexCatalog.UnknownBlueprintBody));
                 모은것.Add(($"{locale} 잠긴 연구", CodexCatalog.UnknownResearchBody));
                 모은것.Add(($"{locale} 잠긴 개체", CodexCatalog.UnknownCreatureBody));
+                모은것.Add(($"{locale} 잠긴 식물", CodexCatalog.UnknownPlantBody));
+                모은것.Add(($"{locale} 빈 식물 탭", MenuListing.CodexEmptyBody(CodexSection.Plant)));
 
                 foreach (var (원장이름, 원장) in new[]
                          {
                              ("잠근 채", new UnlockLedger()),
-                             ("다 아는 채", 다_아는_원장(discoveries, research, creatures)),
+                             ("다 아는 채", 다_아는_원장(discoveries, research, creatures, plants)),
                          })
                 {
                     CodexCatalog.BuildDiscoveries(discoveries, 원장, 줄);
@@ -287,6 +299,9 @@ public class CodexUnclassifiedGateTests
 
                     CodexCatalog.BuildCreatures(creatures, 원장, 줄);
                     담는다($"{locale} 개체 관측 · {원장이름}", 줄, 모은것);
+
+                    CodexCatalog.BuildPlants(plants, 원장, 줄);
+                    담는다($"{locale} 식물 관찰 · {원장이름}", 줄, 모은것);
                 }
 
                 // 관측 보고는 화면을 거치지 않고도 지을 수 있다. 목록을 거치는 길이
@@ -294,6 +309,10 @@ public class CodexUnclassifiedGateTests
                 foreach (var c in creatures.creatures)
                     if (c != null)
                         모은것.Add(($"{locale} 관측 보고 {c.id}", CodexCatalog.DescribeCreature(c)));
+
+                foreach (var p in plants.plants)
+                    if (p != null)
+                        모은것.Add(($"{locale} 관찰 기록 {p.name}", CodexCatalog.DescribePlant(p)));
             }
         }
         finally { Loc.SetLocale(처음로케일); }
@@ -315,8 +334,11 @@ public class CodexUnclassifiedGateTests
     /// 세상의 모든 열쇠를 연 원장. 잠긴 줄만 보면 계층명이 숨을 자리가 남는다 —
     /// 계층은 <b>열린 줄</b>에만 적히던 것이다.
     /// </summary>
+    /// <summary>도감이 식물 목록을 찾는 이름. 화면 쪽 상수와 같아야 한다.</summary>
+    const string CodexUIPlantBookName = "PlantBook";
+
     static UnlockLedger 다_아는_원장(DiscoveryBookSO discoveries, ResearchBookSO research,
-                                    CreatureBookSO creatures)
+                                    CreatureBookSO creatures, PlantBookSO plants)
     {
         var ledger = new UnlockLedger();
 
@@ -339,6 +361,12 @@ public class CodexUnclassifiedGateTests
         foreach (var c in creatures.creatures ?? new CreatureDefinitionSO[0])
         {
             var key = CodexCatalog.CreatureKey(c);
+            if (key != null) ledger.Unlock(key);
+        }
+
+        foreach (var p in plants.plants ?? new PlantNodeSO[0])
+        {
+            var key = CodexCatalog.PlantKey(p);
             if (key != null) ledger.Unlock(key);
         }
 
