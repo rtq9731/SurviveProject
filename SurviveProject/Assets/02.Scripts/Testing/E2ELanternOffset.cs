@@ -496,7 +496,13 @@ namespace Survive.Testing
         /// 2.77m에서 더 오지 못했고, 그것은 빛이 아니라 지형이었다. 그래서
         /// <b>사람과 바다 사이에 낫이 지나갈 수 있는 통로가 있는지</b>까지 본다.
         /// </summary>
-        static bool 물가를_찾는다(Vector3 중심, float 최소, float 최대,
+        /// <remarks>
+        /// <b>조명탄 시나리오가 그대로 쓴다</b>(<see cref="E2EFlare"/>). 무대 조건이
+        /// 글자 그대로 같기 때문이다 — 등진 사람에게 낫이 실제로 붙을 수 있는
+        /// 어두운 물가. 복사해 두면 한쪽 무대만 고쳐지고, 그러면 두 시나리오가
+        /// 서로 다른 자리를 재면서 같은 말을 하게 된다.
+        /// </remarks>
+        public static bool 물가를_찾는다(Vector3 중심, float 최소, float 최대,
                                   out Vector3 자리, out Vector3 바다)
         {
             자리 = Vector3.zero;

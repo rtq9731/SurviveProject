@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b31bd7f88dc01be48a346b3ec6a86f77, type: 3}
+  m_Name: "\uC870\uBA85\uD0C4 \uCD1D"
+  m_EditorClassIdentifier: Survive.Domain::Survive.Items.ToolItemSO
+  id: flare_gun
+  displayName: "\uC870\uBA85\uD0C4 \uCD1D"
+  description: "\uB9E4\uD06C\uB85C\uB284 \uC11D\uC601\uC744 \uC555\uCD95\uD574 \uC3D8\uC544
+    \uBCF4\uB0B8\uB2E4. \uBC15\uD78C \uC790\uB9AC\uAC00 \uD55C\uB3D9\uC548 \uC790\uD64D\uC73C\uB85C
+    \uD0C0\uC62C\uB77C, \uADF8 \uC548\uC5D0\uC11C\uB294 \uBE5B\uC744 \uAEBC\uB9AC\uB294
+    \uAC83\uC774 \uBC84\uD2F0\uC9C0 \uBABB\uD55C\uB2E4. \uBC30\uD130\uB9AC\uB97C
+    \uD06C\uAC8C \uBA39\uC73C\uBBC0\uB85C \uD55C \uBC1C\uC774 \uACE7 \uB79C\uD134\uC744
+    \uCF1C \uB458 \uC2DC\uAC04\uC774\uB2E4."
+  icon: {fileID: 21300000, guid: f7aa4e99a54afd040a197d11ee750527, type: 3}
+  maxStack: 1
+  category: 1
+  equipSlot: 0
+  worldPrefab: {fileID: 0}
+  toolType: 0
+  tier: 3
+  harvestPower: 1
+  damage: 0
+  attackRange: 0
+  attackCooldown: 1.2
+  socketChildName: 
