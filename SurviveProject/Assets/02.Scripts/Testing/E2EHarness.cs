@@ -508,9 +508,14 @@ namespace Survive.Testing
 
         // ── 랜턴 ────────────────────────────────────────────────
         //
-        // 랜턴은 상시 점등이 전제고 끄는 입력이 없다(스펙 §12). 그래서 시나리오가
-        // "어두운 자리"를 만들려면 F를 누르는 대신 <b>배터리를 다 쓰는</b> 하나뿐인
-        // 길을 지나야 한다. 그 길을 시나리오마다 다시 적지 않도록 여기 둔다.
+        // 불이 없는 상태에 이르는 길은 둘이다 — 껐거나(F, 검토회신 ②), 다
+        // 태웠거나. 여기 있는 것은 뒤엣길이다.
+        //
+        // 스위치가 돌아온 뒤에도 이쪽을 그대로 두는 이유: 대부분의 시나리오가
+        // 원하는 것은 "어두운 자리"이고, 배터리를 태우는 길은 그 자리를 만들면서
+        // 동시에 <b>셀 자동 교체</b>(TryInsertBatteryCell)까지 지난다. 스위치로
+        // 바꾸면 그 경로가 어느 시나리오에서도 안 돌게 된다. 스위치 쪽 왕복은
+        // E2ELantern·E2EDiveLantern이 F를 실제로 눌러서 따로 본다.
 
         public static LanternController Lantern =>
             UnityEngine.Object.FindAnyObjectByType<LanternController>(FindObjectsInactive.Include);

@@ -7,14 +7,15 @@ using Survive.Localization;
 using Survive.World;
 
 /// <summary>
-/// 챕터 1 재건 스펙 §12 - 랜턴은 상시 점등이고 반경은 작다.
+/// 챕터 1 재건 스펙 §12 - 랜턴의 반경은 작고, 넓은 티어는 더 먹는다.
 ///
 /// 지켜야 하는 규칙은 넷이다.
-/// 1. <b>끄는 길이 없다.</b> 입력도, 그 입력을 받던 코드도 남아 있으면 안 된다.
-/// 2. 불이 들어오는 조건은 둘뿐이다 - 랜턴을 가졌는가, 배터리가 남았는가.
+/// 1. <b>끌 수 있다.</b> F 배선이 살아 있어야 한다(검토회신 2026-08-07 ②).
+///    스위치 자체의 규칙은 <c>LanternSwitchTests</c>가 따로 본다.
+/// 2. 불이 들어오는 재료는 둘이다 - 랜턴을 가졌는가, 배터리가 남았는가.
 /// 3. 반경은 티어에서 나오고, 넓은 티어는 초당 더 먹는다.
 /// 4. <b>수치를 여기 베껴 적지 않는다.</b> 랜턴 반경·초당 소모는 사람이 정할
-///    튜닝 3값이고(기획서 §9, 실행 스펙 §16), 상수를 돌릴 때마다 검사가
+///    튜닝 5값 중 셋이고(기획서 §9, 실행 스펙 §16), 상수를 돌릴 때마다 검사가
 ///    거짓으로 깨지면 손잡이가 손잡이가 아니게 된다. 그래서 아래 단언은
 ///    전부 <see cref="LanternRule"/>의 상수를 <b>참조</b>해서 관계만 본다.
 /// </summary>
@@ -125,15 +126,15 @@ public class LanternRuleTests
     [Test]
     public void 한_칸이라도_남으면_켜져_있고_다_쓰면_꺼진다()
     {
-        Assert.IsTrue(LanternRule.IsLit(1, 0.001f), "남아 있으면 켜져 있다");
-        Assert.IsTrue(LanternRule.IsLit(1, LanternRule.MaxBattery), "가득이면 당연히 켜져 있다");
-        Assert.IsFalse(LanternRule.IsLit(1, 0f), "다 쓰면 꺼진다 - 이것이 유일한 꺼짐이다");
+        Assert.IsTrue(LanternRule.IsLit(1, 0.001f, true), "남아 있으면 켜져 있다");
+        Assert.IsTrue(LanternRule.IsLit(1, LanternRule.MaxBattery, true), "가득이면 당연히 켜져 있다");
+        Assert.IsFalse(LanternRule.IsLit(1, 0f, true), "다 쓰면 꺼진다 - 스위치를 켜 두어도 그렇다");
     }
 
     [Test]
     public void 랜턴이_없으면_배터리가_가득이어도_어둡다()
     {
-        Assert.IsFalse(LanternRule.IsLit(0, LanternRule.MaxBattery),
+        Assert.IsFalse(LanternRule.IsLit(0, LanternRule.MaxBattery, true),
                        "제작 전에는 어둠을 그대로 견딘다");
     }
 
@@ -141,11 +142,12 @@ public class LanternRuleTests
     public void 경고는_임계_이하에서만_울리고_꺼진_랜턴은_울리지_않는다()
     {
         float 임계 = LanternRule.MaxBattery * LanternRule.FlickerThreshold;
-        Assert.IsTrue(LanternRule.IsWarning(1, 임계), "임계값에 닿는 순간부터 깜빡인다");
-        Assert.IsTrue(LanternRule.IsWarning(1, 임계 * 0.5f));
-        Assert.IsFalse(LanternRule.IsWarning(1, 임계 + 1f), "임계 위에서는 아직 조용하다");
-        Assert.IsFalse(LanternRule.IsWarning(1, 0f), "이미 꺼진 것을 경고할 이유가 없다");
-        Assert.IsFalse(LanternRule.IsWarning(0, 임계), "없는 랜턴은 경고하지 않는다");
+        Assert.IsTrue(LanternRule.IsWarning(1, 임계, true), "임계값에 닿는 순간부터 깜빡인다");
+        Assert.IsTrue(LanternRule.IsWarning(1, 임계 * 0.5f, true));
+        Assert.IsFalse(LanternRule.IsWarning(1, 임계 + 1f, true), "임계 위에서는 아직 조용하다");
+        Assert.IsFalse(LanternRule.IsWarning(1, 0f, true), "이미 꺼진 것을 경고할 이유가 없다");
+        Assert.IsFalse(LanternRule.IsWarning(0, 임계, true), "없는 랜턴은 경고하지 않는다");
+        Assert.IsFalse(LanternRule.IsWarning(1, 임계, false), "스위치를 내렸으면 깜빡일 빛이 없다");
     }
 
     [Test]
@@ -228,7 +230,7 @@ public class LanternRuleTests
         Assert.AreEqual(0, LanternRule.EquippedTier(null));
     }
 
-    // ── ⑤ 끄는 길이 코드에 없다 ─────────────────────────────
+    // ── ⑤ 끄는 길이 코드에 살아 있다 ────────────────────────
 
     static string 스크립트뿌리 => Path.Combine(Application.dataPath, "02.Scripts");
 
@@ -239,43 +241,57 @@ public class LanternRuleTests
         "Assets" + full.Substring(Application.dataPath.Length).Replace('\\', '/');
 
     /// <summary>
-    /// <b>이 검사가 이 항목의 핵심이다.</b> 규칙을 아무리 옳게 써도 F를 받던
-    /// 배선이 한 가닥 남아 있으면 랜턴은 그대로 꺼진다. 이름 하나를 통째로
-    /// 금지어로 두는 것이 그 한 가닥을 남기지 않는 가장 싼 방법이다.
+    /// <b>이 검사가 이 항목의 핵심이다.</b> 규칙을 아무리 옳게 써도 F를 받는
+    /// 배선이 한 가닥이라도 끊어져 있으면 랜턴은 그대로 켜져만 있다. 배선은
+    /// 넷을 지나므로(에셋 → 생성 코드 → 리더 → 몸) 넷을 다 센다.
     /// </summary>
     [Test]
-    public void 랜턴을_끄는_입력_배선이_소스에_한_줄도_없다()
+    public void 랜턴을_끄는_입력_배선이_네_군데_모두_살아_있다()
     {
-        var 걸린것 = new List<string>();
-        foreach (var full in 소스전부("*.cs"))
+        var 지나야하는곳 = new Dictionary<string, string>
         {
-            string text = File.ReadAllText(full);
-            if (text.Contains("ToggleLantern")) 걸린것.Add(짧은이름(full));
-        }
+            { Path.Combine(스크립트뿌리, "Input", "PlayerInputActions.inputactions"), "ToggleLantern" },
+            { Path.Combine(스크립트뿌리, "Input", "PlayerInputActions.cs"), "OnToggleLantern" },
+            { Path.Combine(스크립트뿌리, "Input", "InputReaderSO.cs"), "ToggleLanternEvent" },
+            { Path.Combine(스크립트뿌리, "Player", "PlayerToolUser.cs"), "ToggleLanternEvent" },
+        };
 
-        Assert.IsEmpty(걸린것,
-                       "랜턴에는 끄는 선택지가 없다(스펙 §12). 남은 배선:\n  " +
-                       string.Join("\n  ", 걸린것));
+        foreach (var 쌍 in 지나야하는곳)
+        {
+            Assert.IsTrue(File.Exists(쌍.Key), "찾지 못했다: " + 쌍.Key);
+            StringAssert.Contains(쌍.Value, File.ReadAllText(쌍.Key),
+                                  $"{Path.GetFileName(쌍.Key)}에서 배선이 끊겼다");
+        }
     }
 
     [Test]
-    public void 랜턴_컨트롤러에_켜고_끄는_공개_창구가_없다()
+    public void F키가_실제로_토글에_묶여_있다()
+    {
+        string path = Path.Combine(스크립트뿌리, "Input", "PlayerInputActions.inputactions");
+        string text = File.ReadAllText(path);
+
+        int 바인딩 = text.IndexOf("<Keyboard>/f", System.StringComparison.Ordinal);
+        Assert.Greater(바인딩, 0, "F 바인딩이 없다");
+
+        // 바인딩 블록 안에서 액션 이름이 이어져야 한다. 액션만 있고 키가
+        // 다른 데로 가 있으면 누를 키가 없는 기능이 된다.
+        int 액션 = text.IndexOf("\"action\": \"ToggleLantern\"", 바인딩, System.StringComparison.Ordinal);
+        Assert.Greater(액션, 바인딩, "F가 ToggleLantern에 묶여 있지 않다");
+        Assert.Less(액션 - 바인딩, 300, "같은 바인딩 블록 안이어야 한다");
+    }
+
+    [Test]
+    public void 랜턴_컨트롤러에_켜고_끄는_공개_창구가_있다()
     {
         string path = Path.Combine(스크립트뿌리, "World", "LanternController.cs");
         Assert.IsTrue(File.Exists(path), "LanternController를 찾지 못했다: " + path);
 
         string text = File.ReadAllText(path);
-        Assert.IsFalse(text.Contains("public void SetOn"), "SetOn이 남아 있으면 밖에서 끌 수 있다");
-        Assert.IsFalse(text.Contains("public void Toggle"), "Toggle이 남아 있으면 밖에서 끌 수 있다");
+        Assert.IsTrue(text.Contains("public void Toggle"), "F가 부를 창구가 없다");
+        Assert.IsTrue(text.Contains("public void SetSwitch"), "상태를 못 박을 창구가 없다");
         Assert.IsTrue(text.Contains("public bool IsOn"), "켜짐 여부는 여전히 읽을 수 있어야 한다");
-    }
-
-    [Test]
-    public void 입력_에셋에_랜턴_토글_액션이_없다()
-    {
-        string path = Path.Combine(스크립트뿌리, "Input", "PlayerInputActions.inputactions");
-        Assert.IsTrue(File.Exists(path), "입력 에셋을 찾지 못했다: " + path);
-        StringAssert.DoesNotContain("ToggleLantern", File.ReadAllText(path));
+        Assert.IsTrue(text.Contains("public bool HasLantern"),
+                      "배터리 눈금은 소지 여부로 뜬다 - 꺼져도 눈금은 남아야 한다");
     }
 
     [Test]
@@ -293,17 +309,17 @@ public class LanternRuleTests
                                         "직렬화 필드로 두면 프리팹의 사본이 상수를 덮는다");
     }
 
-    // ── ⑥ 화면이 없는 조작을 안내하지 않는다 ────────────────
+    // ── ⑥ 있는 조작을 안내한다 ──────────────────────────────
 
     [Test]
-    public void 조작_안내가_랜턴을_끄라고_말하지_않는다()
+    public void 조작_안내가_F로_켜고_끄라고_말한다()
     {
         Loc.Load(LocalizationTestBootstrap.LoadCatalogFromDisk());
         Loc.SetLocale(StringCatalog.DefaultLocale);
 
         string 안내 = Loc.T("UI", "hint_lantern");
         Assert.IsNotEmpty(안내, "안내 문구는 여전히 있어야 한다");
-        StringAssert.DoesNotContain("[F]", 안내, "없는 키를 안내하면 거짓말이 된다");
-        StringAssert.DoesNotContain("끄기", 안내, "끄는 선택지가 없다");
+        StringAssert.Contains("[F]", 안내, "누를 키를 말하지 않으면 배울 길이 없다");
+        StringAssert.Contains("끄기", 안내, "끌 수 있다는 것이 이 게임의 선택이다");
     }
 }

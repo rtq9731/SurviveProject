@@ -10,18 +10,22 @@ namespace Survive.World
     /// 느리다. 그 비용이 <b>매 순간</b> 작동하게 하려고 셋을 못 박았다.
     ///
     /// <list type="number">
-    /// <item><b>상시 점등이 전제다. 끄는 선택지를 두지 않는다.</b> 예전에는 F로
-    ///       켜고 껐다. 그러면 최적해가 "어두운 데서는 꺼 두고 필요할 때만 켠다"가
-    ///       되어, 플레이어는 비용을 내는 대신 <b>비용을 피하는 조작</b>을 배운다.
-    ///       스위치가 없으면 배터리는 시계가 되고, 시계는 매 순간 돈다.</item>
+    /// <item><b>끌 수 있다. 다만 끌 이유가 없게 설계한다.</b> "상시 점등"은
+    ///       기계적 잠금이 아니라 설계 의도다(검토회신 2026-08-07 ②).
+    ///       <b>끌 수 있어야 "어둠은 비용"이 실제 선택이 된다</b> — 잠그면
+    ///       플레이어가 비용을 감수할 방법이 없어 어둠이 상수로 굳는다.
+    ///       대신 끄면 못 캐고, 못 짓고, 느리고, 가장자리가 안 보인다.
+    ///       비용이 즉시 청구되므로 대부분의 상황에서 켜 두는 것이 최적해다.
+    ///       스위치는 <see cref="NextSwitchState"/>가 정하고, 꺼져 있는 동안은
+    ///       <see cref="AfterDrain(float,int,float,bool)"/>이 배터리를 멈춘다 —
+    ///       <b>아끼는 대신 못 보는 것</b>이 거래의 다른 쪽이기 때문이다.</item>
     /// <item><b>반경은 작다.</b> 켜져 있어도 반경 밖은 캄캄해야 한다. 반경이
     ///       관대하면 어둠은 배터리가 떨어졌을 때만 나타나는 <b>처벌</b>이 되고,
     ///       그러면 "어둠은 비용"이라는 축이 죽는다.</item>
-    /// <item><b>반경 확장은 티어 업그레이드로.</b> 스위치에서 뺏은 선택을 여기서
-    ///       돌려준다. 다만 <b>넓을수록 초당 더 먹는다</b> — 그래야 티어가
-    ///       "무조건 좋은 것"이 아니라 <b>넓게 볼 것인가 오래 버틸 것인가</b>의
-    ///       판단이 된다. 순수 상향이면 고를 것이 없고, 고를 것이 없으면
-    ///       스위치에서 뺏은 선택을 돌려준 것이 아니다.</item>
+    /// <item><b>반경 확장은 티어 업그레이드로.</b> 다만 <b>넓을수록 초당 더
+    ///       먹는다</b> — 그래야 티어가 "무조건 좋은 것"이 아니라 <b>넓게 볼
+    ///       것인가 오래 버틸 것인가</b>의 판단이 된다. 순수 상향이면 고를 것이
+    ///       없다.</item>
     /// </list>
     ///
     /// <b>수치는 아직 확정이 아니다.</b> 랜턴 반경·오프셋·초당 소모는 기획서 §9의
@@ -292,13 +296,55 @@ namespace Survive.World
             IsBehind(anchor, look, point) &&
             !Covers(anchor, look, radius, offset, point);
 
-        /// <summary>
-        /// 지금 불이 들어와 있는가. <b>조건은 둘뿐이고 그중 어느 것도 조작이 아니다.</b>
-        /// 랜턴을 가졌는가(티어 &gt; 0), 배터리가 남았는가.
-        /// </summary>
-        public static bool IsLit(int tier, float battery) => tier > 0 && battery > 0f;
+        // ══ 스위치 ══════════════════════════════════════════════
+        // 끌 수 있어야 "어둠은 비용"이 실제 선택이 된다(검토회신 ②). 스위치의
+        // 상태는 몸이 들고 있지만(LanternController), 그 상태가 무엇을 뜻하는지는
+        // 전부 여기 있다 — 씬을 띄우지 않고 경계값을 확인할 수 있어야 한다.
 
-        /// <summary>지난 시간만큼 닳은 뒤의 배터리. 0 아래로는 내려가지 않는다.</summary>
+        /// <summary>
+        /// 스위치의 처음 자리. <b>켜져 있다.</b> 랜턴을 손에 넣는 순간
+        /// 이유 없이 어두우면 플레이어는 물건이 고장 났다고 읽는다.
+        /// </summary>
+        public const bool DefaultSwitchedOn = true;
+
+        /// <summary>
+        /// 불을 켤 <b>재료</b>가 있는가 — 랜턴을 가졌고 배터리가 남았다.
+        /// 스위치는 보지 않는다. 배터리 눈금이 이것으로 뜬다.
+        /// </summary>
+        public static bool CanLight(int tier, float battery) => tier > 0 && battery > 0f;
+
+        /// <summary>
+        /// 지금 불이 들어와 있는가. <b>재료와 스위치가 둘 다 있어야 한다.</b>
+        /// 불이 없는 상태에 이르는 길이 둘이라는 것이 예전과 갈리는 자리다 —
+        /// 다 태워서(비용을 다 낸 결과)와 꺼서(비용을 안 내기로 한 선택).
+        /// </summary>
+        public static bool IsLit(int tier, float battery, bool switchedOn) =>
+            switchedOn && CanLight(tier, battery);
+
+        /// <summary>
+        /// F를 눌렀을 때 스위치가 갈 자리.
+        ///
+        /// <b>랜턴이 없으면 누른 적이 없는 것과 같다.</b> 제작 전에 꺼 두면
+        /// 랜턴을 손에 넣는 순간 이유 없이 어둡고, 플레이어는 무엇을 눌러야
+        /// 하는지 배운 적이 없다.
+        /// </summary>
+        public static bool NextSwitchState(bool current, int tier) =>
+            tier <= 0 ? DefaultSwitchedOn : !current;
+
+        /// <summary>
+        /// 지난 시간만큼 닳은 뒤의 배터리. 0 아래로는 내려가지 않는다.
+        ///
+        /// <b>꺼져 있으면 줄지 않는다.</b> 이것이 거래의 한쪽이다 —
+        /// 끄면 아끼는 대신 못 본다. 꺼도 계속 닳으면 끄는 것이 순수한 손해라
+        /// 아무도 끄지 않고, 그러면 잠그지 않았을 뿐 잠근 것과 같다.
+        /// </summary>
+        public static float AfterDrain(float battery, int tier, float deltaSeconds, bool switchedOn)
+        {
+            if (!switchedOn) return Mathf.Clamp(battery, 0f, MaxBattery);
+            return AfterDrain(battery, tier, deltaSeconds);
+        }
+
+        /// <summary>켜 둔 채로 지난 시간만큼 닳은 뒤의 배터리.</summary>
         public static float AfterDrain(float battery, int tier, float deltaSeconds)
         {
             if (deltaSeconds <= 0f) return Mathf.Clamp(battery, 0f, MaxBattery);
@@ -321,9 +367,13 @@ namespace Survive.World
             return Mathf.Max(0f, battery) / drain;
         }
 
-        /// <summary>깜빡일 때가 되었는가. 꺼진 랜턴은 경고하지 않는다.</summary>
-        public static bool IsWarning(int tier, float battery) =>
-            IsLit(tier, battery) && battery <= MaxBattery * FlickerThreshold;
+        /// <summary>
+        /// 깜빡일 때가 되었는가. 꺼진 랜턴은 경고하지 않는다 —
+        /// 스위치로 껐든 배터리를 다 썼든 마찬가지다. 깜빡임은 빛의 경고라
+        /// 빛이 없으면 낼 것이 없다.
+        /// </summary>
+        public static bool IsWarning(int tier, float battery, bool switchedOn) =>
+            IsLit(tier, battery, switchedOn) && battery <= MaxBattery * FlickerThreshold;
 
         /// <summary>
         /// 이 아이템이 랜턴이면 그 티어, 아니면 0.

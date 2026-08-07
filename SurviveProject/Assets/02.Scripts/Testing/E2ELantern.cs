@@ -7,20 +7,22 @@ using Survive.World;
 namespace Survive.Testing
 {
     /// <summary>
-    /// 챕터 1 재건 스펙 §12 - 랜턴은 상시 점등이고 반경은 작다.
+    /// 챕터 1 재건 스펙 §12 + 검토회신 2026-08-07 ② - 반경은 작고, <b>끌 수 있다.</b>
     ///
-    /// EditMode(<c>LanternRuleTests</c>)가 규칙과 "끄는 배선이 없다"를 지킨다.
-    /// 규칙이 옳아도 실제 게임이 그 규칙을 지나지 않으면 랜턴은 그대로 꺼져 있고,
-    /// 반경도 그대로 26m다. 그래서 여기서는 <b>진짜 씬에서 진짜 램프를</b> 본다.
+    /// EditMode(<c>LanternRuleTests</c>·<c>LanternSwitchTests</c>)가 규칙과 배선을
+    /// 지킨다. 규칙이 옳아도 실제 게임이 그 규칙을 지나지 않으면 F는 아무 일도
+    /// 하지 않고 반경도 그대로 26m다. 그래서 여기서는 <b>진짜 씬에서 진짜 램프를</b>
+    /// 본다.
     ///
     /// 보는 것은 다섯이다.
     /// 1. 랜턴이 없으면 어둡고, 지니는 순간 <b>아무것도 누르지 않았는데</b> 켜진다.
-    /// 2. <b>끌 수 없다.</b> 옛 토글 키(F)도, 도구를 비우는 Q도 불을 끄지 못한다.
+    /// 2. <b>F로 켜고 끈다.</b> 끄면 밝은 구역이 사라지고 배터리가 멈춘다.
+    ///    다만 도구를 돌리는 Q는 불을 건드리지 않는다.
     /// 3. 반경 밖은 캄캄하다 - 판정 반경과 <b>실제 Light.range</b>가 같은 값이다.
     /// 4. 배터리가 실제로 준다. 초당 소모가 규칙과 맞는다.
     /// 5. 티어를 올리면 반경이 넓어지고, 배터리가 다하면 꺼진다.
     ///
-    /// 수치는 확정이 아니다(기획서 §9 튜닝 3값). 그래서 단언은 전부
+    /// 수치는 확정이 아니다(기획서 §9 튜닝 5값). 그래서 단언은 전부
     /// <see cref="LanternRule"/>을 참조하고, 실측값은 마지막에 표로 남긴다.
     /// </summary>
     public static class E2ELantern
@@ -37,7 +39,7 @@ namespace Survive.Testing
             yield return 무대를_비운다();
             yield return 랜턴이_없으면_어둡다();
             yield return 지니면_저절로_켜진다();
-            yield return 끌_수_없다();
+            yield return F로_켜고_끈다();
             yield return 반경_밖은_캄캄하다();
             yield return 배터리가_준다();
             yield return 티어를_올리면_반경이_넓어진다();
@@ -122,22 +124,51 @@ namespace Survive.Testing
             E2EHarness.Assert(_lamp.enabled, "실제 램프에도 불이 들어왔다");
         }
 
-        // ── 3. 끌 수 없다 ────────────────────────────────────────
+        // ── 3. F로 켜고 끈다 ─────────────────────────────────────
 
         /// <summary>
-        /// <b>이것이 이 시나리오의 핵심이다.</b> 규칙에서 스위치를 지워도 어딘가에
-        /// 배선이 한 가닥 남아 있으면 랜턴은 그대로 꺼진다. 실제로 있었던 두 길을
-        /// 눌러 본다 - 옛 토글 키 F, 그리고 도구 목록을 비울 때 함께 불을 껐던 Q.
+        /// <b>이것이 이 시나리오의 핵심이다.</b> 규칙에 스위치를 세워도 배선이
+        /// 한 가닥이라도 끊겨 있으면 F는 아무 일도 하지 않는다. 그래서 규칙이
+        /// 아니라 <b>키</b>를 누른다 - 에셋·생성 코드·리더·몸 넷을 실제로 지난다.
+        ///
+        /// 끄면 셋이 함께 일어나야 한다: 램프가 꺼지고, 밝은 구역에서 빠지고,
+        /// 배터리가 멈춘다. 셋 중 하나라도 빠지면 "끈 대가"나 "끈 이득" 중
+        /// 한쪽이 청구되지 않아 거래가 성립하지 않는다.
+        ///
+        /// 도구를 돌리는 Q는 여전히 불을 건드리지 않는다 - 랜턴은 손에 드는
+        /// 도구가 아니라 몸에 다는 조명이다.
         /// </summary>
-        static IEnumerator 끌_수_없다()
+        static IEnumerator F로_켜고_끈다()
         {
-            E2EHarness.Log("— 끌 수 없다 —");
+            E2EHarness.Log("— F로 켜고 끈다 —");
 
-            for (int i = 0; i < 3; i++)
+            _lantern.Recharge(LanternRule.MaxBattery);
+            yield return null;
+            E2EHarness.Assert(_lantern.IsOn, "출발선: 켜져 있다");
+
+            for (int 회 = 1; 회 <= 3; 회++)
             {
+                // 끈다
                 yield return E2EHarness.TapKey(Key.F);
-                yield return null;
-                E2EHarness.Assert(_lantern.IsOn, $"F를 {i + 1}번 눌러도 켜져 있다");
+                yield return E2EHarness.WaitUntil(() => !_lantern.IsOn, $"{회}회차: F로 껐다", 3f);
+                E2EHarness.Assert(!_lamp.enabled, $"{회}회차: 실제 램프도 꺼졌다");
+                E2EHarness.Assert(!LitZoneRegistry.IsLit(_lantern.LitZoneCenter),
+                                  $"{회}회차: 밝은 구역이 사라졌다");
+                E2EHarness.Assert(_lantern.HasLantern,
+                                  $"{회}회차: 랜턴은 그대로 지니고 있다 (눈금이 남아야 한다)");
+                E2EHarness.Assert(_lantern.Battery > 0f, $"{회}회차: 배터리는 남아 있다");
+
+                // 꺼진 동안 배터리가 멈춘다 - 아끼는 것이 거래의 한쪽이다
+                float 끈직후 = _lantern.Battery;
+                for (int i = 0; i < 30; i++) yield return null;
+                E2EHarness.AssertEqual(_lantern.Battery, 끈직후, $"{회}회차: 꺼진 동안의 배터리");
+
+                // 켠다
+                yield return E2EHarness.TapKey(Key.F);
+                yield return E2EHarness.WaitUntil(() => _lantern.IsOn, $"{회}회차: F로 다시 켰다", 3f);
+                E2EHarness.Assert(_lamp.enabled, $"{회}회차: 실제 램프도 돌아왔다");
+                E2EHarness.Assert(LitZoneRegistry.IsLit(_lantern.LitZoneCenter),
+                                  $"{회}회차: 밝은 구역이 돌아왔다");
             }
 
             for (int i = 0; i < 3; i++)
