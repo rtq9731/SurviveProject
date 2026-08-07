@@ -9,6 +9,7 @@ using Survive.Interaction;
 using Survive.Items;
 using Survive.Localization;
 using Survive.Player;
+using Survive.World;
 
 namespace Survive.Harvesting
 {
@@ -21,7 +22,7 @@ namespace Survive.Harvesting
     /// 부수면 자원이 인벤토리로 순간이동하지 않고 바닥에 튀어나와 굴러서,
     /// 플레이어가 가서 줍는다.
     /// </summary>
-    public class HarvestNode : MonoBehaviour, IHoldInteractable, IDamageable
+    public class HarvestNode : MonoBehaviour, IHoldInteractable, IDamageable, IWorldStateOwner
     {
         [SerializeField] HarvestNodeSO definition;
 
@@ -83,10 +84,17 @@ namespace Survive.Harvesting
         /// </summary>
         public void OverrideRespawnSeconds(float seconds) => _respawnOverride = Mathf.Max(0f, seconds);
 
-        /// <summary>돌아오기까지 남은 초. 다 캐지 않았으면 0이다.</summary>
+        /// <summary>
+        /// 돌아오기까지 남은 초. 다 캐지 않았으면 0이다.
+        ///
+        /// <b>세계 시계로 잰다</b>(<see cref="WorldClock"/>). 프레임 시계는 저장되지
+        /// 않고, 배속을 타고, 씬 로드로 0이 된다 — 셋 다 재생이 원하지 않는 성질이다.
+        /// 특히 마지막 것은 조용히 치명적이다: 시계만 0으로 돌아가고 <c>_depletedAt</c>이
+        /// 큰 값으로 남으면 그 자리는 <b>영영</b> 안 돌아온다.
+        /// </summary>
         public float RespawnRemaining => !_depleted
             ? 0f
-            : HarvestRespawnRule.Remaining(_depletedAt, Time.time, RespawnSeconds);
+            : HarvestRespawnRule.Remaining(_depletedAt, WorldClock.Seconds, RespawnSeconds);
 
         /// <summary>
         /// 실행 시점에 노드를 세우는 서비스가 정의를 물려 준다.
@@ -124,10 +132,21 @@ namespace Survive.Harvesting
             if (visual == null) visual = gameObject;
             _baseScale = transform.localScale;
             _visualBaseScale = visual.transform.localScale;
+
+            // <b>신원은 깨어날 때의 자리로 짓고 그 뒤로 바꾸지 않는다.</b>
+            // 매번 지금 자리로 지으면 물리나 검증이 물체를 조금 밀어 놓은 것만으로
+            // 저장할 때와 불러올 때의 열쇠가 달라져, 저장본이 아무 자리도 못 찾는다.
+            _worldId = Survive.World.WorldId.At(WorldLedgerScope.Harvest, transform.position);
+
+            // <b>비활성화가 아니라 철거에서 뺀다.</b> 다 캔 노드는 겉모습을 끄는데
+            // (돌아오지 않는 것은 통째로), 그때 원장에서 빠지면 「다 캤다」가
+            // 저장되지 않아 불러온 세계에서 도로 서 있게 된다.
+            WorldLedgerRegistry.Register(this);
         }
 
         void OnDestroy()
         {
+            WorldLedgerRegistry.Unregister(this);
             _shake?.Kill();
             _regrow?.Kill();
         }
@@ -339,7 +358,7 @@ namespace Survive.Harvesting
             AudioService.Play(AudioCueBookSO.Or(breakCue, book != null ? book.harvestBreak : null),
                               dropAt ?? transform.position);
 
-            _depletedAt = Time.time;
+            _depletedAt = WorldClock.Seconds;
             SetVisible(false);
 
             if (RespawnSeconds > 0f) StartCoroutine(Respawn());
@@ -363,7 +382,7 @@ namespace Survive.Harvesting
             {
                 yield return 간격;
                 if (RespawnSeconds <= 0f) yield break;      // 검증이 도중에 껐다
-                if (!HarvestRespawnRule.HasRespawned(_depletedAt, Time.time, RespawnSeconds)) continue;
+                if (!HarvestRespawnRule.HasRespawned(_depletedAt, WorldClock.Seconds, RespawnSeconds)) continue;
                 if (!Unseen()) continue;
                 break;
             }
@@ -456,5 +475,63 @@ namespace Survive.Harvesting
         Renderer[] _renderers;
         Collider[] _colliders;
         Light[] _lights;
+
+        // ── 세계 원장 ────────────────────────────────────────────
+        //
+        // <b>이 컴포넌트는 스스로 저장하지 않는다.</b> 세계의 상태를 저장본에
+        // 싣는 창구는 <see cref="WorldLedgerService"/> 하나이고, 여기서 하는 일은
+        // 등록과 응답뿐이다. 잔해가 스물몇 개인데 각자 저장에 참여하면
+        // 창구가 스물몇 개가 된다.
+
+        string _worldId;
+
+        public string WorldId => _worldId;
+
+        /// <summary>
+        /// <b>씬이 놓아둔 그대로면 아무것도 적지 않는다</b>(<c>null</c>).
+        /// 원장은 달라진 것만 담고, 그 덕분에 「다시 찬 자리」가 저절로 원장에서
+        /// 빠져 불러온 세계에서 다시 서 있게 된다.
+        ///
+        /// <b>남은 시간이 아니라 다 캔 시각을 적는다.</b> 남은 시간을 적으면
+        /// 불러온 순간부터 다시 세므로, 저장해 둔 사이에 흐른 세계 시간이
+        /// 통째로 사라진다.
+        /// </summary>
+        public WorldRecord CaptureWorld() => !_depleted
+            ? null
+            : new WorldRecord
+            {
+                kind = WorldLedgerScope.Harvest,
+                gone = true,
+                at = _depletedAt,
+            };
+
+        /// <summary>
+        /// 원장이 돌려주는 상태. <c>null</c>이면 씬이 놓아둔 그대로 — 곧 서 있다.
+        ///
+        /// <b>여기서 시각을 다시 재지 않는다.</b> 다 캔 시각만 앉히고 판정은
+        /// <see cref="Respawn"/>의 되물음에 맡긴다. 불러오기 도중에는 시계 항목과
+        /// 세계 항목 중 어느 쪽이 먼저 복원됐는지 알 수 없어, 그 순간 재면
+        /// 저장본의 항목 순서가 게임 결과를 바꾼다.
+        /// </summary>
+        public void RestoreWorld(WorldRecord record)
+        {
+            bool 캐여있다 = record != null && record.gone;
+
+            if (!캐여있다)
+            {
+                if (!_depleted) return;
+                _depleted = false;
+                _health = definition != null ? definition.durability : 1f;
+                SetVisible(true);
+                return;
+            }
+
+            _depletedAt = record.at;
+            if (_depleted) return;
+
+            _depleted = true;
+            SetVisible(false);
+            if (RespawnSeconds > 0f && isActiveAndEnabled) StartCoroutine(Respawn());
+        }
     }
 }

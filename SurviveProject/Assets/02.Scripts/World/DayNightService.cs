@@ -57,7 +57,6 @@ namespace Survive.World
             Instance = go.AddComponent<DayNightService>();
         }
 
-        double _seconds = DayNightCycle.SecondsAt(StartTimeOfDay);
         Light _sun;
         bool _sunWasActive;
         bool _sunWasEnabled;
@@ -73,11 +72,17 @@ namespace Survive.World
         /// </summary>
         public bool Frozen { get; set; }
 
-        /// <summary>흐른 초. 하루를 넘어도 계속 자란다.</summary>
-        public double Seconds => _seconds;
+        /// <summary>
+        /// 흐른 초. 하루를 넘어도 계속 자란다.
+        ///
+        /// <b>값은 여기 없다.</b> 세계 시각의 주인은 <see cref="WorldClock"/>이고
+        /// 이 컴포넌트는 그것을 <b>모는 몸</b>이다 — 재생 시각과 지핀 시각도 같은
+        /// 시계를 보므로, 시계가 둘로 갈리면 「저장을 건너서도 도는 재생」이 성립하지 않는다.
+        /// </summary>
+        public double Seconds => WorldClock.Now;
 
         /// <summary>지금 시각(0~1). 0이 자정이다.</summary>
-        public float TimeOfDay => DayNightCycle.Wrap(_seconds);
+        public float TimeOfDay => DayNightCycle.Wrap(WorldClock.Now);
 
         /// <summary>지금 국면.</summary>
         public DayPhase Phase => DayNightCycle.PhaseAt(TimeOfDay);
@@ -92,6 +97,11 @@ namespace Survive.World
         {
             if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
+
+            // 아침에서 시작하는 것은 <b>처음 한 번</b>뿐이다. 컴포넌트가 다시
+            // 깨어날 때마다 시각을 앉히면 이미 흐르던 세계가 아침으로 되감기고,
+            // 그러면 다 캔 시각과 불 지핀 시각이 전부 미래가 되어 영영 안 돌아온다.
+            WorldClock.StartAt(DayNightCycle.SecondsAt(StartTimeOfDay));
 
             SceneManager.sceneLoaded -= OnSceneLoaded;
             SceneManager.sceneLoaded += OnSceneLoaded;
@@ -116,28 +126,54 @@ namespace Survive.World
             Apply();
         }
 
+        /// <summary>
+        /// 세계를 굴린다.
+        ///
+        /// <b>배속을 태우지 않는다 — <c>deltaTime</c>이 아니라 <c>unscaledDeltaTime</c>이다.</b>
+        /// 배속은 검증이 기다리기 싫을 때 돌리는 <b>화면 쪽 손잡이</b>이지 세계가
+        /// 빨라진 것이 아니다. 그것이 세계 시각에 곱해지면 재생 주기와 하루 길이가
+        /// 검증 설정에 따라 달라지고, 재는 것이 게임의 값이 아니게 된다.
+        ///
+        /// <b>다만 완전히 멈춘 것은 존중한다.</b> 일시정지(<c>timeScale = 0</c>)는
+        /// 「빠르게/느리게」가 아니라 <b>세계가 섰다</b>는 뜻이다. 그때까지 재생이
+        /// 돌면 메뉴를 열어 둔 채 자리를 뜨는 것이 자원 전략이 된다.
+        ///
+        /// <b>화면 연출은 반대쪽에 남는다.</b> 픽업 피드·레이더 숨김·오디오
+        /// 스로틀이 일시정지 중에도 흐르는 것은 <b>의도다</b> — 그것들은 세계의
+        /// 상태가 아니라 화면이 사람에게 말을 거는 중인 것이고, 정지 화면 위에서
+        /// 반쯤 사라지다 만 줄이 얼어붙어 있으면 고장으로 읽힌다.
+        /// </summary>
         void Update()
         {
-            if (!Frozen) _seconds += Time.deltaTime;
+            WorldClock.Paused = Frozen || Time.timeScale <= 0f;
+            WorldClock.Advance(Time.unscaledDeltaTime);
             Apply();
         }
 
         // ── 시간을 옮기는 창구 ───────────────────────────────────
         //
-        // 셋 다 <b>같은 한 값</b>(_seconds)만 움직인다. 시각을 따로 들고 있는
+        // 셋 다 <b>같은 한 값</b>(WorldClock)만 움직인다. 시각을 따로 들고 있는
         // 자리를 하나라도 두면 되감기와 건너뛰기가 서로 다른 답을 내게 된다.
 
-        /// <summary>시각을 이 값으로 옮긴다. 되감아도(작은 값) 된다.</summary>
+        /// <summary>
+        /// 시각을 이 값으로 옮긴다. <b>되감지 않는다</b> — 지나간 시각을 달라고 하면
+        /// <b>다음 날</b>의 같은 자리로 간다.
+        ///
+        /// 되감기를 막는 이유: 다 캔 시각과 불 지핀 시각이 같은 시계로 적혀 있어,
+        /// 시계를 뒤로 돌리면 그 자리들이 <b>미래에 일어난 일</b>이 되어 영영
+        /// 돌아오지 않는다. 하루를 앞뒤로 훑는 검증은 「다음 날 같은 시각」으로도
+        /// 똑같이 성립한다 — 재는 것은 날짜가 아니라 시각이기 때문이다.
+        /// </summary>
         public void SetTimeOfDay(float timeOfDay)
         {
-            _seconds = DayNightCycle.SecondsAt(timeOfDay);
+            WorldClock.ForwardTo(DayNightCycle.SecondsAt(timeOfDay), DayNightCycle.DayLengthSeconds);
             Apply();
         }
 
-        /// <summary>이만큼 흘려보낸다. 음수면 되감는다.</summary>
+        /// <summary>이만큼 흘려보낸다. 음수는 무시한다(되감지 않는다).</summary>
         public void Skip(double seconds)
         {
-            _seconds += seconds;
+            WorldClock.Skip(seconds);
             Apply();
         }
 
@@ -253,14 +289,19 @@ namespace Survive.World
         public object CaptureState() => new State
         {
             timeOfDay = TimeOfDay,
-            daysElapsed = Mathf.FloorToInt((float)(_seconds / DayNightCycle.DayLengthSeconds)),
+            daysElapsed = Mathf.FloorToInt((float)(WorldClock.Now / DayNightCycle.DayLengthSeconds)),
         };
 
+        /// <summary>
+        /// <b>세계 시각을 저장본에서 되돌리는 자리는 여기 하나다.</b> 세계 원장은
+        /// 이 시계의 초로 시각을 적을 뿐 시계를 소유하지 않는다 — 시계를 저장하는
+        /// 곳이 둘이면 두 값이 어긋날 수 있고, 어긋나는 순간 재생이 미래에서 멈춘다.
+        /// </summary>
         public void RestoreState(object state)
         {
             if (state is not State s) return;
-            _seconds = s.daysElapsed * (double)DayNightCycle.DayLengthSeconds +
-                       DayNightCycle.SecondsAt(s.timeOfDay);
+            WorldClock.Restore(s.daysElapsed * (double)DayNightCycle.DayLengthSeconds +
+                               DayNightCycle.SecondsAt(s.timeOfDay));
             Apply();
         }
     }

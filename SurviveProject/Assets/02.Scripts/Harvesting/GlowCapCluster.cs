@@ -29,7 +29,7 @@ namespace Survive.Harvesting
     /// <b>덩이 하나 = 갓 한 무더기</b>로 세어 "남은 갓 n / 전체 m"을 성립시킨다.
     /// </summary>
     [DisallowMultipleComponent]
-    public class GlowCapCluster : MonoBehaviour, IHoldInteractable
+    public class GlowCapCluster : MonoBehaviour, IHoldInteractable, IWorldStateOwner
     {
         /// <summary>따서 얻는 것. 08.Data/Items의 "버섯 갓"(발광 버섯의 갓)이다.</summary>
         public const string CapItemId = "mushroom_cap";
@@ -71,16 +71,28 @@ namespace Survive.Harvesting
             set => _regrowSeconds = Mathf.Max(0f, value);
         }
 
-        /// <summary>돌아오기까지 남은 초. 따여 있지 않으면 0이다.</summary>
+        /// <summary>
+        /// 돌아오기까지 남은 초. 따여 있지 않으면 0이다.
+        /// <b>세계 시계로 잰다</b> — 이유는 <see cref="WorldClock"/>에 적어 두었다.
+        /// </summary>
         public float RegrowRemaining => _harvested
-            ? GlowGroveRule.RegrowRemaining(_harvestedAt, Time.time, _regrowSeconds)
+            ? GlowGroveRule.RegrowRemaining(_harvestedAt, WorldClock.Seconds, _regrowSeconds)
             : 0f;
 
         void Awake()
         {
             _renderers = GetComponentsInChildren<Renderer>(true);
             _colliders = GetComponentsInChildren<Collider>(true);
+
+            // 신원은 깨어날 때의 자리로 짓고 그 뒤로 바꾸지 않는다.
+            _worldId = Survive.World.WorldId.At(WorldLedgerScope.GlowCap, transform.position);
+
+            // 비활성화가 아니라 철거에서 뺀다 — 딴 갓은 오브젝트를 끄지 않지만,
+            // 관례를 갈래마다 다르게 두면 어느 날 하나가 조용히 저장에서 빠진다.
+            WorldLedgerRegistry.Register(this);
         }
+
+        void OnDestroy() => WorldLedgerRegistry.Unregister(this);
 
         /// <summary>어느 군락의 갓인지 알려 준다. 설치 서비스가 부른다.</summary>
         public void Bind(GlowGrove grove)
@@ -92,7 +104,7 @@ namespace Survive.Harvesting
         void Update()
         {
             if (!_harvested) return;
-            if (!GlowGroveRule.HasRegrown(_harvestedAt, Time.time, _regrowSeconds)) return;
+            if (!GlowGroveRule.HasRegrown(_harvestedAt, WorldClock.Seconds, _regrowSeconds)) return;
             Regrow();
         }
 
@@ -163,7 +175,44 @@ namespace Survive.Harvesting
         void Harvest()
         {
             _harvested = true;
-            _harvestedAt = Time.time;
+            _harvestedAt = WorldClock.Seconds;
+            SetVisible(false);
+            _grove?.Refresh();
+        }
+
+        // ── 세계 원장 ────────────────────────────────────────────
+        //
+        // 갓은 <b>여럿</b>이라 고정 문자열을 열쇠로 삼을 수 없다. 자리로 짓는다.
+        // 딴 갓 하나가 군락의 밝기를 낮추므로, 저장을 건너 이어지지 않으면
+        // 불러온 세계에서 어두워졌던 자리가 도로 환해진다.
+
+        string _worldId;
+
+        public string WorldId => _worldId;
+
+        public WorldRecord CaptureWorld() => !_harvested
+            ? null
+            : new WorldRecord
+            {
+                kind = WorldLedgerScope.GlowCap,
+                gone = true,
+                at = _harvestedAt,
+            };
+
+        public void RestoreWorld(WorldRecord record)
+        {
+            bool 따여있다 = record != null && record.gone;
+
+            if (!따여있다)
+            {
+                if (_harvested) Regrow();
+                return;
+            }
+
+            _harvestedAt = record.at;
+            if (_harvested) return;
+
+            _harvested = true;
             SetVisible(false);
             _grove?.Refresh();
         }

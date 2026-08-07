@@ -88,7 +88,12 @@ namespace Survive.Building
         public float FuelSeconds => _fuel;
 
         /// <summary>
-        /// 마지막으로 <b>불이 붙은</b> 시각(<see cref="Time.time"/>).
+        /// 마지막으로 <b>불이 붙은</b> 세계 시각(<see cref="Survive.World.WorldClock"/>).
+        ///
+        /// <b>프레임 시계로 재지 않는다.</b> 이 값이 하는 일은 여러 화톳불 중
+        /// 「마지막 것」을 고르는 비교인데, 프레임 시계는 씬 로드로 0이 된다 —
+        /// 씬을 갈아 끼운 뒤에 지핀 불이 그 전에 지핀 불보다 <b>이르게</b> 보이고,
+        /// 부활 지점이 엉뚱한 자리로 간다. 세계 시계는 씬을 건너서도 자란다.
         ///
         /// 세운 시각이 아니다 — 꺼졌다가 다시 지핀 불은 그때가 마지막이다.
         /// 부활 지점을 고르는 <see cref="Survive.World.RespawnRule"/>이 "마지막 화톳불"을
@@ -162,7 +167,7 @@ namespace Survive.Building
             // 불이 붙은 순간을 여기서 적는다. ApplyLight는 처음 세울 때, 연료가 다 탔을 때,
             // 다시 지필 때 — 불의 상태가 바뀌는 모든 지점에서 불린다. 한 곳에 두면
             // 나중에 점화 경로가 하나 더 생겨도 저절로 따라온다.
-            if (IsBurning) KindledAt = Time.time;
+            if (IsBurning) KindledAt = WorldClock.Seconds;
 
             // 타는 소리도 불의 상태에 붙는다. 여기 한 곳에 두면 꺼짐·되살림·철거가
             // 전부 같은 줄을 지난다. 소리가 없으면 무효한 손잡이가 돌아오고,
