@@ -204,9 +204,12 @@ public class LanternSwitchTests
     }
 
     [Test]
-    public void 스위치가_돌아와도_오프셋_3m와_등_뒤_사각은_그대로다()
+    public void 스위치가_돌아와도_오프셋과_등_뒤_사각의_관계는_그대로다()
     {
-        Assert.AreEqual(3f, LanternRule.Tier1ForwardOffset, 0.0001f);
+        // 값 자체는 2026-08-07에 3m → 6.5m로 올랐다(사각이 원이 되면서 함께 움직였다).
+        // 여기서 지키는 것은 <b>수가 아니라 관계</b>다 — 스위치를 되돌린 것이
+        // 오프셋 체계를 건드리지 않았다는 것.
+        Assert.AreEqual(6.5f, LanternRule.Tier1ForwardOffset, 0.0001f);
         Assert.AreEqual(LanternRule.Tier1ForwardOffset, LanternRule.OffsetForTier(1), 0.0001f,
                         "티어 1의 오프셋은 손잡이 값 그대로다");
         Assert.AreEqual(LanternRule.Tier1ForwardOffset, LanternRule.BlindSpotDepthForTier(1), 0.0001f,

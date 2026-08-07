@@ -95,22 +95,31 @@ public class LitZoneRegistryTests
     {
         public Vector3 LitAnchor { get; set; }
         public Vector3 LitForward { get; set; } = Vector3.forward;
-        public float 오프셋 { get; set; } = 3f;
-        public float LitZoneRadius { get; set; } = 8f;
+        /// <summary>실제 티어 1 값을 그대로 쓴다. 흉내가 게임과 다른 수를 들면
+        /// 여기서 재는 것이 게임이 아니라 흉내의 사본이 된다.</summary>
+        public float 오프셋 { get; set; } = LanternRule.OffsetForTier(1);
+        public float LitZoneRadius { get; set; } = LanternRule.RadiusForTier(1);
         public bool IsLit { get; set; } = true;
 
         public Vector3 LitZoneCenter => LanternRule.LitCenter(LitAnchor, LitForward, 오프셋);
     }
 
     [Test]
-    public void 등_뒤는_통째로_내준_쪽이다()
+    public void 등_뒤_원_밖이_내준_쪽이다()
     {
-        // 뒤로 새는 빛은 사람이 <b>보기</b> 위한 것이지 지키는 것이 아니다
-        // (기획서 §5 "랜턴은 앞쪽만 지키므로 등 뒤를 내준다").
+        // <b>2026-08-07에 뒤집혔다.</b> 예전에는 "등 뒤는 통째로 사각"이었다
+        // (반평면). 사용자 판단이 <b>"내 약간 뒤까지 커버하는 원형 범위"</b>였으므로,
+        // 원이 덮는 데까지는 지켜 주고 그 너머부터 사각이다.
         LitZoneRegistry.Register(new 가짜랜턴 { LitAnchor = Vector3.zero });
 
-        Assert.IsTrue(LitZoneRegistry.IsBlindSide(new Vector3(0f, 0f, -6f)), "멀리 뒤");
-        Assert.IsTrue(LitZoneRegistry.IsBlindSide(new Vector3(0f, 0f, -2f)), "코앞 뒤");
+        float 뒤덮개 = LanternRule.BackReachForTier(1);   // 반경 − 오프셋
+
+        Assert.IsFalse(LitZoneRegistry.IsBlindSide(new Vector3(0f, 0f, -(뒤덮개 * 0.5f))),
+                       $"원이 덮는 데까지는 지켜 준다 (뒤 덮개 {뒤덮개:F2}m)");
+        Assert.IsTrue(LitZoneRegistry.IsBlindSide(new Vector3(0f, 0f, -(뒤덮개 + 0.5f))),
+                      "덮개 너머는 내준 쪽이다");
+        Assert.IsTrue(LitZoneRegistry.IsBlindSide(new Vector3(0f, 0f, -30f)), "멀리 뒤");
+
         Assert.IsFalse(LitZoneRegistry.IsBlindSide(new Vector3(0f, 0f, 30f)), "앞은 멀어도 사각이 아니다");
         Assert.IsFalse(LitZoneRegistry.IsBlindSide(new Vector3(9f, 0f, 0f)), "정확히 옆도 아니다");
     }

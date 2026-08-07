@@ -289,16 +289,27 @@ namespace Survive.Tests.EditMode
         }
 
         [Test]
-        public void 물속_안개는_한_값도_움직이지_않았다()
+        public void 물속_안개는_랜턴_반경을_따라_움직인다()
         {
-            // 랜턴 반경에서 역산한 값들이다. 22m에서 세계가 닫힌다.
-            Assert.AreEqual(22f, UnderwaterFog.CloseDistance, 1e-4f, "닫히는 거리");
-            Assert.AreEqual(0.0975439f, UnderwaterFog.Density, 1e-6f, "밀도");
+            // <b>2026-08-07에 숫자가 움직였다 — 규칙이 아니라 손잡이가 움직였다.</b>
+            // 이 값들은 처음부터 랜턴 정면 도달의 <b>배수</b>로 역산한 것이고
+            // (UnderwaterFog.CloseDistance), 그 도달이 11m에서 14.5m로 오르면서
+            // 닫히는 거리도 22m에서 29m로 따라왔다. 등 뒤 사각을 원으로 바꾸면서
+            // 오프셋을 3m → 6.5m로 올린 것의 하류 효과다.
+            //
+            // <b>파생 관계가 이 절의 본문이므로 그것부터 못 박는다.</b> 숫자만
+            // 고쳐 놓으면 다음에 손잡이가 움직일 때 또 조용히 어긋난다.
+            Assert.AreEqual(LanternRule.ForwardReachForTier(1) * UnderwaterFog.CloseAtReachMultiple,
+                            UnderwaterFog.CloseDistance, 1e-4f,
+                            "닫히는 거리는 랜턴 정면 도달의 배수다");
+
+            Assert.AreEqual(29f, UnderwaterFog.CloseDistance, 1e-4f, "닫히는 거리");
+            Assert.AreEqual(0.0739988f, UnderwaterFog.Density, 1e-6f, "밀도");
 
             var c = UnderwaterFog.Color;
-            Assert.AreEqual(0.057048f, c.r, 0.0005f, "R");
-            Assert.AreEqual(0.023337f, c.g, 0.0005f, "G");
-            Assert.AreEqual(0.082983f, c.b, 0.0005f, "B");
+            Assert.AreEqual(0.057051f, c.r, 0.0005f, "R");
+            Assert.AreEqual(0.023339f, c.g, 0.0005f, "G");
+            Assert.AreEqual(0.082984f, c.b, 0.0005f, "B");
         }
 
         [Test]

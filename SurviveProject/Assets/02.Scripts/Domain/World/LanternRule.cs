@@ -103,10 +103,37 @@ namespace Survive.World
         ///       (<see cref="Survive.Combat.HurtBearing"/>)</item>
         /// </list>
         ///
-        /// <b>수치는 사람의 몫이다.</b> 3m는 출발점일 뿐이고, 여기를 돌리면
-        /// <see cref="ForwardReachForTier"/>·<see cref="BackReachForTier"/>가 함께 움직인다.
+        /// <b>3m에서 6.5m로 올렸다 (2026-08-07).</b> 사용자 판단이
+        /// <b>"내 약간 뒤까지 커버하는 원형 범위"</b>였고, 그러려면 원이 <b>몸 약간
+        /// 뒤에서 끝나야</b> 한다. 3m일 때 등 뒤 도달은 5m였다 — 사람 뒤 5m까지
+        /// 지켜 주는 원은 "약간 뒤"가 아니다.
+        ///
+        /// <b>이 값과 사각 규칙은 함께 움직여야 한다.</b> <see cref="LitZoneRegistry.IsBlindSide"/>가
+        /// 반평면에서 원으로 돌아왔는데, 3m를 그대로 두면 등 뒤 도달 5m가 낫의 공격
+        /// 거리 2.2m보다 멀어 <b>어둠에 선 채로 닿는 자리가 한 점도 없다</b>
+        /// (<see cref="DarkStrikeMargin"/> = −2.8m). 하나만 고치면 낫이 영영 못 때린다.
+        ///
+        /// <b>왜 6.5인가 — 재어서 골랐다.</b> 반경 8 · 공격 거리 2.2 기준:
+        /// <list type="table">
+        /// <item><term>5.80</term><description>문턱. 여유 0.00m, 사각 넓이 0.00 m²</description></item>
+        /// <item><term>6.00</term><description>여유 0.20m, 0.29 m², 57도 — 칼날 같아 부서지기 쉽다</description></item>
+        /// <item><term>6.25</term><description>여유 0.45m, 0.94 m², 86도</description></item>
+        /// <item><term><b>6.50</b></term><description><b>여유 0.70m, 1.76 m², 108도</b> — 공격 거리의 3분의 1쯤 되는 띠</description></item>
+        /// <item><term>7.00</term><description>여유 1.20m, 3.71 m², 142도 — 뒤가 거의 통째로 열린다</description></item>
+        /// </list>
+        ///
+        /// 6.5를 고른 근거 셋. ① 등 뒤 덮개가 <b>1.5m</b>라 팔 하나 뒤에서 원이 끝난다 —
+        /// 이것이 "약간 뒤"다. ② 어둠에서 때릴 수 있는 띠가 0.7m로, 한 점이 아니라
+        /// <b>설 수 있는 자리</b>다. ③ 정면 도달이 <b>14.5m</b>가 되어 낫의 감지 반경
+        /// 14m를 막 넘어선다 — <b>마주 보면 낫이 제 감지 밖으로 밀린다</b>가 글자
+        /// 그대로 성립하고, 그것이 §19가 지키려는 "조작 자체가 방어"의 가장 배우기
+        /// 쉬운 형태다.
+        ///
+        /// <b>수치는 여전히 사람의 몫이다.</b> 여기를 돌리면
+        /// <see cref="ForwardReachForTier"/>·<see cref="BackReachForTier"/>와
+        /// <c>HarvestRespawnRule.UnseenDistance</c>가 함께 움직인다.
         /// </summary>
-        public const float Tier1ForwardOffset = 3f;
+        public const float Tier1ForwardOffset = 6.5f;
 
         // ══ 파생값·고정값 ══════════════════════════════════════
 
