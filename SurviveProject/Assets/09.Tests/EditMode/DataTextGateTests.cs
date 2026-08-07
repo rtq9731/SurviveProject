@@ -306,23 +306,19 @@ public class DataTextGateTests
     // 오탐 더미가 되어 결국 꺼진다. 그래서 대사 줄이 실제로 나타나는 세 꼴만 본다.
 
     /// <summary>
-    /// 대사 한 줄을 <see cref="DataText"/>를 거치지 않고 읽는 파일. <b>여기 없는 것이
-    /// 나오면 실패다.</b>
+    /// 대사 한 줄을 <see cref="DataText"/>를 거치지 않고 읽는 파일.
+    /// <b>비어 있다</b>(2026-08-07) — 이제 이 검사는 "우회가 하나도 없다"이다.
     ///
-    /// <b>적는 순간 그것은 빚이다.</b> 지금 한 줄뿐이고, 그 한 줄은 이 라운드의
-    /// 파일 범위 밖이라 손대지 않았다.
+    /// 마지막 한 줄이던 <c>UnlockService</c>는 큐가 대사 줄 대신
+    /// <see cref="Survive.Localization.SpokenLine"/>(줄의 주인)을 들도록 고쳐서
+    /// 빠졌다. 호출자 셋(<c>UnlockService.OnItemAdded</c> ·
+    /// <c>LocationDiscoveryTrigger</c> · <c>ResearchStation</c>)이 함께 움직였다.
+    ///
+    /// <b>다시 열어야 한다면 그 파일을 여기 적되, 적는 순간 그것은 빚이다.</b>
+    /// 하나를 남기면 그것이 선례가 되고, 다음 사람은 "저기도 우회하는데"로
+    /// 둘째를 만든다.
     /// </summary>
-    static readonly string[] 대사를_아직_안_거친_파일 =
-    {
-        // UnlockService.Announce(SequenceSO.Line)이 대사 줄을 <b>날것으로</b> 받아
-        // 줄을 세운다. 그래서 현장 발견·연구 대사가 표를 거치지 않고 화면에 나간다 —
-        // 프롤로그 자막과 같은 구멍이고, 지금은 표와 에셋의 값이 같아 티가 안 난다.
-        //
-        // 고치려면 큐가 줄이 아니라 <b>줄의 주인</b>(DiscoverySO·ResearchEntrySO)을
-        // 들어야 하고, 그러면 Progression/의 호출자 셋(UnlockService.OnItemAdded ·
-        // LocationDiscoveryTrigger · ResearchStation)이 함께 움직인다.
-        "Assets/02.Scripts/Progression/UnlockService.cs",
-    };
+    static readonly string[] 대사를_아직_안_거친_파일 = { };
 
     /// <summary>
     /// 대사 줄을 직접 읽는 꼴. 왼쪽부터 <c>x.line.text</c> · <c>x.lines[i].speaker</c> ·
