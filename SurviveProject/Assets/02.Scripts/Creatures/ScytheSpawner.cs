@@ -219,6 +219,7 @@ namespace Survive.Creatures
                                     사람.z + Mathf.Cos(rad) * SpawnRadius);
 
                 if (!액면인가(ref p)) continue;
+                if (이미_누가_있는가(p)) continue;
 
                 _spotPositions.Add(p);
                 _spots.Add(new ReappearSpot(p, LitZoneRegistry.IsLit(p), 눈에_드는가(eye, p)));
@@ -229,6 +230,40 @@ namespace Survive.Creatures
 
             자리 = _spotPositions[고른것];
             return true;
+        }
+
+        /// <summary>
+        /// 그 자리에 이미 다른 낫이 서 있는가.
+        ///
+        /// <b>이것이 없으면 다섯이 한 자리에 겹친다.</b> 자리를 고르는 규칙은
+        /// 결정적이라(같은 입력에 같은 답) 부를 때마다 같은 자리를 내놓는다 —
+        /// 재등장에서는 「있던 자리에서 크게 돌아라」가 그 역할을 했지만, 세울 때는
+        /// 있던 자리가 없다. 실측으로 다섯이 전부 한 점에 섰다.
+        ///
+        /// <b>간격은 감지 반경이다.</b> 새 수를 만들지 않는다 — 서로의 감지 반경
+        /// 안에 세우지 않는다는 것이 곧 "따로 있는 개체로 보인다"의 내용이고,
+        /// 그 값은 정의(SO)에 이미 있어 튜닝이 바뀌면 함께 움직인다.
+        /// </summary>
+        bool 이미_누가_있는가(Vector3 p)
+        {
+            float 간격 = 서로의_간격();
+
+            for (int i = 0; i < _mine.Count; i++)
+            {
+                if (_mine[i] == null) continue;
+                if (Vector3.Distance(_mine[i].transform.position, p) < 간격) return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>낫끼리 떨어져야 할 거리(m). 정의의 감지 반경을 그대로 쓴다.</summary>
+        float 서로의_간격()
+        {
+            if (_prefab == null) return 14f;
+
+            var def = _prefab.GetComponent<Survive.Combat.CreatureHealth>()?.Definition;
+            return def != null ? def.detectRadius : 14f;
         }
 
         /// <summary>
