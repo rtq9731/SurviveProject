@@ -140,6 +140,10 @@ namespace Survive.Creatures
                 if (drifter == null) drifter = gameObject.AddComponent<HoverDrifter>();
                 _motor = drifter;
 
+                // 4상태를 들고 있는 자리(스펙 §20). 꼬리보다 <b>먼저</b> 붙인다 —
+                // 꼬리가 그리는 자세의 근거가 이쪽이 저장한 상태이기 때문이다.
+                if (GetComponent<ScytheMind>() == null) gameObject.AddComponent<ScytheMind>();
+
                 // 꼬리가 상태를 말한다(스펙 §4). 부유하는 몸 다음에 붙이는 것은
                 // ScytheTail이 그 몸에서 구역과 태세를 읽기 때문이다.
                 // 꼬리 부품이 없는 프리팹에 붙어도 스스로 아무것도 하지 않는다.
@@ -255,7 +259,7 @@ namespace Survive.Creatures
         /// 정의가 없으면 <c>default</c> 성질을 넘긴다. 그것은 빛을 꺼리지 않는 성질이라
         /// 규칙이 "가장 가까운 것"으로 접히고, 곧 이 함수가 예전에 하던 일과 같다.
         /// </summary>
-        Transform Target
+        public Transform Target
         {
             get
             {
@@ -264,6 +268,19 @@ namespace Survive.Creatures
                 return i >= 0 && i < _threatBodies.Count ? _threatBodies[i] : null;
             }
         }
+
+        /// <summary>
+        /// 쫓던 것을 <b>그 자리에서</b> 놓는다.
+        ///
+        /// 어그로는 원래 시간이 지나야 식는다. 즉시 끊는 창구가 필요한 것은 낫의
+        /// 따라붙기가 <b>시간이 아니라 사건으로</b> 풀리기 때문이다(스펙 §20: 고정 조명
+        /// 접근). 식기를 기다리면 규칙은 "풀렸다"고 말하는데 몸은 최대
+        /// <see cref="CreatureDefinitionSO.aggroSeconds"/>만큼 더 쫓아, 두 판정이 갈린다.
+        ///
+        /// 종에 매이지 않은 이름을 쓰는 것은 의도다 — "흥미를 잃는다"는 어느 생물에게나
+        /// 있을 수 있는 일이고, 낫 전용 개념을 범용 두뇌에 심지 않는다.
+        /// </summary>
+        public void ReleaseAggro() => _aggroLeft = 0f;
 
         void UpdateState()
         {

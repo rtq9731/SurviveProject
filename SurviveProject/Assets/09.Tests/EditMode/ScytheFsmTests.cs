@@ -211,6 +211,42 @@ public class ScytheFsmTests
     }
 
     [Test]
+    public void 감지에서_벗어나면_교전도_풀린다()
+    {
+        // <b>배선하고 나서야 드러난 구멍이다.</b> 표(§20)에는 조명탄과 랜턴만 적혀
+        // 있었는데, 어둠 속에서는 빛 판정이 언제나 Clear라 한 번 붙은 개체가 영영
+        // 교전에 남았다 — 사람을 32m 밖으로 밀어내도 꼬리가 공격 태세로 굳었다.
+        var 놓쳤다 = new ScytheSituation(detected: false, LightVerdict.Clear, closing: false);
+        Assert.AreEqual(ScytheState.Beware, ScytheFsm.Next(ScytheState.Attack, 놓쳤다));
+    }
+
+    [Test]
+    public void 교전은_두_프레임에_걸쳐_순찰로_내려간다()
+    {
+        // 올라올 때 따라붙기를 반드시 지나듯, 내려갈 때도 같은 계단을 밟는다.
+        var 놓쳤다 = new ScytheSituation(detected: false, LightVerdict.Clear, closing: false);
+
+        var 상태 = ScytheFsm.Next(ScytheState.Attack, 놓쳤다);
+        Assert.AreEqual(ScytheState.Beware, 상태);
+
+        상태 = ScytheFsm.Next(상태, 놓쳤다);
+        Assert.AreEqual(ScytheState.Patrol, 상태);
+    }
+
+    [Test]
+    public void 어둠_속에서도_교전이_영영_이어지지_않는다()
+    {
+        // 회귀선. 빛이 하나도 없는 세계에서는 빛 판정이 계속 Clear다. 그때 감지만
+        // 끊어져도 반드시 내려와야 한다 — 아니면 <b>어둠이 곧 영구 교전</b>이 된다.
+        var 어둠에서놓침 = new ScytheSituation(detected: false, LightVerdict.Clear, closing: true);
+
+        var 상태 = ScytheState.Attack;
+        for (int i = 0; i < 100; i++) 상태 = ScytheFsm.Next(상태, 어둠에서놓침);
+
+        Assert.AreEqual(ScytheState.Patrol, 상태);
+    }
+
+    [Test]
     public void 빛이_다시_막으면_붙어_있던_것이_떨어진다()
     {
         foreach (var 빛 in new[] { LightVerdict.Blocked, LightVerdict.Retreat })
