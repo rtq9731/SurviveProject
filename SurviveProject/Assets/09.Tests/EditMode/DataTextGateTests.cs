@@ -294,6 +294,119 @@ public class DataTextGateTests
             string.Join("\n  ", 허용했는데_없는_파일));
     }
 
+    // ── ④ 대사 한 줄도 우회하지 않는다 ────────────────────────
+    //
+    // 위 ③은 이름·설명 칸(displayName·description…)만 봤다. 그런데 화면에 나가는
+    // 글자가 하나 더 있다 — <c>SequenceSO.Line</c>의 <c>.text</c>와 <c>.speaker</c>다.
+    // 연출 자막과 AI 대사가 그것이고, <c>DataText.Line/Speaker</c>가 이미 있는데도
+    // <b>프로덕션 호출자가 하나도 없었다</b>(2026-08-07 발견).
+    //
+    // 자료형으로 가릴 수 없어 <b>꼴</b>로 잡는다. <c>.text</c>만으로는 못 잡는다 —
+    // <c>TMP_Text.text</c>가 화면 코드 전체에 널려 있고, 그것까지 물면 게이트가
+    // 오탐 더미가 되어 결국 꺼진다. 그래서 대사 줄이 실제로 나타나는 세 꼴만 본다.
+
+    /// <summary>
+    /// 대사 한 줄을 <see cref="DataText"/>를 거치지 않고 읽는 파일. <b>여기 없는 것이
+    /// 나오면 실패다.</b>
+    ///
+    /// <b>적는 순간 그것은 빚이다.</b> 지금 한 줄뿐이고, 그 한 줄은 이 라운드의
+    /// 파일 범위 밖이라 손대지 않았다.
+    /// </summary>
+    static readonly string[] 대사를_아직_안_거친_파일 =
+    {
+        // UnlockService.Announce(SequenceSO.Line)이 대사 줄을 <b>날것으로</b> 받아
+        // 줄을 세운다. 그래서 현장 발견·연구 대사가 표를 거치지 않고 화면에 나간다 —
+        // 프롤로그 자막과 같은 구멍이고, 지금은 표와 에셋의 값이 같아 티가 안 난다.
+        //
+        // 고치려면 큐가 줄이 아니라 <b>줄의 주인</b>(DiscoverySO·ResearchEntrySO)을
+        // 들어야 하고, 그러면 Progression/의 호출자 셋(UnlockService.OnItemAdded ·
+        // LocationDiscoveryTrigger · ResearchStation)이 함께 움직인다.
+        "Assets/02.Scripts/Progression/UnlockService.cs",
+    };
+
+    /// <summary>
+    /// 대사 줄을 직접 읽는 꼴. 왼쪽부터 <c>x.line.text</c> · <c>x.lines[i].speaker</c> ·
+    /// <c>line.text</c>(지역 변수). 대입(<c>= 값</c>)은 읽기가 아니라 세우기다.
+    /// </summary>
+    static readonly Regex 대사직접읽기 = new Regex(
+        @"(?:\.\s*line\s*\.|\.\s*lines\s*\[[^\]]*\]\s*\.|\bline\s*\.)\s*(?:text|speaker)\b(?!\s*=[^=])");
+
+    [Test]
+    public void 대사_한_줄을_직접_읽는_곳이_없다()
+    {
+        var root = Path.Combine(Application.dataPath, "02.Scripts");
+        var 위반 = new List<string>();
+        var 허용했는데_없는_파일 = new List<string>(대사를_아직_안_거친_파일);
+        int 검사한파일 = 0;
+
+        foreach (var path in Directory.EnumerateFiles(root, "*.cs", SearchOption.AllDirectories))
+        {
+            string relative = Relative(path);
+
+            // 접근자 자신과 초안 도구는 당연히 원문을 읽는다.
+            if (relative.StartsWith("Assets/02.Scripts/Domain/Localization/")) continue;
+            // 필드를 선언하는 SO 자신.
+            if (relative.EndsWith("SO.cs")) continue;
+            // 하네스는 "화면에 뜬 글자가 에셋의 값과 같은가"를 물어야 하므로 원문을 읽는다.
+            if (relative.StartsWith("Assets/02.Scripts/Testing/")) continue;
+
+            검사한파일++;
+            bool 허용 = 허용했는데_없는_파일.Remove(relative);
+            if (허용) continue;
+
+            var text = LocSourceScanner.StripComments(File.ReadAllText(path));
+            var lines = text.Split('\n');
+            for (int i = 0; i < lines.Length; i++)
+                if (대사직접읽기.IsMatch(lines[i]))
+                    위반.Add($"{relative}:{i + 1}  {lines[i].Trim()}");
+        }
+
+        Assert.Greater(검사한파일, 100, "코드를 못 찾았다 — 검사가 공회전한다");
+
+        Assert.IsEmpty(위반,
+            "대사 한 줄을 DataText를 거치지 않고 직접 읽는 자리가 있다. " +
+            "그 자막만 로케일을 안 따라오고, 그 로케일로 그 장면을 보기 전까지 아무 신호도 없다:\n  " +
+            string.Join("\n  ", 위반));
+
+        Assert.IsEmpty(허용했는데_없는_파일,
+            "예외 목록에 이제 없는 파일이 남아 있다. 목록을 줄여라:\n  " +
+            string.Join("\n  ", 허용했는데_없는_파일));
+    }
+
+    /// <summary>
+    /// <b>음성 확인.</b> 고치기 전의 <see cref="Survive.Narrative.SequenceDirector"/>가
+    /// 쓰던 꼴을 그대로 먹여 본다. 게이트가 그것을 못 물면 0건은 아무 뜻이 없다.
+    /// </summary>
+    [Test]
+    public void 배선을_걷어낸_꼴을_먹이면_잡힌다()
+    {
+        var 물어야하는것 = new[]
+        {
+            "subtitle?.Show(line.speaker, line.text);",
+            "if (line == null || string.IsNullOrWhiteSpace(line.text)) continue;",
+            "LastLine = discovery.line.text;",
+            "var 글 = sequence.lines[i].text;",
+            "view.Show(so.lines[0].speaker, so.lines[0].text);",
+        };
+
+        foreach (var 줄 in 물어야하는것)
+            Assert.IsTrue(대사직접읽기.IsMatch(줄), $"게이트가 이 꼴을 못 문다: {줄}");
+
+        // 반대쪽. 오탐이 하나라도 있으면 다음 사람이 게이트를 깎는다.
+        var 물면_안_되는것 = new[]
+        {
+            "subtitle?.Show(DataText.Speaker(sequence, i), DataText.Line(sequence, i));",
+            "label.text = Loc.F(\"UI\", \"subtitle_line\", speaker, text);",
+            "outline.text = \"\";",                       // TMP_Text
+            "_pending.Enqueue(line);",                    // 줄을 넘기기만 한다
+            "line.holdSeconds = 3f;",                     // 글자가 아니다
+            "line.text = draft;",                         // 대입은 세우기다
+        };
+
+        foreach (var 줄 in 물면_안_되는것)
+            Assert.IsFalse(대사직접읽기.IsMatch(줄), $"게이트가 멀쩡한 꼴을 문다: {줄}");
+    }
+
     static string Relative(string full) =>
         "Assets" + full.Substring(Application.dataPath.Length).Replace('\\', '/');
 }
