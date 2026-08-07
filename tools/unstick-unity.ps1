@@ -158,10 +158,13 @@ foreach ($d in $dialogs) {
     if (-not $Click) { Write-Output "  (보기만 함. 누르려면 -Click)"; continue }
 
     # 가속키 표시(앰퍼샌드)는 글자 비교에서 뺀다. "Don't &Save" 처럼 붙어 온다.
-    $amp = [char]38
+    #
+    # 주의: Replace 에 char 를 넘기면 PowerShell이 Replace(char,char) 오버로드를 골라
+    # 빈 문자열 인자에서 터진다. 반드시 문자열끼리 넘겨야 한다 (2026-08-06에 실제로 당했다).
+    $amp = [string][char]38
     $target = $null
     foreach ($want in $Button) {
-        $target = $buttons | Where-Object { $_.Text.Replace($amp, '') -eq $want } | Select-Object -First 1
+        $target = $buttons | Where-Object { $_.Text.Replace($amp, [string]'') -eq $want } | Select-Object -First 1
         if ($target) { break }
     }
     if (-not $target) {
@@ -170,7 +173,7 @@ foreach ($d in $dialogs) {
     }
 
     [void][Win]::SendMessage($target.Handle, [Win]::BM_CLICK, [IntPtr]::Zero, [IntPtr]::Zero)
-    $shown = $target.Text.Replace($amp, '')
+    $shown = $target.Text.Replace($amp, [string]'')
     Write-Output "  눌렀다: [$shown]"
     $clicked++
 }
