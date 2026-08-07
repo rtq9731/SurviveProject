@@ -99,6 +99,15 @@ namespace Survive.Creatures
         /// <summary>서식지 밖으로 밀려나 돌아가는 중인가.</summary>
         public bool Returning { get; private set; }
 
+        /// <summary>
+        /// 그 자리에 있어도 되는가 — <b>묻기만 하는 창구</b>.
+        ///
+        /// 재등장 자리를 고르는 쪽(<see cref="ScytheMind"/>)이 서식지 밖을 후보에서
+        /// 미리 빼려고 쓴다. 규칙이 고른 뒤에 몸이 도로 돌아오면 옮긴 적이 없는 것과
+        /// 같고, 그 판정을 저쪽에서 다시 짜면 <b>같은 물음에 답하는 곳이 둘</b>이 된다.
+        /// </summary>
+        public bool CanOccupy(Vector3 position) => CanStand(position);
+
         public float Speed { get; set; } = 3f;
 
         Vector3 _velocity;

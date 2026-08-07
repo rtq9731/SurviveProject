@@ -320,12 +320,30 @@ namespace Survive.Testing
             yield return 랜턴(false);
             yield return 작업으로_돌아갈_때까지_민다();
 
+            // <b>물 위에 있다는 것은 이 문장의 주어가 아니라 전제다.</b>
+            // "물로 돌아오면 작업으로 돌아간다"에서 재려는 것은 <b>작업으로 돌아가는가</b>이고,
+            // 물 위에 있는 것은 그 물음이 성립하기 위한 조건이다. 그런데 위의 밀어내기가
+            // 도는 동안 개체는 제 배회 반경(6m) 안에서 자유롭게 미끄러지고, 그 반경에는
+            // 해안선이 들어 있다. 해안선은 <b>서식 범위 안</b>이므로(기획서 §4.5) 거기 있는
+            // 것은 규칙을 어긴 것이 아니지만, 발밑에 훑을 액면이 없어 Skims가 false다
+            // (ScytheStance.Skims가 스스로 그렇게 적어 두었다 — "해안선에서 액면이 없는 것은
+            // 경계에 들어간 것이 아니다").
+            //
+            // 그래서 관찰창이 해안선에서 시작하면 <b>규칙이 다 지켜졌는데도</b> 이 절이
+            // 실패한다. 실측: main에서 8회 중 3회, 이 브랜치에서 14회 중 5회.
+            // 기대를 낮추는 것이 아니라 <b>전제를 다시 세운다</b> — 절의 첫 줄이 이미 하던
+            // 것과 같은 일이고, 밀어내기를 지나며 흐트러진 것을 되돌리는 것뿐이다.
+            _낫.transform.position = _바다;
+            E2EHarness.SyncPhysics();
+            yield return null;
+
             // <b>여기서 재는 것은 "언제 돌아오는가"이지 "몇 프레임 만인가"가 아니다.</b>
             // 물에 내려놓은 개체는 곧바로 배회를 시작하고, 6.2 m/s면 4초에 25m를 간다 —
             // 관찰하는 동안 제 발로 감지 반경에 다시 들어와 꼬리를 드는 것은 규칙대로
             // 움직인 것이지 되돌아오지 못한 것이 아니다(실측 553/966). 그래서 사람을
             // 계속 밀어내면서 <b>작업 자세와 접촉이 실제로 돌아오는지</b>만 본다.
             bool 돌아왔다 = false, 다시_훑는다 = false;
+            int 액면프레임 = 0, 전체프레임 = 0;
             float t = 0f, 다음정렬 = 1.5f;
             while (t < 12f && !(돌아왔다 && 다시_훑는다))
             {
@@ -339,16 +357,32 @@ namespace Survive.Testing
                 if (_꼬리.Posture == ScythePosture.Trailing) 돌아왔다 = true;
                 if (ScytheStance.Skims(_꼬리.Posture, _몸.Zone)) 다시_훑는다 = true;
 
+                전체프레임++;
+                if (_몸.Zone == HabitatZone.Liquid) 액면프레임++;
+
                 t += Time.deltaTime;
                 yield return null;
             }
 
+            // 실패했을 때 <b>왜</b>인지 로그만 보고 가를 수 있어야 한다 — 해안선으로
+            // 흘러간 것인지, 교전에 들어간 것인지가 자세 하나로는 갈리지 않는다.
             E2EHarness.Log($"  {t:F1}초: 자세 {_꼬리.Posture}, 구역 {_몸.Zone}, " +
-                           $"상태 {_낫.State}, 어그로 {_낫.AggroLeft:F1}");
+                           $"상태 {_낫.State}, 4상태 {상태이름()}, 어그로 {_낫.AggroLeft:F1}, " +
+                           $"액면 {액면프레임}/{전체프레임} 프레임");
             E2EHarness.Assert(돌아왔다, "올리던 것이 전부 사라지면 작업으로 돌아간다");
             E2EHarness.Assert(다시_훑는다, "빛줄기가 다시 수면을 긋는다");
             E2EHarness.AssertEqual(_꼬리.Posture, ScythePosture.Trailing,
                                    "공격 태세가 남아 있지 않다");
+        }
+
+        /// <summary>
+        /// 4상태를 로그에 적기 위한 이름. 부품이 없으면 물음표다 —
+        /// 없다는 사실 자체가 진단에 필요한 정보다.
+        /// </summary>
+        static string 상태이름()
+        {
+            var mind = _낫 != null ? _낫.GetComponent<ScytheMind>() : null;
+            return mind != null ? mind.State.ToString() : "?";
         }
 
         // ── 자리 잡기 ───────────────────────────────────────────

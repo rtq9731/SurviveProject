@@ -72,6 +72,18 @@ namespace Survive.Creatures
         public const float MinTurnDegrees = 90f;
 
         /// <summary>
+        /// 자리를 옮길 때가 되었는가.
+        ///
+        /// <b>새 시간 상수를 만들지 않는다.</b> 간격은 부르는 쪽이 준다. 몸은 이 개체의
+        /// <c>aggroSeconds</c>(낫은 6초)를 그대로 넘긴다 — 그것이 이미 이 개체의
+        /// <b>기억의 길이</b>이기 때문이다. "한 번 잊힐 만한 시간마다 자리를 바꾼다"는
+        /// 임의로 고른 초가 아니라 개체가 이미 갖고 있는 시간 단위이고, 튜닝이 그 값을
+        /// 바꾸면 재등장 리듬도 함께 따라 움직인다.
+        /// </summary>
+        public static bool DueToMove(float sinceLastMove, float interval) =>
+            interval > 0f && sinceLastMove >= interval;
+
+        /// <summary>
         /// 사람을 꼭짓점으로 두고, 지금 자리에서 그 자리까지 <b>몇 도를 도는가</b>.
         ///
         /// <b>높이를 버린다.</b> 사람이 고개를 돌리는 각은 수평각이고, 낫은 액면에 붙어

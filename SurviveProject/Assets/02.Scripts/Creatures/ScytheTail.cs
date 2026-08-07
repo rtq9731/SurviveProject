@@ -94,6 +94,7 @@ namespace Survive.Creatures
         CreatureBrain _brain;
         CreatureDefinitionSO _definition;
         HoverDrifter _drifter;
+        ScytheMind _mind;
 
         Segment[] _segments;
         Renderer[] _arcRenderers;
@@ -132,6 +133,7 @@ namespace Survive.Creatures
             _brain = GetComponent<CreatureBrain>();
             _definition = GetComponent<Survive.Combat.CreatureHealth>()?.Definition;
             _drifter = GetComponent<HoverDrifter>();
+            _mind = GetComponent<ScytheMind>();
 
             CollectSegments();
             if (!HasTail) return;
@@ -182,18 +184,22 @@ namespace Survive.Creatures
         ScytheAlert Alert => _drifter != null ? _drifter.Alert : ScytheAlert.Calm;
 
         /// <summary>
-        /// 판단은 <see cref="ScytheStance"/>에 묻는다. 여기서 하는 일은 값을 모으는 것뿐이고,
-        /// 그 값들은 전부 <see cref="CreatureBrain"/>이 이미 재어 둔 것이다 —
-        /// 거리를 여기서 다시 재면 두뇌가 보는 것과 꼬리가 보는 것이 갈린다.
+        /// 판단은 <see cref="ScytheStance"/>에 묻는다. 여기서 하는 일은 값을 모으는 것뿐이다.
         ///
-        /// <b>위협 목록을 통째로 넘긴다</b>(스펙 §22). 거리 하나만 받으면 위협이 둘일 때
-        /// 꼬리가 누구를 보고 있는지 스스로 다시 골라야 하고, 그러면 두뇌와 다른 규칙을
-        /// 쓸 자리가 생긴다. 목록을 넘기면 고르는 일이 한 군데
-        /// (<see cref="ThreatSelection"/>)에만 있다.
+        /// <b>상태는 <see cref="ScytheMind"/>가 저장한 것 하나를 본다</b>(스펙 §20).
+        /// 꼬리가 상태를 스스로 다시 유도하면 두뇌가 든 상태와 꼬리가 그리는 상태가
+        /// 갈리고, 그 어긋난 프레임에 화면이 거짓말을 한다 — 자세가 곧 경고이므로
+        /// 거짓말의 값이 가장 비싼 자리다.
+        ///
+        /// <b>통역 경로는 대비책으로만 남는다.</b> 4상태를 드는 부품이 없는 개체
+        /// (프리팹을 손으로 만든 경우 등)에서는 예전처럼 범용 상태에서 유도한다 —
+        /// 그 경로가 옛 규칙과 한 글자도 다르지 않다는 것은 ScytheFsmTests가 전수로 못 박았다.
         /// </summary>
         ScythePosture Decide()
         {
             if (_brain == null || _definition == null) return ScythePosture.Trailing;
+
+            if (_mind != null) return ScytheStance.PostureFrom(_mind.State, _brain.State, Zone);
 
             var traits = CreatureTraits.From(_definition);
             return ScytheStance.PostureFor(traits, _brain.Threats, _brain.AggroLeft,
