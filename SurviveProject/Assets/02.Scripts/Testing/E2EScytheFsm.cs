@@ -40,6 +40,9 @@ namespace Survive.Testing
         /// <summary>재등장 절에서 사람이 계속 바라보는 곳. 무대를 흔들지 않으려고 고정한다.</summary>
         static Vector3 _바라볼곳;
 
+        /// <summary>시나리오를 연 자리. 재등장 절이 여기로 되돌아온다.</summary>
+        static Vector3 _사람시작;
+
         public static IEnumerator FullRun()
         {
             yield return 준비();
@@ -115,6 +118,8 @@ namespace Survive.Testing
 
         static IEnumerator 낫을_세운다()
         {
+            _사람시작 = _바다 + new Vector3(0f, 0.6f, -(_def.detectRadius * 3f));
+
             // 사람을 감지 밖으로 먼저 물린다. 세우자마자 사람이 반경 안에 있으면
             // 첫 프레임에 따라붙기로 올라가는데, 그것은 규칙이 맞게 도는 것이지
             // 순찰로 시작하지 않는 것이 아니다 — 시작점을 재려면 무대를 비워야 한다.
@@ -392,6 +397,17 @@ namespace Survive.Testing
         /// </summary>
         static IEnumerator 낫을_사람_옆에_세운다(float 거리)
         {
+            // <b>사람을 시나리오를 연 자리로 되돌린다.</b> 앞 절들이 사람을 화톳불
+            // 속으로 옮겨 놓기 때문에, 그대로 두면 재등장 고리가 물이 아니라 육지
+            // 위에 깔린다 — 후보가 전부 서식지 밖으로 걸러져 고를 자리가 0이 된다
+            // (실측: 사람 y=53.4 물가에서 통과 0개). 재려는 것은 방위이지 지형이 아니다.
+            if (_사람시작 != Vector3.zero)
+            {
+                E2EHarness.Teleport(_사람시작);
+                E2EHarness.SyncPhysics();
+                yield return null;
+            }
+
             Vector3 사람 = 사람자리;
             _바라볼곳 = 사람 + Vector3.forward * 20f;
 
