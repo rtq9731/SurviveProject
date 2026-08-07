@@ -50,3 +50,6 @@
 *.otf              binary
 *.dll              binary
 *.pdf              binary
+
+# 셸 스크립트는 항상 LF. CRLF로 체크아웃되면 줄 끝의 캐리지리턴이 인자에 붙어 bash가 죽는다.
+*.sh               text eol=lf

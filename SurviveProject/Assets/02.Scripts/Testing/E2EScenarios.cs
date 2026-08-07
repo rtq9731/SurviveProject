@@ -118,32 +118,76 @@ namespace Survive.Testing
 
         /// <summary>
         /// 보행 진단. A2가 걷기에서 막혀서 원인을 좁히려고 만들었다.
-        /// 목표 없이 정면으로 10초 걷고 실제 이동 거리를 잰다 —
         /// 입력이 안 들어가는 것인지, 들어가는데 못 가는 것인지 가른다.
+        ///
+        /// <b>왜 방향을 먼저 재는가 (2026-08-07 실측).</b> 예전에는 서 있는 그대로
+        /// 정면으로 10초 걸었다. 그런데 서는 방향이 판마다 달라서, 거점을 둘러싼
+        /// 버섯 숲으로 머리를 두고 시작하면 <b>6.6m에서 딱 멈췄다.</b> 그때 잰 것은
+        /// 걷기가 아니라 <b>소품 배치</b>였다 — 나침반 18방위를 재 보니 7방위가
+        /// 12m 안에서 막히고(가까운 것은 2.7m), 막힌 자리에서 A나 S를 누르면
+        /// 1.5초에 7.5m씩 멀쩡히 걸어 나갔다. 몸도 걷기도 성한데 <b>시험이 벽을
+        /// 향해 서 있었을 뿐</b>이다.
+        ///
+        /// 그래서 이제 <b>몸이 지나갈 수 있는 방향을 먼저 물어보고</b> 그리로 걷는다.
+        /// 막힌 방위는 무엇이 막았는지 함께 적는다 — 배치를 손볼 사람에게 주는 지도다.
+        /// 지형은 사람의 몫이라 여기서 고칠 수 없지만, <b>어디가 좁은지는 여기서만 잰다.</b>
         /// </summary>
         public static IEnumerator WalkDiagnostic()
         {
             var p = E2EHarness.Player.transform;
-            Vector3 start = p.position;
+            var cc = p.GetComponent<CharacterController>();
+            var rig = p.GetComponent<Survive.Player.PlayerCameraRig>();
+            E2EHarness.Assert(cc != null, "CharacterController가 있다");
+            E2EHarness.Assert(rig != null, "PlayerCameraRig가 있다");
 
-            E2EHarness.Log($"  시작 위치 {start.ToString("F1")}");
+            E2EHarness.Log($"  시작 위치 {p.position.ToString("F1")}");
             E2EHarness.Log($"  Keyboard.current = {Keyboard.current}");
 
+            // ── 어느 쪽이 트여 있는가 ──
+            const float NeedClear = 22f;   // 10초에 20m를 걸으려면 이만큼은 뚫려 있어야 한다
+            float bestYaw = -1f, bestRun = -1f;
+            var blockedMap = new System.Text.StringBuilder();
+            for (int deg = 0; deg < 360; deg += 20)
+            {
+                float run = ClearRunAhead(p, cc, deg, NeedClear, out string blocker);
+                if (run > bestRun) { bestRun = run; bestYaw = deg; }
+                if (blocker != null) blockedMap.Append($"{deg}도:{run:F0}m({blocker}) ");
+            }
+            E2EHarness.Log($"  막힌 방위 — {(blockedMap.Length == 0 ? "없음" : blockedMap.ToString())}");
+            E2EHarness.Assert(bestRun >= NeedClear,
+                $"선 자리에서 몸이 지나갈 통로가 {NeedClear:F0}m 이상 뚫린 방위가 있다 " +
+                $"(가장 트인 곳 {bestYaw:F0}도에 {bestRun:F0}m) — 없으면 소품이 사람을 가둔 것이다");
+
+            rig.SetLook(bestYaw, 0f);
+            yield return null;
+            yield return null;
+            E2EHarness.Log($"  트인 쪽 {bestYaw:F0}도로 걷는다 (통로 {bestRun:F0}m)");
+
+            // ── 걷는다 ──
+            Vector3 start = p.position;
             yield return E2EHarness.PressKey(Key.W);
 
-            float t = 0f;
-            Vector3 last = start;
+            float t = 0f, windowT = 0f, bestWindow = 0f;
+            Vector3 last = start, windowFrom = start;
             while (t < 10f)
             {
                 E2EHarness.QueueKeys();
                 float before = t;
                 t += Time.deltaTime;
 
+                if (t - windowT >= 0.5f)
+                {
+                    float d = Planar(p.position, windowFrom);
+                    if (d > bestWindow) bestWindow = d;
+                    windowFrom = p.position;
+                    windowT = t;
+                }
+
                 if (Mathf.FloorToInt(t) > Mathf.FloorToInt(before))
                 {
                     var now = p.position;
-                    E2EHarness.Log($"    [{t:F0}s] 1초 이동 {Vector3.Distance(now, last):F2}m, " +
-                                   $"위치 {now.ToString("F1")}, W눌림 {Keyboard.current.wKey.isPressed}");
+                    E2EHarness.Log($"    [{t:F0}s] 1초 이동 {Planar(now, last):F2}m, " +
+                                   $"위치 {now.ToString("F1")}, 땅 {cc.isGrounded}, W눌림 {Keyboard.current.wKey.isPressed}");
                     last = now;
                 }
                 yield return null;
@@ -151,9 +195,87 @@ namespace Survive.Testing
 
             yield return E2EHarness.ReleaseKey(Key.W);
 
-            float total = Vector3.Distance(p.position, start);
-            E2EHarness.Log($"  10초 총 이동 {total:F1}m");
+            float total = Planar(p.position, start);
+            E2EHarness.Log($"  10초 총 이동 {total:F1}m (평균 {total / t:F2} m/s, 가장 빨랐던 0.5초 {bestWindow * 2f:F2} m/s)");
+
             E2EHarness.Assert(total > 20f, $"10초에 20m 이상 걸었다 (실제 {total:F1}m)");
+
+            // 총 거리만 보면 「느려도 오래 걸으면 통과」가 된다. 순간 속도도 함께 본다 —
+            // 걸음이 절반으로 느려지는 회귀는 여기서 걸린다. 물에 잠기면 0.55배(2.75m/s)라
+            // 문턱은 그보다 위, 맨땅 걸음(5m/s)보다는 아래에 둔다.
+            E2EHarness.Assert(bestWindow * 2f > 3.5f,
+                $"막힘 없는 구간의 걸음이 3.5 m/s를 넘었다 (실제 {bestWindow * 2f:F2} m/s)");
+        }
+
+        static float Planar(Vector3 a, Vector3 b)
+            => Vector3.Distance(new Vector3(a.x, 0f, a.z), new Vector3(b.x, 0f, b.z));
+
+        /// <summary>
+        /// 그 방위로 몸이 몇 m까지 지나갈 수 있는가. 1m마다 발밑을 찾아 앉히고
+        /// 사람 크기 캡슐이 들어가는지 본다 — NavMesh는 소품을 모르므로 직접 두드린다.
+        ///
+        /// <b>발밑은 「바로 앞 걸음의 높이」에서 찾는다.</b> 하늘에서 길게 쏘면
+        /// 머리 위를 덮은 버섯 갓을 먼저 맞고, 그 갓 위를 땅으로 착각해 「막혔다」로
+        /// 읽는다. 실제로 그렇게 재니 18방위 중 17이 막힌 것으로 나왔는데
+        /// 걸어 보면 절반이 40m 넘게 뚫려 있었다. <b>사람은 갓 아래로 지나간다.</b>
+        ///
+        /// <b>옆으로 1.2m까지는 봐준다.</b> 곧은 자로 재면 지름 1m짜리 버섯 대 하나가
+        /// 통로를 끊은 것으로 읽히는데, 실제로 걸으면 <see cref="CharacterController"/>가
+        /// 옆으로 미끄러져 지나간다. 실측에서 20·40·80·120·200·220·300도가 전부
+        /// 이 차이였다 — 자로는 1~11m, 걸으면 39~49m.
+        /// </summary>
+        static float ClearRunAhead(Transform p, CharacterController cc, float yawDeg, float max, out string blocker)
+        {
+            blocker = null;
+            Vector3 dir = Quaternion.Euler(0f, yawDeg, 0f) * Vector3.forward;
+            Vector3 side = Vector3.Cross(Vector3.up, dir);
+            float r = cc.radius, h = cc.height;
+            const float StepUp = 0.5f;   // 이보다 높은 턱은 걸어서 못 오른다
+            const float Drop = 3f;       // 이보다 깊이 떨어지면 길이 아니다
+            var offsets = new[] { 0f, 0.6f, -0.6f, 1.2f, -1.2f };
+
+            float curY = p.position.y;
+            for (float s = 1f; s <= max; s += 1f)
+            {
+                Vector3 ahead = p.position + dir * s;
+                bool fits = false;
+                float bestY = curY;
+
+                foreach (float off in offsets)
+                {
+                    Vector3 probe = ahead + side * off;
+                    Vector3 from = new Vector3(probe.x, curY + StepUp, probe.z);
+                    if (!Physics.Raycast(from, Vector3.down, out var ground, StepUp + Drop,
+                                         ~0, QueryTriggerInteraction.Ignore))
+                    {
+                        if (blocker == null) blocker = "땅없음";
+                        continue;
+                    }
+
+                    Vector3 foot = ground.point + Vector3.up * 0.12f;
+                    var hits = Physics.OverlapCapsule(foot + Vector3.up * r, foot + Vector3.up * (h - r),
+                                                      r * 0.9f, ~0, QueryTriggerInteraction.Ignore);
+                    Collider hit = null;
+                    foreach (var c in hits)
+                    {
+                        if (c.transform.IsChildOf(p)) continue;
+                        // 생물은 곧 자리를 뜬다. 그것을 벽으로 세면 판마다 답이 달라진다.
+                        if (c.GetComponentInParent<Survive.Creatures.CreatureBrain>() != null) continue;
+                        hit = c; break;
+                    }
+                    if (hit != null) { blocker = hit.transform.name; continue; }
+
+                    fits = true;
+                    bestY = ground.point.y;
+                    break;
+                }
+
+                if (!fits) return s - 1f;
+                blocker = null;
+                curY = bestY;
+            }
+            blocker = null;
+            return max;
         }
 
         /// <summary>
