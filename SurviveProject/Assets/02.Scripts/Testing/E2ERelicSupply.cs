@@ -487,7 +487,7 @@ namespace Survive.Testing
 
             if (_낫.Motor is HoverDrifter 몸)
             {
-                몸.Alert = ScytheAlert.Alarmed;
+                ScytheWatch.Set(ScytheAlert.Alarmed);
                 E2EHarness.Log("  태세: 발령 — 육지 교전은 코어를 훔친 뒤의 상황이다");
             }
 

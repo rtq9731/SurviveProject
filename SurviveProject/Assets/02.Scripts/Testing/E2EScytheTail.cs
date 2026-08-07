@@ -279,7 +279,7 @@ namespace Survive.Testing
             yield return 랜턴(false);
             yield return 선다(_내륙);
 
-            _몸.Alert = ScytheAlert.Alarmed;
+            ScytheWatch.Set(ScytheAlert.Alarmed);
             _낫.transform.position = _올려둘곳 + Vector3.up * 0.6f;
             E2EHarness.SyncPhysics();
             yield return null;
@@ -314,7 +314,7 @@ namespace Survive.Testing
         {
             E2EHarness.Log("— 되돌아오는 길 —");
 
-            _몸.Alert = ScytheAlert.Calm;
+            ScytheWatch.Set(ScytheAlert.Calm);
             _낫.transform.position = _바다;
             E2EHarness.SyncPhysics();
             yield return 랜턴(false);
@@ -531,7 +531,7 @@ namespace Survive.Testing
                 default:
                     yield return 랜턴(false);
                     yield return 선다(_내륙);
-                    _몸.Alert = ScytheAlert.Alarmed;
+                    ScytheWatch.Set(ScytheAlert.Alarmed);
                     _낫.transform.position = _올려둘곳 + Vector3.up * 0.6f;
                     E2EHarness.SyncPhysics();
                     break;

@@ -250,7 +250,7 @@ namespace Survive.Testing
                                    "정의의 속도가 실제 이동에 들어갔다");
 
             // 육지에서 붙는 것은 발령 상태뿐이다. 클래스 주석 참고.
-            drifter.Alert = ScytheAlert.Alarmed;
+            ScytheWatch.Set(ScytheAlert.Alarmed);
             E2EHarness.Log("  태세: 발령 — 육지 교전은 코어를 훔친 뒤의 상황이다 (기획서 §6.2 11단계)");
 
             // 몸에 붙은 발광 부속이 여럿인가 — 광원 없이 에미션만으로 보여야 하므로

@@ -598,7 +598,7 @@ namespace Survive.Testing
             yield return 선다(_내륙);
 
             // 1) 평시 — 올려 놓아도 남아 있지 못한다
-            _몸.Alert = ScytheAlert.Calm;
+            ScytheWatch.Set(ScytheAlert.Calm);
             올려놓는다();
             yield return null;
             yield return null;
@@ -628,7 +628,7 @@ namespace Survive.Testing
                               $"({t:F1}초, 구역 {_몸.Zone}, 높이 {_낫.transform.position.y:F2})");
 
             // 2) 발령 — 같은 자리에 그대로 머문다
-            _몸.Alert = ScytheAlert.Alarmed;
+            ScytheWatch.Set(ScytheAlert.Alarmed);
             E2EHarness.Log("  태세를 발령으로 세운다 (무엇이 이것을 거는가는 스펙 §5)");
             올려놓는다();
             yield return null;
@@ -653,7 +653,7 @@ namespace Survive.Testing
                               $"발령이면 육지에 머문다 — 못 오는 것이 아니었다 " +
                               $"({육지프레임}/{전체프레임} 프레임)");
 
-            _몸.Alert = ScytheAlert.Calm;
+            ScytheWatch.Set(ScytheAlert.Calm);
         }
 
         /// <summary>
