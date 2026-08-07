@@ -67,6 +67,9 @@ namespace Survive.Creatures
 
         ThreatRoster _roster = ThreatRoster.Empty;
 
+        /// <summary>낫의 4상태. 낫이 아닌 개체에는 없고, 그때는 아무것도 막지 않는다.</summary>
+        ScytheMind _mind;
+
         /// <summary>
         /// 지금 무엇을 하고 있는가. 읽기 전용이다 — 상태를 바꾸는 것은 여전히
         /// <see cref="CreatureDecision"/>의 답뿐이다.
@@ -143,6 +146,7 @@ namespace Survive.Creatures
                 // 4상태를 들고 있는 자리(스펙 §20). 꼬리보다 <b>먼저</b> 붙인다 —
                 // 꼬리가 그리는 자세의 근거가 이쪽이 저장한 상태이기 때문이다.
                 if (GetComponent<ScytheMind>() == null) gameObject.AddComponent<ScytheMind>();
+                _mind = GetComponent<ScytheMind>();
 
                 // 꼬리가 상태를 말한다(스펙 §4). 부유하는 몸 다음에 붙이는 것은
                 // ScytheTail이 그 몸에서 구역과 태세를 읽기 때문이다.
@@ -501,6 +505,14 @@ namespace Survive.Creatures
 
         void Attack()
         {
+            // <b>짐을 든 꼬리는 무기가 아니다</b> (기획서 §4.5 회수 연출).
+            // 규칙은 오래 그렇게 적혀 있었는데(<see cref="ScytheFsm.CanAttack"/>)
+            // 몸에는 강제하지 않았다 — 코어가 없어 회수가 실전에 안 들어왔기
+            // 때문이다. §9가 서면서 들어왔으므로 여기서 막는다.
+            //
+            // 4상태를 드는 부품이 없는 개체(낫이 아닌 넷)에는 아무 영향이 없다.
+            if (_mind != null && !ScytheFsm.CanAttack(_mind.State)) return;
+
             // 때리는 상대도 규칙이 고른다. 지금은 목록이 하나뿐이라 예전과 같은 몸이다.
             var victim = Target;
             if (victim == null || !CreatureDecision.IsReady(Time.time, _nextAttackTime)) return;
