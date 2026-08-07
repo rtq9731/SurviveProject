@@ -169,9 +169,11 @@ namespace Survive.Localization
         /// 원문의 앞뒤 공백은 뗀다. 인스펙터의 <c>TextArea</c>에 줄바꿈이 딸려 들어가는
         /// 일이 흔하고, 표를 거친 값에는 그런 것이 붙지 않으므로 두 경로의 답이
         /// 달라지면 안 된다.
+        ///
+        /// <b>바깥(같은 어셈블리)에 열어 둔 이유는 <see cref="SpokenLine"/> 하나다.</b>
+        /// 대사 큐는 줄의 주인을 들고 다니다가 <b>띄우는 그 순간</b> 조회하는데,
+        /// 그 조회가 여기와 다른 규칙을 쓰면 같은 값이 두 경로에서 갈린다.
         /// </summary>
-        /// 바깥(같은 어셈블리)에 열어 둔 이유는 <see cref="SpokenLine"/> 하나다 —
-        /// 대사 큐는 주인을 들고 다니다가 <b>띄우는 그 순간</b> 같은 규칙으로 조회해야 한다.
         internal static string Resolve(LocKey key, string fallback)
         {
             if (!key.IsEmpty && Loc.TryT(key, out var translated)) return translated;
