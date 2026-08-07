@@ -46,6 +46,9 @@ namespace Survive.Testing
             E2EHarness.MuteAmbientLitZones();
             ScytheWatch.Reset();
             E2EScytheNight.밤에_세운다();
+
+            // 이 시나리오는 스포너 자체를 잰다. 위에서 멈춘 것을 도로 켠다.
+            ScytheSpawner.Suspended = false;
             E2EHarness.DarkenLantern();
 
             _몸 = ScytheSpawner.Instance;

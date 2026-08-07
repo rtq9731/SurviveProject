@@ -58,6 +58,16 @@ namespace Survive.Creatures
 
         static ScytheSpawner _instance;
 
+        /// <summary>
+        /// <b>세우기를 잠시 멈춘다.</b> 제 낫을 손수 세워 재는 검증이 켠다.
+        ///
+        /// 왜 필요한가: 스포너가 돌기 시작하면서 <b>무대에 낫이 하나가 아니게</b> 됐다.
+        /// 유물 굴림 수(<c>RelicShedder.ShedCount</c>)처럼 온 세계가 함께 쓰는 값은
+        /// 다른 개체가 올려도 올라가므로, "내가 세운 그 낫이 흘렸다"를 못 가린다 —
+        /// 실측으로 「낫은 밤에 다닌다」가 그렇게 한 번 깨졌다.
+        /// </summary>
+        public static bool Suspended { get; set; }
+
         readonly List<ScytheMind> _mine = new List<ScytheMind>();
         readonly List<ReappearSpot> _spots = new List<ReappearSpot>(CandidateCount);
         readonly List<Vector3> _spotPositions = new List<Vector3>(CandidateCount);
@@ -137,6 +147,8 @@ namespace Survive.Creatures
         public void 수를_맞춘다()
         {
             청소한다();
+
+            if (Suspended) return;
 
             if (_player == null)
             {
