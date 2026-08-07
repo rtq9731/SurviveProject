@@ -75,6 +75,21 @@ namespace Survive.Player
         public float CurrentSpeed { get; private set; }
         public Vector3 PlanarVelocity { get; private set; }
 
+        /// <summary>
+        /// 바깥에서 거는 걸음 배율. 1이면 아무 일도 없다.
+        ///
+        /// <b>왜 여기에 창구를 하나 두는가.</b> 몸이 느려질 이유가 늘어날 때마다
+        /// <see cref="GroundMove"/> 안에 <c>if</c>를 하나씩 더하면, 이유들이 서로
+        /// 곱해지는지 이기는지가 이 파일 안에 흩어져 버린다. 창구를 하나로 두면
+        /// <b>누가 얼마를 걸지는 거는 쪽이 정하고</b> 여기서는 곱하기 한 번만 한다.
+        /// 지금 이것을 거는 것은 수분·식량이 바닥일 때의 <see cref="Sustenance"/>이고,
+        /// 그쪽이 이미 「나쁜 쪽 하나만 쓴다」로 여럿을 하나로 접어 온다.
+        ///
+        /// 허리까지 잠겨 느려지는 것(<c>wadeSpeedFactor</c>)과는 곱해진다 — 그쪽은
+        /// 물에 든 몸의 물리이고 이쪽은 몸의 상태라, 서로 대신할 수 있는 것이 아니다.
+        /// </summary>
+        public float ExternalSpeedFactor { get; set; } = 1f;
+
         /// <summary>마지막으로 땅에 닿을 때의 하강 속도(m/s). 무해했어도 적는다 — 실측용이다.</summary>
         public float LastLandingSpeed { get; private set; }
 
@@ -246,6 +261,8 @@ namespace Survive.Player
             // 허리까지 잠기면 느려진다
             if (swimming != null && swimming.IsWading) speed *= wadeSpeedFactor;
 
+            speed *= Mathf.Max(0.01f, ExternalSpeedFactor);
+
             Vector3 planar = transform.TransformDirection(dir) * speed;
 
             if (_cc.isGrounded && _verticalSpeed < 0f) _verticalSpeed = -1f;
@@ -270,6 +287,11 @@ namespace Survive.Player
             // Shift는 어디서나 빨라지는 것이다. 물에 들어갔다고 뜻이 바뀌면
             // 같은 손가락이 두 가지를 하게 되고, 그건 익힐 것이 하나 더 느는 것이다.
             float speed = swimSpeed * (input != null && input.IsSprinting ? swimSprintFactor : 1f);
+
+            // 헤엄에도 같은 배율이 걸린다. 걷기만 느려지면 목마른 사람이 헤엄쳐
+            // 도망치는 것이 최적해가 되어, 벌이 오히려 이동 방식을 고르게 만든다.
+            speed *= Mathf.Max(0.01f, ExternalSpeedFactor);
+
             Vector3 MoveTo = (forward * dir.z + right * dir.x) * speed;
 
             bool ascendInput = false;

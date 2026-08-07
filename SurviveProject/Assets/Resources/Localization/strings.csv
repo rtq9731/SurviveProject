@@ -512,3 +512,5 @@ Sequence,prologue_intro.line5.text,근처에 적절한 피난처 감지. 표시�
 #   생명 수치 이름. HUD 게이지에 붙는다.
 Vital,health.name,체력,,
 Vital,oxygen.name,산소,Oxygen,
+Vital,hydration.name,수분,Hydration,
+Vital,food.name,식량,Food,
