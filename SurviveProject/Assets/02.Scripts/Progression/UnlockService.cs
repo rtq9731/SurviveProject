@@ -4,6 +4,7 @@ using UnityEngine;
 using TMPro;
 using Survive.Core;
 using Survive.Items;
+using Survive.Localization;
 using Survive.Narrative;
 
 namespace Survive.Progression
@@ -61,7 +62,9 @@ namespace Survive.Progression
         PlayerInventory _player;
         Inventory _bound;
 
-        readonly Queue<SequenceSO.Line> _pending = new Queue<SequenceSO.Line>();
+        // 큐가 무는 것은 글자가 아니라 <b>줄의 주인</b>이다. 글자를 물면 넣는 순간의
+        // 로케일이 굳어 버린다 (SpokenLine의 문서 주석).
+        readonly Queue<SpokenLine> _pending = new Queue<SpokenLine>();
         Coroutine _narrating;
         SubtitleView _subtitle;
 
@@ -206,7 +209,7 @@ namespace Survive.Progression
 
             if (!FieldDiscovery.TryDiscover(_book, Ledger, item.id, out var discovery)) return;
 
-            Announce(discovery.line);
+            Announce(discovery);
         }
 
         // ── AI 대사 ──────────────────────────────────────────────
@@ -222,10 +225,24 @@ namespace Survive.Progression
         /// 바깥에 열어 두는 이유: 알아낸 것을 말하는 자리가 첫 습득 하나뿐이 아니게
         /// 됐다. 연구대(<see cref="ResearchStation"/>)가 항목 하나를 다 보고 나서
         /// 같은 목소리로 말한다 — 화자가 같으면 줄을 세우는 자리도 같아야 한다.
+        ///
+        /// <b>받는 것이 글자가 아니라 줄의 주인이다.</b> 대사 줄을 날것으로 받으면
+        /// 화면에 나가는 글자가 에셋에서 곧장 오고, 그 자리는 번역 표를 통째로
+        /// 우회한다(<see cref="SpokenLine"/>). 주인을 받아 두면 띄우는 순간에
+        /// 표를 뒤질 수 있다.
         /// </summary>
-        public void Announce(SequenceSO.Line line)
+        public void Announce(DiscoverySO discovery) => Announce(SpokenLine.Of(discovery));
+
+        /// <summary>연구 항목 하나를 끝냈을 때. <see cref="Announce(DiscoverySO)"/>와 같은 줄에 선다.</summary>
+        public void Announce(ResearchEntrySO entry) => Announce(SpokenLine.Of(entry));
+
+        /// <summary>
+        /// 줄 세우기의 본체. 새 주인 종류가 생기면 <see cref="SpokenLine"/>에
+        /// 과부하를 하나 더하고 여기로 흘려보낸다.
+        /// </summary>
+        public void Announce(SpokenLine line)
         {
-            if (line == null || string.IsNullOrWhiteSpace(line.text)) return;
+            if (line.IsEmpty) return;
 
             _pending.Enqueue(line);
             if (_narrating == null) _narrating = StartCoroutine(Narrate());
@@ -240,14 +257,21 @@ namespace Survive.Progression
                        director != null && director.IsPlaying)
                     yield return null;
 
-                var line = _pending.Dequeue();
+                var 줄 = _pending.Dequeue();
+
+                // 표를 뒤지는 것은 큐에 넣을 때가 아니라 <b>바로 지금</b>이다. 앞줄이
+                // 끝나기를 몇 초씩 기다리는 사이에 로케일이 바뀔 수 있고, 그때 큐에
+                // 남은 줄은 새 로케일로 나와야 한다.
+                string 대사 = 줄.Text;
+                if (string.IsNullOrWhiteSpace(대사)) continue;
+
                 var view = EnsureSubtitle();
 
-                LastLine = line.text;
+                LastLine = 대사;
                 LinesSpoken++;
 
-                if (view != null) view.Show(line.speaker, line.text);
-                yield return new WaitForSeconds(Mathf.Max(0.5f, line.holdSeconds));
+                if (view != null) view.Show(줄.Speaker, 대사);
+                yield return new WaitForSeconds(Mathf.Max(0.5f, 줄.HoldSeconds));
 
                 // 다음 줄이 이어지면 판을 내렸다 올리지 않는다 — 깜빡임만 는다.
                 if (view != null && _pending.Count == 0) view.HideView();

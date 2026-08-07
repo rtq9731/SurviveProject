@@ -64,7 +64,10 @@ namespace Survive.Progression
             }
 
             _fired = true;
-            service.Announce(d.line);
+
+            // 대사 줄이 아니라 발견 자체를 넘긴다. 줄을 넘기면 그 글자가 표를
+            // 우회해 화면으로 간다 (UnlockService.Announce의 문서 주석).
+            service.Announce(d);
             return true;
         }
     }

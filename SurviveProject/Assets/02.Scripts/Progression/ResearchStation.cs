@@ -80,7 +80,10 @@ namespace Survive.Progression
 
             // 알아낸 것을 말하는 목소리는 하나뿐이다 — 첫 습득 때 말하던 그 AI다.
             // 자막판을 따로 세우면 같은 화자가 두 군데서 다른 방식으로 말하게 된다.
-            if (UnlockService.Instance != null) UnlockService.Instance.Announce(done.line);
+            //
+            // 대사 줄이 아니라 항목 자체를 넘긴다. 화면에 나가는 글자는 표에서
+            // 나와야 하고, 표를 뒤지려면 열쇠를 지을 주인이 필요하다.
+            if (UnlockService.Instance != null) UnlockService.Instance.Announce(done);
         }
 
         // ── 상호작용 ─────────────────────────────────────────────
