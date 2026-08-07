@@ -278,6 +278,103 @@ namespace Survive.World
         public static float BlindSpotDepthForTier(int tier) =>
             BlindSpotDepth(RadiusForTier(tier), OffsetForTier(tier));
 
+        // ══ 어둠에서 때릴 수 있는 자리 ══════════════════════════
+        // 사각을 <b>깊이</b>로만 세면 "낫이 거기서 사람에게 닿는가"에 답하지 못한다.
+        // 기획서 §9가 오프셋과 낫 공격 거리를 <b>같이 보라</b>고 한 것이 그 뜻이고,
+        // 여기 셋이 그 물음에 답한다 — 넓이·각도·여유. 셋 다 <b>수평 평면</b>에서
+        // 잰다. 사람도 낫도 바닥을 딛고 있고, 사각은 발치에서 갈리기 때문이다.
+        //
+        // <b>사각을 정하는 것은 오프셋이 아니라 「등 뒤 도달 거리」다.</b> 사람 뒤로
+        // 가장 가까운 어두운 자리는 반경 − 오프셋 미터 뒤에 있고, 낫이 거기 서서
+        // 사람에게 닿으려면 <b>공격 거리가 그만큼은 돼야 한다.</b> 오프셋을 그대로
+        // 공격 거리와 견주면(3 대 2.2) 여유가 0.8m로 보이지만, 실제로 견줄 것은
+        // 5m 대 2.2m다 — 부호가 뒤집힌다.
+
+        /// <summary>
+        /// 낫이 <b>어둠 속에 선 채로</b> 사람에게 닿을 수 있는 여유(m).
+        /// 공격 거리에서 등 뒤 도달 거리를 뺀 값이다.
+        ///
+        /// <b>0 이하이면 그런 자리가 없다.</b> 낫은 여전히 등 뒤로 파고들 수 있지만
+        /// (<see cref="LitZoneRegistry.IsBlindSide"/>는 반경이 아니라 <b>반평면</b>이다)
+        /// 때리는 순간의 제 몸은 빛 안이다.
+        /// </summary>
+        public static float DarkStrikeMargin(float radius, float offset, float reach)
+            => reach - DarkBehindDistance(radius, offset);
+
+        /// <summary>사람 뒤로 가장 가까운 <b>어두운</b> 자리까지의 거리(m).</summary>
+        public static float DarkBehindDistance(float radius, float offset)
+            => Mathf.Max(0f, radius - Mathf.Max(0f, offset));
+
+        /// <summary>어둠에서 때릴 수 있는 자리가 하나라도 있는가.</summary>
+        public static bool HasDarkStrikeWindow(float radius, float offset, float reach)
+            => reach > 0f && DarkStrikeMargin(radius, offset, reach) > 0f;
+
+        /// <summary>
+        /// 이 반경에서 사각이 열리기 시작하는 <b>오프셋</b>(m).
+        /// 이보다 크게 밀어야 낫이 어둠에 선 채로 닿는다.
+        /// </summary>
+        public static float OffsetThatOpensDark(float radius, float reach)
+            => Mathf.Max(0f, radius - Mathf.Max(0f, reach));
+
+        /// <summary>
+        /// 이 반경·오프셋에서 사각이 열리기 시작하는 <b>공격 거리</b>(m).
+        /// 곧 <see cref="DarkBehindDistance"/>와 같은 값이다 — 두 손잡이가
+        /// 같은 문턱의 양쪽이라는 것이 이 등호로 드러난다.
+        /// </summary>
+        public static float ReachThatOpensDark(float radius, float offset)
+            => DarkBehindDistance(radius, offset);
+
+        /// <summary>
+        /// 사각의 <b>넓이</b>(m²) — 빛 밖이면서 낫 사거리 안인 바닥의 크기.
+        /// 사거리 원에서 빛 원과 겹치는 몫을 뺀 것이다.
+        /// </summary>
+        public static float DarkStrikeArea(float radius, float offset, float reach)
+        {
+            if (reach <= 0f) return 0f;
+            float R = reach;
+            float r = Mathf.Max(0f, radius);
+            float d = Mathf.Max(0f, offset);
+            return Mathf.PI * R * R - LensArea(R, r, d);
+        }
+
+        /// <summary>
+        /// 사각이 사람을 둘러싸는 <b>각도</b>(도). 등 뒤 한복판을 가운데 둔 부채꼴이다.
+        /// 0이면 어느 방향으로도 어둠에 선 채로 닿을 수 없고, 360이면 사방이 그렇다.
+        /// </summary>
+        public static float DarkStrikeAngle(float radius, float offset, float reach)
+        {
+            if (reach <= 0f) return 0f;
+            float R = reach;
+            float r = Mathf.Max(0f, radius);
+            float o = Mathf.Max(0f, offset);
+
+            // 오프셋이 0이면 원이 사람을 가운데 두므로 방향이 없다 — 사방이 같다.
+            if (o < 1e-6f) return R > r ? 360f : 0f;
+
+            float k = (R * R + o * o - r * r) / (2f * R * o);
+            if (k >= 1f) return 360f;
+            if (k <= -1f) return 0f;
+            return 2f * (180f - Mathf.Acos(k) * Mathf.Rad2Deg);
+        }
+
+        /// <summary>두 원이 겹치는 넓이. 중심 사이가 <paramref name="d"/>다.</summary>
+        static float LensArea(float ra, float rb, float d)
+        {
+            if (ra <= 0f || rb <= 0f) return 0f;
+            if (d >= ra + rb) return 0f;
+
+            float small = Mathf.Min(ra, rb);
+            if (d <= Mathf.Abs(ra - rb)) return Mathf.PI * small * small;
+
+            float a2 = ra * ra, b2 = rb * rb, d2 = d * d;
+            float ca = Mathf.Clamp((d2 + a2 - b2) / (2f * d * ra), -1f, 1f);
+            float cb = Mathf.Clamp((d2 + b2 - a2) / (2f * d * rb), -1f, 1f);
+            float alpha = Mathf.Acos(ca);
+            float beta = Mathf.Acos(cb);
+            return a2 * (alpha - Mathf.Sin(2f * alpha) * 0.5f) +
+                   b2 * (beta - Mathf.Sin(2f * beta) * 0.5f);
+        }
+
         /// <summary>
         /// 이 자리가 <b>등 뒤 사각</b>인가 — 뒤이면서 빛이 닿지 않는다.
         ///
